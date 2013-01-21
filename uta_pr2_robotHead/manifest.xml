@@ -1,0 +1,17 @@
+<package>
+  <description brief="uta_pr2_robotHead">
+
+     uta_pr2_robotHead
+
+  </description>
+  <author>isura</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/uta_pr2_robotHead</url>
+  <depend package="actionlib"/>
+  <depend package="roscpp"/>
+  <depend package="pr2_controllers_msgs"/>
+
+</package>
+
+

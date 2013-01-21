@@ -1,0 +1,22 @@
+<package>
+  <description brief="uta_pr2_robotVisualservo">
+
+     uta_pr2_robotVisualservo: This stack will contain Image based and Position based visual servoing code.
+
+  </description>
+  <author>Isura Ranatunga</author>
+  <license>private</license>
+  <review status="unreviewed" notes=""/>
+  <url>https://drc.resquared.com/trac/wiki/uta_pr2_robotVisualservo</url>
+  <depend package="drc_robot_utils"/>
+  <depend package="sensor_msgs"/>
+  <depend package="opencv2"/>
+  <depend package="cv_bridge"/>
+  <depend package="roscpp"/>
+  <depend package="std_msgs"/>
+  <depend package="image_transport"/>
+  <depend package="geometry_msgs"/>
+
+</package>
+
+
