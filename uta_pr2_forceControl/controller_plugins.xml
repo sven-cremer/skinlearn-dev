@@ -1,0 +1,5 @@
+<library path="lib/libisura_controller_lib">
+  <class name="uta_pr2_forceControl/PR2ControllerPlugin" 
+         type="pr2_controller_ns::PR2ControllerClass"           
+         base_class_type="pr2_controller_interface::Controller" />
+</library>
