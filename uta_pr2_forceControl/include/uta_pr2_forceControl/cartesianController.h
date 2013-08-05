@@ -10,7 +10,7 @@
 #include <kdl/jacobian.hpp>
 #include <kdl/jntarray.hpp>
 
-#include <pr2_mechanism_model/kinematichelpers.h>
+//#include <pr2_mechanism_model/kinematichelpers.h>
 #include <Eigen/Geometry>
 
 
@@ -53,7 +53,7 @@ class PR2CartControllerClass: public pr2_controller_interface::Controller
   KDL::JntArray qtmp_;          // Joint vector
   KDL::Frame    xtmp_;          // Tip pose
   KDL::Jacobian Jtmp_;          // Jacobian
-  pr2_mechanism_model::KinematicHelpers kin_;
+  //pr2_mechanism_model::KinematicHelpers kin_;
  
   // The trajectory initial value
   CartPose  x0_;                // Tip initial pose

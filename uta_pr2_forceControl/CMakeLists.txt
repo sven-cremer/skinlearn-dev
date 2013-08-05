@@ -23,6 +23,9 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 #common commands for building c++ executables and libraries
 
+find_package(Eigen REQUIRED)
+include_directories(${Eigen_INCLUDE_DIRS})
+
 rosbuild_add_library(isura_controller_lib src/cartesianController.cpp )
 
 #target_link_libraries(${PROJECT_NAME} another_library)
