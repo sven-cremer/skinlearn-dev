@@ -27,7 +27,7 @@ bool PR2CartControllerClass::init(pr2_mechanism_model::RobotState *robot,
   // Note the joints must be calibrated.
   if (!chain_.init(robot, root_name, tip_name))
   {
-    ROS_ERROR("PR2CartController could not use the chain from '%s' to '%s'",
+    ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'",
               root_name.c_str(), tip_name.c_str());
     return false;
   }
@@ -36,42 +36,34 @@ bool PR2CartControllerClass::init(pr2_mechanism_model::RobotState *robot,
   robot_state_ = robot;
 
   // Construct the kdl solvers in non-realtime.
-  KDL::Chain kdl_chain;
-  chain_.toKDL(kdl_chain);
-  jnt_to_pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain));
-  jnt_to_jac_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain));
+  chain_.toKDL(kdl_chain_);
+  jnt_to_pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
+  jnt_to_jac_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
 
-  // Resize (pre-allocate) the temporary variables in non-realtime.
-  qtmp_.resize(chain_.getNumOfJoints());
-  Jtmp_.resize(chain_.getNumOfJoints());
-
-  // Verify the number of joints.
-  if (chain_.getNumOfJoints() != Joints)
-  {
-    ROS_ERROR("The chain from '%s' to '%s' does not contain %d joints",
-              root_name.c_str(), tip_name.c_str(), Joints);
-    return false;
-  }
+  // Resize (pre-allocate) the variables in non-realtime.
+  q_.resize(kdl_chain_.getNrOfJoints());
+  q0_.resize(kdl_chain_.getNrOfJoints());
+  qdot_.resize(kdl_chain_.getNrOfJoints());
+  tau_.resize(kdl_chain_.getNrOfJoints());
+  J_.resize(kdl_chain_.getNrOfJoints());
 
   // Pick the gains.
-  Kp_(0) = 100.0;  Kd_(0) = 1.0;        // Translation x
-  Kp_(1) = 100.0;  Kd_(1) = 1.0;        // Translation y
-  Kp_(2) = 100.0;  Kd_(2) = 1.0;        // Translation z
-  Kp_(3) = 100.0;  Kd_(3) = 1.0;        // Rotation x
-  Kp_(4) = 100.0;  Kd_(4) = 1.0;        // Rotation y
-  Kp_(5) = 100.0;  Kd_(5) = 1.0;        // Rotation z
+  Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
+  Kp_.vel(1) = 100.0;  Kd_.vel(1) = 1.0;        // Translation y
+  Kp_.vel(2) = 100.0;  Kd_.vel(2) = 1.0;        // Translation z
+  Kp_.rot(0) = 100.0;  Kd_.rot(0) = 1.0;        // Rotation x
+  Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
+  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
 
   return true;
 }
 
-
 /// Controller startup in realtime
-void MyCartControllerClass::starting()
+void PR2CartControllerClass::starting()
 {
   // Get the current joint values to compute the initial tip location.
-  chain_.getJointPositions(qtmp_);
-  jnt_to_pose_solver_->JntToCart(qtmp_, xtmp_);
-  kin_.KDLtoEigen(xtmp_, x0_);
+  chain_.getPositions(q0_);
+  jnt_to_pose_solver_->JntToCart(q0_, x0_);
 
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
@@ -82,54 +74,62 @@ void MyCartControllerClass::starting()
 
 
 /// Controller update loop in realtime
-void MyCartControllerClass::update()
+void PR2CartControllerClass::update()
 {
-  double       dt;              // Servo loop time step
-  JointVector  q, qdot, tau;    // Joint position, velocity, torques
-  CartPose     x, xd;           // Tip pose, desired pose
-  Cart6Vector  xerr, xdot, F;   // Cart error,velocity,effort
-  JacobianMatrix  J;            // Jacobian
+  double dt;                    // Servo loop time step
 
   // Calculate the dt between servo cycles.
   dt = (robot_state_->getTime() - last_time_).toSec();
   last_time_ = robot_state_->getTime();
 
   // Get the current joint positions and velocities.
-  chain_.getJointPositions(q);
-  chain_.getJointVelocities(qdot);
+  chain_.getPositions(q_);
+  chain_.getVelocities(qdot_);
 
   // Compute the forward kinematics and Jacobian (at this location).
-  kin_.EigentoKDL(q, qtmp_);
-  jnt_to_pose_solver_->JntToCart(qtmp_, xtmp_);
-  jnt_to_jac_solver_->JntToJac(qtmp_, Jtmp_);
-  kin_.KDLtoEigen(xtmp_, x);
-  kin_.KDLtoEigen(Jtmp_, J);
+  jnt_to_pose_solver_->JntToCart(q_, x_);
+  jnt_to_jac_solver_->JntToJac(q_, J_);
 
-  xdot = J * qdot;
+  for (unsigned int i = 0 ; i < 6 ; i++)
+  {
+    xdot_(i) = 0;
+    for (unsigned int j = 0 ; j < kdl_chain_.getNrOfJoints() ; j++)
+      xdot_(i) += J_(i,j) * qdot_.qdot(j);
+  }
 
   // Follow a circle of 10cm at 3 rad/sec.
   circle_phase_ += 3.0 * dt;
-  Cart3Vector  circle(0,0,0);
-  circle.x() = 0.1 * sin(circle_phase_);
-  circle.y() = 0.1 * (1 - cos(circle_phase_));
+  KDL::Vector  circle(0,0,0);
+  circle(2) = 0.1 * sin(circle_phase_);
+  circle(1) = 0.1 * (cos(circle_phase_) - 1);
 
-  xd = x0_;
-  xd.translation() += circle;
+  xd_ = x0_;
+  xd_.p += circle;
 
   // Calculate a Cartesian restoring force.
-  kin_.computeCartError(x,xd,xerr);
-  F = - Kp_.asDiagonal() * xerr - Kd_.asDiagonal() * xdot;
+  xerr_.vel = x_.p - xd_.p;
+  xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
+                     xd_.M.UnitY() * x_.M.UnitY() +
+                     xd_.M.UnitZ() * x_.M.UnitZ());
+
+  for (unsigned int i = 0 ; i < 6 ; i++)
+    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
 
   // Convert the force into a set of joint torques.
-  tau = J.transpose() * F;
+  for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
+  {
+    tau_(i) = 0;
+    for (unsigned int j = 0 ; j < 6 ; j++)
+      tau_(i) += J_(j,i) * F_(j);
+  }
 
   // And finally send these torques out.
-  chain_.setJointEfforts(tau);
+  chain_.setEfforts(tau_);
 }
 
 
 /// Controller stopping in realtime
-void MyCartControllerClass::stopping()
+void PR2CartControllerClass::stopping()
 {}
 
 
