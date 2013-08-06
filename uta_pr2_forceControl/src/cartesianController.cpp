@@ -135,6 +135,6 @@ void PR2CartControllerClass::stopping()
 
 
 /// Register controller to pluginlib
-PLUGINLIB_DECLARE_CLASS(uta_pr2_forceControl,PR2ControllerPlugin,
-						 pr2_controller_ns::PR2CartControllerClass,
-                         pr2_controller_interface::Controller)
+PLUGINLIB_REGISTER_CLASS( PR2ControllerPlugin,
+						  pr2_controller_ns::PR2CartControllerClass,
+                          pr2_controller_interface::Controller )
