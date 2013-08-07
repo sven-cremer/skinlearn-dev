@@ -1,5 +1,5 @@
 <library path="lib/libpr2_controller_lib">
-  <class name="uta_pr2_forceControl/PR2CartControllerClass"
-         type="pr2_controller_ns::PR2ControllerClass"           
+  <class name="PR2CartControllerClass"
+         type="pr2_controller_ns::PR2CartControllerClass"           
          base_class_type="pr2_controller_interface::Controller" />
 </library>
