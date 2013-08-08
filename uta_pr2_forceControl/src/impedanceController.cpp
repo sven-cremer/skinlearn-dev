@@ -1,11 +1,11 @@
-#include "uta_pr2_forceControl/cartesianController.h"
+#include "uta_pr2_forceControl/impedanceController.h"
 #include <pluginlib/class_list_macros.h>
 
 using namespace pr2_controller_ns;
 
 
 /// Controller initialization in non-realtime
-bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
+bool PR2ImpedanceControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                  ros::NodeHandle &n)
 {
   // Get the root and tip link names from parameter server.
@@ -59,7 +59,7 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
 }
 
 /// Controller startup in realtime
-void PR2CartesianControllerClass::starting()
+void PR2ImpedanceControllerClass::starting()
 {
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
@@ -74,7 +74,7 @@ void PR2CartesianControllerClass::starting()
 
 
 /// Controller update loop in realtime
-void PR2CartesianControllerClass::update()
+void PR2ImpedanceControllerClass::update()
 {
   double dt;                    // Servo loop time step
 
@@ -129,7 +129,7 @@ void PR2CartesianControllerClass::update()
 
 
 /// Controller stopping in realtime
-void PR2CartesianControllerClass::stopping()
+void PR2ImpedanceControllerClass::stopping()
 {}
 
 
@@ -139,6 +139,6 @@ void PR2CartesianControllerClass::stopping()
 
 
 // Register controller to pluginlib
-PLUGINLIB_REGISTER_CLASS( PR2CartesianControllerClass,
-						  pr2_controller_ns::PR2CartesianControllerClass,
+PLUGINLIB_REGISTER_CLASS( PR2ImpedanceControllerClass,
+						  pr2_controller_ns::PR2ImpedanceControllerClass,
                           pr2_controller_interface::Controller )

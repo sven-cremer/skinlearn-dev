@@ -13,7 +13,7 @@
 
 namespace pr2_controller_ns{
 
-class PR2CartesianControllerClass: public pr2_controller_interface::Controller
+class PR2ImpedanceControllerClass: public pr2_controller_interface::Controller
 {
 private:
   // The current robot state (to get the time stamp)
