@@ -1,4 +1,4 @@
-my_cart_controller_name:
-  type: uta_pr2_forceControl/PR2CartControllerClass
+pr2_cart_controller_name:
+  type: PR2CartControllerClass
   root_name: torso_lift_link
   tip_name: r_gripper_tool_frame
