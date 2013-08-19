@@ -11,6 +11,7 @@
   <depend package="pr2_controller_interface"/>
   <depend package="pr2_hardware_interface"/> 
   <depend package="pr2_mechanism_model"/>
+  <depend package="realtime_tools"/>
   <depend package="pluginlib"/>
   <depend package="kdl" />
 

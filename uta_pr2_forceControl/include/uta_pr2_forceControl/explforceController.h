@@ -11,6 +11,9 @@
 #include <kdl/jacobian.hpp>
 #include <kdl/jntarray.hpp>
 
+#include "realtime_tools/realtime_publisher.h"
+
+#include "geometry_msgs/WrenchStamped.h"
 
 namespace pr2_controller_ns{
 
@@ -54,6 +57,14 @@ private:
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle
   ros::Time last_time_;         // Time of the last servo cycle
+
+  //! realtime publisher for max_force value
+  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_;
+  geometry_msgs::WrenchStamped forceData;
+
+  //! publish max_force values every X realtime cycles
+  int pub_cycle_count_;
+  bool should_publish_;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,

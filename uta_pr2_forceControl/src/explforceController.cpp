@@ -3,10 +3,8 @@
 
 using namespace pr2_controller_ns;
 
-
 /// Controller initialization in non-realtime
-bool PR2ExplforceControllerClass::init(pr2_mechanism_model::RobotState *robot,
-                                 ros::NodeHandle &n)
+bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n )
 {
   // Get the root and tip link names from parameter server.
   std::string root_name, tip_name;
@@ -74,6 +72,12 @@ bool PR2ExplforceControllerClass::init(pr2_mechanism_model::RobotState *robot,
   // set to +/- 8g range (0=2g,1=4g)
   accelerometer_handle_->command_.range_ = 2;
 
+  pub_cycle_count_ = 0;
+  should_publish_  = false;
+
+  // Initialize realtime publisher to publish to ROS topic
+  pub_.init(n, "force_torque_stats", 2);
+
 
 
 
@@ -120,7 +124,27 @@ void PR2ExplforceControllerClass::update()
 	aZ = threeAccs[i].z;
   }
 
-  ROS_WARN_STREAM("XYZ: "<< aX << " "<< aY << " "<< aZ);
+  // Publish data in ROS message every 10 cycles (about 100Hz)
+    if (++pub_cycle_count_ > 10)
+    {
+      should_publish_ = true;
+      pub_cycle_count_ = 0;
+    }
+
+    if (should_publish_ && pub_.trylock())
+    {
+      should_publish_ = false;
+      pub_.msg_.wrench.force.x = aX;
+      pub_.msg_.wrench.force.y = aY;
+      pub_.msg_.wrench.force.z = aZ;
+      pub_.unlockAndPublish();
+    }
+
+
+
+
+
+
 
 
   double dt;                    // Servo loop time step
