@@ -55,6 +55,29 @@ bool PR2ExplforceControllerClass::init(pr2_mechanism_model::RobotState *robot,
   Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
   Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
 
+
+
+
+  /* get a handle to the hardware interface */
+  pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
+  if(!hardwareInterface)
+      ROS_ERROR("Something wrong with the hardware interface pointer!");
+
+  /* get a handle to the left gripper accelerometer */
+  accelerometer_handle_ = hardwareInterface->getAccelerometer("l_gripper_motor");
+  if(!accelerometer_handle_)
+      ROS_ERROR("Something wrong with getting accelerometer handle");
+
+  // set to 1.5 kHz bandwidth (should be the default)
+  accelerometer_handle_->command_.bandwidth_ = 6;
+
+  // set to +/- 8g range (0=2g,1=4g)
+  accelerometer_handle_->command_.range_ = 2;
+
+
+
+
+
   return true;
 }
 
@@ -76,6 +99,30 @@ void PR2ExplforceControllerClass::starting()
 /// Controller update loop in realtime
 void PR2ExplforceControllerClass::update()
 {
+
+
+
+
+// retrieve our accelerometer data
+  // it is most likely that this loop below will run 3 times,
+  // this is because the ROS controller_manager calls this
+  // function at 1khz and data is buffered from the accelerometer
+  // at 3khz.
+  std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
+  for( uint  i = 0; i < threeAccs.size(); i++ )
+  {
+	// here is where you would do anything that you want with
+	// the measured acceleration data. This is a good place to
+	// do any filtering or other such manipulation. Below we simply
+	// overwrite global variables that act as storage containers.
+	aX = threeAccs[i].x;
+	aY = threeAccs[i].y;
+	aZ = threeAccs[i].z;
+  }
+
+
+
+
   double dt;                    // Servo loop time step
 
   // Calculate the dt between servo cycles.

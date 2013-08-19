@@ -1,4 +1,5 @@
 #include <pr2_controller_interface/controller.h>
+#include <pr2_hardware_interface/hardware_interface.h>
 #include <pr2_mechanism_model/chain.h>
 #include <pr2_mechanism_model/robot.h>
 
@@ -22,6 +23,9 @@ private:
   // The chain of links and joints
   pr2_mechanism_model::Chain chain_;
   KDL::Chain kdl_chain_;
+
+  pr2_hardware_interface::Accelerometer* accelerometer_handle_;
+    double aX, aY, aZ;
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
