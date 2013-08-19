@@ -9,6 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/uta_pr2_forceControl</url>
   <depend package="pr2_controller_interface"/>
+  <depend package="pr2_hardware_interface"/> 
   <depend package="pr2_mechanism_model"/>
   <depend package="pluginlib"/>
   <depend package="kdl" />
