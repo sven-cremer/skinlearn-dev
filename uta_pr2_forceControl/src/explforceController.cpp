@@ -120,7 +120,7 @@ void PR2ExplforceControllerClass::update()
 	aZ = threeAccs[i].z;
   }
 
-
+  ROS_WARN_STREAM("XYZ: "<< aX << " "<< aY << " "<< aZ);
 
 
   double dt;                    // Servo loop time step
