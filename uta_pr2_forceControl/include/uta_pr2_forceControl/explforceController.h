@@ -27,7 +27,7 @@ private:
   pr2_mechanism_model::Chain chain_;
   KDL::Chain kdl_chain_;
 
-  pr2_hardware_interface::Accelerometer* accelerometer_handle_;
+  pr2_hardware_interface::ForceTorque* ft_handle_;
     double aX, aY, aZ;
 
   // KDL Solvers performing the actual computations

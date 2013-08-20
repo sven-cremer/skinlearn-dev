@@ -62,15 +62,9 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
       ROS_ERROR("Something wrong with the hardware interface pointer!");
 
   /* get a handle to the left gripper accelerometer */
-  accelerometer_handle_ = hardwareInterface->getAccelerometer("l_gripper_motor");
-  if(!accelerometer_handle_)
-      ROS_ERROR("Something wrong with getting accelerometer handle");
-
-  // set to 1.5 kHz bandwidth (should be the default)
-  accelerometer_handle_->command_.bandwidth_ = 6;
-
-  // set to +/- 8g range (0=2g,1=4g)
-  accelerometer_handle_->command_.range_ = 2;
+  ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+  if(!ft_handle_)
+      ROS_ERROR("Something wrong with getting ft handle");
 
   pub_cycle_count_ = 0;
   should_publish_  = false;
@@ -112,16 +106,16 @@ void PR2ExplforceControllerClass::update()
   // this is because the ROS controller_manager calls this
   // function at 1khz and data is buffered from the accelerometer
   // at 3khz.
-  std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
-  for( uint  i = 0; i < threeAccs.size(); i++ )
+  std::vector<geometry_msgs::Wrench> threeForces = ft_handle_->state_.samples_;
+  for( uint  i = 0; i < threeForces.size(); i++ )
   {
 	// here is where you would do anything that you want with
 	// the measured acceleration data. This is a good place to
 	// do any filtering or other such manipulation. Below we simply
 	// overwrite global variables that act as storage containers.
-	aX = threeAccs[i].x;
-	aY = threeAccs[i].y;
-	aZ = threeAccs[i].z;
+	aX = threeForces[i].force.x;
+	aY = threeForces[i].force.y;
+	aZ = threeForces[i].force.z;
   }
 
   // Publish data in ROS message every 10 cycles (about 100Hz)
