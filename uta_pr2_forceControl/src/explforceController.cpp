@@ -134,17 +134,13 @@ void PR2ExplforceControllerClass::update()
   // function at 1khz and data is buffered from the accelerometer
   // at 3khz.
 
-  std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
-  for( uint  i = 0; i < threeAccs.size(); i++ )
-  {
-    aX = threeAccs[i].x;
-    aY = threeAccs[i].y;
-    aZ = threeAccs[i].z;
-  }
-
-
-  if( !analogin_handle_ )
-	  aX = 99999;
+//  std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
+//  for( uint  i = 0; i < threeAccs.size(); i++ )
+//  {
+//    aX = threeAccs[i].x;
+//    aY = threeAccs[i].y;
+//    aZ = threeAccs[i].z;
+//  }
 
 
 //  std::vector<geometry_msgs::Wrench> threeForces = ft_handle_->state_.samples_;
@@ -154,6 +150,26 @@ void PR2ExplforceControllerClass::update()
 //	aY = threeForces[i].force.y;
 //	aZ = threeForces[i].force.z;
 //  }
+
+
+  if( !analogin_handle_ )
+	  aX = 99999;
+
+
+  if (analogin_handle_->state_.state_.size() != 6)
+    {
+      ROS_ERROR_THROTTLE(5.0, "NetFTExampleController: AnalogInput is has unexpected size %d",
+                         int(analogin_handle_->state_.state_.size()));
+      return;
+    }
+
+   forceData.wrench.force.x  = analogin_handle_->state_.state_[0];
+   forceData.wrench.force.y  = analogin_handle_->state_.state_[1];
+   forceData.wrench.force.z  = analogin_handle_->state_.state_[2];
+   forceData.wrench.torque.x = analogin_handle_->state_.state_[3];
+   forceData.wrench.torque.y = analogin_handle_->state_.state_[4];
+   forceData.wrench.torque.z = analogin_handle_->state_.state_[5];
+
 
   // Publish data in ROS message every 10 cycles (about 100Hz)
     if (++pub_cycle_count_ > 10)
@@ -165,9 +181,16 @@ void PR2ExplforceControllerClass::update()
     if (should_publish_ && pub_.trylock())
     {
       should_publish_ = false;
-      pub_.msg_.wrench.force.x = aX;
-      pub_.msg_.wrench.force.y = aY;
-      pub_.msg_.wrench.force.z = aZ;
+
+      pub_.msg_.wrench = forceData.wrench;
+
+//      pub_.msg_.wrench.force.x  = aX;
+//      pub_.msg_.wrench.force.y  = aY;
+//      pub_.msg_.wrench.force.z  = aZ;
+//      pub_.msg_.wrench.torque.x = aX;
+//      pub_.msg_.wrench.torque.y = aY;
+//      pub_.msg_.wrench.torque.z = aZ;
+
       pub_.unlockAndPublish();
     }
 
