@@ -92,7 +92,16 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 
 
+  std::string analog_in_name = "r_gripper_motor_ft_raw";
 
+  analogin_handle_ = hardwareInterface->getAnalogIn(analog_in_name);
+  if (analogin_handle_ == NULL)
+  {
+    ROS_ERROR("NetFTExampleController: Cannot find AnalogIn named \"%s\"",
+  			analog_in_name.c_str());
+    return false;
+  }
+  ROS_INFO("NetFTExampleController: Using AnalogIn named \"%s\"", analog_in_name.c_str());
 
   return true;
 }
@@ -132,6 +141,11 @@ void PR2ExplforceControllerClass::update()
     aY = threeAccs[i].y;
     aZ = threeAccs[i].z;
   }
+
+
+  if( !analogin_handle_ )
+	  aX = 99999;
+
 
 //  std::vector<geometry_msgs::Wrench> threeForces = ft_handle_->state_.samples_;
 //  for( uint  i = 0; i < threeForces.size(); i++ )
