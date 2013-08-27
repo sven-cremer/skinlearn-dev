@@ -79,10 +79,10 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 
 
-//  /* get a handle to the left gripper accelerometer */
-//  ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
-//  if(!ft_handle_)
-//      ROS_ERROR("Something wrong with getting ft handle");
+  /* get a handle to the left gripper accelerometer */
+  ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+  if(!ft_handle_)
+      ROS_ERROR("Something wrong with getting ft handle");
 
   pub_cycle_count_ = 0;
   should_publish_  = false;
