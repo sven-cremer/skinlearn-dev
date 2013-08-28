@@ -152,10 +152,6 @@ void PR2ExplforceControllerClass::update()
 //  }
 
 
-  if( !analogin_handle_ )
-	  aX = 99999;
-
-
   if (analogin_handle_->state_.state_.size() != 6)
     {
       ROS_ERROR_THROTTLE(5.0, "NetFTExampleController: AnalogInput is has unexpected size %d",
@@ -169,6 +165,13 @@ void PR2ExplforceControllerClass::update()
    forceData.wrench.torque.x = analogin_handle_->state_.state_[3];
    forceData.wrench.torque.y = analogin_handle_->state_.state_[4];
    forceData.wrench.torque.z = analogin_handle_->state_.state_[5];
+
+
+   if( !analogin_handle_ )
+	   forceData.wrench.force.x = 99999;
+
+   if( !ft_handle_ )
+	   forceData.wrench.force.z = 99999;
 
 
   // Publish data in ROS message every 10 cycles (about 100Hz)
