@@ -30,7 +30,9 @@ private:
   pr2_hardware_interface::AnalogIn* analogin_handle_;
   pr2_hardware_interface::Accelerometer* accelerometer_handle_;
   pr2_hardware_interface::ForceTorque* ft_handle_;
-    double aX, aY, aZ;
+
+  int l_ft_samples;
+  int r_ft_samples;
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
@@ -62,7 +64,7 @@ private:
 
   //! realtime publisher for max_force value
   realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_;
-  geometry_msgs::WrenchStamped forceData;
+  geometry_msgs::WrenchStamped r_forceData;
 
   //! publish max_force values every X realtime cycles
   int pub_cycle_count_;

@@ -54,8 +54,6 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
 
 
-
-
   /* get a handle to the hardware interface */
   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
   if(!hardwareInterface)
@@ -63,23 +61,7 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 
 
-  accelerometer_handle_ = hardwareInterface->getAccelerometer("l_gripper_motor");
-   if(!accelerometer_handle_)
-       ROS_ERROR("Something wrong with getting accelerometer handle");
-
-   // set to 1.5 kHz bandwidth (should be the default)
-   accelerometer_handle_->command_.bandwidth_ = 6;
-
-   // set to +/- 8g range (0=2g,1=4g)
-   accelerometer_handle_->command_.range_ = 2;
-
-
-
-
-
-
-
-  /* get a handle to the left gripper accelerometer */
+  /* get a handle to the right gripper accelerometer */
   ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
   if(!ft_handle_)
       ROS_ERROR("Something wrong with getting ft handle");
@@ -91,17 +73,6 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   pub_.init(n, "force_torque_stats", 2);
 
 
-
-  std::string analog_in_name = "r_gripper_motor_ft_raw";
-
-  analogin_handle_ = hardwareInterface->getAnalogIn(analog_in_name);
-  if (analogin_handle_ == NULL)
-  {
-    ROS_ERROR("NetFTExampleController: Cannot find AnalogIn named \"%s\"",
-  			analog_in_name.c_str());
-    return false;
-  }
-  ROS_INFO("NetFTExampleController: Using AnalogIn named \"%s\"", analog_in_name.c_str());
 
   return true;
 }
@@ -125,63 +96,17 @@ void PR2ExplforceControllerClass::starting()
 void PR2ExplforceControllerClass::update()
 {
 
-
-
-
-// retrieve our accelerometer data
-  // it is most likely that this loop below will run 3 times,
-  // this is because the ROS controller_manager calls this
-  // function at 1khz and data is buffered from the accelerometer
-  // at 3khz.
-
-//  std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
-//  for( uint  i = 0; i < threeAccs.size(); i++ )
-//  {
-//    aX = threeAccs[i].x;
-//    aY = threeAccs[i].y;
-//    aZ = threeAccs[i].z;
-//  }
-
-
   std::vector<geometry_msgs::Wrench> threeForces = ft_handle_->state_.samples_;
 
-  aX = threeForces.size() - 1;
+  r_ft_samples = threeForces.size() - 1;
 
-//  for( uint  i = 0; i < threeForces.size(); i++ )
-//  {
-//	aX = threeForces[i].force.x;
-//	aY = threeForces[i].force.y;
-//	aZ = threeForces[i].force.z;
-//  }
+  r_forceData.wrench.force.x  = threeForces[r_ft_samples].force.x ;
+  r_forceData.wrench.force.y  = threeForces[r_ft_samples].force.y ;
+  r_forceData.wrench.force.z  = threeForces[r_ft_samples].force.z ;
+  r_forceData.wrench.torque.x = threeForces[r_ft_samples].torque.x;
+  r_forceData.wrench.torque.y = threeForces[r_ft_samples].torque.y;
+  r_forceData.wrench.torque.z = threeForces[r_ft_samples].torque.z;
 
-
-  if (analogin_handle_->state_.state_.size() != 6)
-    {
-      ROS_ERROR_THROTTLE(5.0, "NetFTExampleController: AnalogInput is has unexpected size %d",
-                         int(analogin_handle_->state_.state_.size()));
-      return;
-    }
-
-//   forceData.wrench.force.x  = analogin_handle_->state_.state_[0];
-//   forceData.wrench.force.y  = analogin_handle_->state_.state_[1];
-//   forceData.wrench.force.z  = analogin_handle_->state_.state_[2];
-//   forceData.wrench.torque.x = analogin_handle_->state_.state_[3];
-//   forceData.wrench.torque.y = analogin_handle_->state_.state_[4];
-//   forceData.wrench.torque.z = analogin_handle_->state_.state_[5];
-
-   forceData.wrench.force.x  = threeForces[aX].force.x ;
-   forceData.wrench.force.y  = threeForces[aX].force.y ;
-   forceData.wrench.force.z  = threeForces[aX].force.z ;
-   forceData.wrench.torque.x = threeForces[aX].torque.x;
-   forceData.wrench.torque.y = threeForces[aX].torque.y;
-   forceData.wrench.torque.z = threeForces[aX].torque.z;
-
-
-   if( !analogin_handle_ )
-	   forceData.wrench.force.x = 99999;
-
-   if( !ft_handle_ )
-	   forceData.wrench.force.z = 99999;
 
 
   // Publish data in ROS message every 10 cycles (about 100Hz)
@@ -195,21 +120,10 @@ void PR2ExplforceControllerClass::update()
     {
       should_publish_ = false;
 
-      pub_.msg_.wrench = forceData.wrench;
-
-//      pub_.msg_.wrench.force.x  = aX;
-//      pub_.msg_.wrench.force.y  = aY;
-//      pub_.msg_.wrench.force.z  = aZ;
-//      pub_.msg_.wrench.torque.x = aX;
-//      pub_.msg_.wrench.torque.y = aY;
-//      pub_.msg_.wrench.torque.z = aZ;
+      pub_.msg_.wrench = r_forceData.wrench;
 
       pub_.unlockAndPublish();
     }
-
-
-
-
 
 
 
