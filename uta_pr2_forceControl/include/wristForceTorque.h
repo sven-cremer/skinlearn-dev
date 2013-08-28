@@ -26,6 +26,9 @@ class WristForceTorque
 	std::vector<geometry_msgs::Wrench> l_ftData_vector;
 	std::vector<geometry_msgs::Wrench> r_ftData_vector;
 
+	geometry_msgs::WrenchStamped l_ftBias;
+	geometry_msgs::WrenchStamped r_ftBias;
+
 	geometry_msgs::WrenchStamped l_ftData;
 	geometry_msgs::WrenchStamped r_ftData;
 
@@ -33,6 +36,7 @@ class WristForceTorque
 
 	void setLeftHandle ( pr2_hardware_interface::ForceTorque* handle_ );
 	void setRightHandle( pr2_hardware_interface::ForceTorque* handle_ );
+	void setBias();
 	void update();
 	geometry_msgs::WrenchStamped getLeftData ( );
 	geometry_msgs::WrenchStamped getRightData( );

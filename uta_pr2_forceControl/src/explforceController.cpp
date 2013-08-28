@@ -78,8 +78,6 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   // Initialize realtime publisher to publish to ROS topic
   pub_.init(n, "force_torque_stats", 2);
 
-
-
   return true;
 }
 
@@ -95,6 +93,10 @@ void PR2ExplforceControllerClass::starting()
 
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
+
+  // set FT sensor bias due to gravity
+  wristFTdata.setBias();
+
 }
 
 

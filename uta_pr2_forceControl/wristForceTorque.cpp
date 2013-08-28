@@ -18,6 +18,19 @@ void WristForceTorque::setRightHandle( pr2_hardware_interface::ForceTorque* hand
 	r_ft_handle_ = handle_;
 }
 
+void WristForceTorque::setBias()
+{
+
+  l_ftData_vector = l_ft_handle_->state_.samples_;
+  l_ft_samples    = l_ftData_vector.size() - 1;
+  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
+
+  r_ftData_vector = r_ft_handle_->state_.samples_;
+  r_ft_samples    = r_ftData_vector.size() - 1;
+  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+
+}
+
 void WristForceTorque::update()
 {
 
