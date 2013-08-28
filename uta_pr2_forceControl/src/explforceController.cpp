@@ -143,7 +143,10 @@ void PR2ExplforceControllerClass::update()
 //  }
 
 
-//  std::vector<geometry_msgs::Wrench> threeForces = ft_handle_->state_.samples_;
+  std::vector<geometry_msgs::Wrench> threeForces = ft_handle_->state_.samples_;
+
+  aX = threeForces.size() - 1;
+
 //  for( uint  i = 0; i < threeForces.size(); i++ )
 //  {
 //	aX = threeForces[i].force.x;
@@ -159,12 +162,19 @@ void PR2ExplforceControllerClass::update()
       return;
     }
 
-   forceData.wrench.force.x  = analogin_handle_->state_.state_[0];
-   forceData.wrench.force.y  = analogin_handle_->state_.state_[1];
-   forceData.wrench.force.z  = analogin_handle_->state_.state_[2];
-   forceData.wrench.torque.x = analogin_handle_->state_.state_[3];
-   forceData.wrench.torque.y = analogin_handle_->state_.state_[4];
-   forceData.wrench.torque.z = analogin_handle_->state_.state_[5];
+//   forceData.wrench.force.x  = analogin_handle_->state_.state_[0];
+//   forceData.wrench.force.y  = analogin_handle_->state_.state_[1];
+//   forceData.wrench.force.z  = analogin_handle_->state_.state_[2];
+//   forceData.wrench.torque.x = analogin_handle_->state_.state_[3];
+//   forceData.wrench.torque.y = analogin_handle_->state_.state_[4];
+//   forceData.wrench.torque.z = analogin_handle_->state_.state_[5];
+
+   forceData.wrench.force.x  = threeForces[aX].force.x ;
+   forceData.wrench.force.y  = threeForces[aX].force.y ;
+   forceData.wrench.force.z  = threeForces[aX].force.z ;
+   forceData.wrench.torque.x = threeForces[aX].torque.x;
+   forceData.wrench.torque.y = threeForces[aX].torque.y;
+   forceData.wrench.torque.z = threeForces[aX].torque.z;
 
 
    if( !analogin_handle_ )
