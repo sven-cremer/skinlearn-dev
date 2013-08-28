@@ -15,6 +15,8 @@
 
 #include "geometry_msgs/WrenchStamped.h"
 
+#include <wristForceTorque.h>
+
 namespace pr2_controller_ns{
 
 class PR2ExplforceControllerClass: public pr2_controller_interface::Controller
@@ -29,10 +31,11 @@ private:
 
   pr2_hardware_interface::AnalogIn* analogin_handle_;
   pr2_hardware_interface::Accelerometer* accelerometer_handle_;
-  pr2_hardware_interface::ForceTorque* ft_handle_;
 
-  int l_ft_samples;
-  int r_ft_samples;
+  pr2_hardware_interface::ForceTorque* l_ft_handle_;
+  pr2_hardware_interface::ForceTorque* r_ft_handle_;
+
+  WristForceTorque wristFTdata;
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;

@@ -61,10 +61,16 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 
 
-  /* get a handle to the right gripper accelerometer */
-  ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
-  if(!ft_handle_)
-      ROS_ERROR("Something wrong with getting ft handle");
+  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+
+  wristFTdata.setLeftHandle( l_ft_handle_ );
+  wristFTdata.setRightHandle( r_ft_handle_ );
+
+  if( !wristFTdata.getLeftHandle() )
+      ROS_ERROR("Something wrong with getting l_ft handle");
+  if( !wristFTdata.getRightHandle() )
+      ROS_ERROR("Something wrong with getting r_ft handle");
 
   pub_cycle_count_ = 0;
   should_publish_  = false;
@@ -96,18 +102,7 @@ void PR2ExplforceControllerClass::starting()
 void PR2ExplforceControllerClass::update()
 {
 
-  std::vector<geometry_msgs::Wrench> threeForces = ft_handle_->state_.samples_;
-
-  r_ft_samples = threeForces.size() - 1;
-
-  r_forceData.wrench.force.x  = threeForces[r_ft_samples].force.x ;
-  r_forceData.wrench.force.y  = threeForces[r_ft_samples].force.y ;
-  r_forceData.wrench.force.z  = threeForces[r_ft_samples].force.z ;
-  r_forceData.wrench.torque.x = threeForces[r_ft_samples].torque.x;
-  r_forceData.wrench.torque.y = threeForces[r_ft_samples].torque.y;
-  r_forceData.wrench.torque.z = threeForces[r_ft_samples].torque.z;
-
-
+	wristFTdata.update();
 
   // Publish data in ROS message every 10 cycles (about 100Hz)
     if (++pub_cycle_count_ > 10)
@@ -120,7 +115,7 @@ void PR2ExplforceControllerClass::update()
     {
       should_publish_ = false;
 
-      pub_.msg_.wrench = r_forceData.wrench;
+      pub_.msg_.wrench = wristFTdata.getRightData().wrench;
 
       pub_.unlockAndPublish();
     }
