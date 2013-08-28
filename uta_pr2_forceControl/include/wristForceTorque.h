@@ -23,9 +23,6 @@ class WristForceTorque
 	int l_ft_samples;
 	int r_ft_samples;
 
-	std::vector<geometry_msgs::Wrench> l_ftData_vector;
-	std::vector<geometry_msgs::Wrench> r_ftData_vector;
-
 	geometry_msgs::WrenchStamped l_ftBias;
 	geometry_msgs::WrenchStamped r_ftBias;
 
