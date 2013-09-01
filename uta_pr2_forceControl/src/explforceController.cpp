@@ -64,13 +64,13 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
   r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
 
-  wristFTdata.setLeftHandle( l_ft_handle_ );
-  wristFTdata.setRightHandle( r_ft_handle_ );
-
-  if( !wristFTdata.getLeftHandle() )
-      ROS_ERROR("Something wrong with getting l_ft handle");
-  if( !wristFTdata.getRightHandle() )
-      ROS_ERROR("Something wrong with getting r_ft handle");
+//  wristFTdata.setLeftHandle( l_ft_handle_ );
+//  wristFTdata.setRightHandle( r_ft_handle_ );
+//
+//  if( !wristFTdata.getLeftHandle() )
+//      ROS_ERROR("Something wrong with getting l_ft handle");
+//  if( !wristFTdata.getRightHandle() )
+//      ROS_ERROR("Something wrong with getting r_ft handle");
 
   pub_cycle_count_ = 0;
   should_publish_  = false;
