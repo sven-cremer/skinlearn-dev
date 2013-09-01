@@ -64,12 +64,12 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
   r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
 
-  wristFTdata.setLeftHandle( l_ft_handle_ );
-  wristFTdata.setRightHandle( r_ft_handle_ );
+//  wristFTdata.setLeftHandle( l_ft_handle_ );
+//  wristFTdata.setRightHandle( r_ft_handle_ );
 
-  if( !wristFTdata.getLeftHandle() )
+  if( !l_ft_handle_ /*wristFTdata.getLeftHandle()*/ )
       ROS_ERROR("Something wrong with getting l_ft handle");
-  if( !wristFTdata.getRightHandle() )
+  if( !r_ft_handle_ /*wristFTdata.getRightHandle()*/ )
       ROS_ERROR("Something wrong with getting r_ft handle");
 
   pub_cycle_count_ = 0;
@@ -95,7 +95,14 @@ void PR2ExplforceControllerClass::starting()
   last_time_ = robot_state_->getTime();
 
   // set FT sensor bias due to gravity
-  wristFTdata.setBias();
+//  wristFTdata.setBias();
+  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+  l_ft_samples    = l_ftData_vector.size() - 1;
+  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
+
+  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+  r_ft_samples    = r_ftData_vector.size() - 1;
+  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
 
 }
 
@@ -104,7 +111,14 @@ void PR2ExplforceControllerClass::starting()
 void PR2ExplforceControllerClass::update()
 {
 
-  wristFTdata.update();
+//  wristFTdata.update();
+	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+	l_ft_samples    = l_ftData_vector.size() - 1;
+	l_ftData.wrench = l_ftData_vector[l_ft_samples];
+
+	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+	r_ft_samples    = r_ftData_vector.size() - 1;
+	r_ftData.wrench = r_ftData_vector[r_ft_samples];
 
   // Publish data in ROS message every 10 cycles (about 100Hz)
     if (++pub_cycle_count_ > 10)
@@ -117,7 +131,7 @@ void PR2ExplforceControllerClass::update()
     {
       should_publish_ = false;
 
-      pub_.msg_.wrench = wristFTdata.getRightData().wrench;
+      pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
 
       pub_.unlockAndPublish();
     }

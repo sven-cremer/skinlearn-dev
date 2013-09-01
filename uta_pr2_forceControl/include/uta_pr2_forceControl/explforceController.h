@@ -15,7 +15,7 @@
 
 #include "geometry_msgs/WrenchStamped.h"
 
-#include <wristForceTorque.h>
+//#include <wristForceTorque.h>
 
 namespace pr2_controller_ns{
 
@@ -35,7 +35,16 @@ private:
   pr2_hardware_interface::ForceTorque* l_ft_handle_;
   pr2_hardware_interface::ForceTorque* r_ft_handle_;
 
-  WristForceTorque wristFTdata;
+  int l_ft_samples;
+  int r_ft_samples;
+
+  geometry_msgs::WrenchStamped l_ftBias;
+  geometry_msgs::WrenchStamped r_ftBias;
+
+  geometry_msgs::WrenchStamped l_ftData;
+  geometry_msgs::WrenchStamped r_ftData;
+
+//  WristForceTorque wristFTdata;
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
