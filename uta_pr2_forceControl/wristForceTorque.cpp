@@ -7,6 +7,14 @@
 
 #include <wristForceTorque.h>
 
+WristForceTorque::WristForceTorque( )
+{
+	*l_ft_handle_ = NULL;
+	*r_ft_handle_ = NULL;
+
+	l_ft_samples = 0;
+	r_ft_samples = 0;
+}
 
 void WristForceTorque::setLeftHandle( pr2_hardware_interface::ForceTorque* handle_ )
 {
