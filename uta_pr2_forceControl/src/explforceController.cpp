@@ -95,7 +95,7 @@ void PR2ExplforceControllerClass::starting()
   last_time_ = robot_state_->getTime();
 
   // set FT sensor bias due to gravity
-  wristFTdata.setBias();
+  //wristFTdata.setBias();
 
 }
 
@@ -104,7 +104,7 @@ void PR2ExplforceControllerClass::starting()
 void PR2ExplforceControllerClass::update()
 {
 
-	wristFTdata.update();
+	//wristFTdata.update();
 
   // Publish data in ROS message every 10 cycles (about 100Hz)
     if (++pub_cycle_count_ > 10)
@@ -117,7 +117,7 @@ void PR2ExplforceControllerClass::update()
     {
       should_publish_ = false;
 
-      pub_.msg_.wrench = wristFTdata.getRightData().wrench;
+      //pub_.msg_.wrench = wristFTdata.getRightData().wrench;
 
       pub_.unlockAndPublish();
     }
