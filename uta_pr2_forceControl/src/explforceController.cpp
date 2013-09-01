@@ -143,6 +143,7 @@ void PR2ExplforceControllerClass::update()
     {
       should_publish_ = false;
 
+      pub_.msg_.header.stamp = robot_state_->getTime();
       pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
 
       pub_.unlockAndPublish();
