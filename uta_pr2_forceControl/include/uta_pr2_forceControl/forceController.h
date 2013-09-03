@@ -59,14 +59,16 @@ public:
   KDL::Frame     xd_;           // Tip desired pose
   KDL::Frame     x0_;           // Tip initial pose
 
-  KDL::Twist     xerr_;         // Cart error
+  KDL::Twist     xerr_;         // Cart position error
   KDL::Twist     xdot_;         // Cart velocity
   KDL::Wrench    F_;            // Cart effort
+  KDL::Twist     ferr_;         // Cart effort error
   KDL::Jacobian  J_;            // Jacobian
 
   // Note the gains are incorrectly typed as a twist,
   // as there is no appropriate type!
   KDL::Twist     Kp_;           // Proportional gains
+  KDL::Twist     Ki_;           // Integral gains
   KDL::Twist     Kd_;           // Derivative gains
 
   // The trajectory variables
