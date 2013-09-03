@@ -12,3 +12,9 @@ pr2_impedanceController:
   type: PR2ImpedanceControllerClass
   root_name: torso_lift_link
   tip_name: r_gripper_tool_frame
+
+pr2_neuroadptController:
+  type: PR2NeuroadptControllerClass
+  root_name: torso_lift_link
+  tip_name: r_gripper_tool_frame
+
