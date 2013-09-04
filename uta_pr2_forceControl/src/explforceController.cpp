@@ -46,12 +46,12 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   J_.resize(kdl_chain_.getNrOfJoints());
 
   // Pick the gains.
-  Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
-  Kp_.vel(1) = 100.0;  Kd_.vel(1) = 1.0;        // Translation y
-  Kp_.vel(2) = 100.0;  Kd_.vel(2) = 1.0;        // Translation z
-  Kp_.rot(0) = 100.0;  Kd_.rot(0) = 1.0;        // Rotation x
-  Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
-  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
+  Kp_.vel(0) = 0.0;  Kd_.vel(0) = 1.0;        // Translation x
+  Kp_.vel(1) = 0.0;  Kd_.vel(1) = 1.0;        // Translation y
+  Kp_.vel(2) = 1.0;  Kd_.vel(2) = 1.0;        // Translation z
+  Kp_.rot(0) = 0.0;  Kd_.rot(0) = 1.0;        // Rotation x
+  Kp_.rot(1) = 0.0;  Kd_.rot(1) = 1.0;        // Rotation y
+  Kp_.rot(2) = 0.0;  Kd_.rot(2) = 1.0;        // Rotation z
 
 
   /* get a handle to the hardware interface */
