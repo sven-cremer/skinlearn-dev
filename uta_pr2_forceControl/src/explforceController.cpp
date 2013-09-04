@@ -24,27 +24,27 @@ void PR2ExplforceControllerClass::update()
   jnt_to_pose_solver_->JntToCart(q_, x_);
   jnt_to_jac_solver_->JntToJac(q_, J_);
 
-//  for (unsigned int i = 0 ; i < 6 ; i++)
-//  {
-//    xdot_(i) = 0;
-//    for (unsigned int j = 0 ; j < kdl_chain_.getNrOfJoints() ; j++)
-//      xdot_(i) += J_(i,j) * qdot_.qdot(j);
-//  }
-//
-//  // Follow a circle of 10cm at 3 rad/sec.
-//  circle_phase_ += 3.0 * dt;
-//  KDL::Vector  circle(0,0,0);
+  for (unsigned int i = 0 ; i < 6 ; i++)
+  {
+    xdot_(i) = 0;
+    for (unsigned int j = 0 ; j < kdl_chain_.getNrOfJoints() ; j++)
+      xdot_(i) += J_(i,j) * qdot_.qdot(j);
+  }
+
+  // Follow a circle of 10cm at 3 rad/sec.
+  circle_phase_ += 3.0 * dt;
+  KDL::Vector  pos(0,0,0.1);
 //  circle(2) = 0.1 * sin(circle_phase_);
 //  circle(1) = 0.1 * (cos(circle_phase_) - 1);
-//
-//  xd_ = x0_;
-//  xd_.p += circle;
-//
-//  // Calculate a Cartesian restoring force.
-//  xerr_.vel = x_.p - xd_.p;
-//  xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
-//                     xd_.M.UnitY() * x_.M.UnitY() +
-//                     xd_.M.UnitZ() * x_.M.UnitZ());
+
+  xd_ = x0_;
+  xd_.p += pos;
+
+  // Calculate a Cartesian restoring force.
+  xerr_.vel = x_.p - xd_.p;
+  xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
+                     xd_.M.UnitY() * x_.M.UnitY() +
+                     xd_.M.UnitZ() * x_.M.UnitZ());
 
 
   // Force error
@@ -56,8 +56,12 @@ void PR2ExplforceControllerClass::update()
     ferr_(5) = r_ftData.wrench.torque.z;
 
   for (unsigned int i = 0 ; i < 6 ; i++)
-	F_(i) = - Kp_(i) * ferr_(i); // - Kd_(i) * xdot_(i);
-//    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+  {
+    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+  }
+
+  // Force control only Z
+	F_(2) = - 1 * ferr_(2); // - Kd_(i) * xdot_(i);
 
   // Convert the force into a set of joint torques.
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
