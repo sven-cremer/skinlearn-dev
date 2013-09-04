@@ -1,10 +1,10 @@
-#include "uta_pr2_forceControl/explforceController.h"
+#include "uta_pr2_forceControl/neuroadptController.h"
 #include <pluginlib/class_list_macros.h>
 
 using namespace pr2_controller_ns;
 
 /// Controller update loop in realtime
-void PR2ExplforceControllerClass::update()
+void PR2NeuroadptControllerClass::update()
 {
 
   setFTData();
@@ -48,15 +48,15 @@ void PR2ExplforceControllerClass::update()
 
 
   // Force error
-    ferr_(0) = r_ftData.wrench.force.x ;
-    ferr_(1) = r_ftData.wrench.force.y ;
-    ferr_(2) = r_ftData.wrench.force.z ;
-    ferr_(3) = r_ftData.wrench.torque.x;
-    ferr_(4) = r_ftData.wrench.torque.y;
-    ferr_(5) = r_ftData.wrench.torque.z;
+    xerr_(0) = r_ftData.wrench.force.x ;
+    xerr_(1) = r_ftData.wrench.force.y ;
+    xerr_(2) = r_ftData.wrench.force.z ;
+    xerr_(3) = r_ftData.wrench.torque.x;
+    xerr_(4) = r_ftData.wrench.torque.y;
+    xerr_(5) = r_ftData.wrench.torque.z;
 
   for (unsigned int i = 0 ; i < 6 ; i++)
-	F_(i) = - Kp_(i) * ferr_(i); // - Kd_(i) * xdot_(i);
+	F_(i) = - Kp_(i) * xerr_(i); // - Kd_(i) * xdot_(i);
 //    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
 
   // Convert the force into a set of joint torques.
@@ -72,6 +72,6 @@ void PR2ExplforceControllerClass::update()
 }
 
 // Register controller to pluginlib
-PLUGINLIB_REGISTER_CLASS( PR2ExplforceControllerClass,
-		          	      pr2_controller_ns::PR2ExplforceControllerClass,
+PLUGINLIB_REGISTER_CLASS( PR2NeuroadptControllerClass,
+		          	      pr2_controller_ns::PR2NeuroadptControllerClass,
                           pr2_controller_interface::Controller )

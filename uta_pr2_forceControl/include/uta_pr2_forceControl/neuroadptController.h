@@ -2,7 +2,7 @@
 
 namespace pr2_controller_ns{
 
-class PR2ImpedanceControllerClass :  public PR2ForceControllerClass
+class PR2NeuroadptControllerClass : public PR2ForceControllerClass
 {
 
 public:

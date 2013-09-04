@@ -3,79 +3,13 @@
 
 using namespace pr2_controller_ns;
 
-
-/// Controller initialization in non-realtime
-bool PR2ImpedanceControllerClass::init(pr2_mechanism_model::RobotState *robot,
-                                 ros::NodeHandle &n)
-{
-  // Get the root and tip link names from parameter server.
-  std::string root_name, tip_name;
-  if (!n.getParam("root_name", root_name))
-  {
-    ROS_ERROR("No root name given in namespace: %s)",
-              n.getNamespace().c_str());
-    return false;
-  }
-  if (!n.getParam("tip_name", tip_name))
-  {
-    ROS_ERROR("No tip name given in namespace: %s)",
-              n.getNamespace().c_str());
-    return false;
-  }
-
-  // Construct a chain from the root to the tip and prepare the kinematics.
-  // Note the joints must be calibrated.
-  if (!chain_.init(robot, root_name, tip_name))
-  {
-    ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'",
-              root_name.c_str(), tip_name.c_str());
-    return false;
-  }
-
-  // Store the robot handle for later use (to get time).
-  robot_state_ = robot;
-
-  // Construct the kdl solvers in non-realtime.
-  chain_.toKDL(kdl_chain_);
-  jnt_to_pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
-  jnt_to_jac_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
-
-  // Resize (pre-allocate) the variables in non-realtime.
-  q_.resize(kdl_chain_.getNrOfJoints());
-  q0_.resize(kdl_chain_.getNrOfJoints());
-  qdot_.resize(kdl_chain_.getNrOfJoints());
-  tau_.resize(kdl_chain_.getNrOfJoints());
-  J_.resize(kdl_chain_.getNrOfJoints());
-
-  // Pick the gains.
-  Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
-  Kp_.vel(1) = 100.0;  Kd_.vel(1) = 1.0;        // Translation y
-  Kp_.vel(2) = 100.0;  Kd_.vel(2) = 1.0;        // Translation z
-  Kp_.rot(0) = 100.0;  Kd_.rot(0) = 1.0;        // Rotation x
-  Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
-  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
-
-  return true;
-}
-
-/// Controller startup in realtime
-void PR2ImpedanceControllerClass::starting()
-{
-  // Get the current joint values to compute the initial tip location.
-  chain_.getPositions(q0_);
-  jnt_to_pose_solver_->JntToCart(q0_, x0_);
-
-  // Initialize the phase of the circle as zero.
-  circle_phase_ = 0.0;
-
-  // Also reset the time-of-last-servo-cycle.
-  last_time_ = robot_state_->getTime();
-}
-
-
 /// Controller update loop in realtime
 void PR2ImpedanceControllerClass::update()
 {
+
+  setFTData();
+  pubFTData();
+
   double dt;                    // Servo loop time step
 
   // Calculate the dt between servo cycles.
@@ -126,17 +60,6 @@ void PR2ImpedanceControllerClass::update()
   // And finally send these torques out.
   chain_.setEfforts(tau_);
 }
-
-
-/// Controller stopping in realtime
-void PR2ImpedanceControllerClass::stopping()
-{}
-
-
-//PLUGINLIB_DECLARE_CLASS( uta_pr2_forceControl,PR2CartControllerClass,
-//                         pr2_controller_ns::PR2CartControllerClass,
-//                         pr2_controller_interface::Controller )
-
 
 // Register controller to pluginlib
 PLUGINLIB_REGISTER_CLASS( PR2ImpedanceControllerClass,
