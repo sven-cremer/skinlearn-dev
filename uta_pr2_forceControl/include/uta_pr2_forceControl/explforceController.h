@@ -6,7 +6,16 @@ class PR2ExplforceControllerClass : public PR2ForceControllerClass
 {
 
 public:
+
+  bool init(pr2_mechanism_model::RobotState *robot,
+			ros::NodeHandle &n);
+
+  void starting();
   void update();
+  void stopping();
+
+  void setFTData();
+  void pubFTData();
 
 };
 }
