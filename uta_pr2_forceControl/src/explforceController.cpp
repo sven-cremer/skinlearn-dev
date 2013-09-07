@@ -202,8 +202,8 @@ void PR2ExplforceControllerClass::update()
       F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
     }
 
-    // Force control only Z
-    F_(2) = - 1 * ferr_(2); // - Kd_(i) * xdot_(i);
+    // Force control only ferr Z in ft sensor frame is x in robot frame
+    F_(1) = - 1 * ferr_(2); // - Kd_(i) * xdot_(i);
 
 
   // Convert the force into a set of joint torques.
