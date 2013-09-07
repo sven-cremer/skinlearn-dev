@@ -209,26 +209,26 @@ void PR2ExplforceControllerClass::update()
   }
 
 
-	testClass->update( tau_ );
-	testClass->getStates( q_m_, qd_m_, qdd_m_ );
+//	testClass->update( tau_ );
+//	testClass->getStates( q_m_, qd_m_, qdd_m_ );
 
-	modelState.header.stamp = robot_state_->getTime();
-
-	modelState.position.push_back(q_m_(0));
-	modelState.position.push_back(q_m_(1));
-	modelState.position.push_back(q_m_(2));
-	modelState.position.push_back(q_m_(3));
-	modelState.position.push_back(q_m_(4));
-	modelState.position.push_back(q_m_(5));
-	modelState.position.push_back(q_m_(6));
-
-	modelState.velocity.push_back(qd_m_(0));
-	modelState.velocity.push_back(qd_m_(1));
-	modelState.velocity.push_back(qd_m_(2));
-	modelState.velocity.push_back(qd_m_(3));
-	modelState.velocity.push_back(qd_m_(4));
-	modelState.velocity.push_back(qd_m_(5));
-	modelState.velocity.push_back(qd_m_(6));
+//	modelState.header.stamp = robot_state_->getTime();
+//
+//	modelState.position.push_back(q_m_(0));
+//	modelState.position.push_back(q_m_(1));
+//	modelState.position.push_back(q_m_(2));
+//	modelState.position.push_back(q_m_(3));
+//	modelState.position.push_back(q_m_(4));
+//	modelState.position.push_back(q_m_(5));
+//	modelState.position.push_back(q_m_(6));
+//
+//	modelState.velocity.push_back(qd_m_(0));
+//	modelState.velocity.push_back(qd_m_(1));
+//	modelState.velocity.push_back(qd_m_(2));
+//	modelState.velocity.push_back(qd_m_(3));
+//	modelState.velocity.push_back(qd_m_(4));
+//	modelState.velocity.push_back(qd_m_(5));
+//	modelState.velocity.push_back(qd_m_(6));
 
 
 	// And finally send these torques out.
@@ -248,10 +248,10 @@ void PR2ExplforceControllerClass::update()
 		pub_.msg_.header.stamp = robot_state_->getTime();
 		pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
 
-		pubModelStates_.msg_ = modelState;
+//		pubModelStates_.msg_ = modelState;
 
 		pub_.unlockAndPublish();
-		pubModelStates_.unlockAndPublish();
+//		pubModelStates_.unlockAndPublish();
 	}
 
 }
