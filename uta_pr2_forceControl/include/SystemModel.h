@@ -47,6 +47,7 @@ class SystemModel
    * Updates the model
    */
   void update( KDL::JntArray & tau_ );
+  void getStates( KDL::JntArray & q_m_, KDL::JntArray & qd_m_, KDL::JntArray & qdd_m_ );
   void debug();
 
 };

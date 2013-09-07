@@ -43,7 +43,16 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   q0_.resize(kdl_chain_.getNrOfJoints());
   qdot_.resize(kdl_chain_.getNrOfJoints());
   tau_.resize(kdl_chain_.getNrOfJoints());
+
+  q_m_.resize(kdl_chain_.getNrOfJoints());
+  qd_m_.resize(kdl_chain_.getNrOfJoints());
+  qdd_m_.resize(kdl_chain_.getNrOfJoints());
+
   J_.resize(kdl_chain_.getNrOfJoints());
+
+  modelState.name.resize(kdl_chain_.getNrOfJoints());
+  modelState.position.resize(kdl_chain_.getNrOfJoints());
+  modelState.velocity.resize(kdl_chain_.getNrOfJoints());
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
@@ -77,6 +86,8 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   // Initialize realtime publisher to publish to ROS topic
   pub_.init(n, "force_torque_stats", 2);
+
+  *testClass = SystemModel( 10, 10, 10);
 
   return true;
 }
@@ -132,25 +143,6 @@ void PR2ExplforceControllerClass::update()
         r_ftData.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y;
         r_ftData.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z;
 
-  // Publish data in ROS message every 10 cycles (about 100Hz)
-    if (++pub_cycle_count_ > 10)
-    {
-      should_publish_ = true;
-      pub_cycle_count_ = 0;
-    }
-
-    if (should_publish_ && pub_.trylock())
-    {
-      should_publish_ = false;
-
-      pub_.msg_.header.stamp = robot_state_->getTime();
-      pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
-
-      pub_.unlockAndPublish();
-    }
-
-
-
 
   double dt;                    // Servo loop time step
 
@@ -197,6 +189,7 @@ void PR2ExplforceControllerClass::update()
     ferr_(4) = r_ftData.wrench.torque.y;
     ferr_(5) = r_ftData.wrench.torque.z;
 
+
     for (unsigned int i = 0 ; i < 6 ; i++)
     {
       F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
@@ -214,8 +207,52 @@ void PR2ExplforceControllerClass::update()
       tau_(i) += J_(j,i) * F_(j);
   }
 
-  // And finally send these torques out.
-  chain_.setEfforts(tau_);
+
+	testClass->update( tau_ );
+	testClass->getStates( q_m_, qd_m_, qdd_m_ );
+
+	modelState.header.stamp = robot_state_->getTime();
+
+	modelState.position(0) = q_m_(0);
+	modelState.position(1) = q_m_(1);
+	modelState.position(2) = q_m_(2);
+	modelState.position(3) = q_m_(3);
+	modelState.position(4) = q_m_(4);
+	modelState.position(5) = q_m_(5);
+	modelState.position(6) = q_m_(6);
+
+	modelState.velocity(0) = qd_m_(0);
+	modelState.velocity(1) = qd_m_(1);
+	modelState.velocity(2) = qd_m_(2);
+	modelState.velocity(3) = qd_m_(3);
+	modelState.velocity(4) = qd_m_(4);
+	modelState.velocity(5) = qd_m_(5);
+	modelState.velocity(6) = qd_m_(6);
+
+
+	// And finally send these torques out.
+    chain_.setEfforts(tau_);
+
+    // Publish data in ROS message every 10 cycles (about 100Hz)
+	if (++pub_cycle_count_ > 10)
+	{
+		should_publish_ = true;
+		pub_cycle_count_ = 0;
+	}
+
+	if (should_publish_ && pub_.trylock())
+	{
+		should_publish_ = false;
+
+		pub_.msg_.header.stamp = robot_state_->getTime();
+		pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
+
+		pubModelStates_.msg_ = modelState;
+
+		pub_.unlockAndPublish();
+		pubModelStates_.unlockAndPublish();
+	}
+
 }
 
 

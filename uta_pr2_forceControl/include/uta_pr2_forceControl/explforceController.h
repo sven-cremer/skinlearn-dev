@@ -15,6 +15,10 @@
 
 #include "geometry_msgs/WrenchStamped.h"
 
+#include "sensor_msgs/JointState.h"
+
+#include <SystemModel.h>
+
 //#include <wristForceTorque.h>
 
 namespace pr2_controller_ns{
@@ -44,6 +48,8 @@ private:
   geometry_msgs::WrenchStamped l_ftData;
   geometry_msgs::WrenchStamped r_ftData;
 
+  sensor_msgs::JointState modelState;
+
 //  WristForceTorque wristFTdata;
 
   // KDL Solvers performing the actual computations
@@ -55,6 +61,10 @@ private:
   KDL::JntArray  q0_;           // Joint initial positions
   KDL::JntArrayVel  qdot_;      // Joint velocities
   KDL::JntArray  tau_;          // Joint torques
+
+  KDL::JntArray  q_m_;          // Model Joint positions
+  KDL::JntArray  qd_m_;         // Model Joint positions
+  KDL::JntArray  qdd_m_;        // Model Joint positions
 
   KDL::Frame     x_;            // Tip pose
   KDL::Frame     xd_;           // Tip desired pose
@@ -77,11 +87,14 @@ private:
 
   //! realtime publisher for max_force value
   realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_;
+  realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubModelStates_;
   geometry_msgs::WrenchStamped r_forceData;
 
   //! publish max_force values every X realtime cycles
   int pub_cycle_count_;
   bool should_publish_;
+
+  SystemModel* testClass;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,
