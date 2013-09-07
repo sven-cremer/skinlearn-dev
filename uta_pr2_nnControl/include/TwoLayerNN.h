@@ -23,7 +23,6 @@ namespace nn
   {
 
     public:
-
             Eigen::MatrixXd V_trans, W_trans, G, F, L, Z, V_trans_next, W_trans_next, sigmaPrime;
             Eigen::VectorXd x, y, hiddenLayer_out, hiddenLayer_in, outputLayer_out, r, vRobust;
             int n, l, m;
@@ -48,7 +47,6 @@ namespace nn
 
 
     private:
-
             Eigen::VectorXd sigmoid(Eigen::VectorXd& z);
 
   };
