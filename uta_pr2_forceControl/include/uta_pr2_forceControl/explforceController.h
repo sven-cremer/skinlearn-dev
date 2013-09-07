@@ -12,13 +12,16 @@
 #include <kdl/jntarray.hpp>
 
 #include "realtime_tools/realtime_publisher.h"
+
 #include "geometry_msgs/WrenchStamped.h"
+
+//#include <wristForceTorque.h>
 
 namespace pr2_controller_ns{
 
-class PR2ExplforceControllerClass : public pr2_controller_interface::Controller
+class PR2ExplforceControllerClass: public pr2_controller_interface::Controller
 {
-public:
+private:
   // The current robot state (to get the time stamp)
   pr2_mechanism_model::RobotState* robot_state_;
 
@@ -57,16 +60,14 @@ public:
   KDL::Frame     xd_;           // Tip desired pose
   KDL::Frame     x0_;           // Tip initial pose
 
-  KDL::Twist     xerr_;         // Cart position error
+  KDL::Twist     xerr_;         // Cart error
   KDL::Twist     xdot_;         // Cart velocity
   KDL::Wrench    F_;            // Cart effort
-  KDL::Twist     ferr_;         // Cart effort error
   KDL::Jacobian  J_;            // Jacobian
 
   // Note the gains are incorrectly typed as a twist,
   // as there is no appropriate type!
   KDL::Twist     Kp_;           // Proportional gains
-  KDL::Twist     Ki_;           // Integral gains
   KDL::Twist     Kd_;           // Derivative gains
 
   // The trajectory variables
@@ -82,16 +83,10 @@ public:
   bool should_publish_;
 
 public:
-
   bool init(pr2_mechanism_model::RobotState *robot,
-			ros::NodeHandle &n);
-
+            ros::NodeHandle &n);
   void starting();
   void update();
   void stopping();
-
-  void setFTData();
-  void pubFTData();
-
 };
 }
