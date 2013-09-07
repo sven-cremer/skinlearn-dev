@@ -35,37 +35,35 @@ namespace nn
             int n, l, m;
             double  kappa, Kp, Kd, Kz, Zb; //delT
 
-	    twoLayerNN(int a1, int a2, int a3, double a4, double a5, double a6, double a7, double a8)
-            {
+			TwoLayerNN(int n_, int m_, int l_, double kappa_, double Kp_, double Kd_, double G_, double F_)
+			{
+				init( n_, m_,  l_,  kappa_,  Kp_,  Kd_, G_,  F_);
+			}
 
-		init(a1, a2, a3, a4, a5, a6, a7, a8);
-
-	    }
-
-            void init(int a1, int a2, int a3, double a4, double a5, double a6, double a7, double a8)
+            void init(int n_, int m_, int l_, double kappa_, double Kp_, double Kd_, double G_, double F_)
             {
               //Initialize the matrices
-              n = a1;  // Size of the inputs
-              m = a2;  // Size of the outputs
-              l = a3; // Size of the hidden layer
+              n = n_;  // Size of the inputs
+              m = m_;  // Size of the outputs
+              l = l_; // Size of the hidden layer
 
 
               //delT = 0.0001;
-              kappa = a4; //0.3
-              Kp = a5; // prop. gain for PID inner loop
-              Kd = a6;//*std::sqrt(Kp); // der. gain for PID inner loop
-              Kz = 3;
-              Zb = 100;
+              kappa = kappa_; //0.3
+              Kp    = Kp_; // prop. gain for PID inner loop
+              Kd    = Kd_;//*std::sqrt(Kp); // der. gain for PID inner loop
+              Kz    = 3;
+              Zb    = 100;
 
 
 
 
 			  G.resize(n + 1, n + 1);
-			  G = a7*Eigen::MatrixXd::Identity(n + 1, n + 1);
+			  G = G_*Eigen::MatrixXd::Identity(n + 1, n + 1);
 
 
 			  F.resize(l,l);
-			  F = a8*Eigen::MatrixXd::Identity(l,l);
+			  F = F_*Eigen::MatrixXd::Identity(l,l);
 
 			  L.resize(m,m);
 			  L = Kp*Eigen::MatrixXd::Identity(m,m);
