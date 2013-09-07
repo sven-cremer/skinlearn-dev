@@ -48,7 +48,7 @@ private:
   geometry_msgs::WrenchStamped l_ftData;
   geometry_msgs::WrenchStamped r_ftData;
 
-  sensor_msgs::JointState modelState;
+//  sensor_msgs::JointState modelState;
 
 //  WristForceTorque wristFTdata;
 
