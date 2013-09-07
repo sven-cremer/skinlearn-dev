@@ -50,9 +50,9 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   J_.resize(kdl_chain_.getNrOfJoints());
 
-  modelState.name.resize(kdl_chain_.getNrOfJoints());
-  modelState.position.resize(kdl_chain_.getNrOfJoints());
-  modelState.velocity.resize(kdl_chain_.getNrOfJoints());
+//  modelState.name.resize(kdl_chain_.getNrOfJoints());
+//  modelState.position.resize(kdl_chain_.getNrOfJoints());
+//  modelState.velocity.resize(kdl_chain_.getNrOfJoints());
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
@@ -86,7 +86,7 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   // Initialize realtime publisher to publish to ROS topic
   pub_.init(n, "force_torque_stats", 2);
-  pubModelStates_.init(n, "model_joint_states", 2);
+//  pubModelStates_.init(n, "model_joint_states", 2);
 
   *testClass = SystemModel( 10, 10, 10);
 
