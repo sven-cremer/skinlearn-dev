@@ -86,6 +86,7 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   // Initialize realtime publisher to publish to ROS topic
   pub_.init(n, "force_torque_stats", 2);
+  pubModelStates_.init(n, "model_joint_states", 2);
 
   *testClass = SystemModel( 10, 10, 10);
 
