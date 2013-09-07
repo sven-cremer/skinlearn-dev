@@ -190,16 +190,21 @@ void PR2ExplforceControllerClass::update()
 
 
   // Force error
-    xerr_(0) = r_ftData.wrench.force.x ;
-    xerr_(1) = r_ftData.wrench.force.y ;
-    xerr_(2) = r_ftData.wrench.force.z ;
-    xerr_(3) = r_ftData.wrench.torque.x;
-    xerr_(4) = r_ftData.wrench.torque.y;
-    xerr_(5) = r_ftData.wrench.torque.z;
+    ferr_(0) = r_ftData.wrench.force.x ;
+    ferr_(1) = r_ftData.wrench.force.y ;
+    ferr_(2) = r_ftData.wrench.force.z ;
+    ferr_(3) = r_ftData.wrench.torque.x;
+    ferr_(4) = r_ftData.wrench.torque.y;
+    ferr_(5) = r_ftData.wrench.torque.z;
 
-  for (unsigned int i = 0 ; i < 6 ; i++)
-        F_(i) = - Kp_(i) * xerr_(i); // - Kd_(i) * xdot_(i);
-//    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+    for (unsigned int i = 0 ; i < 6 ; i++)
+    {
+      F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+    }
+
+    // Force control only Z
+  //      F_(2) = - 1 * ferr_(2); // - Kd_(i) * xdot_(i);
+
 
   // Convert the force into a set of joint torques.
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
