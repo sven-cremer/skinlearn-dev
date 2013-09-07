@@ -214,21 +214,21 @@ void PR2ExplforceControllerClass::update()
 
 	modelState.header.stamp = robot_state_->getTime();
 
-	modelState.position(0) = q_m_(0);
-	modelState.position(1) = q_m_(1);
-	modelState.position(2) = q_m_(2);
-	modelState.position(3) = q_m_(3);
-	modelState.position(4) = q_m_(4);
-	modelState.position(5) = q_m_(5);
-	modelState.position(6) = q_m_(6);
+	modelState.position.push_back(q_m_(0));
+	modelState.position.push_back(q_m_(1));
+	modelState.position.push_back(q_m_(2));
+	modelState.position.push_back(q_m_(3));
+	modelState.position.push_back(q_m_(4));
+	modelState.position.push_back(q_m_(5));
+	modelState.position.push_back(q_m_(6));
 
-	modelState.velocity(0) = qd_m_(0);
-	modelState.velocity(1) = qd_m_(1);
-	modelState.velocity(2) = qd_m_(2);
-	modelState.velocity(3) = qd_m_(3);
-	modelState.velocity(4) = qd_m_(4);
-	modelState.velocity(5) = qd_m_(5);
-	modelState.velocity(6) = qd_m_(6);
+	modelState.velocity.push_back(qd_m_(0));
+	modelState.velocity.push_back(qd_m_(1));
+	modelState.velocity.push_back(qd_m_(2));
+	modelState.velocity.push_back(qd_m_(3));
+	modelState.velocity.push_back(qd_m_(4));
+	modelState.velocity.push_back(qd_m_(5));
+	modelState.velocity.push_back(qd_m_(6));
 
 
 	// And finally send these torques out.
