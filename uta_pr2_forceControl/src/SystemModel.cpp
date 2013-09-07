@@ -5,6 +5,7 @@
  *      Author: Isura
  */
 
+#include <iostream>
 #include "SystemModel.h"
 
 SystemModel::SystemModel( double m, double d, double k )
@@ -72,3 +73,14 @@ void SystemModel::update( KDL::JntArray & tau_human )
 //	qdd_m_(5) = qdd_m(5);
 //	qdd_m_(6) = qdd_m(6);
 //}
+
+void SystemModel::debug()
+{
+	std::cout << "\n Mm    :\n" << Mm;
+	std::cout << "\n Dm    :\n" << Dm;
+	std::cout << "\n Km    :\n" << Km;
+
+	std::cout << "\n q_m   :\n" << q_m.transpose();
+	std::cout << "\n qd_m  :\n" << qd_m.transpose();
+	std::cout << "\n qdd_m :\n" << qdd_m.transpose();
+}

@@ -26,6 +26,8 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #find_package(Eigen REQUIRED)
 #include_directories(${Eigen_INCLUDE_DIRS})
 
+rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
+
 rosbuild_add_library(pr2_controller_lib src/explforceController.cpp)
 #					src/cartesianController.cpp
 #					src/explforceController.cpp
@@ -36,4 +38,9 @@ rosbuild_add_library(pr2_controller_lib src/explforceController.cpp)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 #rosbuild_add_executable(example examples/example.cpp)
+
+rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
+
+target_link_libraries( SystemModel_test	${PROJECT_NAME} )
+
 #target_link_libraries(example ${PROJECT_NAME})

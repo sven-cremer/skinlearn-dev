@@ -9,6 +9,7 @@
 #define SYSTEMMODEL_H_
 
 #include <Eigen/Geometry>
+#include <kdl/jntarray.hpp>
 
 class SystemModel
 {
@@ -46,6 +47,7 @@ class SystemModel
    * Updates the model
    */
   void update( KDL::JntArray & tau_ );
+  void debug();
 
 };
 
