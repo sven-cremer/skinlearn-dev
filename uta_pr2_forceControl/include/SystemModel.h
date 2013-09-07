@@ -10,6 +10,7 @@
 
 #include <Eigen/Geometry>
 #include <kdl/jntarray.hpp>
+#include <boost/shared_ptr.hpp>
 
 class SystemModel
 {
@@ -37,6 +38,9 @@ class SystemModel
   // See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+ public:
+  typedef boost::shared_ptr<SystemModel> Ptr;
 
  public:
 

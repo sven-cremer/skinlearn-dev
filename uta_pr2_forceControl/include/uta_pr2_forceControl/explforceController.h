@@ -48,7 +48,7 @@ private:
   geometry_msgs::WrenchStamped l_ftData;
   geometry_msgs::WrenchStamped r_ftData;
 
-//  sensor_msgs::JointState modelState;
+  sensor_msgs::JointState modelState;
 
 //  WristForceTorque wristFTdata;
 
@@ -94,7 +94,7 @@ private:
   int pub_cycle_count_;
   bool should_publish_;
 
-  SystemModel* testClass;
+  SystemModel::Ptr testClass;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,
