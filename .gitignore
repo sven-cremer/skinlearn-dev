@@ -37,6 +37,13 @@ ehthumbs.db
 Thumbs.db
 *.cpp~
 *.h~
+*~
+
+# Eclipse generated files #
+###########################
+.cproject
+.project
+.pydevproject
 
 # Directories #
 ###############
