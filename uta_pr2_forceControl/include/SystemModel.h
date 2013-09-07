@@ -1,0 +1,52 @@
+/*
+ * SystemModel.h
+ *
+ *  Created on: Sep 7, 2013
+ *      Author: Isura
+ */
+
+#ifndef SYSTEMMODEL_H_
+#define SYSTEMMODEL_H_
+
+#include <Eigen/Geometry>
+
+class SystemModel
+{
+
+  // Declare the number of joints.
+  enum
+  {
+    Joints = 7
+  };
+
+  // Define the joint/cart vector types accordingly (using a fixed
+  // size to avoid dynamic allocations and make the code realtime safe).
+  Eigen::Matrix<double, Joints, Joints>  Mm;
+  Eigen::Matrix<double, Joints, Joints>  Dm;
+  Eigen::Matrix<double, Joints, Joints>  Km;
+  Eigen::Matrix<double, Joints, 1>		 q_m;
+  Eigen::Matrix<double, Joints, 1>       qd_m;
+  Eigen::Matrix<double, Joints, 1>  	 qdd_m;
+  Eigen::Matrix<double, Joints, 1>  	 t_h;
+  Eigen::Matrix<double, Joints, Joints>  MmInv;
+
+  double delT;
+
+  // Ensure 128-bit alignment for Eigen
+  // See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+ public:
+
+	SystemModel( double m, double d, double k );
+	virtual ~SystemModel();
+
+  /*
+   * Updates the model
+   */
+  void update( KDL::JntArray & tau_ );
+
+};
+
+#endif /* SYSTEMMODEL_H_ */
