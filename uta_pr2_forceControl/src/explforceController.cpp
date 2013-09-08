@@ -66,22 +66,6 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// System Model
 
-	q_m(0)  = 0.0 ;
-	q_m(1)  = 0.0 ;
-	q_m(2)  = 0.0 ;
-	q_m(3)  = 0.0 ;
-	q_m(4)  = 0.0 ;
-	q_m(5)  = 0.0 ;
-	q_m(6)  = 0.0 ;
-
-	qd_m(0) = 0.0 ;
-	qd_m(1) = 0.0 ;
-	qd_m(2) = 0.0 ;
-	qd_m(3) = 0.0 ;
-	qd_m(4) = 0.0 ;
-	qd_m(5) = 0.0 ;
-	qd_m(6) = 0.0 ;
-
 	double m = 10;
 	double d = 10;
 	double k = 10;
