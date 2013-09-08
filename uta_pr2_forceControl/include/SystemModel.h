@@ -40,7 +40,7 @@ class SystemModel
   // Ensure 128-bit alignment for Eigen
   // See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+//  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  public:
 
