@@ -50,10 +50,6 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   J_.resize(kdl_chain_.getNrOfJoints());
 
-//  modelState.name.resize(kdl_chain_.getNrOfJoints());
-//  modelState.position.resize(kdl_chain_.getNrOfJoints());
-//  modelState.velocity.resize(kdl_chain_.getNrOfJoints());
-
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
   Kp_.vel(1) = 100.0;  Kd_.vel(1) = 1.0;        // Translation y
@@ -62,7 +58,6 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
   Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
 
-
   /* get a handle to the hardware interface */
   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
   if(!hardwareInterface)
@@ -70,9 +65,6 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
   r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
-
-//  wristFTdata.setLeftHandle( l_ft_handle_ );
-//  wristFTdata.setRightHandle( r_ft_handle_ );
 
   if( !l_ft_handle_ /*wristFTdata.getLeftHandle()*/ )
       ROS_ERROR("Something wrong with getting l_ft handle");
@@ -84,7 +76,7 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   // Initialize realtime publisher to publish to ROS topic
   pub_.init(n, "force_torque_stats", 2);
-//  pubModelStates_.init(n, "model_joint_states", 2);
+  pubModelStates_.init(n, "model_joint_states", 2);
 
   return true;
 }

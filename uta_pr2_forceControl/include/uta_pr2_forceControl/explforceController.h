@@ -17,9 +17,7 @@
 
 #include "sensor_msgs/JointState.h"
 
-#include <SystemModel.h>
-
-//#include <wristForceTorque.h>
+#include <Eigen/Geometry>
 
 namespace pr2_controller_ns{
 
@@ -49,8 +47,6 @@ private:
   geometry_msgs::WrenchStamped r_ftData;
 
   sensor_msgs::JointState modelState;
-
-//  WristForceTorque wristFTdata;
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
@@ -94,9 +90,30 @@ private:
   int pub_cycle_count_;
   bool should_publish_;
 
-  //SystemModel testClass;
+  /////////////////////////
+  // System Model
+  // Declare the number of joints.
+  enum { Joints = 7 };
+
+  // Define the joint/cart vector types accordingly (using a fixed
+  // size to avoid dynamic allocations and make the code realtime safe).
+  typedef Eigen::Matrix<double, Joints, Joints>  SystemMatrix;
+  typedef Eigen::Matrix<double, Joints, 1>		 SystemVector;
+
+  SystemMatrix  Mm;
+  SystemMatrix  Dm;
+  SystemMatrix  Km;
+  SystemMatrix  MmInv;
+
+  SystemVector	q_m;
+  SystemVector  qd_m;
+  SystemVector 	qdd_m;
+  SystemVector 	t_h;
+
+  double delT;
 
 public:
+
   bool init(pr2_mechanism_model::RobotState *robot,
             ros::NodeHandle &n);
   void starting();
