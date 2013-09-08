@@ -9,7 +9,7 @@
 #define SYSTEMMODEL_H_
 
 #include <Eigen/Geometry>
-#include <kdl/jntarray.hpp>
+//#include <kdl/jntarray.hpp>
 
 class SystemModel
 {
