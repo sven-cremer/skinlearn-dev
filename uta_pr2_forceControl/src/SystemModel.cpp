@@ -18,8 +18,8 @@ SystemModel::~SystemModel()
 	// TODO Auto-generated destructor stub
 }
 
-void SystemModel::init( double m, double d, double k )
-{
+//void SystemModel::init( double m, double d, double k )
+//{
 //	Mm << m, 0, 0, 0, 0, 0, 0,
 //		  0, m, 0, 0, 0, 0, 0,
 //		  0, 0, m, 0, 0, 0, 0,
@@ -53,7 +53,7 @@ void SystemModel::init( double m, double d, double k )
 //	MmInv = Mm;
 //
 //	delT  = 0.001;
-}
+//}
 
 /*
 void SystemModel::update( KDL::JntArray & tau_human )
