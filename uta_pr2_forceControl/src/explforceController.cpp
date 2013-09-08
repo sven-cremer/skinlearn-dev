@@ -249,9 +249,9 @@ void PR2ExplforceControllerClass::update()
   }
 
 
-
+    /////////////////////////
 	// System Model
-
+  	// Integrator
 	t_h(0) = tau_h(0);
 	t_h(1) = tau_h(1);
 	t_h(2) = tau_h(2);
@@ -260,8 +260,8 @@ void PR2ExplforceControllerClass::update()
 	t_h(5) = tau_h(5);
 	t_h(6) = tau_h(6);
 
-	q_m   = delT*qd_m;
-	qd_m  = delT*qdd_m;
+	q_m   = q_m + delT*qd_m;
+	qd_m  = qd_m + delT*qdd_m;
 	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
 
 	// System Model END

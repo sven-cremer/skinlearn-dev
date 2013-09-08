@@ -66,8 +66,8 @@ void SystemModel::update( KDL::JntArray & tau_human )
 	t_h(5) = tau_human(5);
 	t_h(6) = tau_human(6);
 
-	q_m   = delT*qd_m;
-	qd_m  = delT*qdd_m;
+	q_m   = q_m + delT*qd_m;
+	qd_m  = qd_m + delT*qdd_m;
 	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
 }
 
