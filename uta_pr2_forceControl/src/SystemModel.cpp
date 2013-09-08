@@ -8,7 +8,17 @@
 #include <iostream>
 #include "SystemModel.h"
 
-SystemModel::SystemModel( double m, double d, double k )
+SystemModel::SystemModel()
+{
+	init( 10, 10, 10 );
+}
+
+SystemModel::~SystemModel()
+{
+	// TODO Auto-generated destructor stub
+}
+
+void SystemModel::init( double m, double d, double k )
 {
 	// TODO Auto-generated constructor stub
 	Mm    = Eigen::Matrix<double, Joints, Joints>::Identity()*m;
@@ -24,12 +34,6 @@ SystemModel::SystemModel( double m, double d, double k )
 	MmInv = Mm;
 
 	delT  = 0.001;
-
-}
-
-SystemModel::~SystemModel()
-{
-	// TODO Auto-generated destructor stub
 }
 
 void SystemModel::update( KDL::JntArray & tau_human )

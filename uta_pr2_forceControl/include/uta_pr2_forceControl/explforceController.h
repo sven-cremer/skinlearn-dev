@@ -94,7 +94,7 @@ private:
   int pub_cycle_count_;
   bool should_publish_;
 
-  SystemModel::Ptr testClass;
+  SystemModel testClass;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,

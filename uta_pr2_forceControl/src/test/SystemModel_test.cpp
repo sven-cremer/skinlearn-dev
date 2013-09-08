@@ -20,7 +20,7 @@ int main()
 	tau_(5) = 0.5;
 	tau_(6) = 0.5;
 
-	SystemModel testClass( 10, 10, 10);
+	SystemModel testClass;
 
 	testClass.update( tau_ );
 	testClass.debug();

@@ -10,7 +10,6 @@
 
 #include <Eigen/Geometry>
 #include <kdl/jntarray.hpp>
-#include <boost/shared_ptr.hpp>
 
 class SystemModel
 {
@@ -40,16 +39,14 @@ class SystemModel
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  public:
-  typedef boost::shared_ptr<SystemModel> Ptr;
 
- public:
-
-	SystemModel( double m, double d, double k );
+	SystemModel();
 	virtual ~SystemModel();
 
   /*
    * Updates the model
    */
+  void init( double m, double d, double k );
   void update( KDL::JntArray & tau_ );
   void getStates( KDL::JntArray & q_m_, KDL::JntArray & qd_m_, KDL::JntArray & qdd_m_ );
   void debug();
