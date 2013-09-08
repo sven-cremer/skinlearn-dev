@@ -5,6 +5,8 @@
  *      Author: Isura
  */
 
+#define EIGEN_RUNTIME_NO_MALLOC // Define this symbol to enable runtime tests for allocations
+
 #include <SystemModel.h>
 
 int main()
@@ -22,17 +24,17 @@ int main()
 
 	SystemModel testClass;
 
-	testClass.update( tau_ );
-	testClass.debug();
-
-	testClass.update( tau_ );
-	testClass.debug();
-
-	testClass.update( tau_ );
-	testClass.debug();
-
-	testClass.update( tau_ );
-	testClass.debug();
+//	testClass.update( tau_ );
+//	testClass.debug();
+//
+//	testClass.update( tau_ );
+//	testClass.debug();
+//
+//	testClass.update( tau_ );
+//	testClass.debug();
+//
+//	testClass.update( tau_ );
+//	testClass.debug();
 
 	return 0;
 }

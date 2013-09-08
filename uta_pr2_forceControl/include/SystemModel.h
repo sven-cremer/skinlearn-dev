@@ -40,20 +40,20 @@ class SystemModel
   // Ensure 128-bit alignment for Eigen
   // See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
  public:
-//  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  public:
 
 	SystemModel();
-	virtual ~SystemModel();
+	~SystemModel();
 
   /*
    * Updates the model
    */
   void init( double m, double d, double k );
-  void update( KDL::JntArray & tau_ );
-  void getStates( KDL::JntArray & q_m_, KDL::JntArray & qd_m_, KDL::JntArray & qdd_m_ );
-  void debug();
+//  void update( KDL::JntArray & tau_ );
+//  void getStates( KDL::JntArray & q_m_, KDL::JntArray & qd_m_, KDL::JntArray & qdd_m_ );
+//  void debug();
 
 };
 
