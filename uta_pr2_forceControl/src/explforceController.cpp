@@ -43,12 +43,17 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   q0_.resize(kdl_chain_.getNrOfJoints());
   qdot_.resize(kdl_chain_.getNrOfJoints());
   tau_.resize(kdl_chain_.getNrOfJoints());
+  tau_h.resize(kdl_chain_.getNrOfJoints());
 
   q_m_.resize(kdl_chain_.getNrOfJoints());
   qd_m_.resize(kdl_chain_.getNrOfJoints());
   qdd_m_.resize(kdl_chain_.getNrOfJoints());
 
   J_.resize(kdl_chain_.getNrOfJoints());
+
+  modelState.name.resize(kdl_chain_.getNrOfJoints());
+  modelState.position.resize(kdl_chain_.getNrOfJoints());
+  modelState.velocity.resize(kdl_chain_.getNrOfJoints());
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
@@ -156,25 +161,25 @@ void PR2ExplforceControllerClass::update()
 {
 
 //  wristFTdata.update();
-        std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-        l_ft_samples    = l_ftData_vector.size() - 1;
+	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+	l_ft_samples    = l_ftData_vector.size() - 1;
 //      l_ftData.wrench = l_ftData_vector[l_ft_samples];
-        l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
-        l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
-        l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
-        l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
-        l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
-        l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
+	l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
+	l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
+	l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
+	l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
+	l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
+	l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
 
-        std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-        r_ft_samples    = r_ftData_vector.size() - 1;
+	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+	r_ft_samples    = r_ftData_vector.size() - 1;
 //      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-        r_ftData.wrench.force.x  = r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x ;
-        r_ftData.wrench.force.y  = r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y ;
-        r_ftData.wrench.force.z  = r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z ;
-        r_ftData.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x;
-        r_ftData.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y;
-        r_ftData.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z;
+	r_ftData.wrench.force.x  = r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x ;
+	r_ftData.wrench.force.y  = r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y ;
+	r_ftData.wrench.force.z  = r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z ;
+	r_ftData.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x;
+	r_ftData.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y;
+	r_ftData.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z;
 
 
   double dt;                    // Servo loop time step
@@ -237,30 +242,51 @@ void PR2ExplforceControllerClass::update()
   {
     tau_(i) = 0;
     for (unsigned int j = 0 ; j < 6 ; j++)
+    {
       tau_(i) += J_(j,i) * F_(j);
+      tau_h(i)+= J_(j,i) * ferr_(j); // this will give the torque from interaction
+    }
   }
 
 
-//	testClass->update( tau_ );
-//	testClass->getStates( q_m_, qd_m_, qdd_m_ );
 
-//	modelState.header.stamp = robot_state_->getTime();
-//
-//	modelState.position.push_back(q_m_(0));
-//	modelState.position.push_back(q_m_(1));
-//	modelState.position.push_back(q_m_(2));
-//	modelState.position.push_back(q_m_(3));
-//	modelState.position.push_back(q_m_(4));
-//	modelState.position.push_back(q_m_(5));
-//	modelState.position.push_back(q_m_(6));
-//
-//	modelState.velocity.push_back(qd_m_(0));
-//	modelState.velocity.push_back(qd_m_(1));
-//	modelState.velocity.push_back(qd_m_(2));
-//	modelState.velocity.push_back(qd_m_(3));
-//	modelState.velocity.push_back(qd_m_(4));
-//	modelState.velocity.push_back(qd_m_(5));
-//	modelState.velocity.push_back(qd_m_(6));
+	// System Model
+
+	t_h(0) = tau_h(0);
+	t_h(1) = tau_h(1);
+	t_h(2) = tau_h(2);
+	t_h(3) = tau_h(3);
+	t_h(4) = tau_h(4);
+	t_h(5) = tau_h(5);
+	t_h(6) = tau_h(6);
+
+	q_m   = delT*qd_m;
+	qd_m  = delT*qdd_m;
+	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
+
+	// System Model END
+	/////////////////////////
+
+
+
+
+	modelState.header.stamp = robot_state_->getTime();
+
+	modelState.position[1] = q_m(0);
+	modelState.position[1] = q_m(1);
+	modelState.position[2] = q_m(2);
+	modelState.position[3] = q_m(3);
+	modelState.position[4] = q_m(4);
+	modelState.position[5] = q_m(5);
+	modelState.position[6] = q_m(6);
+
+	modelState.velocity[0] = qd_m(0);
+	modelState.velocity[1] = qd_m(1);
+	modelState.velocity[2] = qd_m(2);
+	modelState.velocity[3] = qd_m(3);
+	modelState.velocity[4] = qd_m(4);
+	modelState.velocity[5] = qd_m(5);
+	modelState.velocity[6] = qd_m(6);
 
 
 	// And finally send these torques out.
@@ -280,10 +306,10 @@ void PR2ExplforceControllerClass::update()
 		pub_.msg_.header.stamp = robot_state_->getTime();
 		pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
 
-//		pubModelStates_.msg_ = modelState;
+		pubModelStates_.msg_ = modelState;
 
 		pub_.unlockAndPublish();
-//		pubModelStates_.unlockAndPublish();
+		pubModelStates_.unlockAndPublish();
 	}
 
 }

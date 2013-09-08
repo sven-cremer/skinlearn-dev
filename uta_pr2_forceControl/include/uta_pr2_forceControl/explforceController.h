@@ -57,6 +57,7 @@ private:
   KDL::JntArray  q0_;           // Joint initial positions
   KDL::JntArrayVel  qdot_;      // Joint velocities
   KDL::JntArray  tau_;          // Joint torques
+  KDL::JntArray  tau_h;         // Joint torques from human
 
   KDL::JntArray  q_m_;          // Model Joint positions
   KDL::JntArray  qd_m_;         // Model Joint positions
