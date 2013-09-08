@@ -14,6 +14,7 @@
 class SystemModel
 {
 
+  /*
   // Declare the number of joints.
   enum
   {
@@ -41,6 +42,7 @@ class SystemModel
   // See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  */
 
  public:
 
