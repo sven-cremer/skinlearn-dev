@@ -21,15 +21,36 @@ SystemModel::~SystemModel()
 void SystemModel::init( double m, double d, double k )
 {
 	// TODO Auto-generated constructor stub
-	Mm    = Eigen::Matrix<double, Joints, Joints>::Identity()*m;
-	Dm    = Eigen::Matrix<double, Joints, Joints>::Identity()*d;
-	Km    = Eigen::Matrix<double, Joints, Joints>::Identity()*k;
 
-	q_m   = Eigen::Matrix<double, Joints, 1>::Zero();
-	qd_m  = Eigen::Matrix<double, Joints, 1>::Zero();
-	qdd_m = Eigen::Matrix<double, Joints, 1>::Zero();
+	Mm    << m, 0, 0, 0, 0, 0, 0,
+			 0, m, 0, 0, 0, 0, 0,
+			 0, 0, m, 0, 0, 0, 0,
+			 0, 0, 0, m, 0, 0, 0,
+			 0, 0, 0, 0, m, 0, 0,
+			 0, 0, 0, 0, 0, m, 0,
+			 0, 0, 0, 0, 0, 0, m;
 
-	t_h   = Eigen::Matrix<double, Joints, 1>::Zero();
+	Dm    << d, 0, 0, 0, 0, 0, 0,
+			 0, d, 0, 0, 0, 0, 0,
+			 0, 0, d, 0, 0, 0, 0,
+			 0, 0, 0, d, 0, 0, 0,
+			 0, 0, 0, 0, d, 0, 0,
+			 0, 0, 0, 0, 0, d, 0,
+			 0, 0, 0, 0, 0, 0, d;
+
+	Km    << k, 0, 0, 0, 0, 0, 0,
+			 0, k, 0, 0, 0, 0, 0,
+			 0, 0, k, 0, 0, 0, 0,
+			 0, 0, 0, k, 0, 0, 0,
+			 0, 0, 0, 0, k, 0, 0,
+			 0, 0, 0, 0, 0, k, 0,
+			 0, 0, 0, 0, 0, 0, k;
+
+	q_m   << 0, 0, 0, 0, 0, 0, 0 ;
+	qd_m  << 0, 0, 0, 0, 0, 0, 0 ;
+	qdd_m << 0, 0, 0, 0, 0, 0, 0 ;
+
+	t_h   << 0, 0, 0, 0, 0, 0, 0 ;
 
 	MmInv = Mm;
 

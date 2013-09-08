@@ -22,14 +22,18 @@ class SystemModel
 
   // Define the joint/cart vector types accordingly (using a fixed
   // size to avoid dynamic allocations and make the code realtime safe).
-  Eigen::Matrix<double, Joints, Joints>  Mm;
-  Eigen::Matrix<double, Joints, Joints>  Dm;
-  Eigen::Matrix<double, Joints, Joints>  Km;
-  Eigen::Matrix<double, Joints, 1>		 q_m;
-  Eigen::Matrix<double, Joints, 1>       qd_m;
-  Eigen::Matrix<double, Joints, 1>  	 qdd_m;
-  Eigen::Matrix<double, Joints, 1>  	 t_h;
-  Eigen::Matrix<double, Joints, Joints>  MmInv;
+  typedef Eigen::Matrix<double, Joints, Joints>  SystemMatrix;
+  typedef Eigen::Matrix<double, Joints, 1>		 SystemVector;
+
+  SystemMatrix  Mm;
+  SystemMatrix  Dm;
+  SystemMatrix  Km;
+  SystemMatrix  MmInv;
+
+  SystemVector	q_m;
+  SystemVector  qd_m;
+  SystemVector 	qdd_m;
+  SystemVector 	t_h;
 
   double delT;
 
