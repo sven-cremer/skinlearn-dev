@@ -58,6 +58,50 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
   Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
 
+  double m = 10;
+  double d = 10;
+  double k = 10;
+
+	/////////////////////////
+	// System Model
+	Mm << m, 0, 0, 0, 0, 0, 0,
+		  0, m, 0, 0, 0, 0, 0,
+		  0, 0, m, 0, 0, 0, 0,
+		  0, 0, 0, m, 0, 0, 0,
+		  0, 0, 0, 0, m, 0, 0,
+		  0, 0, 0, 0, 0, m, 0,
+		  0, 0, 0, 0, 0, 0, m;
+
+	Dm << d, 0, 0, 0, 0, 0, 0,
+		  0, d, 0, 0, 0, 0, 0,
+		  0, 0, d, 0, 0, 0, 0,
+		  0, 0, 0, d, 0, 0, 0,
+		  0, 0, 0, 0, d, 0, 0,
+		  0, 0, 0, 0, 0, d, 0,
+		  0, 0, 0, 0, 0, 0, d;
+
+	Km << k, 0, 0, 0, 0, 0, 0,
+		  0, k, 0, 0, 0, 0, 0,
+		  0, 0, k, 0, 0, 0, 0,
+		  0, 0, 0, k, 0, 0, 0,
+		  0, 0, 0, 0, k, 0, 0,
+		  0, 0, 0, 0, 0, k, 0,
+		  0, 0, 0, 0, 0, 0, k;
+
+	q_m   << 0, 0, 0, 0, 0, 0, 0 ;
+	qd_m  << 0, 0, 0, 0, 0, 0, 0 ;
+	qdd_m << 0, 0, 0, 0, 0, 0, 0 ;
+
+	t_h   << 0, 0, 0, 0, 0, 0, 0 ;
+
+	MmInv = Mm;
+
+	delT  = 0.001;
+	// System Model END
+	/////////////////////////
+
+
+
   /* get a handle to the hardware interface */
   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
   if(!hardwareInterface)
