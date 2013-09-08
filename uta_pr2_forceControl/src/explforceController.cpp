@@ -68,8 +68,6 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if(!hardwareInterface)
       ROS_ERROR("Something wrong with the hardware interface pointer!");
 
-
-
   l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
   r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
 
