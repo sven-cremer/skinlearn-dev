@@ -50,7 +50,7 @@ class SystemModel
   /*
    * Updates the model
    */
-  void init( double m, double d, double k );
+//  void init( double m, double d, double k );
 //  void update( KDL::JntArray & tau_ );
 //  void getStates( KDL::JntArray & q_m_, KDL::JntArray & qd_m_, KDL::JntArray & qdd_m_ );
 //  void debug();

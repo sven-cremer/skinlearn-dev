@@ -10,7 +10,7 @@
 
 SystemModel::SystemModel()
 {
-	init( 10, 10, 10 );
+//	init( 10, 10, 10 );
 }
 
 SystemModel::~SystemModel()
