@@ -167,37 +167,6 @@ private:
   double  Kz     ;
   double  Zb     ;
 
-//
-//Z.resize(l+n+1,l+m);
-//Z = Eigen::MatrixXd::Zero(l+n+1,l+m);
-//Z.block(0,0,l,m) = W_trans.transpose();
-//Z.block(l,m,n+1,l) = V_trans.transpose();
-//
-//r.resize(n,1);
-//r = Eigen::VectorXd::Zero(n,1);
-//
-//vRobust.resize(n,1);
-//vRobust = Eigen::VectorXd::Zero(n,1);
-//
-//x.resize(n + 1,1);
-//x = Eigen::VectorXd::Random(n + 1,1);
-//x(0) = 1;
-//
-//y.resize(m,1);
-//y = Eigen::VectorXd::Random(m,1);
-//
-//hiddenLayer_in.resize(l,1);
-//hiddenLayer_in = Eigen::VectorXd::Zero(l,1);
-//
-//hiddenLayer_out.resize(l,1);
-//hiddenLayer_out = Eigen::VectorXd::Zero(l,1);
-//
-//outputLayer_out.resize(m,1);
-//outputLayer_out = Eigen::VectorXd::Zero(m,1);
-//
-//sigmaPrime.resize(m, l);
-//sigmaPrime = Eigen::MatrixXd::Zero(l, l);
-
   // NN END
   /////////////////////////
 

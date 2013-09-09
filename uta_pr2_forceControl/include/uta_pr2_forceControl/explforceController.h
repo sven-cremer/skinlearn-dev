@@ -101,105 +101,74 @@ private:
   int pub_cycle_count_;
   bool should_publish_;
 
-  /////////////////////////
-  // System Model
-  // Declare the number of joints.
-  enum { Joints = 7 };
-
-  // Define the joint/cart vector types accordingly (using a fixed
-  // size to avoid dynamic allocations and make the code realtime safe).
-  typedef Eigen::Matrix<double, Joints, Joints>  SystemMatrix;
-  typedef Eigen::Matrix<double, Joints, 1>		 SystemVector;
-
-  SystemMatrix  Mm;
-  SystemMatrix  Dm;
-  SystemMatrix  Km;
-  SystemMatrix  MmInv;
-
-  SystemVector	q;
-  SystemVector  qd;
-  SystemVector 	qdd;
-
-  SystemVector	q_m;
-  SystemVector  qd_m;
-  SystemVector 	qdd_m;
-  SystemVector 	t_h;
-  SystemVector 	tau;
-
-  double delT;
-  // System Model END
-  /////////////////////////
-
-  /////////////////////////
-  // NN
-
-  enum { Inputs  = 14 }; // n Size of the inputs
-  enum { Outputs = 7 }; // m Size of the outputs
-  enum { Hidden  = 7 }; // l Size of the hidden layer
-  enum { Error  = 7 }; // filtered error
-
-  Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans;
-  Eigen::Matrix<double, Outputs, Hidden>                     W_trans;
-  Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans_next;
-  Eigen::Matrix<double, Outputs, Hidden>                     W_trans_next;
-  Eigen::Matrix<double, Inputs+1, Inputs+1>                  G;
-  Eigen::Matrix<double, Hidden, Hidden>                      F;
-  Eigen::Matrix<double, Outputs, Outputs>                    L;
-  Eigen::Matrix<double, Hidden+Inputs+1, Hidden+Outputs>     Z;
-
-//  V_trans_next
-//  W_trans_next
-//  sigmaPrime
-
-  Eigen::Matrix<double, Inputs+1, 1>      x                   ;
-  Eigen::Matrix<double, Outputs, 1>       y                   ;
-  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_out     ;
-  Eigen::Matrix<double, Hidden, Hidden>   hiddenLayerIdentity ;
-  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_in      ;
-  Eigen::Matrix<double, Outputs, 1>       outputLayer_out     ;
-  Eigen::Matrix<double, Outputs, Hidden>  sigmaPrime          ;
-  Eigen::Matrix<double, Error, 1>         r                   ;
-  Eigen::Matrix<double, Outputs, 1>       vRobust             ;
-
-  double  kappa  ;
-  double  Kv     ;
-  double  lambda ;
-  double  Kz     ;
-  double  Zb     ;
-
+//  /////////////////////////
+//  // System Model
+//  // Declare the number of joints.
+//  enum { Joints = 7 };
 //
-//Z.resize(l+n+1,l+m);
-//Z = Eigen::MatrixXd::Zero(l+n+1,l+m);
-//Z.block(0,0,l,m) = W_trans.transpose();
-//Z.block(l,m,n+1,l) = V_trans.transpose();
+//  // Define the joint/cart vector types accordingly (using a fixed
+//  // size to avoid dynamic allocations and make the code realtime safe).
+//  typedef Eigen::Matrix<double, Joints, Joints>  SystemMatrix;
+//  typedef Eigen::Matrix<double, Joints, 1>		 SystemVector;
 //
-//r.resize(n,1);
-//r = Eigen::VectorXd::Zero(n,1);
+//  SystemMatrix  Mm;
+//  SystemMatrix  Dm;
+//  SystemMatrix  Km;
+//  SystemMatrix  MmInv;
 //
-//vRobust.resize(n,1);
-//vRobust = Eigen::VectorXd::Zero(n,1);
+//  SystemVector	q;
+//  SystemVector  qd;
+//  SystemVector 	qdd;
 //
-//x.resize(n + 1,1);
-//x = Eigen::VectorXd::Random(n + 1,1);
-//x(0) = 1;
+//  SystemVector	q_m;
+//  SystemVector  qd_m;
+//  SystemVector 	qdd_m;
+//  SystemVector 	t_h;
+//  SystemVector 	tau;
 //
-//y.resize(m,1);
-//y = Eigen::VectorXd::Random(m,1);
-//
-//hiddenLayer_in.resize(l,1);
-//hiddenLayer_in = Eigen::VectorXd::Zero(l,1);
-//
-//hiddenLayer_out.resize(l,1);
-//hiddenLayer_out = Eigen::VectorXd::Zero(l,1);
-//
-//outputLayer_out.resize(m,1);
-//outputLayer_out = Eigen::VectorXd::Zero(m,1);
-//
-//sigmaPrime.resize(m, l);
-//sigmaPrime = Eigen::MatrixXd::Zero(l, l);
+//  double delT;
+//  // System Model END
+//  /////////////////////////
 
-  // NN END
-  /////////////////////////
+//  /////////////////////////
+//  // NN
+//
+//  enum { Inputs  = 14 }; // n Size of the inputs
+//  enum { Outputs = 7 }; // m Size of the outputs
+//  enum { Hidden  = 7 }; // l Size of the hidden layer
+//  enum { Error  = 7 }; // filtered error
+//
+//  Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans;
+//  Eigen::Matrix<double, Outputs, Hidden>                     W_trans;
+//  Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans_next;
+//  Eigen::Matrix<double, Outputs, Hidden>                     W_trans_next;
+//  Eigen::Matrix<double, Inputs+1, Inputs+1>                  G;
+//  Eigen::Matrix<double, Hidden, Hidden>                      F;
+//  Eigen::Matrix<double, Outputs, Outputs>                    L;
+//  Eigen::Matrix<double, Hidden+Inputs+1, Hidden+Outputs>     Z;
+//
+////  V_trans_next
+////  W_trans_next
+////  sigmaPrime
+//
+//  Eigen::Matrix<double, Inputs+1, 1>      x                   ;
+//  Eigen::Matrix<double, Outputs, 1>       y                   ;
+//  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_out     ;
+//  Eigen::Matrix<double, Hidden, Hidden>   hiddenLayerIdentity ;
+//  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_in      ;
+//  Eigen::Matrix<double, Outputs, 1>       outputLayer_out     ;
+//  Eigen::Matrix<double, Outputs, Hidden>  sigmaPrime          ;
+//  Eigen::Matrix<double, Error, 1>         r                   ;
+//  Eigen::Matrix<double, Outputs, 1>       vRobust             ;
+//
+//  double  kappa  ;
+//  double  Kv     ;
+//  double  lambda ;
+//  double  Kz     ;
+//  double  Zb     ;
+//
+//  // NN END
+//  /////////////////////////
 
   urdf::Model urdf_model;
 
@@ -214,14 +183,14 @@ public:
   void update();
   void stopping();
 
-  Eigen::Matrix<double, Hidden, 1>
-  sigmoid( Eigen::Matrix<double, Hidden, 1> & z );
-
-  SystemVector JointKdl2Eigen( KDL::JntArray & joint_ );
-
-  SystemVector JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
-
-  KDL::JntArray JointEigen2Kdl( SystemVector & joint );
+//  Eigen::Matrix<double, Hidden, 1>
+//  sigmoid( Eigen::Matrix<double, Hidden, 1> & z );
+//
+//  SystemVector JointKdl2Eigen( KDL::JntArray & joint_ );
+//
+//  SystemVector JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
+//
+//  KDL::JntArray JointEigen2Kdl( SystemVector & joint );
 
 };
 }
