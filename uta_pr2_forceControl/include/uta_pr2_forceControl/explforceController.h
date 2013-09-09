@@ -118,7 +118,7 @@ private:
   // System Model END
   /////////////////////////
 
-  urdf::Model model;
+  urdf::Model urdf_model;
 
 public:
 

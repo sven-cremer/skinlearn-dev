@@ -39,7 +39,7 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
     return false;
   }
 
-  if (!model.initString(urdf_string))
+  if (!urdf_model.initString(urdf_string))
   {
     ROS_ERROR("Failed to parse URDF file");
     return -1;
@@ -66,6 +66,8 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   qdd_m_.resize(kdl_chain_.getNrOfJoints());
 
   J_.resize(kdl_chain_.getNrOfJoints());
+
+//  urdf_model.getJoint(kdl_chain_.getSegment(0).name)->limits->lower;
 
   modelState.name.resize(kdl_chain_.getNrOfJoints());
   modelState.position.resize(kdl_chain_.getNrOfJoints());
@@ -292,6 +294,14 @@ void PR2ExplforceControllerClass::update()
 
 
 	modelState.header.stamp = robot_state_->getTime();
+
+	modelState.name[0] = kdl_chain_.getSegment(0).getName();
+	modelState.name[1] = kdl_chain_.getSegment(1).getName();
+	modelState.name[2] = kdl_chain_.getSegment(2).getName();
+	modelState.name[3] = kdl_chain_.getSegment(3).getName();
+	modelState.name[4] = kdl_chain_.getSegment(4).getName();
+	modelState.name[5] = kdl_chain_.getSegment(5).getName();
+	modelState.name[6] = kdl_chain_.getSegment(6).getName();
 
 	modelState.position[0] = q_m(0);
 	modelState.position[1] = q_m(1);
