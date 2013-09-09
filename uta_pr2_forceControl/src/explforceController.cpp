@@ -30,6 +30,22 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
     return false;
   }
 
+  std::string urdf_param_ = "/robot_description";
+  std::string urdf_string;
+
+  if (!n.getParam(urdf_param_, urdf_string))
+  {
+    ROS_ERROR("URDF not loaded from parameter: %s)", urdf_param_.c_str());
+    return false;
+  }
+
+  if (!model.initString(urdf_string))
+  {
+    ROS_ERROR("Failed to parse URDF file");
+    return -1;
+  }
+  ROS_INFO("Successfully parsed URDF file");
+
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
 
@@ -221,21 +237,21 @@ void PR2ExplforceControllerClass::update()
 
 
   // Force error
-    ferr_(0) = r_ftData.wrench.force.x ;
-    ferr_(1) = r_ftData.wrench.force.y ;
-    ferr_(2) = r_ftData.wrench.force.z ;
-    ferr_(3) = r_ftData.wrench.torque.x;
-    ferr_(4) = r_ftData.wrench.torque.y;
-    ferr_(5) = r_ftData.wrench.torque.z;
+  ferr_(0) = r_ftData.wrench.force.x ;
+  ferr_(1) = r_ftData.wrench.force.y ;
+  ferr_(2) = r_ftData.wrench.force.z ;
+  ferr_(3) = r_ftData.wrench.torque.x;
+  ferr_(4) = r_ftData.wrench.torque.y;
+  ferr_(5) = r_ftData.wrench.torque.z;chain_
 
 
-    for (unsigned int i = 0 ; i < 6 ; i++)
-    {
-      F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
-    }
+  for (unsigned int i = 0 ; i < 6 ; i++)
+  {
+    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+  }
 
-    // Force control only ferr Z in ft sensor frame is x in robot frame
-    F_(0) = ferr_(2); // - Kd_(i) * xdot_(i);
+  // Force control only ferr Z in ft sensor frame is x in robot frame
+  F_(0) = ferr_(2); // - Kd_(i) * xdot_(i);
 
 
   // Convert the force into a set of joint torques.
@@ -266,6 +282,8 @@ void PR2ExplforceControllerClass::update()
 	q_m   = q_m + delT*qd_m;
 	qd_m  = qd_m + delT*qdd_m;
 	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
+
+	// Check for joint limits and reset
 
 	// System Model END
 	/////////////////////////

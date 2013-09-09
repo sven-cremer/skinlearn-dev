@@ -19,6 +19,9 @@
 
 #include <Eigen/Geometry>
 
+#include "ros/ros.h"
+#include <urdf/model.h>
+
 namespace pr2_controller_ns{
 
 class PR2ExplforceControllerClass: public pr2_controller_interface::Controller
@@ -114,6 +117,8 @@ private:
   double delT;
   // System Model END
   /////////////////////////
+
+  urdf::Model model;
 
 public:
 
