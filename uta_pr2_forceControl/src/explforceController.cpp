@@ -263,7 +263,7 @@ void PR2ExplforceControllerClass::update()
 
 	q_m   = q_m + delT*qd_m;
 	qd_m  = qd_m + delT*qdd_m;
-	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
+	// qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
 
 	// System Model END
 	/////////////////////////
