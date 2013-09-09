@@ -163,8 +163,8 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// NN
 
-	kappa  = 0.3;
-	Kv     = 5; // prop. gain for PID inner loop
+	kappa  = 0.7;
+	Kv     = 10; // prop. gain for PID inner loop
 	lambda = 1; //*std::sqrt(Kp); // der. gain for PID inner loop
 	Kz     = 3;
 	Zb     = 100;
@@ -180,8 +180,8 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	G.setIdentity();
 	L.setIdentity();
 
-	F = 50*F;
-	G = 30*G;
+	F = 20*F;
+	G = 10*G;
 
 	// NN END
 	/////////////////////////
@@ -346,8 +346,8 @@ void PR2ExplforceControllerClass::update()
 	q = JointKdl2Eigen( q_ );
 	qd = JointVelKdl2Eigen( qdot_ );
 
-	q_m   = q_m + dt*qd_m;
-	qd_m  = qd_m + dt*qdd_m;
+	q_m   = q_m + delT*qd_m;
+	qd_m  = qd_m + delT*qdd_m;
 	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
 
 	// Check for joint limits and reset
@@ -423,10 +423,10 @@ void PR2ExplforceControllerClass::update()
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
 
 	// Wk+1                  = Wk                  +  Wkdot                                                                                                          * dt
-	W_trans_next.transpose() = W_trans.transpose() + (F*hiddenLayer_out*r.transpose() - F*sigmaPrime*V_trans*x*r.transpose() - kappa*F*r.norm()*W_trans.transpose()) * dt;
+	W_trans_next.transpose() = W_trans.transpose() + (F*hiddenLayer_out*r.transpose() - F*sigmaPrime*V_trans*x*r.transpose() - kappa*F*r.norm()*W_trans.transpose()) * delT;
 
-	// Vk+1                  = Vk                  +  Vkdot                                                                                      * dt
-	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * dt;
+	// Vk+1                  = Vk                  +  Vkdot                                                                                      			 * dt
+	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
 
 	// Convert from Eigen to KDL
 	tau_ = JointEigen2Kdl( tau );
