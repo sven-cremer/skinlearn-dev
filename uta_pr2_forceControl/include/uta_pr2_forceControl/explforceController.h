@@ -204,6 +204,9 @@ private:
   urdf::Model urdf_model;
 
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+public:
 
   bool init(pr2_mechanism_model::RobotState *robot,
             ros::NodeHandle &n);
