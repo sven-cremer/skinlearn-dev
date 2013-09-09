@@ -249,21 +249,23 @@ void PR2ExplforceControllerClass::update()
     }
   }
 
+    circle(2) = 0.1 * sin(circle_phase_);
+    circle(1) = 0.1 * (cos(circle_phase_) - 1);
 
     /////////////////////////
 	// System Model
   	// Integrator
-	t_h(0) = tau_h(0);
-	t_h(1) = tau_h(1);
-	t_h(2) = tau_h(2);
-	t_h(3) = tau_h(3);
-	t_h(4) = tau_h(4);
-	t_h(5) = tau_h(5);
-	t_h(6) = tau_h(6);
+	t_h(0) = 0; // tau_h(0);
+	t_h(1) = 0; // tau_h(1);
+	t_h(2) = circle(2); // tau_h(2);
+	t_h(3) = 0; // tau_h(3);
+	t_h(4) = 0; // tau_h(4);
+	t_h(5) = 0; // tau_h(5);
+	t_h(6) = 0; // tau_h(6);
 
 	q_m   = q_m + delT*qd_m;
 	qd_m  = qd_m + delT*qdd_m;
-	// qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
+	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
 
 	// System Model END
 	/////////////////////////
