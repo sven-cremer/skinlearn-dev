@@ -17,7 +17,10 @@
 
 #include "sensor_msgs/JointState.h"
 
+#include <Eigen/StdVector>
 #include <Eigen/Geometry>
+#include <Eigen/Core>
+#include <Eigen/Dense>
 
 #include "ros/ros.h"
 #include <urdf/model.h>
@@ -121,6 +124,7 @@ private:
   SystemVector  qd_m;
   SystemVector 	qdd_m;
   SystemVector 	t_h;
+  SystemVector 	tau;
 
   double delT;
   // System Model END
@@ -129,9 +133,10 @@ private:
   /////////////////////////
   // NN
 
-  enum { Inputs  = 7 }; // n Size of the inputs
+  enum { Inputs  = 14 }; // n Size of the inputs
   enum { Outputs = 7 }; // m Size of the outputs
-  enum { Hidden  = 10 }; // l Size of the hidden layer
+  enum { Hidden  = 7 }; // l Size of the hidden layer
+  enum { Error  = 7 }; // filtered error
 
   Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans;
   Eigen::Matrix<double, Outputs, Hidden>                     W_trans;
@@ -146,20 +151,21 @@ private:
 //  W_trans_next
 //  sigmaPrime
 
-  Eigen::Matrix<double, Inputs+1, 1>      x               ;
-  Eigen::Matrix<double, Outputs, 1>       y               ;
-  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_out ;
-  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_in  ;
-  Eigen::Matrix<double, Outputs, 1>       outputLayer_out ;
-  Eigen::Matrix<double, Outputs, Hidden>  sigmaPrime      ;
-  Eigen::Matrix<double, Inputs, 1>        r               ;
-  Eigen::Matrix<double, Inputs, 1>        vRobust         ;
+  Eigen::Matrix<double, Inputs+1, 1>      x                   ;
+  Eigen::Matrix<double, Outputs, 1>       y                   ;
+  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_out     ;
+  Eigen::Matrix<double, Hidden, Hidden>   hiddenLayerIdentity ;
+  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_in      ;
+  Eigen::Matrix<double, Outputs, 1>       outputLayer_out     ;
+  Eigen::Matrix<double, Outputs, Hidden>  sigmaPrime          ;
+  Eigen::Matrix<double, Error, 1>         r                   ;
+  Eigen::Matrix<double, Outputs, 1>       vRobust             ;
 
-  double  kappa ;
-  double  Kp    ;
-  double  Kd    ;
-  double  Kz    ;
-  double  Zb    ;
+  double  kappa  ;
+  double  Kv     ;
+  double  lambda ;
+  double  Kz     ;
+  double  Zb     ;
 
 //
 //Z.resize(l+n+1,l+m);
@@ -211,6 +217,8 @@ public:
   SystemVector JointKdl2Eigen( KDL::JntArray & joint_ );
 
   SystemVector JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
+
+  KDL::JntArray JointEigen2Kdl( SystemVector & joint );
 
 };
 }

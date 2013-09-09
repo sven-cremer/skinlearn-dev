@@ -155,6 +155,7 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	MmInv = Mm;
 
 	delT  = 0.001;
+
 	// System Model END
 	/////////////////////////
 
@@ -162,12 +163,25 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// NN
 
-	kappa = 0.3;
-	Kp    = 5; // prop. gain for PID inner loop
-	Kd    = 1; //*std::sqrt(Kp); // der. gain for PID inner loop
-	Kz    = 3;
-	Zb    = 100;
+	kappa  = 0.3;
+	Kv     = 5; // prop. gain for PID inner loop
+	lambda = 1; //*std::sqrt(Kp); // der. gain for PID inner loop
+	Kz     = 3;
+	Zb     = 100;
 
+	hiddenLayerIdentity.setIdentity();
+
+	W_trans.setZero();
+	W_trans_next.setZero();
+	V_trans.setZero();
+	V_trans_next.setZero();
+
+	F.setIdentity();
+	G.setIdentity();
+	L.setIdentity();
+
+	F = 50*F;
+	G = 30*G;
 
 	// NN END
 	/////////////////////////
@@ -322,7 +336,7 @@ void PR2ExplforceControllerClass::update()
   	// Integrator
 	t_h(0) = tau_h(0);
 	t_h(1) = tau_h(1);
-	t_h(2) = circle(2); // tau_h(2);
+	t_h(2) = tau_h(2);
 	t_h(3) = tau_h(3);
 	t_h(4) = tau_h(4);
 	t_h(5) = tau_h(5);
@@ -373,25 +387,49 @@ void PR2ExplforceControllerClass::update()
 	V_trans = V_trans_next;
 
 	// Filtered error
-	r = Kd*(qd_m - qd) + L*(q_m - q);
+	r = lambda*(qd_m - qd) + (q_m - q);
 
+	// Robust term
 	Z.block(0,0,Hidden,Outputs) = W_trans.transpose();
 	Z.block(Hidden,Outputs,Inputs+1,Hidden) = V_trans.transpose();
-	double Frob_Z;
-	Frob_Z = Z.norm();
-	vRobust = -Kz*(Frob_Z + Zb)*r;
+	vRobust = /*kappa*r.norm() */- Kz*(Z.norm() + Zb)*r;
+
+	x(0 ) =  q(0);
+	x(1 ) =  q(1);
+	x(2 ) =  q(2);
+	x(3 ) =  q(3);
+	x(4 ) =  q(4);
+	x(5 ) =  q(5);
+	x(6 ) =  q(6);
+	x(7 ) = qd(0);
+	x(8 ) = qd(1);
+	x(9 ) = qd(2);
+	x(10) = qd(3);
+	x(11) = qd(4);
+	x(12) = qd(5);
+	x(13) = qd(6);
+	x(14) = 1;
 
 	hiddenLayer_in = V_trans*x;
 	hiddenLayer_out = sigmoid(hiddenLayer_in);
 	outputLayer_out = W_trans*hiddenLayer_out;
+
 	y = outputLayer_out;
 
-//	sigmaPrime = hiddenLayer_out.asDiagonal()*(Eigen::MatrixXd::Identity(hiddenLayer_out.rows(),hiddenLayer_out.rows()) - Eigen::MatrixXd::Identity(hiddenLayer_out.rows(),hiddenLayer_out.rows())*hiddenLayer_out.asDiagonal());
-//
-//	Eigen::MatrixXd temp = (sigmaPrime.transpose()*W_trans.transpose()*r);
-//	V_trans_next.transpose() = V_trans.transpose() + (G*x*temp.transpose() - kappa*G*r.norm()*V_trans.transpose())*delT;
-//
-//	W_trans_next.transpose() = W_trans.transpose() + (F*hiddenLayer_out*r.transpose() - F*sigmaPrime*V_trans*x*r.transpose() - kappa*F*r.norm()*W_trans.transpose())*delT;
+	// control torques
+	tau = Kv*r + y - vRobust - t_h;
+
+	//
+	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
+
+	// Wk+1                  = Wk                  +  Wkdot                                                                                                          * dt
+	W_trans_next.transpose() = W_trans.transpose() + (F*hiddenLayer_out*r.transpose() - F*sigmaPrime*V_trans*x*r.transpose() - kappa*F*r.norm()*W_trans.transpose()) * dt;
+
+	// Vk+1                  = Vk                  +  Vkdot                                                                                      * dt
+	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * dt;
+
+	// Convert from Eigen to KDL
+	tau_ = JointEigen2Kdl( tau );
 
 	// NN END
 	/////////////////////////
@@ -414,7 +452,6 @@ void PR2ExplforceControllerClass::update()
 	modelState.velocity[4] = t_h(4);
 	modelState.velocity[5] = t_h(5);
 	modelState.velocity[6] = t_h(6);
-
 
 	// And finally send these torques out.
     chain_.setEfforts(tau_);
@@ -469,6 +506,23 @@ PR2ExplforceControllerClass::JointVelKdl2Eigen( KDL::JntArrayVel & joint_ )
 	joint(6) = joint_.qdot(6);
 
 	return joint;
+}
+
+KDL::JntArray
+PR2ExplforceControllerClass::JointEigen2Kdl( SystemVector & joint )
+{
+	KDL::JntArray joint_;
+	joint_.resize(7);
+
+	joint (0) = joint(0);
+	joint_(1) = joint(1);
+	joint_(2) = joint(2);
+	joint_(3) = joint(3);
+	joint_(4) = joint(4);
+	joint_(5) = joint(5);
+	joint_(6) = joint(6);
+
+	return joint_;
 }
 
 Eigen::Matrix<double, PR2ExplforceControllerClass::Hidden, 1>
