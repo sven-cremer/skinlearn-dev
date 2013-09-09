@@ -118,9 +118,9 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// System Model
 
-	double m = 1;
-	double d = 10;
-	double k = 1;
+	double m = 0.01;
+	double d = 0.1;
+	double k = 0.01;
 
 	Mm << m, 0, 0, 0, 0, 0, 0,
 		  0, m, 0, 0, 0, 0, 0,
