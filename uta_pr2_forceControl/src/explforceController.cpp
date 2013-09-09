@@ -306,6 +306,7 @@ void PR2ExplforceControllerClass::update()
 
     /////////////////////////
 	// System Model
+
   	// Integrator
 	t_h(0) = tau_h(0);
 	t_h(1) = tau_h(1);
@@ -314,6 +315,9 @@ void PR2ExplforceControllerClass::update()
 	t_h(4) = tau_h(4);
 	t_h(5) = tau_h(5);
 	t_h(6) = tau_h(6);
+
+	// test
+	hiddenLayer_out = sigmoid(hiddenLayer_out);
 
 	q_m   = q_m + delT*qd_m;
 	qd_m  = qd_m + delT*qdd_m;
@@ -349,6 +353,38 @@ void PR2ExplforceControllerClass::update()
 	/////////////////////////
 
 
+    /////////////////////////
+	// NN
+
+	//		Z.block(0,0,l,m) = W_trans.transpose();
+	//		Z.block(l,m,n+1,l) = V_trans.transpose();
+	//		double Frob_Z;
+	//		Frob_Z = Z.norm();
+	//		vRobust = -Kz*(Frob_Z + Zb)*r;
+
+//	W_trans = W_trans_next;
+//	V_trans = V_trans_next;
+//
+//	// Filtered error
+//	r = Kd*(qd_m - qd) + L*(qDes - q);
+//	x << 1,
+//	   q,
+//	   qDot;
+//
+//	hiddenLayer_in = V_trans*x;
+//	hiddenLayer_out = sigmoid(hiddenLayer_in);
+//	outputLayer_out = W_trans*hiddenLayer_out;
+//	y = outputLayer_out;
+//
+//	sigmaPrime = hiddenLayer_out.asDiagonal()*(Eigen::MatrixXd::Identity(hiddenLayer_out.rows(),hiddenLayer_out.rows()) - Eigen::MatrixXd::Identity(hiddenLayer_out.rows(),hiddenLayer_out.rows())*hiddenLayer_out.asDiagonal());
+//
+//	Eigen::MatrixXd temp = (sigmaPrime.transpose()*W_trans.transpose()*r);
+//	V_trans_next.transpose() = V_trans.transpose() + (G*x*temp.transpose() - kappa*G*r.norm()*V_trans.transpose())*delT;
+//
+//	W_trans_next.transpose() = W_trans.transpose() + (F*hiddenLayer_out*r.transpose() - F*sigmaPrime*V_trans*x*r.transpose() - kappa*F*r.norm()*W_trans.transpose())*delT;
+
+	// NN END
+	/////////////////////////
 
 
 	modelState.header.stamp = robot_state_->getTime();
@@ -394,6 +430,18 @@ void PR2ExplforceControllerClass::update()
 	}
 
 }
+
+
+Eigen::Matrix<double, PR2ExplforceControllerClass::Hidden, 1>
+PR2ExplforceControllerClass::sigmoid( Eigen::Matrix<double, Hidden, 1> & z )
+{
+  for(uint i=0;i<z.size();i++)
+  {
+	z(i) = 1.0/(1.0 + exp(-(double)z(i)));
+  }
+  return z;
+}
+
 
 
 /// Controller stopping in realtime

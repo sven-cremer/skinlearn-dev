@@ -131,8 +131,8 @@ private:
 
   Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans;
   Eigen::Matrix<double, Outputs, Hidden>                     W_trans;
-//  Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans_next;
-//  Eigen::Matrix<double, Outputs, Hidden>                     W_trans_next;
+  Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans_next;
+  Eigen::Matrix<double, Outputs, Hidden>                     W_trans_next;
   Eigen::Matrix<double, Inputs+1, Inputs+1>                  G;
   Eigen::Matrix<double, Hidden, Hidden>                      F;
   Eigen::Matrix<double, Outputs, Outputs>                    L;
@@ -199,6 +199,7 @@ public:
             ros::NodeHandle &n);
   void starting();
   void update();
+  Eigen::Matrix<double, Hidden, 1> sigmoid( Eigen::Matrix<double, Hidden, 1> & z );
   void stopping();
 };
 }
