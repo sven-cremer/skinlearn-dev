@@ -325,17 +325,17 @@ void PR2ExplforceControllerClass::update()
 	q_m(1) = fmax( (double) q_m(1), (double) q_lower(1) );
 	q_m(2) = fmax( (double) q_m(2), (double) q_lower(2) );
 	q_m(3) = fmax( (double) q_m(3), (double) q_lower(3) );
-	q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
+//	q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
 	q_m(5) = fmax( (double) q_m(5), (double) q_lower(5) );
-	q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
+//	q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
 
 	q_m(0) = fmin( (double) q_m(0), (double) q_upper(0) );
 	q_m(1) = fmin( (double) q_m(1), (double) q_upper(1) );
 	q_m(2) = fmin( (double) q_m(2), (double) q_upper(2) );
 	q_m(3) = fmin( (double) q_m(3), (double) q_upper(3) );
-	q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
+//	q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
 	q_m(5) = fmin( (double) q_m(5), (double) q_upper(5) );
-	q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
+//	q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
 
 	qd_m(0) = fmin( (double) qd_m(0), (double) qd_limit(0) );
 	qd_m(1) = fmin( (double) qd_m(1), (double) qd_limit(1) );
@@ -353,21 +353,21 @@ void PR2ExplforceControllerClass::update()
 
 	modelState.header.stamp = robot_state_->getTime();
 
-	modelState.position[0] = q_lower(0);
-	modelState.position[1] = q_lower(1);
-	modelState.position[2] = q_lower(2);
-	modelState.position[3] = q_lower(3);
-	modelState.position[4] = q_lower(4);
-	modelState.position[5] = q_lower(5);
-	modelState.position[6] = q_lower(6);
+	modelState.position[0] = q_m(0);
+	modelState.position[1] = q_m(1);
+	modelState.position[2] = q_m(2);
+	modelState.position[3] = q_m(3);
+	modelState.position[4] = q_m(4);
+	modelState.position[5] = q_m(5);
+	modelState.position[6] = q_m(6);
 
-	modelState.velocity[0] = q_upper(0);
-	modelState.velocity[1] = q_upper(1);
-	modelState.velocity[2] = q_upper(2);
-	modelState.velocity[3] = q_upper(3);
-	modelState.velocity[4] = q_upper(4);
-	modelState.velocity[5] = q_upper(5);
-	modelState.velocity[6] = q_upper(6);
+	modelState.velocity[0] = t_h(0);
+	modelState.velocity[1] = t_h(1);
+	modelState.velocity[2] = t_h(2);
+	modelState.velocity[3] = t_h(3);
+	modelState.velocity[4] = t_h(4);
+	modelState.velocity[5] = t_h(5);
+	modelState.velocity[6] = t_h(6);
 
 
 	// And finally send these torques out.
