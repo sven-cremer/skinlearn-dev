@@ -75,22 +75,22 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   modelState.position.resize(kdl_chain_.getNrOfJoints());
   modelState.velocity.resize(kdl_chain_.getNrOfJoints());
 
-  modelState.name[0] = kdl_chain_.getSegment(7).getJoint().getName();
-  modelState.name[1] = kdl_chain_.getSegment(8).getJoint().getName();
-  modelState.name[2] = kdl_chain_.getSegment(9).getJoint().getName();
-  modelState.name[3] = kdl_chain_.getSegment(3).getJoint().getName();
-  modelState.name[4] = kdl_chain_.getSegment(4).getJoint().getName();
-  modelState.name[5] = kdl_chain_.getSegment(5).getJoint().getName();
-  modelState.name[6] = kdl_chain_.getSegment(6).getJoint().getName();
+  modelState.name[0] = kdl_chain_.getSegment(0).getJoint().getName();
+  modelState.name[1] = kdl_chain_.getSegment(1).getJoint().getName();
+  modelState.name[2] = kdl_chain_.getSegment(2).getJoint().getName();
+  modelState.name[3] = kdl_chain_.getSegment(4).getJoint().getName();
+  modelState.name[4] = kdl_chain_.getSegment(6).getJoint().getName();
+  modelState.name[5] = kdl_chain_.getSegment(7).getJoint().getName();
+  modelState.name[6] = kdl_chain_.getSegment(8).getJoint().getName();
 
-//  q_lower(0) = urdf_model.getJoint(modelState.name[0])->limits->lower;
-//  q_lower(1) = urdf_model.getJoint(modelState.name[1])->limits->lower;
-//  q_lower(2) = urdf_model.getJoint(modelState.name[2])->limits->lower;
-//  q_lower(3) = urdf_model.getJoint(modelState.name[3])->limits->lower;
-//  q_lower(4) = urdf_model.getJoint(modelState.name[4])->limits->lower;
-//  q_lower(5) = urdf_model.getJoint(modelState.name[5])->limits->lower;
-//  q_lower(6) = urdf_model.getJoint(modelState.name[6])->limits->lower;
-//
+  q_lower(0) = urdf_model.getJoint(modelState.name[0])->limits->lower;
+  q_lower(1) = urdf_model.getJoint(modelState.name[1])->limits->lower;
+  q_lower(2) = urdf_model.getJoint(modelState.name[2])->limits->lower;
+  q_lower(3) = urdf_model.getJoint(modelState.name[3])->limits->lower;
+  q_lower(4) = urdf_model.getJoint(modelState.name[4])->limits->lower;
+  q_lower(5) = urdf_model.getJoint(modelState.name[5])->limits->lower;
+  q_lower(6) = urdf_model.getJoint(modelState.name[6])->limits->lower;
+
 //  q_upper(0) = urdf_model.getJoint(modelState.name[0])->limits->upper;
 //  q_upper(1) = urdf_model.getJoint(modelState.name[1])->limits->upper;
 //  q_upper(2) = urdf_model.getJoint(modelState.name[2])->limits->upper;
