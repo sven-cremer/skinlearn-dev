@@ -66,6 +66,10 @@ private:
   KDL::JntArray  qd_m_;         // Model Joint positions
   KDL::JntArray  qdd_m_;        // Model Joint positions
 
+  KDL::JntArray  q_lower;       // Joint position lower limits
+  KDL::JntArray  q_upper;       // Joint position upper limits
+  KDL::JntArray  qd_limit;      // Joint velocity limits
+
   KDL::Frame     x_;            // Tip pose
   KDL::Frame     xd_;           // Tip desired pose
   KDL::Frame     x0_;           // Tip initial pose
