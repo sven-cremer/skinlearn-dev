@@ -445,13 +445,13 @@ void PR2ExplforceControllerClass::update()
 	modelState.position[5] = q_m(5);
 	modelState.position[6] = q_m(6);
 
-	modelState.velocity[0] = t_h(0);
-	modelState.velocity[1] = t_h(1);
-	modelState.velocity[2] = t_h(2);
-	modelState.velocity[3] = t_h(3);
-	modelState.velocity[4] = t_h(4);
-	modelState.velocity[5] = t_h(5);
-	modelState.velocity[6] = t_h(6);
+	modelState.velocity[0] = tau(0);
+	modelState.velocity[1] = tau(1);
+	modelState.velocity[2] = tau(2);
+	modelState.velocity[3] = tau(3);
+	modelState.velocity[4] = tau(4);
+	modelState.velocity[5] = tau(5);
+	modelState.velocity[6] = tau(6);
 
 	// And finally send these torques out.
     chain_.setEfforts(tau_);
