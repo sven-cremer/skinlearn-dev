@@ -242,7 +242,7 @@ void PR2ExplforceControllerClass::update()
   ferr_(2) = r_ftData.wrench.force.z ;
   ferr_(3) = r_ftData.wrench.torque.x;
   ferr_(4) = r_ftData.wrench.torque.y;
-  ferr_(5) = r_ftData.wrench.torque.z;chain_
+  ferr_(5) = r_ftData.wrench.torque.z;
 
 
   for (unsigned int i = 0 ; i < 6 ; i++)
