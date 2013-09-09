@@ -83,29 +83,29 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   modelState.name[5] = kdl_chain_.getSegment(5).getJoint().getName();
   modelState.name[6] = kdl_chain_.getSegment(6).getJoint().getName();
 
-  q_lower(0) = urdf_model.getJoint(modelState.name[0])->limits->lower;
-  q_lower(1) = urdf_model.getJoint(modelState.name[1])->limits->lower;
-  q_lower(2) = urdf_model.getJoint(modelState.name[2])->limits->lower;
-  q_lower(3) = urdf_model.getJoint(modelState.name[3])->limits->lower;
-  q_lower(4) = urdf_model.getJoint(modelState.name[4])->limits->lower;
-  q_lower(5) = urdf_model.getJoint(modelState.name[5])->limits->lower;
-  q_lower(6) = urdf_model.getJoint(modelState.name[6])->limits->lower;
-
-  q_upper(0) = urdf_model.getJoint(modelState.name[0])->limits->upper;
-  q_upper(1) = urdf_model.getJoint(modelState.name[1])->limits->upper;
-  q_upper(2) = urdf_model.getJoint(modelState.name[2])->limits->upper;
-  q_upper(3) = urdf_model.getJoint(modelState.name[3])->limits->upper;
-  q_upper(4) = urdf_model.getJoint(modelState.name[4])->limits->upper;
-  q_upper(5) = urdf_model.getJoint(modelState.name[5])->limits->upper;
-  q_upper(6) = urdf_model.getJoint(modelState.name[6])->limits->upper;
-
-  qd_limit(0) = urdf_model.getJoint(modelState.name[0])->limits->velocity;
-  qd_limit(1) = urdf_model.getJoint(modelState.name[1])->limits->velocity;
-  qd_limit(2) = urdf_model.getJoint(modelState.name[2])->limits->velocity;
-  qd_limit(3) = urdf_model.getJoint(modelState.name[3])->limits->velocity;
-  qd_limit(4) = urdf_model.getJoint(modelState.name[4])->limits->velocity;
-  qd_limit(5) = urdf_model.getJoint(modelState.name[5])->limits->velocity;
-  qd_limit(6) = urdf_model.getJoint(modelState.name[6])->limits->velocity;
+//  q_lower(0) = urdf_model.getJoint(modelState.name[0])->limits->lower;
+//  q_lower(1) = urdf_model.getJoint(modelState.name[1])->limits->lower;
+//  q_lower(2) = urdf_model.getJoint(modelState.name[2])->limits->lower;
+//  q_lower(3) = urdf_model.getJoint(modelState.name[3])->limits->lower;
+//  q_lower(4) = urdf_model.getJoint(modelState.name[4])->limits->lower;
+//  q_lower(5) = urdf_model.getJoint(modelState.name[5])->limits->lower;
+//  q_lower(6) = urdf_model.getJoint(modelState.name[6])->limits->lower;
+//
+//  q_upper(0) = urdf_model.getJoint(modelState.name[0])->limits->upper;
+//  q_upper(1) = urdf_model.getJoint(modelState.name[1])->limits->upper;
+//  q_upper(2) = urdf_model.getJoint(modelState.name[2])->limits->upper;
+//  q_upper(3) = urdf_model.getJoint(modelState.name[3])->limits->upper;
+//  q_upper(4) = urdf_model.getJoint(modelState.name[4])->limits->upper;
+//  q_upper(5) = urdf_model.getJoint(modelState.name[5])->limits->upper;
+//  q_upper(6) = urdf_model.getJoint(modelState.name[6])->limits->upper;
+//
+//  qd_limit(0) = urdf_model.getJoint(modelState.name[0])->limits->velocity;
+//  qd_limit(1) = urdf_model.getJoint(modelState.name[1])->limits->velocity;
+//  qd_limit(2) = urdf_model.getJoint(modelState.name[2])->limits->velocity;
+//  qd_limit(3) = urdf_model.getJoint(modelState.name[3])->limits->velocity;
+//  qd_limit(4) = urdf_model.getJoint(modelState.name[4])->limits->velocity;
+//  qd_limit(5) = urdf_model.getJoint(modelState.name[5])->limits->velocity;
+//  qd_limit(6) = urdf_model.getJoint(modelState.name[6])->limits->velocity;
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
@@ -320,29 +320,30 @@ void PR2ExplforceControllerClass::update()
 	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
 
 	// Check for joint limits and reset
-	// q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
-	// q_m(1) = fmax( (double) q_m(1), (double) q_lower(1) );
-	// q_m(2) = fmax( (double) q_m(2), (double) q_lower(2) );
-	// q_m(3) = fmax( (double) q_m(3), (double) q_lower(3) );
-	// q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
-	// q_m(5) = fmax( (double) q_m(5), (double) q_lower(5) );
-	// q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
-    //
-	// q_m(0) = fmin( (double) q_m(0), (double) q_upper(0) );
-	// q_m(1) = fmin( (double) q_m(1), (double) q_upper(1) );
-	// q_m(2) = fmin( (double) q_m(2), (double) q_upper(2) );
-	// q_m(3) = fmin( (double) q_m(3), (double) q_upper(3) );
-	// q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
-	// q_m(5) = fmin( (double) q_m(5), (double) q_upper(5) );
-	// q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
-    //
-	// qd_m(0) = fmin( (double) qd_m(0), (double) qd_limit(0) );
-	// qd_m(1) = fmin( (double) qd_m(1), (double) qd_limit(1) );
-	// qd_m(2) = fmin( (double) qd_m(2), (double) qd_limit(2) );
-	// qd_m(3) = fmin( (double) qd_m(3), (double) qd_limit(3) );
-	// qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
-	// qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
-	// qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
+	// (condition) ? (if_true) : (if_false)
+//	q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
+//	q_m(1) = fmax( (double) q_m(1), (double) q_lower(1) );
+//	q_m(2) = fmax( (double) q_m(2), (double) q_lower(2) );
+//	q_m(3) = fmax( (double) q_m(3), (double) q_lower(3) );
+//	q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
+//	q_m(5) = fmax( (double) q_m(5), (double) q_lower(5) );
+//	q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
+//
+//	q_m(0) = fmin( (double) q_m(0), (double) q_upper(0) );
+//	q_m(1) = fmin( (double) q_m(1), (double) q_upper(1) );
+//	q_m(2) = fmin( (double) q_m(2), (double) q_upper(2) );
+//	q_m(3) = fmin( (double) q_m(3), (double) q_upper(3) );
+//	q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
+//	q_m(5) = fmin( (double) q_m(5), (double) q_upper(5) );
+//	q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
+//
+//	qd_m(0) = fmin( (double) qd_m(0), (double) qd_limit(0) );
+//	qd_m(1) = fmin( (double) qd_m(1), (double) qd_limit(1) );
+//	qd_m(2) = fmin( (double) qd_m(2), (double) qd_limit(2) );
+//	qd_m(3) = fmin( (double) qd_m(3), (double) qd_limit(3) );
+//	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
+//	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
+//	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
 
 	// System Model END
 	/////////////////////////
