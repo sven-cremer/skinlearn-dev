@@ -75,9 +75,9 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   modelState.position.resize(kdl_chain_.getNrOfJoints());
   modelState.velocity.resize(kdl_chain_.getNrOfJoints());
 
-  modelState.name[0] = kdl_chain_.getSegment(0).getJoint().getName();
-  modelState.name[1] = kdl_chain_.getSegment(1).getJoint().getName();
-  modelState.name[2] = kdl_chain_.getSegment(2).getJoint().getName();
+  modelState.name[0] = kdl_chain_.getSegment(7).getJoint().getName();
+  modelState.name[1] = kdl_chain_.getSegment(8).getJoint().getName();
+  modelState.name[2] = kdl_chain_.getSegment(9).getJoint().getName();
   modelState.name[3] = kdl_chain_.getSegment(3).getJoint().getName();
   modelState.name[4] = kdl_chain_.getSegment(4).getJoint().getName();
   modelState.name[5] = kdl_chain_.getSegment(5).getJoint().getName();
