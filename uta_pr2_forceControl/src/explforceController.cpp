@@ -75,37 +75,37 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   modelState.position.resize(kdl_chain_.getNrOfJoints());
   modelState.velocity.resize(kdl_chain_.getNrOfJoints());
 
-  modelState.name[0] = kdl_chain_.getSegment(0).getJoint().getName();
-  modelState.name[1] = kdl_chain_.getSegment(1).getJoint().getName();
-  modelState.name[2] = kdl_chain_.getSegment(2).getJoint().getName();
-  modelState.name[3] = kdl_chain_.getSegment(4).getJoint().getName();
-  modelState.name[4] = kdl_chain_.getSegment(6).getJoint().getName();
-  modelState.name[5] = kdl_chain_.getSegment(7).getJoint().getName();
-  modelState.name[6] = kdl_chain_.getSegment(8).getJoint().getName();
+  modelState.name[0] = kdl_chain_.getSegment(0).getJoint().getName(); // TODO test this stuff, better way to get joint names...
+  modelState.name[1] = kdl_chain_.getSegment(1).getJoint().getName(); // TODO test this stuff, better way to get joint names...
+  modelState.name[2] = kdl_chain_.getSegment(2).getJoint().getName(); // TODO test this stuff, better way to get joint names...
+  modelState.name[3] = kdl_chain_.getSegment(4).getJoint().getName(); // TODO test this stuff, better way to get joint names...
+  modelState.name[4] = kdl_chain_.getSegment(6).getJoint().getName(); // TODO test this stuff, better way to get joint names...
+  modelState.name[5] = kdl_chain_.getSegment(7).getJoint().getName(); // TODO test this stuff, better way to get joint names...
+  modelState.name[6] = kdl_chain_.getSegment(8).getJoint().getName(); // TODO test this stuff, better way to get joint names...
 
-  q_lower(0) = urdf_model.getJoint("r_shoulder_pan_joint")->limits->lower;
-  q_lower(1) = urdf_model.getJoint("r_shoulder_lift_joint")->limits->lower;
+  q_lower(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->lower;
+  q_lower(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->lower;
   q_lower(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->lower;
-  q_lower(3) = urdf_model.getJoint("r_elbow_flex_joint")->limits->lower;
-  q_lower(4) = urdf_model.getJoint("r_forearm_roll_joint")->limits->lower;
-  q_lower(5) = urdf_model.getJoint("r_wrist_flex_joint")->limits->lower;
-  q_lower(6) = urdf_model.getJoint("r_wrist_roll_joint")->limits->lower;
+  q_lower(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->lower;
+  q_lower(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->lower;
+  q_lower(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->lower;
+  q_lower(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->lower;
 
-//  q_upper(0) = urdf_model.getJoint(modelState.name[0])->limits->upper;
-//  q_upper(1) = urdf_model.getJoint(modelState.name[1])->limits->upper;
-//  q_upper(2) = urdf_model.getJoint(modelState.name[2])->limits->upper;
-//  q_upper(3) = urdf_model.getJoint(modelState.name[3])->limits->upper;
-//  q_upper(4) = urdf_model.getJoint(modelState.name[4])->limits->upper;
-//  q_upper(5) = urdf_model.getJoint(modelState.name[5])->limits->upper;
-//  q_upper(6) = urdf_model.getJoint(modelState.name[6])->limits->upper;
-//
-//  qd_limit(0) = urdf_model.getJoint(modelState.name[0])->limits->velocity;
-//  qd_limit(1) = urdf_model.getJoint(modelState.name[1])->limits->velocity;
-//  qd_limit(2) = urdf_model.getJoint(modelState.name[2])->limits->velocity;
-//  qd_limit(3) = urdf_model.getJoint(modelState.name[3])->limits->velocity;
-//  qd_limit(4) = urdf_model.getJoint(modelState.name[4])->limits->velocity;
-//  qd_limit(5) = urdf_model.getJoint(modelState.name[5])->limits->velocity;
-//  qd_limit(6) = urdf_model.getJoint(modelState.name[6])->limits->velocity;
+  q_upper(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->upper;
+  q_upper(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->upper;
+  q_upper(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->upper;
+  q_upper(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->upper;
+  q_upper(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->upper;
+  q_upper(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->upper;
+  q_upper(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->upper;
+
+  qd_limit(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->velocity;
+  qd_limit(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->velocity;
+  qd_limit(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->velocity;
+  qd_limit(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->velocity;
+  qd_limit(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->velocity;
+  qd_limit(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->velocity;
+  qd_limit(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->velocity;
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
