@@ -113,6 +113,10 @@ private:
   SystemMatrix  Km;
   SystemMatrix  MmInv;
 
+  SystemVector	q;
+  SystemVector  qd;
+  SystemVector 	qdd;
+
   SystemVector	q_m;
   SystemVector  qd_m;
   SystemVector 	qdd_m;
@@ -199,7 +203,14 @@ public:
             ros::NodeHandle &n);
   void starting();
   void update();
-  Eigen::Matrix<double, Hidden, 1> sigmoid( Eigen::Matrix<double, Hidden, 1> & z );
   void stopping();
+
+  Eigen::Matrix<double, Hidden, 1>
+  sigmoid( Eigen::Matrix<double, Hidden, 1> & z );
+
+  SystemVector JointKdl2Eigen( KDL::JntArray & joint_ );
+
+  SystemVector JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
+
 };
 }

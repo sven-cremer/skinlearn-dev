@@ -159,6 +159,18 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 
 
+	/////////////////////////
+	// NN
+
+	kappa = 0.3;
+	Kp    = 5; // prop. gain for PID inner loop
+	Kd    = 1; //*std::sqrt(Kp); // der. gain for PID inner loop
+	Kz    = 3;
+	Zb    = 100;
+
+
+	// NN END
+	/////////////////////////
 
   /* get a handle to the hardware interface */
   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
@@ -316,11 +328,12 @@ void PR2ExplforceControllerClass::update()
 	t_h(5) = tau_h(5);
 	t_h(6) = tau_h(6);
 
-	// test
-	hiddenLayer_out = sigmoid(hiddenLayer_out);
+	// Current joint positions and velocities
+	q = JointKdl2Eigen( q_ );
+	qd = JointVelKdl2Eigen( qdot_ );
 
-	q_m   = q_m + delT*qd_m;
-	qd_m  = qd_m + delT*qdd_m;
+	q_m   = q_m + dt*qd_m;
+	qd_m  = qd_m + dt*qdd_m;
 	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
 
 	// Check for joint limits and reset
@@ -356,26 +369,23 @@ void PR2ExplforceControllerClass::update()
     /////////////////////////
 	// NN
 
-	//		Z.block(0,0,l,m) = W_trans.transpose();
-	//		Z.block(l,m,n+1,l) = V_trans.transpose();
-	//		double Frob_Z;
-	//		Frob_Z = Z.norm();
-	//		vRobust = -Kz*(Frob_Z + Zb)*r;
+	W_trans = W_trans_next;
+	V_trans = V_trans_next;
 
-//	W_trans = W_trans_next;
-//	V_trans = V_trans_next;
-//
-//	// Filtered error
-//	r = Kd*(qd_m - qd) + L*(qDes - q);
-//	x << 1,
-//	   q,
-//	   qDot;
-//
-//	hiddenLayer_in = V_trans*x;
-//	hiddenLayer_out = sigmoid(hiddenLayer_in);
-//	outputLayer_out = W_trans*hiddenLayer_out;
-//	y = outputLayer_out;
-//
+	// Filtered error
+	r = Kd*(qd_m - qd) + L*(q_m - q);
+
+	Z.block(0,0,Hidden,Outputs) = W_trans.transpose();
+	Z.block(Hidden,Outputs,Inputs+1,Hidden) = V_trans.transpose();
+	double Frob_Z;
+	Frob_Z = Z.norm();
+	vRobust = -Kz*(Frob_Z + Zb)*r;
+
+	hiddenLayer_in = V_trans*x;
+	hiddenLayer_out = sigmoid(hiddenLayer_in);
+	outputLayer_out = W_trans*hiddenLayer_out;
+	y = outputLayer_out;
+
 //	sigmaPrime = hiddenLayer_out.asDiagonal()*(Eigen::MatrixXd::Identity(hiddenLayer_out.rows(),hiddenLayer_out.rows()) - Eigen::MatrixXd::Identity(hiddenLayer_out.rows(),hiddenLayer_out.rows())*hiddenLayer_out.asDiagonal());
 //
 //	Eigen::MatrixXd temp = (sigmaPrime.transpose()*W_trans.transpose()*r);
@@ -431,6 +441,35 @@ void PR2ExplforceControllerClass::update()
 
 }
 
+PR2ExplforceControllerClass::SystemVector
+PR2ExplforceControllerClass::JointKdl2Eigen( KDL::JntArray & joint_ )
+{
+	SystemVector joint;
+	joint(0) = joint_(0);
+	joint(1) = joint_(1);
+	joint(2) = joint_(2);
+	joint(3) = joint_(3);
+	joint(4) = joint_(4);
+	joint(5) = joint_(5);
+	joint(6) = joint_(6);
+
+	return joint;
+}
+
+PR2ExplforceControllerClass::SystemVector
+PR2ExplforceControllerClass::JointVelKdl2Eigen( KDL::JntArrayVel & joint_ )
+{
+	SystemVector joint;
+	joint(0) = joint_.qdot(0);
+	joint(1) = joint_.qdot(1);
+	joint(2) = joint_.qdot(2);
+	joint(3) = joint_.qdot(3);
+	joint(4) = joint_.qdot(4);
+	joint(5) = joint_.qdot(5);
+	joint(6) = joint_.qdot(6);
+
+	return joint;
+}
 
 Eigen::Matrix<double, PR2ExplforceControllerClass::Hidden, 1>
 PR2ExplforceControllerClass::sigmoid( Eigen::Matrix<double, Hidden, 1> & z )
