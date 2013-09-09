@@ -28,11 +28,11 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
 
-rosbuild_add_library(pr2_controller_lib src/explforceController.cpp)
+rosbuild_add_library(pr2_controller_lib src/explforceController.cpp
+										src/neuroadptController.cpp )
 #					src/cartesianController.cpp
 #					src/explforceController.cpp
 #					src/impedanceController.cpp
-#					src/neuroadptController.cpp)
 
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
