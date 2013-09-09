@@ -321,29 +321,29 @@ void PR2ExplforceControllerClass::update()
 
 	// Check for joint limits and reset
 	// (condition) ? (if_true) : (if_false)
-//	q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
-//	q_m(1) = fmax( (double) q_m(1), (double) q_lower(1) );
-//	q_m(2) = fmax( (double) q_m(2), (double) q_lower(2) );
-//	q_m(3) = fmax( (double) q_m(3), (double) q_lower(3) );
-//	q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
-//	q_m(5) = fmax( (double) q_m(5), (double) q_lower(5) );
-//	q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
-//
-//	q_m(0) = fmin( (double) q_m(0), (double) q_upper(0) );
-//	q_m(1) = fmin( (double) q_m(1), (double) q_upper(1) );
-//	q_m(2) = fmin( (double) q_m(2), (double) q_upper(2) );
-//	q_m(3) = fmin( (double) q_m(3), (double) q_upper(3) );
-//	q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
-//	q_m(5) = fmin( (double) q_m(5), (double) q_upper(5) );
-//	q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
-//
-//	qd_m(0) = fmin( (double) qd_m(0), (double) qd_limit(0) );
-//	qd_m(1) = fmin( (double) qd_m(1), (double) qd_limit(1) );
-//	qd_m(2) = fmin( (double) qd_m(2), (double) qd_limit(2) );
-//	qd_m(3) = fmin( (double) qd_m(3), (double) qd_limit(3) );
-//	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
-//	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
-//	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
+	q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
+	q_m(1) = fmax( (double) q_m(1), (double) q_lower(1) );
+	q_m(2) = fmax( (double) q_m(2), (double) q_lower(2) );
+	q_m(3) = fmax( (double) q_m(3), (double) q_lower(3) );
+	q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
+	q_m(5) = fmax( (double) q_m(5), (double) q_lower(5) );
+	q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
+
+	q_m(0) = fmin( (double) q_m(0), (double) q_upper(0) );
+	q_m(1) = fmin( (double) q_m(1), (double) q_upper(1) );
+	q_m(2) = fmin( (double) q_m(2), (double) q_upper(2) );
+	q_m(3) = fmin( (double) q_m(3), (double) q_upper(3) );
+	q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
+	q_m(5) = fmin( (double) q_m(5), (double) q_upper(5) );
+	q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
+
+	qd_m(0) = fmin( (double) qd_m(0), (double) qd_limit(0) );
+	qd_m(1) = fmin( (double) qd_m(1), (double) qd_limit(1) );
+	qd_m(2) = fmin( (double) qd_m(2), (double) qd_limit(2) );
+	qd_m(3) = fmin( (double) qd_m(3), (double) qd_limit(3) );
+	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
+	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
+	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
 
 	// System Model END
 	/////////////////////////
