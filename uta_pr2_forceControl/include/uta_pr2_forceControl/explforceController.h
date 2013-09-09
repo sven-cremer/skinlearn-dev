@@ -122,6 +122,75 @@ private:
   // System Model END
   /////////////////////////
 
+  /////////////////////////
+  // NN
+
+  enum { Inputs  = 7 }; // n Size of the inputs
+  enum { Outputs = 7 }; // m Size of the outputs
+  enum { Hidden  = 10 }; // l Size of the hidden layer
+
+  Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans;
+  Eigen::Matrix<double, Outputs, Hidden>                     W_trans;
+//  Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans_next;
+//  Eigen::Matrix<double, Outputs, Hidden>                     W_trans_next;
+  Eigen::Matrix<double, Inputs+1, Inputs+1>                  G;
+  Eigen::Matrix<double, Hidden, Hidden>                      F;
+  Eigen::Matrix<double, Outputs, Outputs>                    L;
+  Eigen::Matrix<double, Hidden+Inputs+1, Hidden+Outputs>     Z;
+
+//  V_trans_next
+//  W_trans_next
+//  sigmaPrime
+
+  Eigen::Matrix<double, Inputs+1, 1>      x               ;
+  Eigen::Matrix<double, Outputs, 1>       y               ;
+  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_out ;
+  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_in  ;
+  Eigen::Matrix<double, Outputs, 1>       outputLayer_out ;
+  Eigen::Matrix<double, Outputs, Hidden>  sigmaPrime      ;
+  Eigen::Matrix<double, Inputs, 1>        r               ;
+  Eigen::Matrix<double, Inputs, 1>        vRobust         ;
+
+  double  kappa ;
+  double  Kp    ;
+  double  Kd    ;
+  double  Kz    ;
+  double  Zb    ;
+
+//
+//Z.resize(l+n+1,l+m);
+//Z = Eigen::MatrixXd::Zero(l+n+1,l+m);
+//Z.block(0,0,l,m) = W_trans.transpose();
+//Z.block(l,m,n+1,l) = V_trans.transpose();
+//
+//r.resize(n,1);
+//r = Eigen::VectorXd::Zero(n,1);
+//
+//vRobust.resize(n,1);
+//vRobust = Eigen::VectorXd::Zero(n,1);
+//
+//x.resize(n + 1,1);
+//x = Eigen::VectorXd::Random(n + 1,1);
+//x(0) = 1;
+//
+//y.resize(m,1);
+//y = Eigen::VectorXd::Random(m,1);
+//
+//hiddenLayer_in.resize(l,1);
+//hiddenLayer_in = Eigen::VectorXd::Zero(l,1);
+//
+//hiddenLayer_out.resize(l,1);
+//hiddenLayer_out = Eigen::VectorXd::Zero(l,1);
+//
+//outputLayer_out.resize(m,1);
+//outputLayer_out = Eigen::VectorXd::Zero(m,1);
+//
+//sigmaPrime.resize(m, l);
+//sigmaPrime = Eigen::MatrixXd::Zero(l, l);
+
+  // NN END
+  /////////////////////////
+
   urdf::Model urdf_model;
 
 public:
