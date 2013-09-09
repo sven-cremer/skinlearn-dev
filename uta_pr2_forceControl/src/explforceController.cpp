@@ -275,7 +275,7 @@ void PR2ExplforceControllerClass::update()
 
 	modelState.header.stamp = robot_state_->getTime();
 
-	modelState.position[1] = q_m(0);
+	modelState.position[0] = q_m(0);
 	modelState.position[1] = q_m(1);
 	modelState.position[2] = q_m(2);
 	modelState.position[3] = q_m(3);
