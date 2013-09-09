@@ -83,13 +83,13 @@ bool PR2ExplforceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   modelState.name[5] = kdl_chain_.getSegment(7).getJoint().getName();
   modelState.name[6] = kdl_chain_.getSegment(8).getJoint().getName();
 
-  q_lower(0) = urdf_model.getJoint(modelState.name[0])->limits->lower;
-  q_lower(1) = urdf_model.getJoint(modelState.name[1])->limits->lower;
-  q_lower(2) = urdf_model.getJoint(modelState.name[2])->limits->lower;
-  q_lower(3) = urdf_model.getJoint(modelState.name[3])->limits->lower;
-  q_lower(4) = urdf_model.getJoint(modelState.name[4])->limits->lower;
-  q_lower(5) = urdf_model.getJoint(modelState.name[5])->limits->lower;
-  q_lower(6) = urdf_model.getJoint(modelState.name[6])->limits->lower;
+  q_lower(0) = urdf_model.getJoint("r_shoulder_pan_joint")->limits->lower;
+  q_lower(1) = urdf_model.getJoint("r_shoulder_lift_joint")->limits->lower;
+  q_lower(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->lower;
+  q_lower(3) = urdf_model.getJoint("r_elbow_flex_joint")->limits->lower;
+  q_lower(4) = urdf_model.getJoint("r_forearm_roll_joint")->limits->lower;
+  q_lower(5) = urdf_model.getJoint("r_wrist_flex_joint")->limits->lower;
+  q_lower(6) = urdf_model.getJoint("r_wrist_roll_joint")->limits->lower;
 
 //  q_upper(0) = urdf_model.getJoint(modelState.name[0])->limits->upper;
 //  q_upper(1) = urdf_model.getJoint(modelState.name[1])->limits->upper;
