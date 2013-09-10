@@ -180,8 +180,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	G.setIdentity();
 	L.setIdentity();
 
-	F = 20*F;
-	G = 10*G;
+	F = 10*F;
+	G = 5*G;
 
 	// NN END
 	/////////////////////////
