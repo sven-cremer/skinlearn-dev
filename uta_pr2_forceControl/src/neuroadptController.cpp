@@ -392,7 +392,7 @@ void PR2NeuroadptControllerClass::update()
 	// Robust term
 	Z.block(0,0,Hidden,Outputs) = W_trans.transpose();
 	Z.block(Hidden,Outputs,Inputs+1,Hidden) = V_trans.transpose();
-	vRobust = /*kappa*r.norm() */- Kz*(Z.norm() + Zb)*r;
+	vRobust = kappa*r.norm()*vRobust.Ones(); /*- Kz*(Z.norm() + Zb)*r*/;
 
 	x(0 ) =  q(0);
 	x(1 ) =  q(1);
@@ -417,7 +417,7 @@ void PR2NeuroadptControllerClass::update()
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv*r + y /*- vRobust*/ - t_h;
+	tau = Kv*r + y - vRobust - t_h;
 
 	//
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
