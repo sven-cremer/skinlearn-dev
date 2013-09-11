@@ -1,0 +1,15 @@
+<package>
+  <description brief="neuroAdaptiveSim">
+
+     neuroAdaptiveSim
+
+  </description>
+  <author>isura</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/neuroAdaptiveSim</url>
+  <depend package="rbdl"/>
+
+</package>
+
+
