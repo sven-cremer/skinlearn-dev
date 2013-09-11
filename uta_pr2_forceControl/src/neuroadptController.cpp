@@ -383,7 +383,7 @@ void PR2NeuroadptControllerClass::update()
 	q_m(0)  = 0;
 	q_m(1)  = 0;
 	q_m(2)  = 0;
-	q_m(3)  = 0.5 * (sin(circle_phase_) + 1 );
+	q_m(3)  = - 0.5 * (sin(circle_phase_) + 1 );
 	q_m(4)  = 0;
 	q_m(5)  = 0;
 	q_m(6)  = 0;
