@@ -1,0 +1,1736 @@
+# ./bin/rbdlModelTest 
+[ INFO]: Successfully parsed URDF file
+joint 'base_footprint_joint' child link 'base_link type = 6
+  joint 'base_bellow_joint' child link 'base_bellow_link type = 6
+  joint 'base_laser_joint' child link 'base_laser_link type = 6
+  joint 'bl_caster_rotation_joint' child link 'bl_caster_rotation_link type = 2
+    joint 'bl_caster_l_wheel_joint' child link 'bl_caster_l_wheel_link type = 2
+    joint 'bl_caster_r_wheel_joint' child link 'bl_caster_r_wheel_link type = 2
+  joint 'br_caster_rotation_joint' child link 'br_caster_rotation_link type = 2
+    joint 'br_caster_l_wheel_joint' child link 'br_caster_l_wheel_link type = 2
+    joint 'br_caster_r_wheel_joint' child link 'br_caster_r_wheel_link type = 2
+  joint 'fl_caster_rotation_joint' child link 'fl_caster_rotation_link type = 2
+    joint 'fl_caster_l_wheel_joint' child link 'fl_caster_l_wheel_link type = 2
+    joint 'fl_caster_r_wheel_joint' child link 'fl_caster_r_wheel_link type = 2
+  joint 'fr_caster_rotation_joint' child link 'fr_caster_rotation_link type = 2
+    joint 'fr_caster_l_wheel_joint' child link 'fr_caster_l_wheel_link type = 2
+    joint 'fr_caster_r_wheel_joint' child link 'fr_caster_r_wheel_link type = 2
+  joint 'torso_lift_joint' child link 'torso_lift_link type = 3
+    joint 'head_pan_joint' child link 'head_pan_link type = 1
+      joint 'head_tilt_joint' child link 'head_tilt_link type = 1
+        joint 'head_plate_frame_joint' child link 'head_plate_frame type = 6
+          joint 'head_mount_joint' child link 'head_mount_link type = 6
+            joint 'head_mount_kinect_ir_joint' child link 'head_mount_kinect_ir_link type = 6
+              joint 'head_mount_kinect_ir_optical_frame_joint' child link 'head_mount_kinect_ir_optical_frame type = 6
+              joint 'head_mount_kinect_rgb_joint' child link 'head_mount_kinect_rgb_link type = 6
+                joint 'head_mount_kinect_rgb_optical_frame_joint' child link 'head_mount_kinect_rgb_optical_frame type = 6
+            joint 'head_mount_prosilica_joint' child link 'head_mount_prosilica_link type = 6
+              joint 'head_mount_prosilica_optical_frame_joint' child link 'head_mount_prosilica_optical_frame type = 6
+          joint 'projector_wg6802418_frame_joint' child link 'projector_wg6802418_frame type = 6
+            joint 'projector_wg6802418_child_frame_joint' child link 'projector_wg6802418_child_frame type = 6
+          joint 'sensor_mount_frame_joint' child link 'sensor_mount_link type = 6
+            joint 'double_stereo_frame_joint' child link 'double_stereo_link type = 6
+              joint 'narrow_stereo_frame_joint' child link 'narrow_stereo_link type = 6
+                joint 'narrow_stereo_gazebo_l_stereo_camera_frame_joint' child link 'narrow_stereo_gazebo_l_stereo_camera_frame type = 6
+                  joint 'narrow_stereo_gazebo_l_stereo_camera_optical_frame_joint' child link 'narrow_stereo_gazebo_l_stereo_camera_optical_frame type = 6
+                  joint 'narrow_stereo_gazebo_r_stereo_camera_frame_joint' child link 'narrow_stereo_gazebo_r_stereo_camera_frame type = 6
+                    joint 'narrow_stereo_gazebo_r_stereo_camera_optical_frame_joint' child link 'narrow_stereo_gazebo_r_stereo_camera_optical_frame type = 6
+                joint 'narrow_stereo_optical_frame_joint' child link 'narrow_stereo_optical_frame type = 6
+              joint 'wide_stereo_frame_joint' child link 'wide_stereo_link type = 6
+                joint 'wide_stereo_gazebo_l_stereo_camera_frame_joint' child link 'wide_stereo_gazebo_l_stereo_camera_frame type = 6
+                  joint 'wide_stereo_gazebo_l_stereo_camera_optical_frame_joint' child link 'wide_stereo_gazebo_l_stereo_camera_optical_frame type = 6
+                  joint 'wide_stereo_gazebo_r_stereo_camera_frame_joint' child link 'wide_stereo_gazebo_r_stereo_camera_frame type = 6
+                    joint 'wide_stereo_gazebo_r_stereo_camera_optical_frame_joint' child link 'wide_stereo_gazebo_r_stereo_camera_optical_frame type = 6
+                joint 'wide_stereo_optical_frame_joint' child link 'wide_stereo_optical_frame type = 6
+            joint 'high_def_frame_joint' child link 'high_def_frame type = 6
+              joint 'high_def_optical_frame_joint' child link 'high_def_optical_frame type = 6
+    joint 'imu_joint' child link 'imu_link type = 6
+    joint 'l_shoulder_pan_joint' child link 'l_shoulder_pan_link type = 1
+      joint 'l_shoulder_lift_joint' child link 'l_shoulder_lift_link type = 1
+        joint 'l_upper_arm_roll_joint' child link 'l_upper_arm_roll_link type = 1
+          joint 'l_upper_arm_joint' child link 'l_upper_arm_link type = 6
+            joint 'l_elbow_flex_joint' child link 'l_elbow_flex_link type = 1
+              joint 'l_forearm_roll_joint' child link 'l_forearm_roll_link type = 2
+                joint 'l_forearm_cam_frame_joint' child link 'l_forearm_cam_frame type = 6
+                  joint 'l_forearm_cam_optical_frame_joint' child link 'l_forearm_cam_optical_frame type = 6
+                joint 'l_forearm_joint' child link 'l_forearm_link type = 6
+                  joint 'l_wrist_flex_joint' child link 'l_wrist_flex_link type = 1
+                    joint 'l_wrist_roll_joint' child link 'l_wrist_roll_link type = 2
+                      joint 'l_gripper_palm_joint' child link 'l_gripper_palm_link type = 6
+                        joint 'l_gripper_l_finger_joint' child link 'l_gripper_l_finger_link type = 1
+                          joint 'l_gripper_l_finger_tip_joint' child link 'l_gripper_l_finger_tip_link type = 1
+                        joint 'l_gripper_led_joint' child link 'l_gripper_led_frame type = 6
+                        joint 'l_gripper_motor_accelerometer_joint' child link 'l_gripper_motor_accelerometer_link type = 6
+                        joint 'l_gripper_motor_slider_joint' child link 'l_gripper_motor_slider_link type = 3
+                          joint 'l_gripper_motor_screw_joint' child link 'l_gripper_motor_screw_link type = 2
+                        joint 'l_gripper_r_finger_joint' child link 'l_gripper_r_finger_link type = 1
+                          joint 'l_gripper_r_finger_tip_joint' child link 'l_gripper_r_finger_tip_link type = 1
+                            joint 'l_gripper_joint' child link 'l_gripper_l_finger_tip_frame type = 3
+                        joint 'l_gripper_tool_joint' child link 'l_gripper_tool_frame type = 6
+    joint 'l_torso_lift_side_plate_joint' child link 'l_torso_lift_side_plate_link type = 6
+    joint 'laser_tilt_mount_joint' child link 'laser_tilt_mount_link type = 1
+      joint 'laser_tilt_joint' child link 'laser_tilt_link type = 6
+    joint 'r_shoulder_pan_joint' child link 'r_shoulder_pan_link type = 1
+      joint 'r_shoulder_lift_joint' child link 'r_shoulder_lift_link type = 1
+        joint 'r_upper_arm_roll_joint' child link 'r_upper_arm_roll_link type = 1
+          joint 'r_upper_arm_joint' child link 'r_upper_arm_link type = 6
+            joint 'r_elbow_flex_joint' child link 'r_elbow_flex_link type = 1
+              joint 'r_forearm_roll_joint' child link 'r_forearm_roll_link type = 2
+                joint 'r_forearm_cam_frame_joint' child link 'r_forearm_cam_frame type = 6
+                  joint 'r_forearm_cam_optical_frame_joint' child link 'r_forearm_cam_optical_frame type = 6
+                joint 'r_forearm_joint' child link 'r_forearm_link type = 6
+                  joint 'r_wrist_flex_joint' child link 'r_wrist_flex_link type = 1
+                    joint 'r_wrist_roll_joint' child link 'r_wrist_roll_link type = 2
+                      joint 'r_gripper_palm_joint' child link 'r_gripper_palm_link type = 6
+                        joint 'r_gripper_l_finger_joint' child link 'r_gripper_l_finger_link type = 1
+                          joint 'r_gripper_l_finger_tip_joint' child link 'r_gripper_l_finger_tip_link type = 1
+                        joint 'r_gripper_led_joint' child link 'r_gripper_led_frame type = 6
+                        joint 'r_gripper_motor_accelerometer_joint' child link 'r_gripper_motor_accelerometer_link type = 6
+                        joint 'r_gripper_motor_slider_joint' child link 'r_gripper_motor_slider_link type = 3
+                          joint 'r_gripper_motor_screw_joint' child link 'r_gripper_motor_screw_link type = 2
+                        joint 'r_gripper_r_finger_joint' child link 'r_gripper_r_finger_link type = 1
+                          joint 'r_gripper_r_finger_tip_joint' child link 'r_gripper_r_finger_tip_link type = 1
+                            joint 'r_gripper_joint' child link 'r_gripper_l_finger_tip_frame type = 3
+                        joint 'r_gripper_tool_joint' child link 'r_gripper_tool_frame type = 6
+    joint 'r_torso_lift_side_plate_joint' child link 'r_torso_lift_side_plate_link type = 6
+  joint 'torso_lift_motor_screw_joint' child link 'torso_lift_motor_screw_link type = 2
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =     0     0 0.051
+  joint dofs : 0
+  body inertia: 
+    8.14185 -0.00971993     2.33062           0     -16.994           0
+-0.00971993     8.59073 -0.00737958      16.994           0       7.076
+    2.33062 -0.00737958     4.11483          -0      -7.076           0
+          0      16.994          -0         116           0           0
+    -16.994           0      -7.076           0         116           0
+          0       7.076           0           0           0         116
+  body_name  : base_link
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = -0.29   0 0.8
+  joint dofs : 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0    1    0    0
+  -0    0    0    0    1    0
+   0   -0    0    0    0    1
+  body_name  : base_bellow_link
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.275     0 0.252
+  joint dofs : 0
+  body inertia: 
+0.0001      0      0      0     -0      0
+     0  1e-06      0      0      0     -0
+     0      0 0.0001     -0      0      0
+     0      0     -0  0.001      0      0
+    -0      0      0      0  0.001      0
+     0     -0      0      0      0  0.001
+  body_name  : base_laser_link
+Added: bl_caster_rotation_joint base_link 0 0 1
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = -0.2246 0.2246 0.0282
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+   0.0294299 -0.000711734   0.00050273            0    -0.243116            0
+-0.000711734    0.0322363 -4.27347e-06     0.243116            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0     0.243116           -0      3.47308            0            0
+   -0.243116            0            0            0      3.47308            0
+           0           -0            0            0            0      3.47308
+  body_name  : bl_caster_rotation_link
+Added: bl_caster_l_wheel_joint bl_caster_rotation_link 0 1 0
++ Adding Body 
+  parent_id  : 1
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =     0 0.049     0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0124118 -0.000711734   0.00050273            0           -0            0
+-0.000711734    0.0152182 -4.27347e-06            0            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0            0           -0      0.44036            0            0
+          -0            0            0            0      0.44036            0
+           0           -0            0            0            0      0.44036
+  body_name  : bl_caster_l_wheel_link
+Added: bl_caster_r_wheel_joint bl_caster_rotation_link 0 1 0
++ Adding Body 
+  parent_id  : 1
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =      0 -0.049      0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0124118 -0.000711734   0.00050273            0           -0            0
+-0.000711734    0.0152182 -4.27347e-06            0            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0            0           -0      0.44036            0            0
+          -0            0            0            0      0.44036            0
+           0           -0            0            0            0      0.44036
+  body_name  : bl_caster_r_wheel_link
+Added: br_caster_rotation_joint base_link 0 0 1
++ Adding Body 
+  parent_id  : 2147483647
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = -0.2246 -0.2246  0.0282
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+   0.0294299 -0.000711734   0.00050273            0    -0.243116            0
+-0.000711734    0.0322363 -4.27347e-06     0.243116            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0     0.243116           -0      3.47308            0            0
+   -0.243116            0            0            0      3.47308            0
+           0           -0            0            0            0      3.47308
+  body_name  : br_caster_rotation_link
+Added: br_caster_l_wheel_joint br_caster_rotation_link 0 1 0
++ Adding Body 
+  parent_id  : 4
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =     0 0.049     0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0124118 -0.000711734   0.00050273            0           -0            0
+-0.000711734    0.0152182 -4.27347e-06            0            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0            0           -0      0.44036            0            0
+          -0            0            0            0      0.44036            0
+           0           -0            0            0            0      0.44036
+  body_name  : br_caster_l_wheel_link
+Added: br_caster_r_wheel_joint br_caster_rotation_link 0 1 0
++ Adding Body 
+  parent_id  : 4
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =      0 -0.049      0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0124118 -0.000711734   0.00050273            0           -0            0
+-0.000711734    0.0152182 -4.27347e-06            0            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0            0           -0      0.44036            0            0
+          -0            0            0            0      0.44036            0
+           0           -0            0            0            0      0.44036
+  body_name  : br_caster_r_wheel_link
+Added: fl_caster_rotation_joint base_link 0 0 1
++ Adding Body 
+  parent_id  : 2147483647
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.2246 0.2246 0.0282
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+   0.0294299 -0.000711734   0.00050273            0    -0.243116            0
+-0.000711734    0.0322363 -4.27347e-06     0.243116            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0     0.243116           -0      3.47308            0            0
+   -0.243116            0            0            0      3.47308            0
+           0           -0            0            0            0      3.47308
+  body_name  : fl_caster_rotation_link
+Added: fl_caster_l_wheel_joint fl_caster_rotation_link 0 1 0
++ Adding Body 
+  parent_id  : 7
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =     0 0.049     0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0124118 -0.000711734   0.00050273            0           -0            0
+-0.000711734    0.0152182 -4.27347e-06            0            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0            0           -0      0.44036            0            0
+          -0            0            0            0      0.44036            0
+           0           -0            0            0            0      0.44036
+  body_name  : fl_caster_l_wheel_link
+Added: fl_caster_r_wheel_joint fl_caster_rotation_link 0 1 0
++ Adding Body 
+  parent_id  : 7
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =      0 -0.049      0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0124118 -0.000711734   0.00050273            0           -0            0
+-0.000711734    0.0152182 -4.27347e-06            0            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0            0           -0      0.44036            0            0
+          -0            0            0            0      0.44036            0
+           0           -0            0            0            0      0.44036
+  body_name  : fl_caster_r_wheel_link
+Added: fr_caster_rotation_joint base_link 0 0 1
++ Adding Body 
+  parent_id  : 2147483647
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =  0.2246 -0.2246  0.0282
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+   0.0294299 -0.000711734   0.00050273            0    -0.243116            0
+-0.000711734    0.0322363 -4.27347e-06     0.243116            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0     0.243116           -0      3.47308            0            0
+   -0.243116            0            0            0      3.47308            0
+           0           -0            0            0            0      3.47308
+  body_name  : fr_caster_rotation_link
+Added: fr_caster_l_wheel_joint fr_caster_rotation_link 0 1 0
++ Adding Body 
+  parent_id  : 10
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =     0 0.049     0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0124118 -0.000711734   0.00050273            0           -0            0
+-0.000711734    0.0152182 -4.27347e-06            0            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0            0           -0      0.44036            0            0
+          -0            0            0            0      0.44036            0
+           0           -0            0            0            0      0.44036
+  body_name  : fr_caster_l_wheel_link
+Added: fr_caster_r_wheel_joint fr_caster_rotation_link 0 1 0
++ Adding Body 
+  parent_id  : 10
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =      0 -0.049      0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0124118 -0.000711734   0.00050273            0           -0            0
+-0.000711734    0.0152182 -4.27347e-06            0            0           -0
+  0.00050273 -4.27347e-06     0.011764           -0            0            0
+           0            0           -0      0.44036            0            0
+          -0            0            0            0      0.44036            0
+           0           -0            0            0            0      0.44036
+  body_name  : fr_caster_r_wheel_link
++ Adding Body 
+  parent_id  : 2147483647
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =    -0.05        0 0.739675
+  joint dofs : 1
+    0: 0 0 0 0 0 1
+  body inertia: 
+   3.05556 0.00428452  -0.481214          0    3.20795          0
+0.00428452     3.1564  0.0296645   -3.20795          0     3.6248
+ -0.481214  0.0296645   0.888913         -0    -3.6248          0
+         0   -3.20795         -0     36.248          0          0
+   3.20795          0    -3.6248          0     36.248          0
+         0     3.6248          0          0          0     36.248
+  body_name  : torso_lift_link
+Added: head_pan_joint torso_lift_link 0 0 1
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = -0.01707       0 0.38145
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+  0.0907908  -0.0015552 -0.00367245           0   -0.573724    0.200902
+ -0.0015552   0.0992258  -0.0206365    0.573724           0  -0.0691395
+-0.00367245  -0.0206365    0.064774   -0.200902   0.0691395           0
+          0    0.573724   -0.200902       6.339           0           0
+  -0.573724           0   0.0691395           0       6.339           0
+   0.200902  -0.0691395           0           0           0       6.339
+  body_name  : head_pan_link
+Added: head_tilt_joint head_pan_link 0 1 0
++ Adding Body 
+  parent_id  : 14
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.068 0 0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0394861  0.000770942 -0.000519653            0    -0.246354   -0.0875913
+ 0.000770942    0.0682862   0.00761472     0.246354            0  -0.00768596
+-0.000519653   0.00761472    0.0690325    0.0875913   0.00768596            0
+           0     0.246354    0.0875913        4.479            0            0
+   -0.246354            0   0.00768596            0        4.479            0
+  -0.0875913  -0.00768596            0            0            0        4.479
+  body_name  : head_tilt_link
++ Adding Body 
+  parent_id  : 15
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.0232      0 0.0645
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : head_plate_frame
++ Adding Body 
+  parent_id  : 2147483650
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = -0.138     0 0.091
+  joint dofs : 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : head_mount_link
++ Adding Body 
+  parent_id  : 2147483651
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = -0.032267   0.0125 0.136453
+  joint dofs : 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : head_mount_kinect_ir_link
++ Adding Body 
+  parent_id  : 2147483652
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+  0   0   0   0  -0   0
+  0   0   0   0   0  -0
+  0   0   0  -0   0   0
+  0   0  -0 0.1   0   0
+ -0   0   0   0 0.1   0
+  0  -0   0   0   0 0.1
+  body_name  : head_mount_kinect_ir_optical_frame
++ Adding Body 
+  parent_id  : 2147483652
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =     0 -0.03     0
+  joint dofs : 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : head_mount_kinect_rgb_link
++ Adding Body 
+  parent_id  : 2147483654
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+  0   0   0   0  -0   0
+  0   0   0   0   0  -0
+  0   0   0  -0   0   0
+  0   0  -0 0.1   0   0
+ -0   0   0   0 0.1   0
+  0  -0   0   0   0 0.1
+  body_name  : head_mount_kinect_rgb_optical_frame
++ Adding Body 
+  parent_id  : 2147483651
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = -0.046457   0.0125 0.088921
+  joint dofs : 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : head_mount_prosilica_link
++ Adding Body 
+  parent_id  : 2147483656
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+  0   0   0   0  -0   0
+  0   0   0   0   0  -0
+  0   0   0  -0   0   0
+  0   0  -0 0.1   0   0
+ -0   0   0   0 0.1   0
+  0  -0   0   0   0 0.1
+  body_name  : head_mount_prosilica_optical_frame
++ Adding Body 
+  parent_id  : 2147483650
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =      0   0.11 0.0546
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : projector_wg6802418_frame
++ Adding Body 
+  parent_id  : 2147483658
+  joint_frame: X.E = 
+6.12303e-17           0           1
+          0           1           0
+         -1           0 6.12303e-17
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : projector_wg6802418_child_frame
++ Adding Body 
+  parent_id  : 2147483650
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0  0.01    -0     0     0
+    0     0    -0  0.05     0     0
+   -0     0     0     0  0.05     0
+    0    -0     0     0     0  0.05
+  body_name  : sensor_mount_link
++ Adding Body 
+  parent_id  : 2147483660
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0  0.01    -0     0     0
+    0     0    -0   0.1     0     0
+   -0     0     0     0   0.1     0
+    0    -0     0     0     0   0.1
+  body_name  : double_stereo_link
++ Adding Body 
+  parent_id  : 2147483661
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =  0.045   0.06 0.0501
+  joint dofs : 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : narrow_stereo_link
++ Adding Body 
+  parent_id  : 2147483662
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : narrow_stereo_gazebo_l_stereo_camera_frame
++ Adding Body 
+  parent_id  : 2147483663
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+   0    0    0    0   -0    0
+   0    0    0    0    0   -0
+   0    0    0   -0    0    0
+   0    0   -0 0.01    0    0
+  -0    0    0    0 0.01    0
+   0   -0    0    0    0 0.01
+  body_name  : narrow_stereo_gazebo_l_stereo_camera_optical_frame
++ Adding Body 
+  parent_id  : 2147483663
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =     0 -0.09     0
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : narrow_stereo_gazebo_r_stereo_camera_frame
++ Adding Body 
+  parent_id  : 2147483665
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+   0    0    0    0   -0    0
+   0    0    0    0    0   -0
+   0    0    0   -0    0    0
+   0    0   -0 0.01    0    0
+  -0    0    0    0 0.01    0
+   0   -0    0    0    0 0.01
+  body_name  : narrow_stereo_gazebo_r_stereo_camera_optical_frame
++ Adding Body 
+  parent_id  : 2147483662
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+   0    0    0    0   -0    0
+   0    0    0    0    0   -0
+   0    0    0   -0    0    0
+   0    0   -0 0.01    0    0
+  -0    0    0    0 0.01    0
+   0   -0    0    0    0 0.01
+  body_name  : narrow_stereo_optical_frame
++ Adding Body 
+  parent_id  : 2147483661
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =  0.045   0.03 0.0501
+  joint dofs : 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : wide_stereo_link
++ Adding Body 
+  parent_id  : 2147483668
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : wide_stereo_gazebo_l_stereo_camera_frame
++ Adding Body 
+  parent_id  : 2147483669
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+   0    0    0    0   -0    0
+   0    0    0    0    0   -0
+   0    0    0   -0    0    0
+   0    0   -0 0.01    0    0
+  -0    0    0    0 0.01    0
+   0   -0    0    0    0 0.01
+  body_name  : wide_stereo_gazebo_l_stereo_camera_optical_frame
++ Adding Body 
+  parent_id  : 2147483669
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =     0 -0.09     0
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : wide_stereo_gazebo_r_stereo_camera_frame
++ Adding Body 
+  parent_id  : 2147483671
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+   0    0    0    0   -0    0
+   0    0    0    0    0   -0
+   0    0    0   -0    0    0
+   0    0   -0 0.01    0    0
+  -0    0    0    0 0.01    0
+   0   -0    0    0    0 0.01
+  body_name  : wide_stereo_gazebo_r_stereo_camera_optical_frame
++ Adding Body 
+  parent_id  : 2147483668
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+   0    0    0    0   -0    0
+   0    0    0    0    0   -0
+   0    0    0   -0    0    0
+   0    0   -0 0.01    0    0
+  -0    0    0    0 0.01    0
+   0   -0    0    0    0 0.01
+  body_name  : wide_stereo_optical_frame
++ Adding Body 
+  parent_id  : 2147483660
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.046457  -0.11 0.0546
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : high_def_frame
++ Adding Body 
+  parent_id  : 2147483674
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : high_def_optical_frame
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+         -1 1.22461e-16 2.06823e-13
+1.22461e-16           1 1.22461e-16
+-2.06823e-13 1.22461e-16          -1
+X.r = -0.02977 -0.1497   0.164
+  joint dofs : 0
+  body inertia: 
+0.0001      0      0      0     -0      0
+     0  1e-06      0      0      0     -0
+     0      0 0.0001     -0      0      0
+     0      0     -0  0.001      0      0
+    -0      0      0      0  0.001      0
+     0     -0      0      0      0  0.001
+  body_name  : imu_link
+Added: l_shoulder_pan_joint torso_lift_link 0 0 1
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =     0 0.188     0
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+   1.13063 -0.0601055  -0.124224          0    2.53429   0.632419
+-0.0601055     1.1232 0.00325703   -2.53429          0   0.030985
+ -0.124224 0.00325703   0.289078  -0.632419  -0.030985          0
+         0   -2.53429  -0.632419    25.7993          0          0
+   2.53429          0  -0.030985          0    25.7993          0
+  0.632419   0.030985          0          0          0    25.7993
+  body_name  : l_shoulder_pan_link
+Added: l_shoulder_lift_joint l_shoulder_pan_link 0 1 0
++ Adding Body 
+  parent_id  : 16
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.1 0 0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0256963   0.00657503 -6.06365e-05            0    0.0859887   -0.0732568
+  0.00657503     0.025286  -0.00118649   -0.0859887            0   -0.0603599
+-6.06365e-05  -0.00118649     0.023034    0.0732568    0.0603599            0
+           0   -0.0859887    0.0732568      2.74988            0            0
+   0.0859887            0    0.0603599            0      2.74988            0
+  -0.0732568   -0.0603599            0            0            0      2.74988
+  body_name  : l_shoulder_lift_link
+Added: l_upper_arm_roll_joint l_shoulder_lift_link 1 0 0
++ Adding Body 
+  parent_id  : 17
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 1
+    0: 1 0 0 0 0 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : l_upper_arm_roll_link
++ Adding Body 
+  parent_id  : 18
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+   0.0169622   -0.0247497   0.00134186            0   0.00343008    0.0997733
+  -0.0247497     0.350454 -0.000142667  -0.00343008            0     -1.28809
+  0.00134186 -0.000142667     0.353385   -0.0997733      1.28809            0
+           0  -0.00343008   -0.0997733      6.01769            0            0
+  0.00343008            0      1.28809            0      6.01769            0
+   0.0997733     -1.28809            0            0            0      6.01769
+  body_name  : l_upper_arm_link
+Added: l_elbow_flex_joint l_upper_arm_link 0 1 0
++ Adding Body 
+  parent_id  : 2147483677
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.4 0 0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+  0.00374473  3.44925e-05  0.000665429            0    0.0230486  0.000609046
+ 3.44925e-05   0.00489088 -3.23136e-05   -0.0230486            0   -0.0192992
+ 0.000665429 -3.23136e-05   0.00378746 -0.000609046    0.0192992            0
+           0   -0.0230486 -0.000609046      1.90327            0            0
+   0.0230486            0    0.0192992            0      1.90327            0
+ 0.000609046   -0.0192992            0            0            0      1.90327
+  body_name  : l_elbow_flex_link
+Added: l_forearm_roll_joint l_elbow_flex_link 1 0 0
++ Adding Body 
+  parent_id  : 19
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 1
+    0: 1 0 0 0 0 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : l_forearm_roll_link
++ Adding Body 
+  parent_id  : 20
+  joint_frame: X.E = 
+   0.845728           0    0.533615
+   0.533615 4.89659e-12   -0.845728
+-2.61289e-12           1 4.14118e-12
+X.r = 0.135     0 0.044
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : l_forearm_cam_frame
++ Adding Body 
+  parent_id  : 2147483678
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+   0    0    0    0   -0    0
+   0    0    0    0    0   -0
+   0    0    0   -0    0    0
+   0    0   -0 0.01    0    0
+  -0    0    0    0 0.01    0
+   0   -0    0    0    0 0.01
+  body_name  : l_forearm_cam_optical_frame
++ Adding Body 
+  parent_id  : 20
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+  0.00386321  0.000134566   0.00513625            0    0.0235267 -0.000438546
+ 0.000134566     0.106381 -1.71072e-05   -0.0235267            0    -0.484748
+  0.00513625 -1.71072e-05     0.107682  0.000438546     0.484748            0
+           0   -0.0235267  0.000438546      2.57968            0            0
+   0.0235267            0     0.484748            0      2.57968            0
+-0.000438546    -0.484748            0            0            0      2.57968
+  body_name  : l_forearm_link
+Added: l_wrist_flex_joint l_forearm_link 0 1 0
++ Adding Body 
+  parent_id  : 2147483680
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.321 0 0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+ 0.000652003   2.8864e-07  2.31176e-06            0  0.000460515            0
+  2.8864e-07  0.000200103  -2.2645e-07 -0.000460515            0  0.000964011
+ 2.31176e-06  -2.2645e-07  0.000646018           -0 -0.000964011            0
+           0 -0.000460515           -0      0.61402            0            0
+ 0.000460515            0 -0.000964011            0      0.61402            0
+           0  0.000964011            0            0            0      0.61402
+  body_name  : l_wrist_flex_link
+Added: l_wrist_roll_joint l_wrist_flex_link 1 0 0
++ Adding Body 
+  parent_id  : 21
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 1
+    0: 1 0 0 0 0 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : l_wrist_roll_link
++ Adding Body 
+  parent_id  : 22
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+ 0.000353224 -3.61663e-05     4.48e-05            0  0.000690283  0.000307437
+-3.61663e-05   0.00322266  -2.2969e-07 -0.000690283            0    -0.038418
+    4.48e-05  -2.2969e-07   0.00341022 -0.000307437     0.038418            0
+           0 -0.000690283 -0.000307437      0.58007            0            0
+ 0.000690283            0     0.038418            0      0.58007            0
+ 0.000307437    -0.038418            0            0            0      0.58007
+  body_name  : l_gripper_palm_link
+Added: l_gripper_l_finger_joint l_gripper_palm_link 0 0 1
++ Adding Body 
+  parent_id  : 2147483681
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.07691 0.01    0
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+ 0.000129279 -0.000105111  2.71723e-07            0  0.000280866    0.0029628
+-0.000105111   0.00041925  1.79774e-06 -0.000280866            0  -0.00616193
+ 2.71723e-07  1.79774e-06  0.000454017   -0.0029628   0.00616193            0
+           0 -0.000280866   -0.0029628      0.17126            0            0
+ 0.000280866            0   0.00616193            0      0.17126            0
+   0.0029628  -0.00616193            0            0            0      0.17126
+  body_name  : l_gripper_l_finger_link
+Added: l_gripper_l_finger_tip_joint l_gripper_l_finger_link 0 0 -1
++ Adding Body 
+  parent_id  : 23
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.09137 0.00495       0
+  joint dofs : 1
+    0:  0  0 -1  0  0  0
+  body inertia: 
+ 8.72689e-06  5.30546e-06            0            0           -0    0.0001255
+ 5.30546e-06  1.06614e-05            0            0            0 -0.000186924
+           0            0  1.65648e-05   -0.0001255  0.000186924            0
+           0            0   -0.0001255      0.04419            0            0
+          -0            0  0.000186924            0      0.04419            0
+   0.0001255 -0.000186924            0            0            0      0.04419
+  body_name  : l_gripper_l_finger_tip_link
++ Adding Body 
+  parent_id  : 2147483681
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.0513      0 0.0244
+  joint dofs : 0
+  body inertia: 
+ 3.56419e-07 -5.30863e-07            0            0           -0    0.0001255
+-5.30863e-07  7.90687e-07            0            0            0 -0.000186924
+           0            0  1.14711e-06   -0.0001255  0.000186924            0
+           0            0   -0.0001255      0.04419            0            0
+          -0            0  0.000186924            0      0.04419            0
+   0.0001255 -0.000186924            0            0            0      0.04419
+  body_name  : l_gripper_led_frame
++ Adding Body 
+  parent_id  : 2147483681
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0 0.001     0     0
+   -0     0     0     0 0.001     0
+    0    -0     0     0     0 0.001
+  body_name  : l_gripper_motor_accelerometer_link
++ Adding Body 
+  parent_id  : 2147483681
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.16828 0 0
+  joint dofs : 1
+    0: 0 0 0 1 0 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : l_gripper_motor_slider_link
+Added: l_gripper_motor_screw_joint l_gripper_motor_slider_link 0 1 0
++ Adding Body 
+  parent_id  : 25
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+0.0001      0      0      0     -0      0
+     0 0.0001      0      0      0     -0
+     0      0 0.0001     -0      0      0
+     0      0     -0   0.01      0      0
+    -0      0      0      0   0.01      0
+     0     -0      0      0      0   0.01
+  body_name  : l_gripper_motor_screw_link
+Added: l_gripper_r_finger_joint l_gripper_palm_link 0 0 -1
++ Adding Body 
+  parent_id  : 2147483681
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.07691 -0.01     0
+  joint dofs : 1
+    0:  0  0 -1  0  0  0
+  body inertia: 
+ 0.000129946  0.000105857 -2.45489e-06            0  0.000165195  -0.00301873
+ 0.000105857  0.000420997 -4.06694e-07 -0.000165195            0  -0.00621831
+-2.45489e-06 -4.06694e-07  0.000455842   0.00301873   0.00621831            0
+           0 -0.000165195   0.00301873      0.17389            0            0
+ 0.000165195            0   0.00621831            0      0.17389            0
+ -0.00301873  -0.00621831            0            0            0      0.17389
+  body_name  : l_gripper_r_finger_link
+Added: l_gripper_r_finger_tip_joint l_gripper_r_finger_link 0 0 1
++ Adding Body 
+  parent_id  : 27
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =  0.09137 -0.00495        0
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+ 8.72689e-06 -5.30546e-06            0            0           -0   -0.0001255
+-5.30546e-06  1.06614e-05            0            0            0 -0.000186924
+           0            0  1.65648e-05    0.0001255  0.000186924            0
+           0            0    0.0001255      0.04419            0            0
+          -0            0  0.000186924            0      0.04419            0
+  -0.0001255 -0.000186924            0            0            0      0.04419
+  body_name  : l_gripper_r_finger_tip_link
++ Adding Body 
+  parent_id  : 28
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 1
+    0: 0 0 0 0 1 0
+  body inertia: 
+ 3.56419e-07  5.30863e-07            0            0           -0   -0.0001255
+ 5.30863e-07  7.90687e-07            0            0            0 -0.000186924
+           0            0  1.14711e-06    0.0001255  0.000186924            0
+           0            0    0.0001255      0.04419            0            0
+          -0            0  0.000186924            0      0.04419            0
+  -0.0001255 -0.000186924            0            0            0      0.04419
+  body_name  : l_gripper_l_finger_tip_frame
++ Adding Body 
+  parent_id  : 2147483681
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.18 0 0
+  joint dofs : 0
+  body inertia: 
+ 3.56419e-07  5.30863e-07            0            0           -0   -0.0001255
+ 5.30863e-07  7.90687e-07            0            0            0 -0.000186924
+           0            0  1.14711e-06    0.0001255  0.000186924            0
+           0            0    0.0001255      0.04419            0            0
+          -0            0  0.000186924            0      0.04419            0
+  -0.0001255 -0.000186924            0            0            0      0.04419
+  body_name  : l_gripper_tool_frame
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =   0.0535 0.209285 0.176625
+  joint dofs : 0
+  body inertia: 
+   0.00125          0  0.0003125          0     -0.005          0
+         0 0.00164063          0      0.005          0    0.00625
+ 0.0003125          0 0.00139062         -0   -0.00625          0
+         0      0.005         -0        0.1          0          0
+    -0.005          0   -0.00625          0        0.1          0
+         0    0.00625          0          0          0        0.1
+  body_name  : l_torso_lift_side_plate_link
+Added: laser_tilt_mount_joint torso_lift_link 0 1 0
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.09893     0 0.227
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+  0.00122697  2.42082e-05  3.26801e-05            0   0.00421383   0.00098697
+ 2.42082e-05   0.00111476  4.19431e-05  -0.00421383            0  0.000671376
+ 3.26801e-05  4.19431e-05  0.000797425  -0.00098697 -0.000671376            0
+           0  -0.00421383  -0.00098697        0.591            0            0
+  0.00421383            0 -0.000671376            0        0.591            0
+  0.00098697  0.000671376            0            0            0        0.591
+  body_name  : laser_tilt_mount_link
++ Adding Body 
+  parent_id  : 30
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =    0    0 0.03
+  joint dofs : 0
+  body inertia: 
+0.0001      0      0      0     -0      0
+     0  1e-06      0      0      0     -0
+     0      0 0.0001     -0      0      0
+     0      0     -0  0.001      0      0
+    -0      0      0      0  0.001      0
+     0     -0      0      0      0  0.001
+  body_name  : laser_tilt_link
+Added: r_shoulder_pan_joint torso_lift_link 0 0 1
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =      0 -0.188      0
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+   1.13063 -0.0601055  -0.124224          0    2.53429   0.632419
+-0.0601055     1.1232 0.00325703   -2.53429          0   0.030985
+ -0.124224 0.00325703   0.289078  -0.632419  -0.030985          0
+         0   -2.53429  -0.632419    25.7993          0          0
+   2.53429          0  -0.030985          0    25.7993          0
+  0.632419   0.030985          0          0          0    25.7993
+  body_name  : r_shoulder_pan_link
+Added: r_shoulder_lift_joint r_shoulder_pan_link 0 1 0
++ Adding Body 
+  parent_id  : 31
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.1 0 0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+   0.0256963   0.00657503 -6.06365e-05            0    0.0859887   -0.0732568
+  0.00657503     0.025286  -0.00118649   -0.0859887            0   -0.0603599
+-6.06365e-05  -0.00118649     0.023034    0.0732568    0.0603599            0
+           0   -0.0859887    0.0732568      2.74988            0            0
+   0.0859887            0    0.0603599            0      2.74988            0
+  -0.0732568   -0.0603599            0            0            0      2.74988
+  body_name  : r_shoulder_lift_link
+Added: r_upper_arm_roll_joint r_shoulder_lift_link 1 0 0
++ Adding Body 
+  parent_id  : 32
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 1
+    0: 1 0 0 0 0 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : r_upper_arm_roll_link
++ Adding Body 
+  parent_id  : 33
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+    0.016959    0.0246302 -0.000450996            0   0.00120354   -0.0975468
+   0.0246302     0.350272 -0.000198874  -0.00120354            0     -1.28767
+-0.000450996 -0.000198874     0.353203    0.0975468      1.28767            0
+           0  -0.00120354    0.0975468      6.01769            0            0
+  0.00120354            0      1.28767            0      6.01769            0
+  -0.0975468     -1.28767            0            0            0      6.01769
+  body_name  : r_upper_arm_link
+Added: r_elbow_flex_joint r_upper_arm_link 0 1 0
++ Adding Body 
+  parent_id  : 2147483687
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.4 0 0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+  0.00374473  3.44925e-05  0.000665429            0    0.0230486  0.000609046
+ 3.44925e-05   0.00489088 -3.23136e-05   -0.0230486            0   -0.0192992
+ 0.000665429 -3.23136e-05   0.00378746 -0.000609046    0.0192992            0
+           0   -0.0230486 -0.000609046      1.90327            0            0
+   0.0230486            0    0.0192992            0      1.90327            0
+ 0.000609046   -0.0192992            0            0            0      1.90327
+  body_name  : r_elbow_flex_link
+Added: r_forearm_roll_joint r_elbow_flex_link 1 0 0
++ Adding Body 
+  parent_id  : 34
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 1
+    0: 1 0 0 0 0 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : r_forearm_roll_link
++ Adding Body 
+  parent_id  : 35
+  joint_frame: X.E = 
+   0.845728           0    0.533615
+  -0.533615 4.89659e-12    0.845728
+-2.61289e-12          -1 4.14118e-12
+X.r = 0.135     0 0.044
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : r_forearm_cam_frame
++ Adding Body 
+  parent_id  : 2147483688
+  joint_frame: X.E = 
+ 4.89659e-12           -1  5.55112e-17
+ 4.89659e-12 -5.55111e-17           -1
+           1  4.89659e-12  4.89659e-12
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+   0    0    0    0   -0    0
+   0    0    0    0    0   -0
+   0    0    0   -0    0    0
+   0    0   -0 0.01    0    0
+  -0    0    0    0 0.01    0
+   0   -0    0    0    0 0.01
+  body_name  : r_forearm_cam_optical_frame
++ Adding Body 
+  parent_id  : 35
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+  0.00386321  0.000134566   0.00513625            0    0.0235267 -0.000438546
+ 0.000134566     0.106381 -1.71072e-05   -0.0235267            0    -0.484748
+  0.00513625 -1.71072e-05     0.107682  0.000438546     0.484748            0
+           0   -0.0235267  0.000438546      2.57968            0            0
+   0.0235267            0     0.484748            0      2.57968            0
+-0.000438546    -0.484748            0            0            0      2.57968
+  body_name  : r_forearm_link
+Added: r_wrist_flex_joint r_forearm_link 0 1 0
++ Adding Body 
+  parent_id  : 2147483690
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.321 0 0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+ 0.000652003   2.8864e-07  2.31176e-06            0  0.000460515            0
+  2.8864e-07  0.000200103  -2.2645e-07 -0.000460515            0  0.000964011
+ 2.31176e-06  -2.2645e-07  0.000646018           -0 -0.000964011            0
+           0 -0.000460515           -0      0.61402            0            0
+ 0.000460515            0 -0.000964011            0      0.61402            0
+           0  0.000964011            0            0            0      0.61402
+  body_name  : r_wrist_flex_link
+Added: r_wrist_roll_joint r_wrist_flex_link 1 0 0
++ Adding Body 
+  parent_id  : 36
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 1
+    0: 1 0 0 0 0 0
+  body inertia: 
+0.01    0    0    0   -0    0
+   0 0.01    0    0    0   -0
+   0    0 0.01   -0    0    0
+   0    0   -0  0.1    0    0
+  -0    0    0    0  0.1    0
+   0   -0    0    0    0  0.1
+  body_name  : r_wrist_roll_link
++ Adding Body 
+  parent_id  : 37
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+ 0.000353224 -3.61663e-05     4.48e-05            0  0.000690283  0.000307437
+-3.61663e-05   0.00322266  -2.2969e-07 -0.000690283            0    -0.038418
+    4.48e-05  -2.2969e-07   0.00341022 -0.000307437     0.038418            0
+           0 -0.000690283 -0.000307437      0.58007            0            0
+ 0.000690283            0     0.038418            0      0.58007            0
+ 0.000307437    -0.038418            0            0            0      0.58007
+  body_name  : r_gripper_palm_link
+Added: r_gripper_l_finger_joint r_gripper_palm_link 0 0 1
++ Adding Body 
+  parent_id  : 2147483691
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.07691 0.01    0
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+ 0.000129279 -0.000105111  2.71723e-07            0  0.000280866    0.0029628
+-0.000105111   0.00041925  1.79774e-06 -0.000280866            0  -0.00616193
+ 2.71723e-07  1.79774e-06  0.000454017   -0.0029628   0.00616193            0
+           0 -0.000280866   -0.0029628      0.17126            0            0
+ 0.000280866            0   0.00616193            0      0.17126            0
+   0.0029628  -0.00616193            0            0            0      0.17126
+  body_name  : r_gripper_l_finger_link
+Added: r_gripper_l_finger_tip_joint r_gripper_l_finger_link 0 0 -1
++ Adding Body 
+  parent_id  : 38
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.09137 0.00495       0
+  joint dofs : 1
+    0:  0  0 -1  0  0  0
+  body inertia: 
+ 8.72689e-06  5.30546e-06            0            0           -0    0.0001255
+ 5.30546e-06  1.06614e-05            0            0            0 -0.000186924
+           0            0  1.65648e-05   -0.0001255  0.000186924            0
+           0            0   -0.0001255      0.04419            0            0
+          -0            0  0.000186924            0      0.04419            0
+   0.0001255 -0.000186924            0            0            0      0.04419
+  body_name  : r_gripper_l_finger_tip_link
++ Adding Body 
+  parent_id  : 2147483691
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.0513      0 0.0244
+  joint dofs : 0
+  body inertia: 
+ 3.56419e-07 -5.30863e-07            0            0           -0    0.0001255
+-5.30863e-07  7.90687e-07            0            0            0 -0.000186924
+           0            0  1.14711e-06   -0.0001255  0.000186924            0
+           0            0   -0.0001255      0.04419            0            0
+          -0            0  0.000186924            0      0.04419            0
+   0.0001255 -0.000186924            0            0            0      0.04419
+  body_name  : r_gripper_led_frame
++ Adding Body 
+  parent_id  : 2147483691
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0 0.001     0     0
+   -0     0     0     0 0.001     0
+    0    -0     0     0     0 0.001
+  body_name  : r_gripper_motor_accelerometer_link
++ Adding Body 
+  parent_id  : 2147483691
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.16828 0 0
+  joint dofs : 1
+    0: 0 0 0 1 0 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0  0.01     0     0
+   -0     0     0     0  0.01     0
+    0    -0     0     0     0  0.01
+  body_name  : r_gripper_motor_slider_link
+Added: r_gripper_motor_screw_joint r_gripper_motor_slider_link 0 1 0
++ Adding Body 
+  parent_id  : 40
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 1
+    0: 0 1 0 0 0 0
+  body inertia: 
+0.0001      0      0      0     -0      0
+     0 0.0001      0      0      0     -0
+     0      0 0.0001     -0      0      0
+     0      0     -0   0.01      0      0
+    -0      0      0      0   0.01      0
+     0     -0      0      0      0   0.01
+  body_name  : r_gripper_motor_screw_link
+Added: r_gripper_r_finger_joint r_gripper_palm_link 0 0 -1
++ Adding Body 
+  parent_id  : 2147483691
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.07691 -0.01     0
+  joint dofs : 1
+    0:  0  0 -1  0  0  0
+  body inertia: 
+ 0.000129946  0.000105857 -2.45489e-06            0  0.000165195  -0.00301873
+ 0.000105857  0.000420997 -4.06694e-07 -0.000165195            0  -0.00621831
+-2.45489e-06 -4.06694e-07  0.000455842   0.00301873   0.00621831            0
+           0 -0.000165195   0.00301873      0.17389            0            0
+ 0.000165195            0   0.00621831            0      0.17389            0
+ -0.00301873  -0.00621831            0            0            0      0.17389
+  body_name  : r_gripper_r_finger_link
+Added: r_gripper_r_finger_tip_joint r_gripper_r_finger_link 0 0 1
++ Adding Body 
+  parent_id  : 42
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =  0.09137 -0.00495        0
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+ 8.72689e-06 -5.30546e-06            0            0           -0   -0.0001255
+-5.30546e-06  1.06614e-05            0            0            0 -0.000186924
+           0            0  1.65648e-05    0.0001255  0.000186924            0
+           0            0    0.0001255      0.04419            0            0
+          -0            0  0.000186924            0      0.04419            0
+  -0.0001255 -0.000186924            0            0            0      0.04419
+  body_name  : r_gripper_r_finger_tip_link
++ Adding Body 
+  parent_id  : 43
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0 0 0
+  joint dofs : 1
+    0: 0 0 0 0 1 0
+  body inertia: 
+ 3.56419e-07  5.30863e-07            0            0           -0   -0.0001255
+ 5.30863e-07  7.90687e-07            0            0            0 -0.000186924
+           0            0  1.14711e-06    0.0001255  0.000186924            0
+           0            0    0.0001255      0.04419            0            0
+          -0            0  0.000186924            0      0.04419            0
+  -0.0001255 -0.000186924            0            0            0      0.04419
+  body_name  : r_gripper_l_finger_tip_frame
++ Adding Body 
+  parent_id  : 2147483691
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = 0.18 0 0
+  joint dofs : 0
+  body inertia: 
+ 3.56419e-07  5.30863e-07            0            0           -0   -0.0001255
+ 5.30863e-07  7.90687e-07            0            0            0 -0.000186924
+           0            0  1.14711e-06    0.0001255  0.000186924            0
+           0            0    0.0001255      0.04419            0            0
+          -0            0  0.000186924            0      0.04419            0
+  -0.0001255 -0.000186924            0            0            0      0.04419
+  body_name  : r_gripper_tool_frame
++ Adding Body 
+  parent_id  : 0
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r =    0.0535 -0.209285  0.176625
+  joint dofs : 0
+  body inertia: 
+   0.00125          0  0.0003125          0     -0.005          0
+         0 0.00164063          0      0.005          0    0.00625
+ 0.0003125          0 0.00139062         -0   -0.00625          0
+         0      0.005         -0        0.1          0          0
+    -0.005          0   -0.00625          0        0.1          0
+         0    0.00625          0          0          0        0.1
+  body_name  : r_torso_lift_side_plate_link
+Added: torso_lift_motor_screw_joint base_link 0 0 1
++ Adding Body 
+  parent_id  : 2147483647
+  joint_frame: X.E = 
+1 0 0
+0 1 0
+0 0 1
+X.r = -0.15   0 0.7
+  joint dofs : 1
+    0: 0 0 1 0 0 0
+  body inertia: 
+0.001     0     0     0    -0     0
+    0 0.001     0     0     0    -0
+    0     0 0.001    -0     0     0
+    0     0    -0     1     0     0
+   -0     0     0     0     1     0
+    0    -0     0     0     0     1
+  body_name  : torso_lift_motor_screw_link
+Model loading successful!
+Degree of freedom overview:
+  0: bl_caster_rotation_link_RZ
+  1: bl_caster_l_wheel_link_RY
+  2: bl_caster_r_wheel_link_RY
+  3: br_caster_rotation_link_RZ
+  4: br_caster_l_wheel_link_RY
+  5: br_caster_r_wheel_link_RY
+  6: fl_caster_rotation_link_RZ
+  7: fl_caster_l_wheel_link_RY
+  8: fl_caster_r_wheel_link_RY
+  9: fr_caster_rotation_link_RZ
+ 10: fr_caster_l_wheel_link_RY
+ 11: fr_caster_r_wheel_link_RY
+ 12: torso_lift_link_TZ
+ 13: head_pan_link_RZ
+ 14: head_tilt_link_RY
+ 15: l_shoulder_pan_link_RZ
+ 16: l_shoulder_lift_link_RY
+ 17: l_upper_arm_roll_link_RX
+ 18: l_elbow_flex_link_RY
+ 19: l_forearm_roll_link_RX
+ 20: l_wrist_flex_link_RY
+ 21: l_wrist_roll_link_RX
+ 22: l_gripper_l_finger_link_RZ
+ 23: l_gripper_l_finger_tip_link_custom ( 0  0 -1  0  0  0)
+ 24: l_gripper_motor_slider_link_TX
+ 25: l_gripper_motor_screw_link_RY
+ 26: l_gripper_r_finger_link_custom ( 0  0 -1  0  0  0)
+ 27: l_gripper_r_finger_tip_link_RZ
+ 28: l_gripper_l_finger_tip_frame_TY
+ 29: laser_tilt_mount_link_RY
+ 30: r_shoulder_pan_link_RZ
+ 31: r_shoulder_lift_link_RY
+ 32: r_upper_arm_roll_link_RX
+ 33: r_elbow_flex_link_RY
+ 34: r_forearm_roll_link_RX
+ 35: r_wrist_flex_link_RY
+ 36: r_wrist_roll_link_RX
+ 37: r_gripper_l_finger_link_RZ
+ 38: r_gripper_l_finger_tip_link_custom ( 0  0 -1  0  0  0)
+ 39: r_gripper_motor_slider_link_TX
+ 40: r_gripper_motor_screw_link_RY
+ 41: r_gripper_r_finger_link_custom ( 0  0 -1  0  0  0)
+ 42: r_gripper_r_finger_tip_link_RZ
+ 43: r_gripper_l_finger_tip_frame_TY
+ 44: torso_lift_motor_screw_link_RZ
+Q:    26.7483    65.7185    65.7185    26.7483    65.7185    65.7185    26.7483    65.7185    65.7185    26.7483    65.7185    65.7185  0.0275877   -10.9512    5.09096   -15.2369 -0.0779469   -1.63818   0.227307    3.44421  -0.901944    74.6254    3875.25    68308.8         50    10000.8    3862.85    66969.6    113.965    895.525   -15.2369  0.0299255    -1.8873 -0.0351246    3.69349  -0.719665    74.6253    3875.25    68308.8         50    10000.7    3862.85    66969.6    113.965       1000
+
+Tau: 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+
