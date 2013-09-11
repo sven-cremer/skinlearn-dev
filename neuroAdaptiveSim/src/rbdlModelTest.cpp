@@ -11,6 +11,8 @@
 #include "rbdl_utils.h"
 #include "rbdl_urdfreader.cc"
 
+#include <urdf/model.h>
+
 using namespace std;
 
 bool verbose = false;
@@ -27,23 +29,28 @@ int main (int argc, char *argv[])
         std::string urdf_param_ = "/robot_description";
 		std::string urdf_string;
 
+		urdf::Model urdf_model;
+
 		if (!node.getParam(urdf_param_, urdf_string))
 		{
 		ROS_ERROR("URDF not loaded from parameter: %s)", urdf_param_.c_str());
 		return false;
 		}
 
-//		if (!urdf_model.initString(urdf_string))
-//		{
-//		ROS_ERROR("Failed to parse URDF file");
-//		return -1;
-//		}
-//		ROS_INFO("Successfully parsed URDF file");
+		if (!urdf_model.initString(urdf_string))
+		{
+		ROS_ERROR("Failed to parse URDF file");
+		return -1;
+		}
+		ROS_INFO("Successfully parsed URDF file");
 
         RigidBodyDynamics::Model model;
         model.Init();
 
-        if (!RigidBodyDynamics::Addons::read_urdf_model(urdf_string.c_str(), &model, verbose))
+//        urdf_string = "atlas.urdf";
+
+        if (!RigidBodyDynamics::Addons::construct_model ( &model, &urdf_model, verbose, "torso_lift_link"))
+//        if (!RigidBodyDynamics::Addons::read_urdf_model(urdf_string.c_str(), &model, verbose))
         {
                 cerr << "Loading of urdf model failed!" << endl;
                 return -1;
