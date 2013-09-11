@@ -13,85 +13,85 @@ using namespace RigidBodyDynamics::Math;
 int main (int argc, char* argv[]) {
   rbdl_check_api_version (RBDL_API_VERSION);
 
-  Model* model = NULL;
+  Model* RBDL_model = NULL;
 
-  unsigned int base_id					;
-  unsigned int r_shoulder_pan_link_id   ;
-  unsigned int r_shoulder_lift_link_id  ;
-  unsigned int r_upper_arm_roll_link_id ;
-  unsigned int r_upper_arm_link_id      ;
-  unsigned int r_elbow_flex_link_id     ;
-  unsigned int r_forearm_roll_link_id   ;
-  unsigned int r_forearm_link_id        ;
-  unsigned int r_wrist_flex_link_id     ;
-  unsigned int r_wrist_roll_link_id     ;
+  unsigned int RBDL_base_id					;
+  unsigned int RBDL_r_shoulder_pan_link_id   ;
+  unsigned int RBDL_r_shoulder_lift_link_id  ;
+  unsigned int RBDL_r_upper_arm_roll_link_id ;
+  unsigned int RBDL_r_upper_arm_link_id      ;
+  unsigned int RBDL_r_elbow_flex_link_id     ;
+  unsigned int RBDL_r_forearm_roll_link_id   ;
+  unsigned int RBDL_r_forearm_link_id        ;
+  unsigned int RBDL_r_wrist_flex_link_id     ;
+  unsigned int RBDL_r_wrist_roll_link_id     ;
 
-  Body base             	 ;
-  Body r_shoulder_pan_link   ;
-  Body r_shoulder_lift_link  ;
-  Body r_upper_arm_roll_link ;
-  Body r_upper_arm_link      ;
-  Body r_elbow_flex_link     ;
-  Body r_forearm_roll_link   ;
-  Body r_forearm_link        ;
-  Body r_wrist_flex_link     ;
-  Body r_wrist_roll_link     ;
+  Body RBDL_base             	 ;
+  Body RBDL_r_shoulder_pan_link   ;
+  Body RBDL_r_shoulder_lift_link  ;
+  Body RBDL_r_upper_arm_roll_link ;
+  Body RBDL_r_upper_arm_link      ;
+  Body RBDL_r_elbow_flex_link     ;
+  Body RBDL_r_forearm_roll_link   ;
+  Body RBDL_r_forearm_link        ;
+  Body RBDL_r_wrist_flex_link     ;
+  Body RBDL_r_wrist_roll_link     ;
 
-  Joint r_shoulder_pan_joint   ;
-  Joint r_shoulder_lift_joint  ;
-  Joint r_upper_arm_roll_joint ;
+  Joint RBDL_r_shoulder_pan_joint   ;
+  Joint RBDL_r_shoulder_lift_joint  ;
+  Joint RBDL_r_upper_arm_roll_joint ;
 
-  Joint r_elbow_flex_joint     ;
-  Joint r_forearm_roll_joint   ;
+  Joint RBDL_r_elbow_flex_joint     ;
+  Joint RBDL_r_forearm_roll_joint   ;
 
-  Joint r_wrist_flex_joint     ;
-  Joint r_wrist_roll_joint     ;
+  Joint RBDL_r_wrist_flex_joint     ;
+  Joint RBDL_r_wrist_roll_joint     ;
 
-  model = new Model();
+  RBDL_model = new Model();
 
-  model->gravity = Vector3d (0., -9.81, 0.);
+  RBDL_model->gravity = Vector3d (0., -9.81, 0.);
 
-  base             	      = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-  r_shoulder_pan_link     = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-  r_shoulder_lift_link    = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-  r_upper_arm_roll_link   = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-  r_upper_arm_link        = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-  r_elbow_flex_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-  r_forearm_roll_link     = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-  r_forearm_link          = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-  r_wrist_flex_link    	  = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-  r_wrist_roll_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+  RBDL_base             	   = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+  RBDL_r_shoulder_pan_link     = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+  RBDL_r_shoulder_lift_link    = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+  RBDL_r_upper_arm_roll_link   = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+  RBDL_r_upper_arm_link        = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+  RBDL_r_elbow_flex_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+  RBDL_r_forearm_roll_link     = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+  RBDL_r_forearm_link          = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+  RBDL_r_wrist_flex_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+  RBDL_r_wrist_roll_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
 
-  r_shoulder_pan_joint   = Joint( JointTypeRevolute, Vector3d (0., 0., 1.) );
-  r_shoulder_lift_joint  = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
-  r_upper_arm_roll_joint = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
-  r_elbow_flex_joint     = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
-  r_forearm_roll_joint   = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
-  r_wrist_flex_joint     = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
-  r_wrist_roll_joint     = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
+  RBDL_r_shoulder_pan_joint   = Joint( JointTypeRevolute, Vector3d (0., 0., 1.) );
+  RBDL_r_shoulder_lift_joint  = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
+  RBDL_r_upper_arm_roll_joint = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
+  RBDL_r_elbow_flex_joint     = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
+  RBDL_r_forearm_roll_joint   = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
+  RBDL_r_wrist_flex_joint     = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
+  RBDL_r_wrist_roll_joint     = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
 
-  base_id					= model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), r_shoulder_pan_joint   , base				  );
-  r_shoulder_pan_link_id    = model->AddBody(0, Xtrans(Vector3d(    0., -0.188, 0. )), r_shoulder_lift_joint  , r_shoulder_pan_link   );
-  r_shoulder_lift_link_id   = model->AddBody(0, Xtrans(Vector3d(   0.1,     0., 0. )), r_upper_arm_roll_joint , r_shoulder_lift_link  );
-  r_upper_arm_roll_link_id  = model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed         , r_upper_arm_roll_link );
-  r_upper_arm_link_id       = model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed         , r_upper_arm_link      );
-  r_elbow_flex_link_id      = model->AddBody(0, Xtrans(Vector3d(   0.4,     0., 0. )), r_elbow_flex_joint     , r_elbow_flex_link     );
-  r_forearm_roll_link_id    = model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), r_forearm_roll_joint   , r_forearm_roll_link   );
-  r_forearm_link_id         = model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed         , r_forearm_link        );
-  r_wrist_flex_link_id     	= model->AddBody(0, Xtrans(Vector3d( 0.321,     0., 0. )), r_wrist_flex_joint     , r_wrist_flex_link     );
-  r_wrist_roll_link_id     	= model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), r_wrist_roll_joint     , r_wrist_roll_link     );
+  RBDL_base_id					 = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), RBDL_r_shoulder_pan_joint   , RBDL_base				  );
+  RBDL_r_shoulder_pan_link_id    = RBDL_model->AddBody(0, Xtrans(Vector3d(    0., -0.188, 0. )), RBDL_r_shoulder_lift_joint  , RBDL_r_shoulder_pan_link   );
+  RBDL_r_shoulder_lift_link_id   = RBDL_model->AddBody(0, Xtrans(Vector3d(   0.1,     0., 0. )), RBDL_r_upper_arm_roll_joint , RBDL_r_shoulder_lift_link  );
+  RBDL_r_upper_arm_roll_link_id  = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed              , RBDL_r_upper_arm_roll_link );
+  RBDL_r_upper_arm_link_id       = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed              , RBDL_r_upper_arm_link      );
+  RBDL_r_elbow_flex_link_id      = RBDL_model->AddBody(0, Xtrans(Vector3d(   0.4,     0., 0. )), RBDL_r_elbow_flex_joint     , RBDL_r_elbow_flex_link     );
+  RBDL_r_forearm_roll_link_id    = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), RBDL_r_forearm_roll_joint   , RBDL_r_forearm_roll_link   );
+  RBDL_r_forearm_link_id         = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed              , RBDL_r_forearm_link        );
+  RBDL_r_wrist_flex_link_id      = RBDL_model->AddBody(0, Xtrans(Vector3d( 0.321,     0., 0. )), RBDL_r_wrist_flex_joint     , RBDL_r_wrist_flex_link     );
+  RBDL_r_wrist_roll_link_id      = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), RBDL_r_wrist_roll_joint     , RBDL_r_wrist_roll_link     );
 
 
-  VectorNd Q     = VectorNd::Zero (model->dof_count);
-  VectorNd QDot  = VectorNd::Zero (model->dof_count);
-  VectorNd Tau   = VectorNd::Ones (model->dof_count);
-  VectorNd QDDot = VectorNd::Zero (model->dof_count);
+  VectorNd RBDL_Q     = VectorNd::Zero (RBDL_model->dof_count);
+  VectorNd RBDL_QDot  = VectorNd::Zero (RBDL_model->dof_count);
+  VectorNd RBDL_Tau   = VectorNd::Ones (RBDL_model->dof_count);
+  VectorNd RBDL_QDDot = VectorNd::Zero (RBDL_model->dof_count);
 
-  ForwardDynamics (*model, Q, QDot, Tau, QDDot);
+  ForwardDynamics (*RBDL_model, RBDL_Q, RBDL_QDot, RBDL_Tau, RBDL_QDDot);
 
-  std::cout << QDDot.transpose() << " | DOF : " << model->dof_count << std::endl;
+  std::cout << RBDL_QDDot.transpose() << " | DOF : " << RBDL_model->dof_count << std::endl;
 
-  delete model;
+  delete RBDL_model;
 
   return 0;
 }
