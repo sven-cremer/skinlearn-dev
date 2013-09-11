@@ -404,7 +404,7 @@ void PR2NeuroadptControllerClass::update()
 	V_trans = V_trans_next;
 
 	// Filtered error
-	r = lambda*(qd_m - qd) + (q_m - q);
+	r = lambda*(qd_m - qd) + 100*(q_m - q);
 
 	// Robust term
 	Z.block(0,0,Hidden,Outputs) = W_trans.transpose();
@@ -434,7 +434,7 @@ void PR2NeuroadptControllerClass::update()
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv*r /*+ y - vRobust - t_h*/;
+	tau = r; // Kv*r /*+ y - vRobust - t_h*/;
 
 	//
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
