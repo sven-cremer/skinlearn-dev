@@ -164,8 +164,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	// NN
 
 	kappa  = 0.7;
-	Kv     = 10; // prop. gain for PID inner loop
-	lambda = 1; //*std::sqrt(Kp); // der. gain for PID inner loop
+	Kv     = 100; // prop. gain for PID inner loop
+	lambda = 0.01; //*std::sqrt(Kp); // der. gain for PID inner loop
 	Kz     = 3;
 	Zb     = 100;
 
@@ -191,13 +191,13 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if(!hardwareInterface)
       ROS_ERROR("Something wrong with the hardware interface pointer!");
 
-  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
-  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
-
-  if( !l_ft_handle_ /*wristFTdata.getLeftHandle()*/ )
-      ROS_ERROR("Something wrong with getting l_ft handle");
-  if( !r_ft_handle_ /*wristFTdata.getRightHandle()*/ )
-      ROS_ERROR("Something wrong with getting r_ft handle");
+//  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+//  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+//
+//  if( !l_ft_handle_ /*wristFTdata.getLeftHandle()*/ )
+//      ROS_ERROR("Something wrong with getting l_ft handle");
+//  if( !r_ft_handle_ /*wristFTdata.getRightHandle()*/ )
+//      ROS_ERROR("Something wrong with getting r_ft handle");
 
   pub_cycle_count_ = 0;
   should_publish_  = false;
@@ -224,13 +224,13 @@ void PR2NeuroadptControllerClass::starting()
 
   // set FT sensor bias due to gravity
 //  wristFTdata.setBias();
-  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-  l_ft_samples    = l_ftData_vector.size() - 1;
-  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
-
-  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-  r_ft_samples    = r_ftData_vector.size() - 1;
-  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+//  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+//  l_ft_samples    = l_ftData_vector.size() - 1;
+//  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
+//
+//  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+//  r_ft_samples    = r_ftData_vector.size() - 1;
+//  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
 
 }
 
@@ -239,26 +239,26 @@ void PR2NeuroadptControllerClass::starting()
 void PR2NeuroadptControllerClass::update()
 {
 
-//  wristFTdata.update();
-	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-	l_ft_samples    = l_ftData_vector.size() - 1;
-//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
-	l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
-	l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
-	l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
-	l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
-	l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
-	l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
-
-	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-	r_ft_samples    = r_ftData_vector.size() - 1;
-//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-	r_ftData.wrench.force.x  = r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x ;
-	r_ftData.wrench.force.y  = r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y ;
-	r_ftData.wrench.force.z  = r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z ;
-	r_ftData.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x;
-	r_ftData.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y;
-	r_ftData.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z;
+////  wristFTdata.update();
+//	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+//	l_ft_samples    = l_ftData_vector.size() - 1;
+////      l_ftData.wrench = l_ftData_vector[l_ft_samples];
+//	l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
+//	l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
+//	l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
+//	l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
+//	l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
+//	l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
+//
+//	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+//	r_ft_samples    = r_ftData_vector.size() - 1;
+////      r_ftData.wrench = r_ftData_vector[r_ft_samples];
+//	r_ftData.wrench.force.x  = r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x ;
+//	r_ftData.wrench.force.y  = r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y ;
+//	r_ftData.wrench.force.z  = r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z ;
+//	r_ftData.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x;
+//	r_ftData.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y;
+//	r_ftData.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z;
 
 
   double dt;                    // Servo loop time step
@@ -379,6 +379,23 @@ void PR2NeuroadptControllerClass::update()
 	// System Model END
 	/////////////////////////
 
+	// DEBUG
+	q_m(0)  = - 0.5 * (sin(circle_phase_) + 1 );
+	q_m(1)  = - 0.5 * (sin(circle_phase_) + 1 );
+	q_m(2)  = - 0.5 * (sin(circle_phase_) + 1 );
+	q_m(3)  = - 0.5 * (sin(circle_phase_) + 1 );
+	q_m(4)  = 0;
+	q_m(5)  = 0;
+	q_m(6)  = 0;
+
+	qd_m(0) = 0;
+	qd_m(1) = 0;
+	qd_m(2) = 0;
+	qd_m(3) = 0;
+	qd_m(4) = 0;
+	qd_m(5) = 0;
+	qd_m(6) = 0;
+
 
     /////////////////////////
 	// NN
@@ -392,7 +409,7 @@ void PR2NeuroadptControllerClass::update()
 	// Robust term
 	Z.block(0,0,Hidden,Outputs) = W_trans.transpose();
 	Z.block(Hidden,Outputs,Inputs+1,Hidden) = V_trans.transpose();
-	vRobust = kappa*r.norm()*vRobust.Ones(); /*- Kz*(Z.norm() + Zb)*r*/;
+	vRobust = kappa*r.norm()*vRobust.Ones(); /*- Kz*(Z.norm() + Zb)*r;*/
 
 	x(0 ) =  q(0);
 	x(1 ) =  q(1);
@@ -417,7 +434,7 @@ void PR2NeuroadptControllerClass::update()
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv*r /*+ y - vRobust*/ - t_h;
+	tau = Kv*r + y - vRobust /*- t_h*/;
 
 	//
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
