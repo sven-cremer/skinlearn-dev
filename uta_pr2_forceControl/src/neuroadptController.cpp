@@ -156,46 +156,6 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 	delT  = 0.001;
 
-
-	RBDL_model = new Model();
-
-	  RBDL_model->gravity = Vector3d (0., -9.81, 0.);
-
-	  RBDL_base             	   = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-	  RBDL_r_shoulder_pan_link     = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-	  RBDL_r_shoulder_lift_link    = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-	  RBDL_r_upper_arm_roll_link   = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-	  RBDL_r_upper_arm_link        = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-	  RBDL_r_elbow_flex_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-	  RBDL_r_forearm_roll_link     = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-	  RBDL_r_forearm_link          = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-	  RBDL_r_wrist_flex_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-	  RBDL_r_wrist_roll_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
-
-	  RBDL_r_shoulder_pan_joint   = Joint( JointTypeRevolute, Vector3d (0., 0., 1.) );
-	  RBDL_r_shoulder_lift_joint  = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
-	  RBDL_r_upper_arm_roll_joint = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
-	  RBDL_r_elbow_flex_joint     = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
-	  RBDL_r_forearm_roll_joint   = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
-	  RBDL_r_wrist_flex_joint     = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
-	  RBDL_r_wrist_roll_joint     = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
-
-	  RBDL_base_id					 = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), RBDL_r_shoulder_pan_joint   , RBDL_base				  );
-	  RBDL_r_shoulder_pan_link_id    = RBDL_model->AddBody(0, Xtrans(Vector3d(    0., -0.188, 0. )), RBDL_r_shoulder_lift_joint  , RBDL_r_shoulder_pan_link   );
-	  RBDL_r_shoulder_lift_link_id   = RBDL_model->AddBody(0, Xtrans(Vector3d(   0.1,     0., 0. )), RBDL_r_upper_arm_roll_joint , RBDL_r_shoulder_lift_link  );
-	  RBDL_r_upper_arm_roll_link_id  = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed              , RBDL_r_upper_arm_roll_link );
-	  RBDL_r_upper_arm_link_id       = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed              , RBDL_r_upper_arm_link      );
-	  RBDL_r_elbow_flex_link_id      = RBDL_model->AddBody(0, Xtrans(Vector3d(   0.4,     0., 0. )), RBDL_r_elbow_flex_joint     , RBDL_r_elbow_flex_link     );
-	  RBDL_r_forearm_roll_link_id    = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), RBDL_r_forearm_roll_joint   , RBDL_r_forearm_roll_link   );
-	  RBDL_r_forearm_link_id         = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed              , RBDL_r_forearm_link        );
-	  RBDL_r_wrist_flex_link_id      = RBDL_model->AddBody(0, Xtrans(Vector3d( 0.321,     0., 0. )), RBDL_r_wrist_flex_joint     , RBDL_r_wrist_flex_link     );
-	  RBDL_r_wrist_roll_link_id      = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), RBDL_r_wrist_roll_joint     , RBDL_r_wrist_roll_link     );
-
-	  RBDL_Q     = VectorNd::Zero ( Joints );
-	  RBDL_QDot  = VectorNd::Zero ( Joints );
-	  RBDL_Tau   = VectorNd::Ones ( Joints );
-	  RBDL_QDDot = VectorNd::Zero ( Joints );
-
 	// System Model END
 	/////////////////////////
 
