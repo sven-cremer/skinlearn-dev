@@ -118,7 +118,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// System Model
 
-	double m = 50;
+	double m = 1;
 	double d = 10;
 	double k = 1;
 
@@ -283,7 +283,7 @@ void PR2NeuroadptControllerClass::update()
   }
 
   // Follow a circle of 10cm at 3 rad/sec.
-  circle_phase_ += 3.0 * dt;
+  circle_phase_ += 1 * dt;
   KDL::Vector  circle(0,0,0);
 //  circle(2) = 0.1 * sin(circle_phase_);
 //  circle(1) = 0.1 * (cos(circle_phase_) - 1);
@@ -299,9 +299,9 @@ void PR2NeuroadptControllerClass::update()
 
 
   // Force error
-  ferr_(0) = 0                 ; // r_ftData.wrench.force.x ;
-  ferr_(1) = 0                 ; // r_ftData.wrench.force.y ;
-  ferr_(2) = sin(circle_phase_); // r_ftData.wrench.force.z ;
+  ferr_(0) = sin(circle_phase_); // r_ftData.wrench.force.x ;
+  ferr_(1) = 0				   ; // r_ftData.wrench.force.y ;
+  ferr_(2) = 0				   ; // r_ftData.wrench.force.z ;
   ferr_(3) = 0                 ; // r_ftData.wrench.torque.x;
   ferr_(4) = 0                 ; // r_ftData.wrench.torque.y;
   ferr_(5) = 0                 ; // r_ftData.wrench.torque.z;
@@ -334,13 +334,13 @@ void PR2NeuroadptControllerClass::update()
 	// System Model
 
   	// Integrator
-	t_h(0) = tau_h(0);
-	t_h(1) = tau_h(1);
-	t_h(2) = tau_h(2);
-	t_h(3) = tau_h(3);
-	t_h(4) = tau_h(4);
-	t_h(5) = tau_h(5);
-	t_h(6) = tau_h(6);
+	t_h(0) = 0 ; // tau_h(0);
+	t_h(1) =        tau_h(1);
+	t_h(2) = 0 ; // tau_h(2);
+	t_h(3) = 0 ; // tau_h(3);
+	t_h(4) = 0 ; // tau_h(4);
+	t_h(5) = 0 ; // tau_h(5);
+	t_h(6) = 0 ; // tau_h(6);
 
 	// Current joint positions and velocities
 	q = JointKdl2Eigen( q_ );
