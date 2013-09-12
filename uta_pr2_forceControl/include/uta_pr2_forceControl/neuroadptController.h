@@ -25,6 +25,11 @@
 #include "ros/ros.h"
 #include <urdf/model.h>
 
+#include <boost/array.hpp>
+#include <boost/numeric/odeint.hpp>
+
+typedef boost::array< double , 3 > state_type;
+
 namespace pr2_controller_ns{
 
 class PR2NeuroadptControllerClass: public pr2_controller_interface::Controller
@@ -127,6 +132,13 @@ private:
   SystemVector 	tau;
 
   double delT;
+
+  double sigma;
+  double R;
+  double b;
+
+  state_type ode_init_x;
+
   // System Model END
   /////////////////////////
 

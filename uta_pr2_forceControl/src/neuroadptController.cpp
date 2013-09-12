@@ -3,6 +3,26 @@
 
 using namespace pr2_controller_ns;
 
+using namespace std;
+using namespace boost::numeric::odeint;
+
+void lorenz( const state_type &x , state_type &dxdt , double t )
+{
+
+	double sigma = 10.0;
+	double R = 28.0;
+	double b = 8.0 / 3.0;
+
+    dxdt[0] = sigma * ( x[1] - x[0] );
+    dxdt[1] = R * x[0] - x[1] - x[0] * x[2];
+    dxdt[2] = -b * x[2] + x[0] * x[1];
+}
+
+void write_lorenz( const state_type &x , const double t )
+{
+    cout << t << '\t' << x[0] << '\t' << x[1] << '\t' << x[2] << endl;
+}
+
 /// Controller initialization in non-realtime
 bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n )
 {
@@ -155,6 +175,11 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	MmInv = Mm;
 
 	delT  = 0.001;
+
+
+	ode_init_x[0] = 10.0;
+	ode_init_x[1] = 1.0;
+	ode_init_x[2] = 1.0; // initial conditions
 
 	// System Model END
 	/////////////////////////
@@ -375,6 +400,8 @@ void PR2NeuroadptControllerClass::update()
 	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
 	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
 	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
+
+	integrate( lorenz , ode_init_x , 0.0 , 25.0 , 0.1 , write_lorenz );
 
 	// System Model END
 	/////////////////////////
