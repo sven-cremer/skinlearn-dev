@@ -238,9 +238,9 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	// NN
 
 	kappa  = 0.07;
-	Kv     = 1; // prop. gain for PID inner loop
-	lambda = 1; //*std::sqrt(Kp); // der. gain for PID inner loop
-	Kz     = 5;
+	Kv     = 5; // prop. gain for PID inner loop
+	lambda = 0.5; //*std::sqrt(Kp); // der. gain for PID inner loop
+	Kz     = 3;
 	Zb     = 100;
 
 	hiddenLayerIdentity.setIdentity();
@@ -254,6 +254,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	G.setIdentity();
 	L.setIdentity();
 
+	// Very important
 	Z.setZero();
 
 	F = 100*F;
@@ -513,7 +514,7 @@ void PR2NeuroadptControllerClass::update()
 	// Robust term
 	Z.block(0,0,Hidden,Outputs) = W_trans.transpose();
 	Z.block(Hidden,Outputs,Inputs+1,Hidden) = V_trans.transpose();
-	vRobust = /*kappa*r.norm()*vRobust.Ones();*/ - Kz*(Z.norm() + Zb)*r;
+	vRobust = - Kz*(Z.norm() + Zb)*r;
 
 	x(0 ) =  q(0);
 	x(1 ) =  q(1);
