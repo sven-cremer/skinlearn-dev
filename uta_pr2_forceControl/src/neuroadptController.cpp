@@ -256,8 +256,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 	kappa  = 0.07;
 	Kv     = 10; // prop. gain for PID inner loop
-	lambda = 5; //*std::sqrt(Kp); // der. gain for PID inner loop
-	Kz     = 0;
+	lambda = 0.05; //*std::sqrt(Kp); // der. gain for PID inner loop
+	Kz     = 3;
 	Zb     = 100;
 
 	hiddenLayerIdentity.setIdentity();
