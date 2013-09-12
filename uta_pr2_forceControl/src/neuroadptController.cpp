@@ -255,8 +255,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	// NN
 
 	kappa  = 0.07;
-	Kv     = 5; // prop. gain for PID inner loop
-	lambda = 0.5; //*std::sqrt(Kp); // der. gain for PID inner loop
+	Kv     = 100; // prop. gain for PID inner loop
+	lambda = 0.01; //*std::sqrt(Kp); // der. gain for PID inner loop
 	Kz     = 3;
 	Zb     = 100;
 
@@ -558,7 +558,7 @@ void PR2NeuroadptControllerClass::update()
 
 	// control torques
 //	tau = Kv*r + y - vRobust /* - t_h*/;
-	tau = (qd_m - qd) + 100*(q_m - q);;
+	tau = (qd_m - qd) + 100*(q_m - q);
 
 	//
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
