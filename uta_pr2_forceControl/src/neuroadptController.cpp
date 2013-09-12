@@ -557,8 +557,8 @@ void PR2NeuroadptControllerClass::update()
 	y = outputLayer_out;
 
 	// control torques
-//	tau = Kv*r + y - vRobust /* - t_h*/;
-	tau = (qd_m - qd) + 100*(q_m - q);
+	tau = Kv*r + y - vRobust /* - t_h*/;
+//	tau = (qd_m - qd) + 100*(q_m - q);
 
 	//
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
