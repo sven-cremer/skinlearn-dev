@@ -29,6 +29,7 @@
 #include <boost/numeric/odeint.hpp>
 
 typedef boost::array< double , 21 > state_type;
+typedef boost::array< double , 4 > state_type_4;
 
 namespace pr2_controller_ns{
 
@@ -139,7 +140,8 @@ private:
   double R;
   double b;
 
-  state_type ode_init_x;
+  state_type   ode_init_x;
+  state_type_4 vpol_init_x;
 
   // System Model END
   /////////////////////////

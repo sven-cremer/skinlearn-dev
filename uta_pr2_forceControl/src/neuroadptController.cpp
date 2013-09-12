@@ -40,6 +40,18 @@ void reference_model( const state_type &x , state_type &dxdt , double t )
 
 }
 
+void vanderpol_model( const state_type_4 &x , state_type_4 &dxdt , double t )
+{
+	double Mu1 = 0.2;
+	double Mu2 = 5  ;
+
+	dxdt[0 ] = x[2];
+	dxdt[1 ] = x[3];
+	dxdt[2 ] = Mu1*(1-x[0]*x[0])*x[2]-x[0];
+	dxdt[3 ] = Mu2*(1-x[1]*x[1])*x[3]-x[1];
+
+}
+
 void write_lorenz( const state_type &x , const double t )
 {
     cout << t << '\t' << x[0] << '\t' << x[1] << '\t' << x[2] << endl;
@@ -230,6 +242,11 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	ode_init_x[20] = 0.0;
 
 
+	vpol_init_x[0 ] = 2.0;
+	vpol_init_x[1 ] = 2.0;
+    vpol_init_x[2 ] = 0.0;
+    vpol_init_x[3 ] = 0.0;
+
 	// System Model END
 	/////////////////////////
 
@@ -413,7 +430,7 @@ void PR2NeuroadptControllerClass::update()
 
   	// Integrator
 	t_h(0) = 0 ; // tau_h(0);
-	t_h(1) = sin(circle_phase_);    // tau_h(1);
+	t_h(1) = vpol_init_x[0]; //sin(circle_phase_);    // tau_h(1);
 	t_h(2) = 0 ; // tau_h(2);
 	t_h(3) = 0 ; // tau_h(3);
 	t_h(4) = 0 ; // tau_h(4);
@@ -480,6 +497,7 @@ void PR2NeuroadptControllerClass::update()
 	ode_init_x[20] = t_h(6);
 
 //	integrate( reference_model , ode_init_x , 0.0 , 0.001 , 0.001 );
+	integrate( vanderpol_model , vpol_init_x , 0.0 , 0.001 , 0.001 );
 
 	// System Model END
 	/////////////////////////
