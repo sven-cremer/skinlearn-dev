@@ -6,16 +6,38 @@ using namespace pr2_controller_ns;
 using namespace std;
 using namespace boost::numeric::odeint;
 
-void lorenz( const state_type &x , state_type &dxdt , double t )
+void reference_model( const state_type &x , state_type &dxdt , double t )
 {
 
-	double sigma = 10.0;
-	double R = 28.0;
-	double b = 8.0 / 3.0;
+	double m = 1;
+	double d = 10;
+	double k = 1;
 
-    dxdt[0] = sigma * ( x[1] - x[0] );
-    dxdt[1] = R * x[0] - x[1] - x[0] * x[2];
-    dxdt[2] = -b * x[2] + x[0] * x[1];
+	dxdt[0 ] = x[7 ];
+	dxdt[1 ] = x[8 ];
+	dxdt[2 ] = x[9 ];
+	dxdt[3 ] = x[10];
+	dxdt[4 ] = x[11];
+	dxdt[5 ] = x[12];
+	dxdt[6 ] = x[13];
+
+	//             f_r		 qd_m      q_m
+	dxdt[7 ] = m*( x[14] - d*x[7 ] - k*x[0 ] );
+	dxdt[8 ] = m*( x[15] - d*x[8 ] - k*x[1 ] );
+	dxdt[9 ] = m*( x[16] - d*x[9 ] - k*x[2 ] );
+	dxdt[10] = m*( x[17] - d*x[10] - k*x[3 ] );
+	dxdt[11] = m*( x[18] - d*x[11] - k*x[4 ] );
+	dxdt[12] = m*( x[19] - d*x[12] - k*x[5 ] );
+	dxdt[13] = m*( x[20] - d*x[13] - k*x[6 ] );
+
+	dxdt[14] = x[14];
+	dxdt[15] = x[15];
+	dxdt[16] = x[16];
+	dxdt[17] = x[17];
+	dxdt[18] = x[18];
+	dxdt[19] = x[19];
+	dxdt[20] = x[20];
+
 }
 
 void write_lorenz( const state_type &x , const double t )
@@ -172,14 +194,35 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 	t_h   << 0, 0, 0, 0, 0, 0, 0 ;
 
-	MmInv = Mm;
+	MmInv = Mm.inverse();
 
 	delT  = 0.001;
 
+	// initial conditions
+	ode_init_x[0 ] = 0.0;
+	ode_init_x[1 ] = 0.0;
+	ode_init_x[2 ] = 0.0;
+	ode_init_x[3 ] = 0.0;
+	ode_init_x[4 ] = 0.0;
+	ode_init_x[5 ] = 0.0;
+	ode_init_x[6 ] = 0.0;
 
-	ode_init_x[0] = 10.0;
-	ode_init_x[1] = 1.0;
-	ode_init_x[2] = 1.0; // initial conditions
+	ode_init_x[7 ] = 0.0;
+	ode_init_x[8 ] = 0.0;
+	ode_init_x[9 ] = 0.0;
+	ode_init_x[10] = 0.0;
+	ode_init_x[11] = 0.0;
+	ode_init_x[12] = 0.0;
+	ode_init_x[13] = 0.0;
+
+	ode_init_x[14] = 0.0;
+	ode_init_x[15] = 0.0;
+	ode_init_x[16] = 0.0;
+	ode_init_x[17] = 0.0;
+	ode_init_x[18] = 0.0;
+	ode_init_x[19] = 0.0;
+	ode_init_x[20] = 0.0;
+
 
 	// System Model END
 	/////////////////////////
@@ -360,7 +403,7 @@ void PR2NeuroadptControllerClass::update()
 
   	// Integrator
 	t_h(0) = 0 ; // tau_h(0);
-	t_h(1) =        tau_h(1);
+	t_h(1) = sin(circle_phase_);    // tau_h(1);
 	t_h(2) = 0 ; // tau_h(2);
 	t_h(3) = 0 ; // tau_h(3);
 	t_h(4) = 0 ; // tau_h(4);
@@ -375,53 +418,78 @@ void PR2NeuroadptControllerClass::update()
 	qd_m  = qd_m + delT*qdd_m;
 	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
 
-	// Check for joint limits and reset
-	// (condition) ? (if_true) : (if_false)
-	q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
-	q_m(1) = fmax( (double) q_m(1), (double) q_lower(1) );
-	q_m(2) = fmax( (double) q_m(2), (double) q_lower(2) );
-	q_m(3) = fmax( (double) q_m(3), (double) q_lower(3) );
-//	q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
-	q_m(5) = fmax( (double) q_m(5), (double) q_lower(5) );
-//	q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
+//	// Check for joint limits and reset
+//	// (condition) ? (if_true) : (if_false)
+//	q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
+//	q_m(1) = fmax( (double) q_m(1), (double) q_lower(1) );
+//	q_m(2) = fmax( (double) q_m(2), (double) q_lower(2) );
+//	q_m(3) = fmax( (double) q_m(3), (double) q_lower(3) );
+////	q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
+//	q_m(5) = fmax( (double) q_m(5), (double) q_lower(5) );
+////	q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
+//
+//	q_m(0) = fmin( (double) q_m(0), (double) q_upper(0) );
+//	q_m(1) = fmin( (double) q_m(1), (double) q_upper(1) );
+//	q_m(2) = fmin( (double) q_m(2), (double) q_upper(2) );
+//	q_m(3) = fmin( (double) q_m(3), (double) q_upper(3) );
+////	q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
+//	q_m(5) = fmin( (double) q_m(5), (double) q_upper(5) );
+////	q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
+//
+//	qd_m(0) = fmin( (double) qd_m(0), (double) qd_limit(0) );
+//	qd_m(1) = fmin( (double) qd_m(1), (double) qd_limit(1) );
+//	qd_m(2) = fmin( (double) qd_m(2), (double) qd_limit(2) );
+//	qd_m(3) = fmin( (double) qd_m(3), (double) qd_limit(3) );
+//	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
+//	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
+//	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
 
-	q_m(0) = fmin( (double) q_m(0), (double) q_upper(0) );
-	q_m(1) = fmin( (double) q_m(1), (double) q_upper(1) );
-	q_m(2) = fmin( (double) q_m(2), (double) q_upper(2) );
-	q_m(3) = fmin( (double) q_m(3), (double) q_upper(3) );
-//	q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
-	q_m(5) = fmin( (double) q_m(5), (double) q_upper(5) );
-//	q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
 
-	qd_m(0) = fmin( (double) qd_m(0), (double) qd_limit(0) );
-	qd_m(1) = fmin( (double) qd_m(1), (double) qd_limit(1) );
-	qd_m(2) = fmin( (double) qd_m(2), (double) qd_limit(2) );
-	qd_m(3) = fmin( (double) qd_m(3), (double) qd_limit(3) );
-	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
-	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
-	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
+//	ode_init_x[0 ] = 0.0;
+//	ode_init_x[1 ] = 0.0;
+//	ode_init_x[2 ] = 0.0;
+//	ode_init_x[3 ] = 0.0;
+//	ode_init_x[4 ] = 0.0;
+//	ode_init_x[5 ] = 0.0;
+//	ode_init_x[6 ] = 0.0;
+//
+//	ode_init_x[7 ] = 0.0;
+//	ode_init_x[8 ] = 0.0;
+//	ode_init_x[9 ] = 0.0;
+//	ode_init_x[10] = 0.0;
+//	ode_init_x[11] = 0.0;
+//	ode_init_x[12] = 0.0;
+//	ode_init_x[13] = 0.0;
 
-	integrate( lorenz , ode_init_x , 0.0 , 25.0 , 0.1 , write_lorenz );
+	ode_init_x[14] = t_h(0);
+	ode_init_x[15] = t_h(1);
+	ode_init_x[16] = t_h(2);
+	ode_init_x[17] = t_h(3);
+	ode_init_x[18] = t_h(4);
+	ode_init_x[19] = t_h(5);
+	ode_init_x[20] = t_h(6);
+
+	integrate( reference_model , ode_init_x , 0.0 , 0.001 , 0.001 );
 
 	// System Model END
 	/////////////////////////
 
-	// DEBUG
-	q_m(0)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(1)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(2)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(3)  =       - 0.5 * (sin(circle_phase_) + 1.5 );
-	q_m(4)  = 0;
-	q_m(5)  = 0;
-	q_m(6)  = 0;
-
-	qd_m(0) = 0;
-	qd_m(1) = 0;
-	qd_m(2) = 0;
-	qd_m(3) = - 10 * (cos(circle_phase_));
-	qd_m(4) = 0;
-	qd_m(5) = 0;
-	qd_m(6) = 0;
+//	// DEBUG
+//	q_m(0)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+//	q_m(1)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+//	q_m(2)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+//	q_m(3)  =       - 0.5 * (sin(circle_phase_) + 1.5 );
+//	q_m(4)  = 0;
+//	q_m(5)  = 0;
+//	q_m(6)  = 0;
+//
+//	qd_m(0) = 0;
+//	qd_m(1) = 0;
+//	qd_m(2) = 0;
+//	qd_m(3) = - 10 * (cos(circle_phase_));
+//	qd_m(4) = 0;
+//	qd_m(5) = 0;
+//	qd_m(6) = 0;
 
 
     /////////////////////////
@@ -489,13 +557,13 @@ void PR2NeuroadptControllerClass::update()
 	modelState.position[5] = q_m(5);
 	modelState.position[6] = q_m(6);
 
-	modelState.velocity[0] = tau(0);
-	modelState.velocity[1] = tau(1);
-	modelState.velocity[2] = tau(2);
-	modelState.velocity[3] = tau(3);
-	modelState.velocity[4] = tau(4);
-	modelState.velocity[5] = tau(5);
-	modelState.velocity[6] = tau(6);
+	modelState.velocity[0] = ode_init_x[0 ] ; // tau(0);
+	modelState.velocity[1] = ode_init_x[1 ] ; // tau(1);
+	modelState.velocity[2] = ode_init_x[2 ] ; // tau(2);
+	modelState.velocity[3] = ode_init_x[3 ] ; // tau(3);
+	modelState.velocity[4] = ode_init_x[4 ] ; // tau(4);
+	modelState.velocity[5] = ode_init_x[5 ] ; // tau(5);
+	modelState.velocity[6] = ode_init_x[6 ] ; // tau(6);
 
 	// And finally send these torques out.
     chain_.setEfforts(tau_);

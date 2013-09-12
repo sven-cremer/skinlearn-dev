@@ -28,7 +28,7 @@
 #include <boost/array.hpp>
 #include <boost/numeric/odeint.hpp>
 
-typedef boost::array< double , 3 > state_type;
+typedef boost::array< double , 21 > state_type;
 
 namespace pr2_controller_ns{
 
