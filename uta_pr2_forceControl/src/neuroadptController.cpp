@@ -255,9 +255,9 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	// NN
 
 	kappa  = 0.07;
-	Kv     = 30; // prop. gain for PID inner loop
+	Kv     = 10; // prop. gain for PID inner loop
 	lambda = 0.01; //*std::sqrt(Kp); // der. gain for PID inner loop
-	Kz     = 3;
+	Kz     = 0;
 	Zb     = 100;
 
 	hiddenLayerIdentity.setIdentity();
@@ -502,22 +502,22 @@ void PR2NeuroadptControllerClass::update()
 	// System Model END
 	/////////////////////////
 
-	// DEBUG
-	q_m(0)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(1)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(2)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(3)  =       - 0.5 * (sin(circle_phase_) + 1.5 );
-	q_m(4)  = 0;
-	q_m(5)  = 0;
-	q_m(6)  = 0;
-
-	qd_m(0) = 0;
-	qd_m(1) = 0;
-	qd_m(2) = 0;
-	qd_m(3) = - 10 * (cos(circle_phase_));
-	qd_m(4) = 0;
-	qd_m(5) = 0;
-	qd_m(6) = 0;
+//	// DEBUG
+//	q_m(0)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+//	q_m(1)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+//	q_m(2)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+//	q_m(3)  =       - 0.5 * (sin(circle_phase_) + 1.5 );
+//	q_m(4)  = 0;
+//	q_m(5)  = 0;
+//	q_m(6)  = 0;
+//
+//	qd_m(0) = 0;
+//	qd_m(1) = 0;
+//	qd_m(2) = 0;
+//	qd_m(3) = - 10 * (cos(circle_phase_));
+//	qd_m(4) = 0;
+//	qd_m(5) = 0;
+//	qd_m(6) = 0;
 
 
     /////////////////////////
