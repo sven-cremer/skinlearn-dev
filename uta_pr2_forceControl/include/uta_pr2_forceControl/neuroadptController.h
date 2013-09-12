@@ -58,6 +58,7 @@ private:
   geometry_msgs::WrenchStamped r_ftData;
 
   sensor_msgs::JointState modelState;
+  sensor_msgs::JointState robotState;
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
@@ -100,6 +101,7 @@ private:
   //! realtime publisher for max_force value
   realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_;
   realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubModelStates_;
+  realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubRobotStates_;
   geometry_msgs::WrenchStamped r_forceData;
 
   //! publish max_force values every X realtime cycles

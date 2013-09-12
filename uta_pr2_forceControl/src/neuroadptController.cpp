@@ -116,6 +116,12 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   modelState.name.resize(kdl_chain_.getNrOfJoints());
   modelState.position.resize(kdl_chain_.getNrOfJoints());
   modelState.velocity.resize(kdl_chain_.getNrOfJoints());
+  modelState.effort.resize(kdl_chain_.getNrOfJoints());
+
+  robotState.name.resize(kdl_chain_.getNrOfJoints());
+  robotState.position.resize(kdl_chain_.getNrOfJoints());
+  robotState.velocity.resize(kdl_chain_.getNrOfJoints());
+  robotState.effort.resize(kdl_chain_.getNrOfJoints());
 
   modelState.name[0] = kdl_chain_.getSegment(0).getJoint().getName(); // TODO test this stuff, better way to get joint names...
   modelState.name[1] = kdl_chain_.getSegment(1).getJoint().getName(); // TODO test this stuff, better way to get joint names...
@@ -194,7 +200,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 	t_h   << 0, 0, 0, 0, 0, 0, 0 ;
 
-	MmInv = Mm.inverse();
+	MmInv = Mm;
 
 	delT  = 0.001;
 
@@ -232,8 +238,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	// NN
 
 	kappa  = 0.07;
-	Kv     = 10; // prop. gain for PID inner loop
-	lambda = 5; //*std::sqrt(Kp); // der. gain for PID inner loop
+	Kv     = 5; // prop. gain for PID inner loop
+	lambda = 1; //*std::sqrt(Kp); // der. gain for PID inner loop
 	Kz     = 1;
 	Zb     = 1000;
 
@@ -271,8 +277,9 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   should_publish_  = false;
 
   // Initialize realtime publisher to publish to ROS topic
-  pub_.init(n, "force_torque_stats", 2);
-  pubModelStates_.init(n, "model_joint_states", 2);
+  pub_.init(n, "force_torque_stats", 1);
+  pubModelStates_.init(n, "model_joint_states", 1);
+  pubRobotStates_.init(n, "robot_joint_states", 1);
 
   return true;
 }
@@ -418,31 +425,31 @@ void PR2NeuroadptControllerClass::update()
 	qd_m  = qd_m + delT*qdd_m;
 	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
 
-//	// Check for joint limits and reset
-//	// (condition) ? (if_true) : (if_false)
-//	q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
-//	q_m(1) = fmax( (double) q_m(1), (double) q_lower(1) );
-//	q_m(2) = fmax( (double) q_m(2), (double) q_lower(2) );
-//	q_m(3) = fmax( (double) q_m(3), (double) q_lower(3) );
-////	q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
-//	q_m(5) = fmax( (double) q_m(5), (double) q_lower(5) );
-////	q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
-//
-//	q_m(0) = fmin( (double) q_m(0), (double) q_upper(0) );
-//	q_m(1) = fmin( (double) q_m(1), (double) q_upper(1) );
-//	q_m(2) = fmin( (double) q_m(2), (double) q_upper(2) );
-//	q_m(3) = fmin( (double) q_m(3), (double) q_upper(3) );
-////	q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
-//	q_m(5) = fmin( (double) q_m(5), (double) q_upper(5) );
-////	q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
-//
-//	qd_m(0) = fmin( (double) qd_m(0), (double) qd_limit(0) );
-//	qd_m(1) = fmin( (double) qd_m(1), (double) qd_limit(1) );
-//	qd_m(2) = fmin( (double) qd_m(2), (double) qd_limit(2) );
-//	qd_m(3) = fmin( (double) qd_m(3), (double) qd_limit(3) );
-//	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
-//	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
-//	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
+	// Check for joint limits and reset
+	// (condition) ? (if_true) : (if_false)
+	q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
+	q_m(1) = fmax( (double) q_m(1), (double) q_lower(1) );
+	q_m(2) = fmax( (double) q_m(2), (double) q_lower(2) );
+	q_m(3) = fmax( (double) q_m(3), (double) q_lower(3) );
+//	q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
+	q_m(5) = fmax( (double) q_m(5), (double) q_lower(5) );
+//	q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
+
+	q_m(0) = fmin( (double) q_m(0), (double) q_upper(0) );
+	q_m(1) = fmin( (double) q_m(1), (double) q_upper(1) );
+	q_m(2) = fmin( (double) q_m(2), (double) q_upper(2) );
+	q_m(3) = fmin( (double) q_m(3), (double) q_upper(3) );
+//	q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
+	q_m(5) = fmin( (double) q_m(5), (double) q_upper(5) );
+//	q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
+
+	qd_m(0) = fmin( (double) qd_m(0), (double) qd_limit(0) );
+	qd_m(1) = fmin( (double) qd_m(1), (double) qd_limit(1) );
+	qd_m(2) = fmin( (double) qd_m(2), (double) qd_limit(2) );
+	qd_m(3) = fmin( (double) qd_m(3), (double) qd_limit(3) );
+	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
+	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
+	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
 
 
 //	ode_init_x[0 ] = 0.0;
@@ -469,7 +476,7 @@ void PR2NeuroadptControllerClass::update()
 	ode_init_x[19] = t_h(5);
 	ode_init_x[20] = t_h(6);
 
-	integrate( reference_model , ode_init_x , 0.0 , 0.001 , 0.001 );
+//	integrate( reference_model , ode_init_x , 0.0 , 0.001 , 0.001 );
 
 	// System Model END
 	/////////////////////////
@@ -529,7 +536,7 @@ void PR2NeuroadptControllerClass::update()
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv*r + y - vRobust /*- t_h*/;
+	tau = Kv*r + y /*- vRobust  - t_h*/;
 
 	//
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
@@ -548,6 +555,7 @@ void PR2NeuroadptControllerClass::update()
 
 
 	modelState.header.stamp = robot_state_->getTime();
+	robotState.header.stamp = robot_state_->getTime();
 
 	modelState.position[0] = q_m(0);
 	modelState.position[1] = q_m(1);
@@ -557,13 +565,48 @@ void PR2NeuroadptControllerClass::update()
 	modelState.position[5] = q_m(5);
 	modelState.position[6] = q_m(6);
 
-	modelState.velocity[0] = ode_init_x[0 ] ; // tau(0);
-	modelState.velocity[1] = ode_init_x[1 ] ; // tau(1);
-	modelState.velocity[2] = ode_init_x[2 ] ; // tau(2);
-	modelState.velocity[3] = ode_init_x[3 ] ; // tau(3);
-	modelState.velocity[4] = ode_init_x[4 ] ; // tau(4);
-	modelState.velocity[5] = ode_init_x[5 ] ; // tau(5);
-	modelState.velocity[6] = ode_init_x[6 ] ; // tau(6);
+	modelState.velocity[0] = qd_m(0); // ode_init_x[0 ] ; // tau(0);
+	modelState.velocity[1] = qd_m(1); // ode_init_x[1 ] ; // tau(1);
+	modelState.velocity[2] = qd_m(2); // ode_init_x[2 ] ; // tau(2);
+	modelState.velocity[3] = qd_m(3); // ode_init_x[3 ] ; // tau(3);
+	modelState.velocity[4] = qd_m(4); // ode_init_x[4 ] ; // tau(4);
+	modelState.velocity[5] = qd_m(5); // ode_init_x[5 ] ; // tau(5);
+	modelState.velocity[6] = qd_m(6); // ode_init_x[6 ] ; // tau(6);
+
+	// Input torque to mode | torque from human
+	modelState.effort[0] = t_h(0);
+	modelState.effort[1] = t_h(1);
+	modelState.effort[2] = t_h(2);
+	modelState.effort[3] = t_h(3);
+	modelState.effort[4] = t_h(4);
+	modelState.effort[5] = t_h(5);
+	modelState.effort[6] = t_h(6);
+
+	robotState.position[0] = q(0);;
+	robotState.position[1] = q(1);;
+	robotState.position[2] = q(2);;
+	robotState.position[3] = q(3);;
+	robotState.position[4] = q(4);;
+	robotState.position[5] = q(5);;
+	robotState.position[6] = q(6);;
+
+	robotState.velocity[0] = qd(0);
+	robotState.velocity[1] = qd(1);
+	robotState.velocity[2] = qd(2);
+	robotState.velocity[3] = qd(3);
+	robotState.velocity[4] = qd(4);
+	robotState.velocity[5] = qd(5);
+	robotState.velocity[6] = qd(6);
+
+	// Output torque from controller that is sent to the robot
+	robotState.effort[0] = tau_(0);
+	robotState.effort[1] = tau_(1);
+	robotState.effort[2] = tau_(2);
+	robotState.effort[3] = tau_(3);
+	robotState.effort[4] = tau_(4);
+	robotState.effort[5] = tau_(5);
+	robotState.effort[6] = tau_(6);
+
 
 	// And finally send these torques out.
     chain_.setEfforts(tau_);
@@ -583,9 +626,11 @@ void PR2NeuroadptControllerClass::update()
 		pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
 
 		pubModelStates_.msg_ = modelState;
+		pubRobotStates_.msg_ = robotState;
 
 		pub_.unlockAndPublish();
 		pubModelStates_.unlockAndPublish();
+		pubRobotStates_.unlockAndPublish();
 	}
 
 }
