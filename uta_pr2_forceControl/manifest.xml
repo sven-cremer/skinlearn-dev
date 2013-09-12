@@ -14,6 +14,8 @@
   <depend package="realtime_tools"/>
   <depend package="pluginlib"/>
   <depend package="kdl" />
+  
+  <depend package="rbdl" />
 
   <export>
     <pr2_controller_interface plugin="${prefix}/controller_plugins.xml" />

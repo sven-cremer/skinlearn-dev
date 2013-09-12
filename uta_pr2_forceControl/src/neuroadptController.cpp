@@ -118,9 +118,9 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// System Model
 
-	double m = 5;
-	double d = 5;
-	double k = 5;
+	double m = 50;
+	double d = 10;
+	double k = 1;
 
 	Mm << m, 0, 0, 0, 0, 0, 0,
 		  0, m, 0, 0, 0, 0, 0,
@@ -155,6 +155,46 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	MmInv = Mm;
 
 	delT  = 0.001;
+
+
+	RBDL_model = new Model();
+
+	  RBDL_model->gravity = Vector3d (0., -9.81, 0.);
+
+	  RBDL_base             	   = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+	  RBDL_r_shoulder_pan_link     = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+	  RBDL_r_shoulder_lift_link    = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+	  RBDL_r_upper_arm_roll_link   = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+	  RBDL_r_upper_arm_link        = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+	  RBDL_r_elbow_flex_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+	  RBDL_r_forearm_roll_link     = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+	  RBDL_r_forearm_link          = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+	  RBDL_r_wrist_flex_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+	  RBDL_r_wrist_roll_link       = Body (1., Vector3d (0.5, 0., 0.0), Vector3d (1., 1., 1.));
+
+	  RBDL_r_shoulder_pan_joint   = Joint( JointTypeRevolute, Vector3d (0., 0., 1.) );
+	  RBDL_r_shoulder_lift_joint  = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
+	  RBDL_r_upper_arm_roll_joint = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
+	  RBDL_r_elbow_flex_joint     = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
+	  RBDL_r_forearm_roll_joint   = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
+	  RBDL_r_wrist_flex_joint     = Joint( JointTypeRevolute, Vector3d (0., 1., 0.) );
+	  RBDL_r_wrist_roll_joint     = Joint( JointTypeRevolute, Vector3d (1., 0., 0.) );
+
+	  RBDL_base_id					 = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), RBDL_r_shoulder_pan_joint   , RBDL_base				  );
+	  RBDL_r_shoulder_pan_link_id    = RBDL_model->AddBody(0, Xtrans(Vector3d(    0., -0.188, 0. )), RBDL_r_shoulder_lift_joint  , RBDL_r_shoulder_pan_link   );
+	  RBDL_r_shoulder_lift_link_id   = RBDL_model->AddBody(0, Xtrans(Vector3d(   0.1,     0., 0. )), RBDL_r_upper_arm_roll_joint , RBDL_r_shoulder_lift_link  );
+	  RBDL_r_upper_arm_roll_link_id  = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed              , RBDL_r_upper_arm_roll_link );
+	  RBDL_r_upper_arm_link_id       = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed              , RBDL_r_upper_arm_link      );
+	  RBDL_r_elbow_flex_link_id      = RBDL_model->AddBody(0, Xtrans(Vector3d(   0.4,     0., 0. )), RBDL_r_elbow_flex_joint     , RBDL_r_elbow_flex_link     );
+	  RBDL_r_forearm_roll_link_id    = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), RBDL_r_forearm_roll_joint   , RBDL_r_forearm_roll_link   );
+	  RBDL_r_forearm_link_id         = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), JointTypeFixed              , RBDL_r_forearm_link        );
+	  RBDL_r_wrist_flex_link_id      = RBDL_model->AddBody(0, Xtrans(Vector3d( 0.321,     0., 0. )), RBDL_r_wrist_flex_joint     , RBDL_r_wrist_flex_link     );
+	  RBDL_r_wrist_roll_link_id      = RBDL_model->AddBody(0, Xtrans(Vector3d(    0.,     0., 0. )), RBDL_r_wrist_roll_joint     , RBDL_r_wrist_roll_link     );
+
+	  RBDL_Q     = VectorNd::Zero ( Joints );
+	  RBDL_QDot  = VectorNd::Zero ( Joints );
+	  RBDL_Tau   = VectorNd::Ones ( Joints );
+	  RBDL_QDDot = VectorNd::Zero ( Joints );
 
 	// System Model END
 	/////////////////////////
@@ -299,12 +339,12 @@ void PR2NeuroadptControllerClass::update()
 
 
   // Force error
-  ferr_(0) = r_ftData.wrench.force.x ;
-  ferr_(1) = r_ftData.wrench.force.y ;
-  ferr_(2) = r_ftData.wrench.force.z ;
-  ferr_(3) = r_ftData.wrench.torque.x;
-  ferr_(4) = r_ftData.wrench.torque.y;
-  ferr_(5) = r_ftData.wrench.torque.z;
+  ferr_(0) = 0                 ; // r_ftData.wrench.force.x ;
+  ferr_(1) = 0                 ; // r_ftData.wrench.force.y ;
+  ferr_(2) = sin(circle_phase_); // r_ftData.wrench.force.z ;
+  ferr_(3) = 0                 ; // r_ftData.wrench.torque.x;
+  ferr_(4) = 0                 ; // r_ftData.wrench.torque.y;
+  ferr_(5) = 0                 ; // r_ftData.wrench.torque.z;
 
 
   for (unsigned int i = 0 ; i < 6 ; i++)
@@ -380,10 +420,10 @@ void PR2NeuroadptControllerClass::update()
 	/////////////////////////
 
 	// DEBUG
-	q_m(0)  = - 0.5 * (sin(circle_phase_) + 1 );
-	q_m(1)  = - 0.5 * (sin(circle_phase_) + 1 );
-	q_m(2)  = - 0.5 * (sin(circle_phase_) + 1 );
-	q_m(3)  = - 0.5 * (sin(circle_phase_) + 1 );
+	q_m(0)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(1)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(2)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(3)  =       - 0.5 * (sin(circle_phase_) + 1 );
 	q_m(4)  = 0;
 	q_m(5)  = 0;
 	q_m(6)  = 0;

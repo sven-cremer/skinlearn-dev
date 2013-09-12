@@ -1,3 +1,5 @@
+#include <rbdl/rbdl.h>
+
 #include <pr2_controller_interface/controller.h>
 #include <pr2_hardware_interface/hardware_interface.h>
 #include <pr2_mechanism_model/chain.h>
@@ -24,6 +26,9 @@
 
 #include "ros/ros.h"
 #include <urdf/model.h>
+
+using namespace RigidBodyDynamics;
+using namespace RigidBodyDynamics::Math;
 
 namespace pr2_controller_ns{
 
@@ -127,6 +132,49 @@ private:
   SystemVector 	tau;
 
   double delT;
+
+
+//  rbdl_check_api_version (RBDL_API_VERSION);
+
+    Model* RBDL_model;
+
+    unsigned int RBDL_base_id					;
+    unsigned int RBDL_r_shoulder_pan_link_id   ;
+    unsigned int RBDL_r_shoulder_lift_link_id  ;
+    unsigned int RBDL_r_upper_arm_roll_link_id ;
+    unsigned int RBDL_r_upper_arm_link_id      ;
+    unsigned int RBDL_r_elbow_flex_link_id     ;
+    unsigned int RBDL_r_forearm_roll_link_id   ;
+    unsigned int RBDL_r_forearm_link_id        ;
+    unsigned int RBDL_r_wrist_flex_link_id     ;
+    unsigned int RBDL_r_wrist_roll_link_id     ;
+
+    Body RBDL_base             	 ;
+    Body RBDL_r_shoulder_pan_link   ;
+    Body RBDL_r_shoulder_lift_link  ;
+    Body RBDL_r_upper_arm_roll_link ;
+    Body RBDL_r_upper_arm_link      ;
+    Body RBDL_r_elbow_flex_link     ;
+    Body RBDL_r_forearm_roll_link   ;
+    Body RBDL_r_forearm_link        ;
+    Body RBDL_r_wrist_flex_link     ;
+    Body RBDL_r_wrist_roll_link     ;
+
+    Joint RBDL_r_shoulder_pan_joint   ;
+    Joint RBDL_r_shoulder_lift_joint  ;
+    Joint RBDL_r_upper_arm_roll_joint ;
+
+    Joint RBDL_r_elbow_flex_joint     ;
+    Joint RBDL_r_forearm_roll_joint   ;
+
+    Joint RBDL_r_wrist_flex_joint     ;
+    Joint RBDL_r_wrist_roll_joint     ;
+
+    VectorNd RBDL_Q     ;
+    VectorNd RBDL_QDot  ;
+    VectorNd RBDL_Tau   ;
+    VectorNd RBDL_QDDot ;
+
   // System Model END
   /////////////////////////
 
