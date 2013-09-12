@@ -39,7 +39,7 @@ rosbuild_add_library(pr2_controller_lib src/explforceController.cpp
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 #rosbuild_add_executable(example examples/example.cpp)
 
-rosbuild_add_executable(odeTest src/odeTest.cpp)
+#rosbuild_add_executable(odeTest src/odeTest.cpp)
 
 #rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
 #target_link_libraries( SystemModel_test	${PROJECT_NAME} )
