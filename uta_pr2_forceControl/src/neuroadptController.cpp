@@ -325,6 +325,8 @@ void PR2NeuroadptControllerClass::starting()
 
   jnt_to_pose_solver_->JntToCart(q0_, x0_);
   x0_m_ = x0_;
+  // Model initial conditions
+  q_m = JointKdl2Eigen(q0_m_);
 
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
@@ -689,10 +691,8 @@ void PR2NeuroadptControllerClass::update()
 		tf::PoseKDLToMsg(x_m_, modelCartPos_);
 		tf::PoseKDLToMsg(x_  , robotCartPos_);
 
-		pubModelCartPos_.msg_.position    = modelCartPos_.position;
-		pubModelCartPos_.msg_.orientation = modelCartPos_.orientation;
-		pubRobotCartPos_.msg_.position    = robotCartPos_.position;
-		pubRobotCartPos_.msg_.orientation = robotCartPos_.orientation;
+		pubModelCartPos_.msg_.pose = modelCartPos_;
+		pubRobotCartPos_.msg_.pose = robotCartPos_;
 
 		pub_.unlockAndPublish();
 		pubModelStates_.unlockAndPublish();
