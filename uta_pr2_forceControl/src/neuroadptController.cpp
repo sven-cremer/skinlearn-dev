@@ -394,7 +394,7 @@ void PR2NeuroadptControllerClass::update()
 
 
   // Force error
-  ferr_(0) = sin(circle_phase_); // r_ftData.wrench.force.x ;
+  ferr_(0) = 5*sin(circle_phase_); // r_ftData.wrench.force.x ;
   ferr_(1) = 0				   ; // r_ftData.wrench.force.y ;
   ferr_(2) = 0				   ; // r_ftData.wrench.force.z ;
   ferr_(3) = 0                 ; // r_ftData.wrench.torque.x;
@@ -402,13 +402,13 @@ void PR2NeuroadptControllerClass::update()
   ferr_(5) = 0                 ; // r_ftData.wrench.torque.z;
 
 
-  for (unsigned int i = 0 ; i < 6 ; i++)
-  {
-    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
-  }
-
-  // Force control only ferr Z in ft sensor frame is x in robot frame
-  F_(0) = ferr_(2); // - Kd_(i) * xdot_(i);
+//  for (unsigned int i = 0 ; i < 6 ; i++)
+//  {
+//    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+//  }
+//
+//  // Force control only ferr Z in ft sensor frame is x in robot frame
+////  F_(0) = ferr_(2); // - Kd_(i) * xdot_(i);
 
 
   // Convert the force into a set of joint torques.
