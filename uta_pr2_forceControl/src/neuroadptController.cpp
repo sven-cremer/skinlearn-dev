@@ -108,14 +108,14 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	ROS_INFO("Successfully parsed URDF file");
   }
 
-  std::string nn_kappa            = "nn_kappa"            ;
-  std::string nn_Kv               = "nn_Kv"               ;
-  std::string nn_lambda           = "nn_lambda"           ;
-  std::string nn_Kz               = "nn_Kz"               ;
-  std::string nn_Zb               = "nn_Zb"               ;
-  std::string nn_feedForwardForce = "nn_feedForwardForce" ;
-  std::string nn_nnF              = "nn_nnF"              ;
-  std::string nn_nnG              = "nn_nnG"              ;
+  std::string nn_kappa            = "/nn_kappa"            ;
+  std::string nn_Kv               = "/nn_Kv"               ;
+  std::string nn_lambda           = "/nn_lambda"           ;
+  std::string nn_Kz               = "/nn_Kz"               ;
+  std::string nn_Zb               = "/nn_Zb"               ;
+  std::string nn_feedForwardForce = "/nn_feedForwardForce" ;
+  std::string nn_nnF              = "/nn_nnF"              ;
+  std::string nn_nnG              = "/nn_nnG"              ;
 
   if (!n.getParam( nn_kappa            , kappa            ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_kappa.c_str())			 ; return false; }
