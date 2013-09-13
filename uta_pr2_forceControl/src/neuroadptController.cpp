@@ -434,23 +434,23 @@ void PR2NeuroadptControllerClass::update()
 
   // Reference torque from human interaction or trajectory following
 
-  // Human
-	t_r(0) = tau_h(0);
-	t_r(1) = tau_h(1);
-	t_r(2) = tau_h(2);
-	t_r(3) = tau_h(3);
-	t_r(4) = tau_h(4);
-	t_r(5) = tau_h(5);
-	t_r(6) = tau_h(6);
+//  // Human
+//	t_r(0) = tau_h(0);
+//	t_r(1) = tau_h(1);
+//	t_r(2) = tau_h(2);
+//	t_r(3) = tau_h(3);
+//	t_r(4) = tau_h(4);
+//	t_r(5) = tau_h(5);
+//	t_r(6) = tau_h(6);
 
-  // Trajectory/impedance
-//	t_r(0) = tau_t(0);
-//	t_r(1) = tau_t(1);
-//	t_r(2) = tau_t(2);
-//	t_r(3) = tau_t(3);
-//	t_r(4) = tau_t(4);
-//	t_r(5) = tau_t(5);
-//	t_r(6) = tau_t(6);
+    // Trajectory/impedance
+	t_r(0) = tau_t(0);
+	t_r(1) = tau_t(1);
+	t_r(2) = tau_t(2);
+	t_r(3) = tau_t(3);
+	t_r(4) = tau_t(4);
+	t_r(5) = tau_t(5);
+	t_r(6) = tau_t(6);
 
 	// Current joint positions and velocities
 	q = JointKdl2Eigen( q_ );
