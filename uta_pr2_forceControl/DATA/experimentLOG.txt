@@ -1,0 +1,2 @@
+NNCartesianFTSensorForce_2013-09-13-11-22-20.bag
+ - The random motions in the beginig and middle, periodic motons in the end
