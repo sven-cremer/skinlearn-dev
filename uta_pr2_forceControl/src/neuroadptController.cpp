@@ -123,19 +123,9 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if (!n.getParam( nn_lambda           , lambda           )) { ROS_ERROR("Value not loaded from parameter: %s !)", nn_lambda.c_str())			; return false; }
   if (!n.getParam( nn_Kz               , Kz               )) { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kz.c_str())				; return false; }
   if (!n.getParam( nn_Zb               , Zb               )) { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())				; return false; }
-  if (!n.getParam( nn_feedForwardForce , feedForwardForce )) { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str()); return false; }
+  if (!n.getParam( nn_feedForwardForce , feedForwardForce )) { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str()) ; return false; }
   if (!n.getParam( nn_nnF              , nnF              )) { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())				; return false; }
   if (!n.getParam( nn_nnG              , nnG              )) { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnG.c_str())				; return false; }
-
-
-//	nn_kappa            = 0.07 ;
-//	nn_Kv               = 10   ;  // prop. gain for PID inner loop
-//	nn_lambda           = 0.5  ; //*std::sqrt(Kp); // der. gain for PID inner loop
-//	nn_Kz               = 0    ;
-//	nn_Zb               = 100  ;
-//	nn_feedForwardForce = 1    ;
-//	nn_nnF              = 100  ;
-//	nn_nnG              = 20   ;
 
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
