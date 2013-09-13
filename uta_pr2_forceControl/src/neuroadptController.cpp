@@ -477,6 +477,11 @@ void PR2NeuroadptControllerClass::update()
 //	t_r(5) = tau_t(5);
 //	t_r(6) = tau_t(6);
 
+
+	// Current joint positions and velocities
+	q = JointKdl2Eigen( q_ );
+	qd = JointVelKdl2Eigen( qdot_ );
+
 	q_m   = q_m + delT*qd_m;
 	qd_m  = qd_m + delT*qdd_m;
 	qdd_m = MmInv*( t_r - Dm*qd_m - Km*q_m );
