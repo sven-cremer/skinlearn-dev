@@ -732,6 +732,7 @@ void PR2NeuroadptControllerClass::update()
 		pubControllerParam_.msg_.feedForwardForce = feedForwardForce ;
 		pubControllerParam_.msg_.F				  = nnF              ;
 		pubControllerParam_.msg_.G				  = nnG              ;
+		pubControllerParam_.msg_.nn_ON			  = nn_ON            ;
 		pubControllerParam_.msg_.inParams   	  = Inputs           ;
 		pubControllerParam_.msg_.outParams		  = Outputs          ;
 		pubControllerParam_.msg_.hiddenNodes	  = Hidden           ;
