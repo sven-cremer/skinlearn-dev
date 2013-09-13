@@ -285,13 +285,13 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if(!hardwareInterface)
       ROS_ERROR("Something wrong with the hardware interface pointer!");
 
-//  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
-//  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
-//
-//  if( !l_ft_handle_ /*wristFTdata.getLeftHandle()*/ )
-//      ROS_ERROR("Something wrong with getting l_ft handle");
-//  if( !r_ft_handle_ /*wristFTdata.getRightHandle()*/ )
-//      ROS_ERROR("Something wrong with getting r_ft handle");
+  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+
+  if( !l_ft_handle_ /*wristFTdata.getLeftHandle()*/ )
+      ROS_ERROR("Something wrong with getting l_ft handle");
+  if( !r_ft_handle_ /*wristFTdata.getRightHandle()*/ )
+      ROS_ERROR("Something wrong with getting r_ft handle");
 
   pub_cycle_count_ = 0;
   should_publish_  = false;
@@ -318,15 +318,13 @@ void PR2NeuroadptControllerClass::starting()
   last_time_ = robot_state_->getTime();
 
   // set FT sensor bias due to gravity
-//  wristFTdata.setBias();
-//  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-//  l_ft_samples    = l_ftData_vector.size() - 1;
-//  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
-//
-//  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-//  r_ft_samples    = r_ftData_vector.size() - 1;
-//  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+  l_ft_samples    = l_ftData_vector.size() - 1;
+  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
 
+  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+  r_ft_samples    = r_ftData_vector.size() - 1;
+  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
 }
 
 
@@ -334,26 +332,26 @@ void PR2NeuroadptControllerClass::starting()
 void PR2NeuroadptControllerClass::update()
 {
 
-////  wristFTdata.update();
-//	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-//	l_ft_samples    = l_ftData_vector.size() - 1;
-////      l_ftData.wrench = l_ftData_vector[l_ft_samples];
-//	l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
-//	l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
-//	l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
-//	l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
-//	l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
-//	l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
-//
-//	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-//	r_ft_samples    = r_ftData_vector.size() - 1;
-////      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-//	r_ftData.wrench.force.x  = r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x ;
-//	r_ftData.wrench.force.y  = r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y ;
-//	r_ftData.wrench.force.z  = r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z ;
-//	r_ftData.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x;
-//	r_ftData.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y;
-//	r_ftData.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z;
+//  wristFTdata.update();
+	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+	l_ft_samples    = l_ftData_vector.size() - 1;
+//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
+	l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
+	l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
+	l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
+	l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
+	l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
+	l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
+
+	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+	r_ft_samples    = r_ftData_vector.size() - 1;
+//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
+	r_ftData.wrench.force.x  = r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x ;
+	r_ftData.wrench.force.y  = r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y ;
+	r_ftData.wrench.force.z  = r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z ;
+	r_ftData.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x;
+	r_ftData.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y;
+	r_ftData.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z;
 
 
   double dt;                    // Servo loop time step
@@ -394,12 +392,12 @@ void PR2NeuroadptControllerClass::update()
 
 
   // Force error
-  ferr_(0) = 5*sin(circle_phase_); // r_ftData.wrench.force.x ;
-  ferr_(1) = 0				   ; // r_ftData.wrench.force.y ;
-  ferr_(2) = 0				   ; // r_ftData.wrench.force.z ;
-  ferr_(3) = 0                 ; // r_ftData.wrench.torque.x;
-  ferr_(4) = 0                 ; // r_ftData.wrench.torque.y;
-  ferr_(5) = 0                 ; // r_ftData.wrench.torque.z;
+  ferr_(0) = r_ftData.wrench.force.x ; // 5*sin(circle_phase_);
+  ferr_(1) = r_ftData.wrench.force.y ; // 0				      ;
+  ferr_(2) = r_ftData.wrench.force.z ; // 0				      ;
+  ferr_(3) = r_ftData.wrench.torque.x; // 0                   ;
+  ferr_(4) = r_ftData.wrench.torque.y; // 0                   ;
+  ferr_(5) = r_ftData.wrench.torque.z; // 0                   ;
 
 
 //  for (unsigned int i = 0 ; i < 6 ; i++)
