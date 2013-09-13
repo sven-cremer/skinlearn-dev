@@ -269,6 +269,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	lambda = 0.5; //*std::sqrt(Kp); // der. gain for PID inner loop
 	Kz     = 0;
 	Zb     = 100;
+	feedForwardForce = 1;
 
 	hiddenLayerIdentity.setIdentity();
 
@@ -284,8 +285,11 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	// Very important
 	Z.setZero();
 
-	F = 100*F;
-	G = 20*G;
+	nnF = 100;
+	nnG = 20 ;
+
+	F = nnF*F;
+	G = nnG*G;
 
 	// NN END
 	/////////////////////////
@@ -312,6 +316,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   pubRobotStates_.init(n, "robot_joint_states", 1);
   pubModelCartPos_.init(n, "model_cart_pos", 1);
   pubRobotCartPos_.init(n, "robot_cart_pos", 1);
+  pubControllerParam_.init(n, "controller_params", 1);
 
   return true;
 }
@@ -597,7 +602,7 @@ void PR2NeuroadptControllerClass::update()
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv*r + y - vRobust - t_r;
+	tau = Kv*r + y - vRobust - feedForwardForce*t_r;
 //	tau = (qd_m - qd) + 100*(q_m - q);
 
 	//
@@ -690,6 +695,38 @@ void PR2NeuroadptControllerClass::update()
 		pubModelStates_.msg_ = modelState;
 		pubRobotStates_.msg_ = robotState;
 
+
+		    kappa  = 0.07;
+			Kv     = 10; // prop. gain for PID inner loop
+			lambda = 0.5; //*std::sqrt(Kp); // der. gain for PID inner loop
+			Kz     = 0;
+			Zb     = 100;
+			feedForwardForce = 1;
+
+
+			nnF = 100;
+			nnG = 20 ;
+
+			F = nnF*F;
+			G = nnG*G;
+
+		pubControllerParam_.msg_.kappa            = kappa            ;
+		pubControllerParam_.msg_.Kv               = Kv               ;
+		pubControllerParam_.msg_.lambda           = lambda           ;
+		pubControllerParam_.msg_.Kz               = Kz               ;
+		pubControllerParam_.msg_.Zb               = Zb               ;
+		pubControllerParam_.msg_.feedForwardForce = feedForwardForce ;
+		pubControllerParam_.msg_.F				  = nnF              ;
+		pubControllerParam_.msg_.G				  = nnG              ;
+		pubControllerParam_.msg_.inParams   	  = Inputs           ;
+		pubControllerParam_.msg_.outParams		  = Outputs          ;
+		pubControllerParam_.msg_.hiddenNodes	  = Hidden           ;
+		pubControllerParam_.msg_.errorParams      = Error  			 ;
+
+		pubControllerParam_.msg_.m				  = Mm(0,0)          ;
+		pubControllerParam_.msg_.d				  = Dm(0,0)          ;
+		pubControllerParam_.msg_.k				  = Km(0,0)          ;
+
 		pubModelCartPos_.msg_.header.stamp = robot_state_->getTime();
 		pubRobotCartPos_.msg_.header.stamp = robot_state_->getTime();
 
@@ -704,6 +741,7 @@ void PR2NeuroadptControllerClass::update()
 		pubRobotStates_.unlockAndPublish();
 		pubModelCartPos_.unlockAndPublish();
 		pubModelCartPos_.unlockAndPublish();
+		pubControllerParam_.unlockAndPublish();
 	}
 
 }

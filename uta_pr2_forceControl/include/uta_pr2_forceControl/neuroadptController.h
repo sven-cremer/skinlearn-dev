@@ -17,6 +17,7 @@
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "sensor_msgs/JointState.h"
+#include <uta_pr2_forceControl/controllerParam.h>
 
 #include <Eigen/StdVector>
 #include <Eigen/Geometry>
@@ -113,6 +114,7 @@ private:
   realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubRobotStates_;
   realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pubModelCartPos_;
   realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pubRobotCartPos_;
+  realtime_tools::RealtimePublisher<uta_pr2_forceControl::controllerParam> pubControllerParam_;
 
   geometry_msgs::WrenchStamped r_forceData;
   geometry_msgs::Pose modelCartPos_;
@@ -165,7 +167,7 @@ private:
   enum { Inputs  = 14 }; // n Size of the inputs
   enum { Outputs = 7 }; // m Size of the outputs
   enum { Hidden  = 7 }; // l Size of the hidden layer
-  enum { Error  = 7 }; // filtered error
+  enum { Error   = 7 }; // filtered error
 
   Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans;
   Eigen::Matrix<double, Outputs, Hidden>                     W_trans;
@@ -195,6 +197,10 @@ private:
   double  lambda ;
   double  Kz     ;
   double  Zb     ;
+  double  nnF    ;
+  double  nnG    ;
+
+  int feedForwardForce;
 
   // NN END
   /////////////////////////
