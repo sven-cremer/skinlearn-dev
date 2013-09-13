@@ -1,3 +1,48 @@
+######################
+# NEW
+######################
+
+rqt_plot /pr2_neuroadptController/model_joint_states/position[1],/pr2_neuroadptController/model_joint_states/velocity[1] /pr2_neuroadptController/robot_joint_states/position[1],/pr2_neuroadptController/robot_joint_states/velocity[1]
+
+##################
+# NN CartesianFTSensorForceNoFeedForward
+rosbag record -o NNCartesianFTSensorForce /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats /pr2_neuroadptController/model_cart_pos /pr2_neuroadptController/robot_cart_pos /pr2_neuroadptController/controller_params
+
+##################
+# NN TrajImpedanceForceNoFeedForward
+rosbag record -o NNTrajImpedanceForce /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats /pr2_neuroadptController/model_cart_pos /pr2_neuroadptController/robot_cart_pos /pr2_neuroadptController /pr2_neuroadptController/controller_params
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 rxplot /pr2_explforceController/model_joint_states/position[0],/pr2_explforceController/model_joint_states/velocity[0] /pr2_explforceController/model_joint_states/position[1],/pr2_explforceController/model_joint_states/velocity[1] /pr2_explforceController/model_joint_states/position[2],/pr2_explforceController/model_joint_states/velocity[2] /pr2_explforceController/model_joint_states/position[3],/pr2_explforceController/model_joint_states/velocity[3] /pr2_explforceController/model_joint_states/position[4],/pr2_explforceController/model_joint_states/velocity[4] /pr2_explforceController/model_joint_states/position[5],/pr2_explforceController/model_joint_states/velocity[5] /pr2_explforceController/model_joint_states/position[6],/pr2_explforceController/model_joint_states/velocity[6]
 
 
@@ -56,7 +101,10 @@ rosbag record -o nNNCartesianFTSensorForceTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr
 
 rosbag record -o NNCartesianFTSensorForceNoFeedForwardTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats 
 
-rosbag record -o nNNCartesianFTSensorForceNoFeedForwardTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats /pr2_neuroadptController/model_cart_pos /pr2_neuroadptController/robot_cart_pos
+rosbag record -o nNNCartesianFTSensorForceNoFeedForwardTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats /pr2_neuroadptController/model_cart_pos /pr2_neuroadptController/robot_cart_pos 
+
+rosbag record -o nNNCartesianFTSensorForceNoFeedForwardTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats /pr2_neuroadptController/model_cart_pos /pr2_neuroadptController/robot_cart_pos 
+
 
 
 ##################
@@ -64,13 +112,13 @@ rosbag record -o nNNCartesianFTSensorForceNoFeedForwardTrajkappa0.07Kv10lambda0.
 
 rosbag record -o NNTrajImpedanceForceTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats
 
+
 ##################
 # NN TrajImpedanceForceNoFeedForward
 
 rosbag record -o NNTrajImpedanceForceNoFeedForwardTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats
 
-rosbag record -o nNNTrajImpedanceForceNoFeedForwardTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats /pr2_neuroadptController/model_cart_pos /pr2_neuroadptController/robot_cart_pos
-
+rosbag record -o nNNTrajImpedanceForceNoFeedForwardTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats /pr2_neuroadptController/model_cart_pos /pr2_neuroadptController /robot_cart_pos
 
 
 
@@ -80,8 +128,7 @@ rosbag record -o nNNTrajImpedanceForceNoFeedForwardTrajkappa0.07Kv10lambda0.5Kz0
 # Good data sets
 nNNCartesianFTSensorForceNoFeedForwardTrajkappa0.07Kv10lambda0.5Kz0Zb100_2013-09-13-03-46-34.bag
 nNNCartesianFTSensorForceTrajkappa0.07Kv10lambda0.5Kz0Zb100_2013-09-13-03-55-10.bag
- - this one also has repetitive motion, I also stopped controllerin the middle
-
+ - this one also has repetitive motion, I also stopped controllerin the 
 
 
 
