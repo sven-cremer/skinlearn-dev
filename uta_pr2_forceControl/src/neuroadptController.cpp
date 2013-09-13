@@ -1,5 +1,6 @@
 #include "uta_pr2_forceControl/neuroadptController.h"
 #include <pluginlib/class_list_macros.h>
+#include <tf_conversions/tf_kdl.h>
 
 using namespace pr2_controller_ns;
 
@@ -57,6 +58,12 @@ void write_lorenz( const state_type &x , const double t )
     cout << t << '\t' << x[0] << '\t' << x[1] << '\t' << x[2] << endl;
 }
 
+
+
+
+
+
+
 /// Controller initialization in non-realtime
 bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n )
 {
@@ -112,10 +119,12 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   q_.resize(kdl_chain_.getNrOfJoints());
   q0_.resize(kdl_chain_.getNrOfJoints());
   qdot_.resize(kdl_chain_.getNrOfJoints());
+
   tau_t.resize(kdl_chain_.getNrOfJoints());
   tau_h.resize(kdl_chain_.getNrOfJoints());
 
   q_m_.resize(kdl_chain_.getNrOfJoints());
+  q0_m_.resize(kdl_chain_.getNrOfJoints());
   qd_m_.resize(kdl_chain_.getNrOfJoints());
   qdd_m_.resize(kdl_chain_.getNrOfJoints());
 
@@ -124,6 +133,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   qd_limit.resize(kdl_chain_.getNrOfJoints());
 
   J_.resize(kdl_chain_.getNrOfJoints());
+  J_m_.resize(kdl_chain_.getNrOfJoints());
 
   modelState.name.resize(kdl_chain_.getNrOfJoints());
   modelState.position.resize(kdl_chain_.getNrOfJoints());
@@ -300,6 +310,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   pub_.init(n, "force_torque_stats", 1);
   pubModelStates_.init(n, "model_joint_states", 1);
   pubRobotStates_.init(n, "robot_joint_states", 1);
+  pubModelCartPos_.init(n, "model_cart_pos", 1);
+  pubRobotCartPos_.init(n, "robot_cart_pos", 1);
 
   return true;
 }
@@ -309,7 +321,10 @@ void PR2NeuroadptControllerClass::starting()
 {
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
+  q0_m_ = q0_;
+
   jnt_to_pose_solver_->JntToCart(q0_, x0_);
+  x0_m_ = x0_;
 
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
@@ -364,9 +379,17 @@ void PR2NeuroadptControllerClass::update()
   chain_.getPositions(q_);
   chain_.getVelocities(qdot_);
 
+  // Save model joints to KDL
+  q_m_ = JointEigen2Kdl(q_m);
+
   // Compute the forward kinematics and Jacobian (at this location).
   jnt_to_pose_solver_->JntToCart(q_, x_);
   jnt_to_jac_solver_->JntToJac(q_, J_);
+
+  // Compute the forward kinematics and Jacobian of the model (at this location).
+  jnt_to_pose_solver_->JntToCart(q_m_, x_m_);
+  jnt_to_jac_solver_->JntToJac(q_m_, J_m_);
+
 
   for (unsigned int i = 0 ; i < 6 ; i++)
   {
@@ -415,8 +438,8 @@ void PR2NeuroadptControllerClass::update()
     tau_h(i) = 0;
     for (unsigned int j = 0 ; j < 6 ; j++)
     {
-      tau_t(i) += J_(j,i) * F_(j);   // This will give the impedance to a trajectory
-      tau_h(i)+= J_(j,i) * ferr_(j); // this will give the torque from human interaction
+      tau_t(i) += J_m_(j,i) * F_(j);   // This will give the impedance to a trajectory
+      tau_h(i)+= J_m_(j,i) * ferr_(j); // this will give the torque from human interaction
     }
   }
 
@@ -452,10 +475,6 @@ void PR2NeuroadptControllerClass::update()
 	t_r(5) = tau_t(5);
 	t_r(6) = tau_t(6);
 
-	// Current joint positions and velocities
-	q = JointKdl2Eigen( q_ );
-	qd = JointVelKdl2Eigen( qdot_ );
-
 	q_m   = q_m + delT*qd_m;
 	qd_m  = qd_m + delT*qdd_m;
 	qdd_m = MmInv*( t_r - Dm*qd_m - Km*q_m );
@@ -485,7 +504,6 @@ void PR2NeuroadptControllerClass::update()
 	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
 	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
 	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
-
 
 //	ode_init_x[0 ] = 0.0;
 //	ode_init_x[1 ] = 0.0;
@@ -665,9 +683,22 @@ void PR2NeuroadptControllerClass::update()
 		pubModelStates_.msg_ = modelState;
 		pubRobotStates_.msg_ = robotState;
 
+		pubModelCartPos_.msg_.header.stamp = robot_state_->getTime();
+		pubRobotCartPos_.msg_.header.stamp = robot_state_->getTime();
+
+		tf::PoseKDLToMsg(x_m_, modelCartPos_);
+		tf::PoseKDLToMsg(x_  , robotCartPos_);
+
+		pubModelCartPos_.msg_.position    = modelCartPos_.position;
+		pubModelCartPos_.msg_.orientation = modelCartPos_.orientation;
+		pubRobotCartPos_.msg_.position    = robotCartPos_.position;
+		pubRobotCartPos_.msg_.orientation = robotCartPos_.orientation;
+
 		pub_.unlockAndPublish();
 		pubModelStates_.unlockAndPublish();
 		pubRobotStates_.unlockAndPublish();
+		pubModelCartPos_.unlockAndPublish();
+		pubModelCartPos_.unlockAndPublish();
 	}
 
 }

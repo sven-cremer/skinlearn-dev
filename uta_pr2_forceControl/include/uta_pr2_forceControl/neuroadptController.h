@@ -14,7 +14,8 @@
 #include "realtime_tools/realtime_publisher.h"
 
 #include "geometry_msgs/WrenchStamped.h"
-
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "sensor_msgs/JointState.h"
 
 #include <Eigen/StdVector>
@@ -69,10 +70,11 @@ private:
   KDL::JntArray  q_;            // Joint positions
   KDL::JntArray  q0_;           // Joint initial positions
   KDL::JntArrayVel  qdot_;      // Joint velocities
-  KDL::JntArray  tau_t;          // Joint torques
+  KDL::JntArray  tau_t;         // Joint torques
   KDL::JntArray  tau_h;         // Joint torques from human
 
   KDL::JntArray  q_m_;          // Model Joint positions
+  KDL::JntArray  q0_m_;          // Joint initial positions
   KDL::JntArray  qd_m_;         // Model Joint positions
   KDL::JntArray  qdd_m_;        // Model Joint positions
 
@@ -80,15 +82,21 @@ private:
   KDL::JntArray  q_upper;       // Joint position upper limits
   KDL::JntArray  qd_limit;      // Joint velocity limits
 
-  KDL::Frame     x_;            // Tip pose
-  KDL::Frame     xd_;           // Tip desired pose
-  KDL::Frame     x0_;           // Tip initial pose
+  KDL::Frame     x_;            // Robot Tip pose
+  KDL::Frame     xd_;           // Robot Tip desired pose
+  KDL::Frame     x0_;           // Robot Tip initial pose
+
+  KDL::Frame     x_m_;          // Model Tip pose
+  KDL::Frame     xd_m_;         // Model Tip desired pose
+  KDL::Frame     x0_m_;         // Model Tip initial pose
 
   KDL::Twist     xerr_;         // Cart error
   KDL::Twist     xdot_;         // Cart velocity
   KDL::Wrench    F_;            // Cart effort
   KDL::Twist     ferr_;			// Cart effort error
-  KDL::Jacobian  J_;            // Jacobian
+
+  KDL::Jacobian  J_;            // Robot Jacobian
+  KDL::Jacobian  J_m_;          // Model Jacobian
 
   // Note the gains are incorrectly typed as a twist,
   // as there is no appropriate type!
@@ -103,7 +111,12 @@ private:
   realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_;
   realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubModelStates_;
   realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubRobotStates_;
+  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pubModelCartPos_;
+  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pubRobotCartPos_;
+
   geometry_msgs::WrenchStamped r_forceData;
+  geometry_msgs::Pose modelCartPos_;
+  geometry_msgs::Pose robotCartPos_;
 
   //! publish max_force values every X realtime cycles
   int pub_cycle_count_;
