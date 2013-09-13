@@ -695,21 +695,6 @@ void PR2NeuroadptControllerClass::update()
 		pubModelStates_.msg_ = modelState;
 		pubRobotStates_.msg_ = robotState;
 
-
-		    kappa  = 0.07;
-			Kv     = 10; // prop. gain for PID inner loop
-			lambda = 0.5; //*std::sqrt(Kp); // der. gain for PID inner loop
-			Kz     = 0;
-			Zb     = 100;
-			feedForwardForce = 1;
-
-
-			nnF = 100;
-			nnG = 20 ;
-
-			F = nnF*F;
-			G = nnG*G;
-
 		pubControllerParam_.msg_.kappa            = kappa            ;
 		pubControllerParam_.msg_.Kv               = Kv               ;
 		pubControllerParam_.msg_.lambda           = lambda           ;
