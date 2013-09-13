@@ -108,31 +108,31 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	ROS_INFO("Successfully parsed URDF file");
   }
 
-//  std::string nn_kappa            = "nn_kappa"            ;
-//  std::string nn_Kv               = "nn_Kv"               ;
-//  std::string nn_lambda           = "nn_lambda"           ;
-//  std::string nn_Kz               = "nn_Kz"               ;
-//  std::string nn_Zb               = "nn_Zb"               ;
-//  std::string nn_feedForwardForce = "nn_feedForwardForce" ;
-//  std::string nn_nnF              = "nn_nnF"              ;
-//  std::string nn_nnG              = "nn_nnG"              ;
-//
-//  if (!n.getParam( nn_kappa            , kappa            ))
-//  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_kappa.c_str())			 	 ; return false; }
-//  if (!n.getParam( nn_Kv               , Kv               ))
-//  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kv.c_str())				 ; return false; }
-//  if (!n.getParam( nn_lambda           , lambda           ))
-//  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_lambda.c_str())			 ; return false; }
-//  if (!n.getParam( nn_Kz               , Kz               ))
-//  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kz.c_str())				 ; return false; }
-//  if (!n.getParam( nn_Zb               , Zb               ))
-//  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())				 ; return false; }
-//  if (!n.getParam( nn_feedForwardForce , feedForwardForce ))
-//  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str()) ; return false; }
-//  if (!n.getParam( nn_nnF              , nnF              ))
-//  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())				 ; return false; }
-//  if (!n.getParam( nn_nnG              , nnG              ))
-//  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnG.c_str())				 ; return false; }
+  std::string nn_kappa            = "nn_kappa"            ;
+  std::string nn_Kv               = "nn_Kv"               ;
+  std::string nn_lambda           = "nn_lambda"           ;
+  std::string nn_Kz               = "nn_Kz"               ;
+  std::string nn_Zb               = "nn_Zb"               ;
+  std::string nn_feedForwardForce = "nn_feedForwardForce" ;
+  std::string nn_nnF              = "nn_nnF"              ;
+  std::string nn_nnG              = "nn_nnG"              ;
+
+  if (!n.getParam( nn_kappa            , kappa            ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_kappa.c_str())			 ; return false; }
+  if (!n.getParam( nn_Kv               , Kv               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kv.c_str())				 ; return false; }
+  if (!n.getParam( nn_lambda           , lambda           ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_lambda.c_str())			 ; return false; }
+  if (!n.getParam( nn_Kz               , Kz               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kz.c_str())				 ; return false; }
+  if (!n.getParam( nn_Zb               , Zb               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())				 ; return false; }
+  if (!n.getParam( nn_feedForwardForce , feedForwardForce ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str()) ; return false; }
+  if (!n.getParam( nn_nnF              , nnF              ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())				 ; return false; }
+  if (!n.getParam( nn_nnG              , nnG              ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnG.c_str())				 ; return false; }
 
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
