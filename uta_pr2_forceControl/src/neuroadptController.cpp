@@ -755,7 +755,7 @@ void PR2NeuroadptControllerClass::update()
 		pubModelStates_.unlockAndPublish();
 		pubRobotStates_.unlockAndPublish();
 		pubModelCartPos_.unlockAndPublish();
-		pubModelCartPos_.unlockAndPublish();
+		pubRobotCartPos_.unlockAndPublish();
 		pubControllerParam_.unlockAndPublish();
 	}
 
