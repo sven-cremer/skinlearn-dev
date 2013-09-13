@@ -15,7 +15,7 @@
 
 using namespace std;
 
-bool verbose = true;
+bool verbose = false;
 
 using namespace RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
