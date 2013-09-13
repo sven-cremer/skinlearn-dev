@@ -415,6 +415,7 @@ void PR2NeuroadptControllerClass::update()
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
   {
     tau_(i) = 0;
+    tau_h(i) = 0;
     for (unsigned int j = 0 ; j < 6 ; j++)
     {
       tau_(i) += J_(j,i) * F_(j);
@@ -429,13 +430,21 @@ void PR2NeuroadptControllerClass::update()
 	// System Model
 
   	// Integrator
-	t_h(0) = 0 ; // tau_h(0);
-	t_h(1) = vpol_init_x[0]; //sin(circle_phase_);    // tau_h(1);
-	t_h(2) = 0 ; // tau_h(2);
-	t_h(3) = 0 ; // tau_h(3);
-	t_h(4) = 0 ; // tau_h(4);
-	t_h(5) = 0 ; // tau_h(5);
-	t_h(6) = 0 ; // tau_h(6);
+//	t_h(0) = 0 ; // tau_h(0);
+//	t_h(1) = vpol_init_x[0]; //sin(circle_phase_);    // tau_h(1);
+//	t_h(2) = 0 ; // tau_h(2);
+//	t_h(3) = 0 ; // tau_h(3);
+//	t_h(4) = 0 ; // tau_h(4);
+//	t_h(5) = 0 ; // tau_h(5);
+//	t_h(6) = 0 ; // tau_h(6);
+
+	t_h(0) = tau_h(0);
+	t_h(1) = tau_h(1);
+	t_h(2) = tau_h(2);
+	t_h(3) = tau_h(3);
+	t_h(4) = tau_h(4);
+	t_h(5) = tau_h(5);
+	t_h(6) = tau_h(6);
 
 	// Current joint positions and velocities
 	q = JointKdl2Eigen( q_ );
