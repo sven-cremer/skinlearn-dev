@@ -322,11 +322,11 @@ void PR2NeuroadptControllerClass::starting()
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
   q0_m_ = q0_;
+  // Model initial conditions
+  q_m = JointKdl2Eigen(q0_m_);
 
   jnt_to_pose_solver_->JntToCart(q0_, x0_);
   x0_m_ = x0_;
-  // Model initial conditions
-  q_m = JointKdl2Eigen(q0_m_);
 
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
@@ -440,8 +440,8 @@ void PR2NeuroadptControllerClass::update()
     tau_h(i) = 0;
     for (unsigned int j = 0 ; j < 6 ; j++)
     {
-      tau_t(i) += J_m_(j,i) * F_(j);   // This will give the impedance to a trajectory
-      tau_h(i)+= J_m_(j,i) * ferr_(j); // this will give the torque from human interaction
+      tau_t(i) += J_(j,i) * F_(j);   // This will give the impedance to a trajectory
+      tau_h(i)+= J_(j,i) * ferr_(j); // this will give the torque from human interaction
     }
   }
 
