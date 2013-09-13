@@ -12,7 +12,8 @@ int64 inParams
 int64 outParams
 int64 hiddenNodes
 int64 errorParams
-int64 feedForwardForce
+float64 feedForwardForce
+float64 nn_ON
 
 # Model Params
 float64 m

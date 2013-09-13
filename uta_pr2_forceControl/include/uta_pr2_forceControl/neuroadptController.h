@@ -199,8 +199,9 @@ private:
   double  Zb     ;
   double  nnF    ;
   double  nnG    ;
+  double  nn_ON  ;
 
-  int feedForwardForce;
+  double  feedForwardForce;
 
   // NN END
   /////////////////////////

@@ -102,10 +102,40 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   if (!urdf_model.initString(urdf_string))
   {
-    ROS_ERROR("Failed to parse URDF file");
+	ROS_ERROR("Failed to parse URDF file");
     return -1;
+  }else {
+	ROS_INFO("Successfully parsed URDF file");
   }
-  ROS_INFO("Successfully parsed URDF file");
+
+  std::string nn_kappa            = "/nn_kappa"            ;
+  std::string nn_Kv               = "/nn_Kv"               ;
+  std::string nn_lambda           = "/nn_lambda"           ;
+  std::string nn_Kz               = "/nn_Kz"               ;
+  std::string nn_Zb               = "/nn_Zb"               ;
+  std::string nn_feedForwardForce = "/nn_feedForwardForce" ;
+  std::string nn_nnF              = "/nn_nnF"              ;
+  std::string nn_nnG              = "/nn_nnG"              ;
+  std::string nn_ONparam          = "/nn_ON"               ;
+
+  if (!n.getParam( nn_kappa            , kappa            ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_kappa.c_str())			 ; return false; }
+  if (!n.getParam( nn_Kv               , Kv               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kv.c_str())				 ; return false; }
+  if (!n.getParam( nn_lambda           , lambda           ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_lambda.c_str())			 ; return false; }
+  if (!n.getParam( nn_Kz               , Kz               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kz.c_str())				 ; return false; }
+  if (!n.getParam( nn_Zb               , Zb               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())				 ; return false; }
+  if (!n.getParam( nn_feedForwardForce , feedForwardForce ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str()) ; return false; }
+  if (!n.getParam( nn_nnF              , nnF              ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())				 ; return false; }
+  if (!n.getParam( nn_nnG              , nnG              ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnG.c_str())				 ; return false; }
+  if (!n.getParam( nn_ONparam          , nn_ON            ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_ONparam.c_str())			 ; return false; }
 
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
@@ -264,12 +294,14 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// NN
 
-	kappa  = 0.07;
-	Kv     = 10; // prop. gain for PID inner loop
-	lambda = 0.5; //*std::sqrt(Kp); // der. gain for PID inner loop
-	Kz     = 0;
-	Zb     = 100;
-	feedForwardForce = 1;
+	kappa            = 0.07 ;
+	Kv               = 10   ;  // prop. gain for PID inner loop
+	lambda           = 0.5  ; //*std::sqrt(Kp); // der. gain for PID inner loop
+	Kz               = 0    ;
+	Zb               = 100  ;
+	feedForwardForce = 1    ;
+	nnF              = 100  ;
+	nnG              = 20   ;
 
 	hiddenLayerIdentity.setIdentity();
 
@@ -284,9 +316,6 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 	// Very important
 	Z.setZero();
-
-	nnF = 100;
-	nnG = 20 ;
 
 	F = nnF*F;
 	G = nnG*G;
@@ -602,7 +631,7 @@ void PR2NeuroadptControllerClass::update()
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv*r + y - vRobust - feedForwardForce*t_r;
+	tau = Kv*r + nn_ON*( y - vRobust ) - feedForwardForce*t_r ;
 //	tau = (qd_m - qd) + 100*(q_m - q);
 
 	//
@@ -703,6 +732,7 @@ void PR2NeuroadptControllerClass::update()
 		pubControllerParam_.msg_.feedForwardForce = feedForwardForce ;
 		pubControllerParam_.msg_.F				  = nnF              ;
 		pubControllerParam_.msg_.G				  = nnG              ;
+		pubControllerParam_.msg_.nn_ON			  = nn_ON            ;
 		pubControllerParam_.msg_.inParams   	  = Inputs           ;
 		pubControllerParam_.msg_.outParams		  = Outputs          ;
 		pubControllerParam_.msg_.hiddenNodes	  = Hidden           ;

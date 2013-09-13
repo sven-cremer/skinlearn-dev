@@ -1,2 +1,9 @@
 NNCartesianFTSensorForce_2013-09-13-11-22-20.bag
  - The random motions in the beginig and middle, periodic motons in the end
+
+NNCartesianFTSensorForce_2013-09-13-13-54-10.bag
+ - Cycles with NNs
+
+NNCartesianFTSensorForce_2013-09-13-14-07-55.bag
+ - Cycles with NO NNs
+
