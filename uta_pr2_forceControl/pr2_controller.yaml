@@ -25,4 +25,5 @@ nn_Kz               : 0
 nn_Zb               : 100 
 nn_feedForwardForce : 1   
 nn_nnF              : 100 
-nn_nnG              : 20 
+nn_nnG              : 20
+nn_ON		    : 1
