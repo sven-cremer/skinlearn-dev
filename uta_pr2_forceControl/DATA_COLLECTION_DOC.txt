@@ -41,7 +41,10 @@ rosbag record -o NNVanDerPolForceTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explfor
 
 rosbag record -o NNCartesianSinXForceTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats
 
+##################
+# NN CartesianFTSensorForce
 
+rosbag record -o NNCartesianFTSensorForceTrajkappa0.07Kv10lambda0.5Kz0Zb100 /pr2_explforceController/model_joint_states /pr2_explforceController/model_joint_states /pr2_neuroadptController/force_torque_stats
 
 
 

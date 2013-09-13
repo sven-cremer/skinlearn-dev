@@ -564,7 +564,7 @@ void PR2NeuroadptControllerClass::update()
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv*r + y - vRobust /* - t_h*/;
+	tau = Kv*r + y - vRobust - t_h;
 //	tau = (qd_m - qd) + 100*(q_m - q);
 
 	//
