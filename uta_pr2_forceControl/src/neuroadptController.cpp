@@ -112,7 +112,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   q_.resize(kdl_chain_.getNrOfJoints());
   q0_.resize(kdl_chain_.getNrOfJoints());
   qdot_.resize(kdl_chain_.getNrOfJoints());
-  tau_.resize(kdl_chain_.getNrOfJoints());
+  tau_t.resize(kdl_chain_.getNrOfJoints());
   tau_h.resize(kdl_chain_.getNrOfJoints());
 
   q_m_.resize(kdl_chain_.getNrOfJoints());
@@ -210,7 +210,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	qd_m  << 0, 0, 0, 0, 0, 0, 0 ;
 	qdd_m << 0, 0, 0, 0, 0, 0, 0 ;
 
-	t_h   << 0, 0, 0, 0, 0, 0, 0 ;
+	t_r   << 0, 0, 0, 0, 0, 0, 0 ;
 
 	MmInv = Mm;
 
@@ -378,8 +378,8 @@ void PR2NeuroadptControllerClass::update()
   // Follow a circle of 10cm at 3 rad/sec.
   circle_phase_ += 1 * dt;
   KDL::Vector  circle(0,0,0);
-//  circle(2) = 0.1 * sin(circle_phase_);
-//  circle(1) = 0.1 * (cos(circle_phase_) - 1);
+  circle(2) = 0.1 * sin(circle_phase_);
+  circle(1) = 0.1 * (cos(circle_phase_) - 1);
 
   xd_ = x0_;
   xd_.p += circle;
@@ -390,7 +390,16 @@ void PR2NeuroadptControllerClass::update()
                      xd_.M.UnitY() * x_.M.UnitY() +
                      xd_.M.UnitZ() * x_.M.UnitZ());
 
+  for (unsigned int i = 0 ; i < 6 ; i++)
+  {
+    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+  }
 
+  // Force control only ferr Z in ft sensor frame is x in robot frame
+//  F_(0) = ferr_(2); // - Kd_(i) * xdot_(i);
+
+
+  // Human force input
   // Force error
   ferr_(0) = r_ftData.wrench.force.x ; // 5*sin(circle_phase_);
   ferr_(1) = r_ftData.wrench.force.y ; // 0				      ;
@@ -399,30 +408,17 @@ void PR2NeuroadptControllerClass::update()
   ferr_(4) = r_ftData.wrench.torque.y; // 0                   ;
   ferr_(5) = r_ftData.wrench.torque.z; // 0                   ;
 
-
-//  for (unsigned int i = 0 ; i < 6 ; i++)
-//  {
-//    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
-//  }
-//
-//  // Force control only ferr Z in ft sensor frame is x in robot frame
-////  F_(0) = ferr_(2); // - Kd_(i) * xdot_(i);
-
-
   // Convert the force into a set of joint torques.
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
   {
-    tau_(i) = 0;
+    tau_t(i) = 0;
     tau_h(i) = 0;
     for (unsigned int j = 0 ; j < 6 ; j++)
     {
-      tau_(i) += J_(j,i) * F_(j);
-      tau_h(i)+= J_(j,i) * ferr_(j); // this will give the torque from interaction
+      tau_t(i) += J_(j,i) * F_(j);   // This will give the impedance to a trajectory
+      tau_h(i)+= J_(j,i) * ferr_(j); // this will give the torque from human interaction
     }
   }
-
-    circle(2) = 0.1 * sin(circle_phase_);
-    circle(1) = 0.1 * (cos(circle_phase_) - 1);
 
     /////////////////////////
 	// System Model
@@ -436,13 +432,25 @@ void PR2NeuroadptControllerClass::update()
 //	t_h(5) = 0 ; // tau_h(5);
 //	t_h(6) = 0 ; // tau_h(6);
 
-	t_h(0) = tau_h(0);
-	t_h(1) = tau_h(1);
-	t_h(2) = tau_h(2);
-	t_h(3) = tau_h(3);
-	t_h(4) = tau_h(4);
-	t_h(5) = tau_h(5);
-	t_h(6) = tau_h(6);
+  // Reference torque from human interaction or trajectory following
+
+  // Human
+//	t_r(0) = tau_h(0);
+//	t_r(1) = tau_h(1);
+//	t_r(2) = tau_h(2);
+//	t_r(3) = tau_h(3);
+//	t_r(4) = tau_h(4);
+//	t_r(5) = tau_h(5);
+//	t_r(6) = tau_h(6);
+
+  // Trajectory/impedance
+	t_r(0) = tau_t(0);
+	t_r(1) = tau_t(1);
+	t_r(2) = tau_t(2);
+	t_r(3) = tau_t(3);
+	t_r(4) = tau_t(4);
+	t_r(5) = tau_t(5);
+	t_r(6) = tau_t(6);
 
 	// Current joint positions and velocities
 	q = JointKdl2Eigen( q_ );
@@ -450,7 +458,7 @@ void PR2NeuroadptControllerClass::update()
 
 	q_m   = q_m + delT*qd_m;
 	qd_m  = qd_m + delT*qdd_m;
-	qdd_m = MmInv*( t_h - Dm*qd_m - Km*q_m );
+	qdd_m = MmInv*( t_r - Dm*qd_m - Km*q_m );
 
 	// Check for joint limits and reset
 	// (condition) ? (if_true) : (if_false)
@@ -495,13 +503,13 @@ void PR2NeuroadptControllerClass::update()
 //	ode_init_x[12] = 0.0;
 //	ode_init_x[13] = 0.0;
 
-	ode_init_x[14] = t_h(0);
-	ode_init_x[15] = t_h(1);
-	ode_init_x[16] = t_h(2);
-	ode_init_x[17] = t_h(3);
-	ode_init_x[18] = t_h(4);
-	ode_init_x[19] = t_h(5);
-	ode_init_x[20] = t_h(6);
+	ode_init_x[14] = t_r(0);
+	ode_init_x[15] = t_r(1);
+	ode_init_x[16] = t_r(2);
+	ode_init_x[17] = t_r(3);
+	ode_init_x[18] = t_r(4);
+	ode_init_x[19] = t_r(5);
+	ode_init_x[20] = t_r(6);
 
 //	integrate( reference_model , ode_init_x , 0.0 , 0.001 , 0.001 );
 	integrate( vanderpol_model , vpol_init_x , 0.0 , 0.001 , 0.001 );
@@ -564,7 +572,7 @@ void PR2NeuroadptControllerClass::update()
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv*r + y - vRobust - t_h;
+	tau = Kv*r + y - vRobust - t_r;
 //	tau = (qd_m - qd) + 100*(q_m - q);
 
 	//
@@ -577,7 +585,7 @@ void PR2NeuroadptControllerClass::update()
 	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
 
 	// Convert from Eigen to KDL
-	tau_ = JointEigen2Kdl( tau );
+	tau_t = JointEigen2Kdl( tau );
 
 	// NN END
 	/////////////////////////
@@ -603,13 +611,13 @@ void PR2NeuroadptControllerClass::update()
 	modelState.velocity[6] = qd_m(6); // ode_init_x[6 ] ; // tau(6);
 
 	// Input torque to mode | torque from human
-	modelState.effort[0] = t_h(0);
-	modelState.effort[1] = t_h(1);
-	modelState.effort[2] = t_h(2);
-	modelState.effort[3] = t_h(3);
-	modelState.effort[4] = t_h(4);
-	modelState.effort[5] = t_h(5);
-	modelState.effort[6] = t_h(6);
+	modelState.effort[0] = t_r(0);
+	modelState.effort[1] = t_r(1);
+	modelState.effort[2] = t_r(2);
+	modelState.effort[3] = t_r(3);
+	modelState.effort[4] = t_r(4);
+	modelState.effort[5] = t_r(5);
+	modelState.effort[6] = t_r(6);
 
 	robotState.position[0] = q(0);;
 	robotState.position[1] = q(1);;
@@ -628,17 +636,17 @@ void PR2NeuroadptControllerClass::update()
 	robotState.velocity[6] = qd(6);
 
 	// Output torque from controller that is sent to the robot
-	robotState.effort[0] = tau_(0);
-	robotState.effort[1] = tau_(1);
-	robotState.effort[2] = tau_(2);
-	robotState.effort[3] = tau_(3);
-	robotState.effort[4] = tau_(4);
-	robotState.effort[5] = tau_(5);
-	robotState.effort[6] = tau_(6);
+	robotState.effort[0] = tau_t(0);
+	robotState.effort[1] = tau_t(1);
+	robotState.effort[2] = tau_t(2);
+	robotState.effort[3] = tau_t(3);
+	robotState.effort[4] = tau_t(4);
+	robotState.effort[5] = tau_t(5);
+	robotState.effort[6] = tau_t(6);
 
 
 	// And finally send these torques out.
-    chain_.setEfforts(tau_);
+    chain_.setEfforts(tau_t);
 
     // Publish data in ROS message every 10 cycles (about 100Hz)
 	if (++pub_cycle_count_ > 10)
