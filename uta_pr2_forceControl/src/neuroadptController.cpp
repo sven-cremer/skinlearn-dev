@@ -695,13 +695,13 @@ void PR2NeuroadptControllerClass::update()
 	robotState.velocity[6] = qd(6);
 
 	// Output torque from controller that is sent to the robot
-	robotState.effort[0] = tau_t(0);
-	robotState.effort[1] = tau_t(1);
-	robotState.effort[2] = tau_t(2);
-	robotState.effort[3] = tau_t(3);
-	robotState.effort[4] = tau_t(4);
-	robotState.effort[5] = tau_t(5);
-	robotState.effort[6] = tau_t(6);
+	robotState.effort[0] = tau(0);
+	robotState.effort[1] = tau(1);
+	robotState.effort[2] = tau(2);
+	robotState.effort[3] = tau(3);
+	robotState.effort[4] = tau(4);
+	robotState.effort[5] = tau(5);
+	robotState.effort[6] = tau(6);
 
 
 	// And finally send these torques out.
