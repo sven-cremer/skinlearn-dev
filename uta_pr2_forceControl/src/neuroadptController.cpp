@@ -608,21 +608,21 @@ void PR2NeuroadptControllerClass::update()
 	Z.block(Hidden,Outputs,Inputs+1,Hidden) = V_trans.transpose();
 	vRobust = - Kz*(Z.norm() + Zb)*r;
 
-	x(0 ) =  q(0);
-	x(1 ) =  q(1);
-	x(2 ) =  q(2);
-	x(3 ) =  q(3);
-	x(4 ) =  q(4);
-	x(5 ) =  q(5);
-	x(6 ) =  q(6);
-	x(7 ) = qd(0);
-	x(8 ) = qd(1);
-	x(9 ) = qd(2);
-	x(10) = qd(3);
-	x(11) = qd(4);
-	x(12) = qd(5);
-	x(13) = qd(6);
-	x(14) = 1;
+	x(0 ) =     1;
+	x(1 ) =  q(0);
+	x(2 ) =  q(1);
+	x(3 ) =  q(2);
+	x(4 ) =  q(3);
+	x(5 ) =  q(4);
+	x(6 ) =  q(5);
+	x(7 ) =  q(6);
+	x(8 ) = qd(0);
+	x(9 ) = qd(1);
+	x(10) = qd(2);
+	x(11) = qd(3);
+	x(12) = qd(4);
+	x(13) = qd(5);
+	x(14) = qd(6);
 
 	hiddenLayer_in = V_trans*x;
 	hiddenLayer_out = sigmoid(hiddenLayer_in);
@@ -695,13 +695,13 @@ void PR2NeuroadptControllerClass::update()
 	robotState.velocity[6] = qd(6);
 
 	// Output torque from controller that is sent to the robot
-	robotState.effort[0] = tau(0);
-	robotState.effort[1] = tau(1);
-	robotState.effort[2] = tau(2);
-	robotState.effort[3] = tau(3);
-	robotState.effort[4] = tau(4);
-	robotState.effort[5] = tau(5);
-	robotState.effort[6] = tau(6);
+	robotState.effort[0] = tau_t(0);
+	robotState.effort[1] = tau_t(1);
+	robotState.effort[2] = tau_t(2);
+	robotState.effort[3] = tau_t(3);
+	robotState.effort[4] = tau_t(4);
+	robotState.effort[5] = tau_t(5);
+	robotState.effort[6] = tau_t(6);
 
 
 	// And finally send these torques out.
