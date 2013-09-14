@@ -608,21 +608,21 @@ void PR2NeuroadptControllerClass::update()
 	Z.block(Hidden,Outputs,Inputs+1,Hidden) = V_trans.transpose();
 	vRobust = - Kz*(Z.norm() + Zb)*r;
 
-	x(0 ) =     1;
-	x(1 ) =  q(0);
-	x(2 ) =  q(1);
-	x(3 ) =  q(2);
-	x(4 ) =  q(3);
-	x(5 ) =  q(4);
-	x(6 ) =  q(5);
-	x(7 ) =  q(6);
-	x(8 ) = qd(0);
-	x(9 ) = qd(1);
-	x(10) = qd(2);
-	x(11) = qd(3);
-	x(12) = qd(4);
-	x(13) = qd(5);
-	x(14) = qd(6);
+	x(0 ) =  q(0);
+	x(1 ) =  q(1);
+	x(2 ) =  q(2);
+	x(3 ) =  q(3);
+	x(4 ) =  q(4);
+	x(5 ) =  q(5);
+	x(6 ) =  q(6);
+	x(7 ) = qd(0);
+	x(8 ) = qd(1);
+	x(9 ) = qd(2);
+	x(10) = qd(3);
+	x(11) = qd(4);
+	x(12) = qd(5);
+	x(13) = qd(6);
+	x(14) =     1;
 
 	hiddenLayer_in = V_trans*x;
 	hiddenLayer_out = sigmoid(hiddenLayer_in);
