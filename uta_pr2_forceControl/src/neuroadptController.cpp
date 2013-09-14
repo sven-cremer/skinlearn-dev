@@ -336,6 +336,17 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if( !r_ft_handle_ /*wristFTdata.getRightHandle()*/ )
       ROS_ERROR("Something wrong with getting r_ft handle");
 
+  /* get a handle to the left gripper accelerometer */
+    accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
+    if(!accelerometer_handle_)
+        ROS_ERROR("Something wrong with getting accelerometer handle");
+
+    // set to 1.5 kHz bandwidth (should be the default)
+    accelerometer_handle_->command_.bandwidth_ = 6;
+
+    // set to +/- 8g range (0=2g,1=4g)
+    accelerometer_handle_->command_.range_ = 2;
+
   pub_cycle_count_ = 0;
   should_publish_  = false;
 
@@ -383,6 +394,9 @@ void PR2NeuroadptControllerClass::starting()
 void PR2NeuroadptControllerClass::update()
 {
 
+	// retrieve our accelerometer data
+	std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
+
 //  wristFTdata.update();
 	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 	l_ft_samples    = l_ftData_vector.size() - 1;
@@ -397,9 +411,9 @@ void PR2NeuroadptControllerClass::update()
 	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
 	r_ft_samples    = r_ftData_vector.size() - 1;
 //      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-	r_ftData.wrench.force.x  =     r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x   ;
-	r_ftData.wrench.force.y  = - ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y ) ;
-	r_ftData.wrench.force.z  =     r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z   ;
+	r_ftData.wrench.force.x  =     r_ftData_vector[r_ft_samples].force.x  - 1.73*threeAccs[threeAccs.size()-1].x  ; // - r_ftBias.wrench.force.x   ;
+	r_ftData.wrench.force.y  = - ( r_ftData_vector[r_ft_samples].force.y  - 1.73*threeAccs[threeAccs.size()-1].y ); // - r_ftBias.wrench.force.y ) ;
+	r_ftData.wrench.force.z  =     r_ftData_vector[r_ft_samples].force.z  - 1.73*threeAccs[threeAccs.size()-1].z  ; // - r_ftBias.wrench.force.z   ;
 	r_ftData.wrench.torque.x =     r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x  ;
 	r_ftData.wrench.torque.y =     r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y  ;
 	r_ftData.wrench.torque.z =     r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z  ;
