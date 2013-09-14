@@ -644,7 +644,15 @@ void PR2NeuroadptControllerClass::update()
 	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
 
 	// Convert from Eigen to KDL
-	tau_t = JointEigen2Kdl( tau );
+//	tau_t = JointEigen2Kdl( tau );
+
+	tau_t(0) = tau(0);
+	tau_t(1) = tau(1);
+	tau_t(2) = tau(2);
+	tau_t(3) = tau(3);
+	tau_t(4) = tau(4);
+	tau_t(5) = tau(5);
+	tau_t(6) = tau(6);
 
 	// NN END
 	/////////////////////////
