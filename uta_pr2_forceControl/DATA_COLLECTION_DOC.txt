@@ -2,7 +2,13 @@
 # NEW
 ######################
 
+rqt_plot /pr2_neuroadptController/model_joint_states/position[0],/pr2_neuroadptController/model_joint_states/velocity[0] /pr2_neuroadptController/robot_joint_states/position[0],/pr2_neuroadptController/robot_joint_states/velocity[0]
+
 rqt_plot /pr2_neuroadptController/model_joint_states/position[1],/pr2_neuroadptController/model_joint_states/velocity[1] /pr2_neuroadptController/robot_joint_states/position[1],/pr2_neuroadptController/robot_joint_states/velocity[1]
+
+rqt_plot /pr2_neuroadptController/model_joint_states/position[2],/pr2_neuroadptController/model_joint_states/velocity[2] /pr2_neuroadptController/robot_joint_states/position[2],/pr2_neuroadptController/robot_joint_states/velocity[2]
+
+rqt_plot /pr2_neuroadptController/model_joint_states/position[3],/pr2_neuroadptController/model_joint_states/velocity[3] /pr2_neuroadptController/robot_joint_states/position[3],/pr2_neuroadptController/robot_joint_states/velocity[3]
 
 ##################
 # NN CartesianFTSensorForceNoFeedForward
