@@ -397,8 +397,8 @@ void PR2NeuroadptControllerClass::update()
 	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
 	r_ft_samples    = r_ftData_vector.size() - 1;
 //      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-	r_ftData.wrench.force.x  = - ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x ) ;
-	r_ftData.wrench.force.y  =     r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y   ;
+	r_ftData.wrench.force.x  =     r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x   ;
+	r_ftData.wrench.force.y  = - ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y ) ;
 	r_ftData.wrench.force.z  =     r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z   ;
 	r_ftData.wrench.torque.x =     r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x  ;
 	r_ftData.wrench.torque.y =     r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y  ;
