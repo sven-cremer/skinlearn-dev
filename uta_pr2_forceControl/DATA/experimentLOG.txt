@@ -12,3 +12,13 @@ NNCartesianFTSensorForce_2013-09-14-18-59-36.bag
 
 ####
 # NEW controller (x) formulation
+
+NNCartesianFTSensorForce_2013-09-14-23-01-23.bag
+ - NN ON
+ - Circles, great response, had noise, did jerk a bit, maybe bacause of learning param?
+
+NNCartesianFTSensorForce_2013-09-14-23-23-33.bag
+ - NN OFF
+ - Circles, seemed harder to use, destabilized a lot, noisy
+
+
