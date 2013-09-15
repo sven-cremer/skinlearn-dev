@@ -598,22 +598,22 @@ void PR2NeuroadptControllerClass::update()
 	// System Model END
 	/////////////////////////
 
-//	// DEBUG
-//	q_m(0)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-//	q_m(1)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-//	q_m(2)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-//	q_m(3)  =       - 0.5 * (sin(circle_phase_) + 1.5 );
-//	q_m(4)  = 0;
-//	q_m(5)  = 0;
-//	q_m(6)  = 0;
-//
-//	qd_m(0) = 0;
-//	qd_m(1) = 0;
-//	qd_m(2) = 0;
-//	qd_m(3) = - 10 * (cos(circle_phase_));
-//	qd_m(4) = 0;
-//	qd_m(5) = 0;
-//	qd_m(6) = 0;
+	// DEBUG
+	q_m(0)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(1)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(2)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(3)  =       - 0.5 * (sin(circle_phase_) + 1.5 );
+	q_m(4)  = 0;
+	q_m(5)  = 0;
+	q_m(6)  = 0;
+
+	qd_m(0) = 0;
+	qd_m(1) = 0;
+	qd_m(2) = 0;
+	qd_m(3) = - 10 * (cos(circle_phase_));
+	qd_m(4) = 0;
+	qd_m(5) = 0;
+	qd_m(6) = 0;
 
 
     /////////////////////////
