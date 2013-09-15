@@ -11,11 +11,11 @@ rqt_plot /pr2_neuroadptController/model_joint_states/position[2],/pr2_neuroadptC
 rqt_plot /pr2_neuroadptController/model_joint_states/position[3],/pr2_neuroadptController/model_joint_states/velocity[3] /pr2_neuroadptController/robot_joint_states/position[3],/pr2_neuroadptController/robot_joint_states/velocity[3]
 
 ##################
-# NN CartesianFTSensorForceNoFeedForward
+# NN CartesianFTSensorForce
 rosbag record -o NNCartesianFTSensorForce /pr2_neuroadptController/model_joint_states /pr2_neuroadptController/robot_joint_states /pr2_neuroadptController/force_torque_stats /pr2_neuroadptController/model_cart_pos /pr2_neuroadptController/robot_cart_pos /pr2_neuroadptController/controller_params
 
 ##################
-# NN TrajImpedanceForceNoFeedForward
+# NN TrajImpedanceForce
 rosbag record -o NNTrajImpedanceForce /pr2_neuroadptController/model_joint_states /pr2_neuroadptController/robot_joint_states /pr2_neuroadptController/force_torque_stats /pr2_neuroadptController/model_cart_pos /pr2_neuroadptController/robot_cart_pos /pr2_neuroadptController/controller_params
 
 
