@@ -59,5 +59,15 @@ NNCartesianFTSensorForce_2013-09-14-18-59-36.bag
  - NN ON
  - Not noisy but terrible performance
 
-7 
+7 NNCartesianFTSensorForce_2013-09-15-00-50-03.bag
+ - NN ON
+ - Worked great, the robustifying term was the problem as usual
+
+7 NNCartesianFTSensorForce_2013-09-15-00-52-45.bag
+ - NN OFF
+ - Some stiffness but overall not too bad, saw the graphs were bad though, dont know how the prev NN ON one was
+
+8 
+
+
 
