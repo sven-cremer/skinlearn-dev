@@ -294,14 +294,14 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// NN
 
-	kappa            = 0.07 ;
-	Kv               = 10   ;  // prop. gain for PID inner loop
-	lambda           = 0.5  ; //*std::sqrt(Kp); // der. gain for PID inner loop
-	Kz               = 0    ;
-	Zb               = 100  ;
-	feedForwardForce = 1    ;
-	nnF              = 100  ;
-	nnG              = 20   ;
+//	kappa            = 0.07 ;
+//	Kv               = 10   ;  // prop. gain for PID inner loop
+//	lambda           = 0.5  ; //*std::sqrt(Kp); // der. gain for PID inner loop
+//	Kz               = 0    ;
+//	Zb               = 100  ;
+//	feedForwardForce = 1    ;
+//	nnF              = 100  ;
+//	nnG              = 20   ;
 
 	hiddenLayerIdentity.setIdentity();
 
@@ -335,6 +335,17 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
       ROS_ERROR("Something wrong with getting l_ft handle");
   if( !r_ft_handle_ /*wristFTdata.getRightHandle()*/ )
       ROS_ERROR("Something wrong with getting r_ft handle");
+
+  /* get a handle to the left gripper accelerometer */
+    accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
+    if(!accelerometer_handle_)
+        ROS_ERROR("Something wrong with getting accelerometer handle");
+
+    // set to 1.5 kHz bandwidth (should be the default)
+    accelerometer_handle_->command_.bandwidth_ = 6;
+
+    // set to +/- 8g range (0=2g,1=4g)
+    accelerometer_handle_->command_.range_ = 2;
 
   pub_cycle_count_ = 0;
   should_publish_  = false;
@@ -383,6 +394,13 @@ void PR2NeuroadptControllerClass::starting()
 void PR2NeuroadptControllerClass::update()
 {
 
+//	// retrieve our accelerometer data
+//	std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
+//
+//	threeAccs[threeAccs.size()-1].x
+//	threeAccs[threeAccs.size()-1].y
+//	threeAccs[threeAccs.size()-1].z
+
 //  wristFTdata.update();
 	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 	l_ft_samples    = l_ftData_vector.size() - 1;
@@ -397,12 +415,16 @@ void PR2NeuroadptControllerClass::update()
 	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
 	r_ft_samples    = r_ftData_vector.size() - 1;
 //      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-	r_ftData.wrench.force.x  = r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x ;
-	r_ftData.wrench.force.y  = r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y ;
-	r_ftData.wrench.force.z  = r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z ;
-	r_ftData.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x;
-	r_ftData.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y;
-	r_ftData.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z;
+	r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
+	r_ftData.wrench.force.y  = - ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
+	r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
+	r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
+	r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
+	r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
+
+//	if( (r_ftData.wrench.force.x > -18) && (r_ftData.wrench.force.x < 18) ){ r_ftData.wrench.force.x = 0; }
+//	if( (r_ftData.wrench.force.y > -18) && (r_ftData.wrench.force.y < 18) ){ r_ftData.wrench.force.y = 0; }
+//	if( (r_ftData.wrench.force.z > -18) && (r_ftData.wrench.force.z < 18) ){ r_ftData.wrench.force.z = 0; }
 
 
   double dt;                    // Servo loop time step
@@ -608,21 +630,42 @@ void PR2NeuroadptControllerClass::update()
 	Z.block(Hidden,Outputs,Inputs+1,Hidden) = V_trans.transpose();
 	vRobust = - Kz*(Z.norm() + Zb)*r;
 
-	x(0 ) =  q(0);
-	x(1 ) =  q(1);
-	x(2 ) =  q(2);
-	x(3 ) =  q(3);
-	x(4 ) =  q(4);
-	x(5 ) =  q(5);
-	x(6 ) =  q(6);
-	x(7 ) = qd(0);
-	x(8 ) = qd(1);
-	x(9 ) = qd(2);
-	x(10) = qd(3);
-	x(11) = qd(4);
-	x(12) = qd(5);
-	x(13) = qd(6);
-	x(14) = 1;
+	x(0 ) =                    1 ;
+	x(1 ) =  (  q_m(0) -  q(0) ) ;
+	x(2 ) =  (  q_m(1) -  q(1) ) ;
+	x(3 ) =  (  q_m(2) -  q(2) ) ;
+	x(4 ) =  (  q_m(3) -  q(3) ) ;
+	x(5 ) =  (  q_m(4) -  q(4) ) ;
+	x(6 ) =  (  q_m(5) -  q(5) ) ;
+	x(7 ) =  (  q_m(6) -  q(6) ) ;
+	x(8 ) =  ( qd_m(0) - qd(0) ) ;
+	x(9 ) =  ( qd_m(1) - qd(1) ) ;
+	x(10) =  ( qd_m(2) - qd(2) ) ;
+	x(11) =  ( qd_m(3) - qd(3) ) ;
+	x(12) =  ( qd_m(4) - qd(4) ) ;
+	x(13) =  ( qd_m(5) - qd(5) ) ;
+	x(14) =  ( qd_m(6) - qd(6) ) ;
+	x(15) =             q_m( 0 ) ;
+	x(16) =             q_m( 1 ) ;
+	x(17) =             q_m( 2 ) ;
+	x(18) =             q_m( 3 ) ;
+	x(19) =             q_m( 4 ) ;
+	x(20) =             q_m( 5 ) ;
+	x(21) =             q_m( 6 ) ;
+	x(22) =            qd_m( 0 ) ;
+	x(23) =            qd_m( 1 ) ;
+	x(24) =            qd_m( 2 ) ;
+	x(25) =            qd_m( 3 ) ;
+	x(26) =            qd_m( 4 ) ;
+	x(27) =            qd_m( 5 ) ;
+	x(28) =            qd_m( 6 ) ;
+	x(29) =           qdd_m( 0 ) ;
+	x(30) =           qdd_m( 1 ) ;
+	x(31) =           qdd_m( 2 ) ;
+	x(32) =           qdd_m( 3 ) ;
+	x(33) =           qdd_m( 4 ) ;
+	x(34) =           qdd_m( 5 ) ;
+	x(35) =           qdd_m( 6 ) ;
 
 	hiddenLayer_in = V_trans*x;
 	hiddenLayer_out = sigmoid(hiddenLayer_in);
@@ -644,7 +687,15 @@ void PR2NeuroadptControllerClass::update()
 	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
 
 	// Convert from Eigen to KDL
-	tau_t = JointEigen2Kdl( tau );
+//	tau_t = JointEigen2Kdl( tau );
+
+	tau_t(0) = tau(0);
+	tau_t(1) = tau(1);
+	tau_t(2) = tau(2);
+	tau_t(3) = tau(3);
+	tau_t(4) = tau(4);
+	tau_t(5) = tau(5);
+	tau_t(6) = tau(6);
 
 	// NN END
 	/////////////////////////

@@ -7,3 +7,8 @@ NNCartesianFTSensorForce_2013-09-13-13-54-10.bag
 NNCartesianFTSensorForce_2013-09-13-14-07-55.bag
  - Cycles with NO NNs
 
+NNCartesianFTSensorForce_2013-09-14-18-59-36.bag
+ - All joints actuated, messed up
+
+####
+# NEW controller (x) formulation
