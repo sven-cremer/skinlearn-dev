@@ -1,5 +1,5 @@
 pr2_cartesianController:
-  type: PR2CartControllerClass
+  type: PR2CartesianControllerClass
   root_name: torso_lift_link
   tip_name: r_gripper_tool_frame
 
@@ -26,4 +26,4 @@ nn_Zb               : 100
 nn_feedForwardForce : 1   
 nn_nnF              : 100 
 nn_nnG              : 20
-nn_ON		    : 1
+nn_ON               : 1
