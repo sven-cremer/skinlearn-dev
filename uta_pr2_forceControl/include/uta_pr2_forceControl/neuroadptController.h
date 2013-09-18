@@ -27,11 +27,11 @@
 #include "ros/ros.h"
 #include <urdf/model.h>
 
-#include <boost/array.hpp>
-#include <boost/numeric/odeint.hpp>
+//#include <boost/array.hpp>
+//#include <boost/numeric/odeint.hpp>
 
-typedef boost::array< double , 21 > state_type;
-typedef boost::array< double , 4 > state_type_4;
+//typedef boost::array< double , 21 > state_type;
+//typedef boost::array< double , 4 > state_type_4;
 
 namespace pr2_controller_ns{
 
@@ -155,8 +155,8 @@ private:
   double R;
   double b;
 
-  state_type   ode_init_x;
-  state_type_4 vpol_init_x;
+//  state_type   ode_init_x;
+//  state_type_4 vpol_init_x;
 
   // System Model END
   /////////////////////////
@@ -166,7 +166,7 @@ private:
 
   enum { Inputs  = 35 }; // n Size of the inputs
   enum { Outputs = 7 }; // m Size of the outputs
-  enum { Hidden  = 7 }; // l Size of the hidden layer
+  enum { Hidden  = 30 }; // l Size of the hidden layer
   enum { Error   = 7 }; // filtered error
 
   Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans;
@@ -188,7 +188,7 @@ private:
   Eigen::Matrix<double, Hidden, Hidden>   hiddenLayerIdentity ;
   Eigen::Matrix<double, Hidden, 1>        hiddenLayer_in      ;
   Eigen::Matrix<double, Outputs, 1>       outputLayer_out     ;
-  Eigen::Matrix<double, Outputs, Hidden>  sigmaPrime          ;
+  Eigen::Matrix<double, Hidden, Hidden>  sigmaPrime          ;
   Eigen::Matrix<double, Error, 1>         r                   ;
   Eigen::Matrix<double, Outputs, 1>       vRobust             ;
 
@@ -205,6 +205,9 @@ private:
 
   // NN END
   /////////////////////////
+
+  SystemVector eigen_temp_joint;
+  KDL::JntArray kdl_temp_joint_;
 
   urdf::Model urdf_model;
 

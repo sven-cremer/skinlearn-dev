@@ -5,58 +5,58 @@
 using namespace pr2_controller_ns;
 
 using namespace std;
-using namespace boost::numeric::odeint;
+//using namespace boost::numeric::odeint;
 
-void reference_model( const state_type &x , state_type &dxdt , double t )
-{
+//void reference_model( const state_type &x , state_type &dxdt , double t )
+//{
+//
+//	double m = 1;
+//	double d = 10;
+//	double k = 1;
+//
+//	dxdt[0 ] = x[7 ];
+//	dxdt[1 ] = x[8 ];
+//	dxdt[2 ] = x[9 ];
+//	dxdt[3 ] = x[10];
+//	dxdt[4 ] = x[11];
+//	dxdt[5 ] = x[12];
+//	dxdt[6 ] = x[13];
+//
+//	//             f_r		 qd_m      q_m
+//	dxdt[7 ] = m*( x[14] - d*x[7 ] - k*x[0 ] );
+//	dxdt[8 ] = m*( x[15] - d*x[8 ] - k*x[1 ] );
+//	dxdt[9 ] = m*( x[16] - d*x[9 ] - k*x[2 ] );
+//	dxdt[10] = m*( x[17] - d*x[10] - k*x[3 ] );
+//	dxdt[11] = m*( x[18] - d*x[11] - k*x[4 ] );
+//	dxdt[12] = m*( x[19] - d*x[12] - k*x[5 ] );
+//	dxdt[13] = m*( x[20] - d*x[13] - k*x[6 ] );
+//
+//	dxdt[14] = x[14];
+//	dxdt[15] = x[15];
+//	dxdt[16] = x[16];
+//	dxdt[17] = x[17];
+//	dxdt[18] = x[18];
+//	dxdt[19] = x[19];
+//	dxdt[20] = x[20];
+//
+//}
 
-	double m = 1;
-	double d = 10;
-	double k = 1;
-
-	dxdt[0 ] = x[7 ];
-	dxdt[1 ] = x[8 ];
-	dxdt[2 ] = x[9 ];
-	dxdt[3 ] = x[10];
-	dxdt[4 ] = x[11];
-	dxdt[5 ] = x[12];
-	dxdt[6 ] = x[13];
-
-	//             f_r		 qd_m      q_m
-	dxdt[7 ] = m*( x[14] - d*x[7 ] - k*x[0 ] );
-	dxdt[8 ] = m*( x[15] - d*x[8 ] - k*x[1 ] );
-	dxdt[9 ] = m*( x[16] - d*x[9 ] - k*x[2 ] );
-	dxdt[10] = m*( x[17] - d*x[10] - k*x[3 ] );
-	dxdt[11] = m*( x[18] - d*x[11] - k*x[4 ] );
-	dxdt[12] = m*( x[19] - d*x[12] - k*x[5 ] );
-	dxdt[13] = m*( x[20] - d*x[13] - k*x[6 ] );
-
-	dxdt[14] = x[14];
-	dxdt[15] = x[15];
-	dxdt[16] = x[16];
-	dxdt[17] = x[17];
-	dxdt[18] = x[18];
-	dxdt[19] = x[19];
-	dxdt[20] = x[20];
-
-}
-
-void vanderpol_model( const state_type_4 &x , state_type_4 &dxdt , double t )
-{
-	double Mu1 = 0.2;
-	double Mu2 = 5  ;
-
-	dxdt[0 ] = x[2];
-	dxdt[1 ] = x[3];
-	dxdt[2 ] = Mu1*(1-x[0]*x[0])*x[2]-x[0];
-	dxdt[3 ] = Mu2*(1-x[1]*x[1])*x[3]-x[1];
-
-}
-
-void write_lorenz( const state_type &x , const double t )
-{
-    cout << t << '\t' << x[0] << '\t' << x[1] << '\t' << x[2] << endl;
-}
+//void vanderpol_model( const state_type_4 &x , state_type_4 &dxdt , double t )
+//{
+//	double Mu1 = 0.2;
+//	double Mu2 = 5  ;
+//
+//	dxdt[0 ] = x[2];
+//	dxdt[1 ] = x[3];
+//	dxdt[2 ] = Mu1*(1-x[0]*x[0])*x[2]-x[0];
+//	dxdt[3 ] = Mu2*(1-x[1]*x[1])*x[3]-x[1];
+//
+//}
+//
+//void write_lorenz( const state_type &x , const double t )
+//{
+//    cout << t << '\t' << x[0] << '\t' << x[1] << '\t' << x[2] << endl;
+//}
 
 
 
@@ -162,6 +162,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   q_upper.resize(kdl_chain_.getNrOfJoints());
   qd_limit.resize(kdl_chain_.getNrOfJoints());
 
+  kdl_temp_joint_.resize(kdl_chain_.getNrOfJoints());
+
   J_.resize(kdl_chain_.getNrOfJoints());
   J_m_.resize(kdl_chain_.getNrOfJoints());
 
@@ -256,36 +258,36 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 	delT  = 0.001;
 
-	// initial conditions
-	ode_init_x[0 ] = 0.0;
-	ode_init_x[1 ] = 0.0;
-	ode_init_x[2 ] = 0.0;
-	ode_init_x[3 ] = 0.0;
-	ode_init_x[4 ] = 0.0;
-	ode_init_x[5 ] = 0.0;
-	ode_init_x[6 ] = 0.0;
-
-	ode_init_x[7 ] = 0.0;
-	ode_init_x[8 ] = 0.0;
-	ode_init_x[9 ] = 0.0;
-	ode_init_x[10] = 0.0;
-	ode_init_x[11] = 0.0;
-	ode_init_x[12] = 0.0;
-	ode_init_x[13] = 0.0;
-
-	ode_init_x[14] = 0.0;
-	ode_init_x[15] = 0.0;
-	ode_init_x[16] = 0.0;
-	ode_init_x[17] = 0.0;
-	ode_init_x[18] = 0.0;
-	ode_init_x[19] = 0.0;
-	ode_init_x[20] = 0.0;
-
-
-	vpol_init_x[0 ] = 2.0;
-	vpol_init_x[1 ] = 2.0;
-    vpol_init_x[2 ] = 0.0;
-    vpol_init_x[3 ] = 0.0;
+//	// initial conditions
+//	ode_init_x[0 ] = 0.0;
+//	ode_init_x[1 ] = 0.0;
+//	ode_init_x[2 ] = 0.0;
+//	ode_init_x[3 ] = 0.0;
+//	ode_init_x[4 ] = 0.0;
+//	ode_init_x[5 ] = 0.0;
+//	ode_init_x[6 ] = 0.0;
+//
+//	ode_init_x[7 ] = 0.0;
+//	ode_init_x[8 ] = 0.0;
+//	ode_init_x[9 ] = 0.0;
+//	ode_init_x[10] = 0.0;
+//	ode_init_x[11] = 0.0;
+//	ode_init_x[12] = 0.0;
+//	ode_init_x[13] = 0.0;
+//
+//	ode_init_x[14] = 0.0;
+//	ode_init_x[15] = 0.0;
+//	ode_init_x[16] = 0.0;
+//	ode_init_x[17] = 0.0;
+//	ode_init_x[18] = 0.0;
+//	ode_init_x[19] = 0.0;
+//	ode_init_x[20] = 0.0;
+//
+//
+//	vpol_init_x[0 ] = 2.0;
+//	vpol_init_x[1 ] = 2.0;
+//    vpol_init_x[2 ] = 0.0;
+//    vpol_init_x[3 ] = 0.0;
 
 	// System Model END
 	/////////////////////////
@@ -328,24 +330,30 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if(!hardwareInterface)
       ROS_ERROR("Something wrong with the hardware interface pointer!");
 
-  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+
+
+
+
+/*  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
   r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
 
-  if( !l_ft_handle_ /*wristFTdata.getLeftHandle()*/ )
+  if( !l_ft_handle_ wristFTdata.getLeftHandle() )
       ROS_ERROR("Something wrong with getting l_ft handle");
-  if( !r_ft_handle_ /*wristFTdata.getRightHandle()*/ )
-      ROS_ERROR("Something wrong with getting r_ft handle");
+  if( !r_ft_handle_ wristFTdata.getRightHandle() )
+      ROS_ERROR("Something wrong with getting r_ft handle");*/
 
-  /* get a handle to the left gripper accelerometer */
-    accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
-    if(!accelerometer_handle_)
-        ROS_ERROR("Something wrong with getting accelerometer handle");
 
-    // set to 1.5 kHz bandwidth (should be the default)
-    accelerometer_handle_->command_.bandwidth_ = 6;
 
-    // set to +/- 8g range (0=2g,1=4g)
-    accelerometer_handle_->command_.range_ = 2;
+//  /* get a handle to the left gripper accelerometer */
+//    accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
+//    if(!accelerometer_handle_)
+//        ROS_ERROR("Something wrong with getting accelerometer handle");
+//
+//    // set to 1.5 kHz bandwidth (should be the default)
+//    accelerometer_handle_->command_.bandwidth_ = 6;
+//
+//    // set to +/- 8g range (0=2g,1=4g)
+//    accelerometer_handle_->command_.range_ = 2;
 
   pub_cycle_count_ = 0;
   should_publish_  = false;
@@ -379,14 +387,14 @@ void PR2NeuroadptControllerClass::starting()
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
 
-  // set FT sensor bias due to gravity
+/*  // set FT sensor bias due to gravity
   std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
   l_ft_samples    = l_ftData_vector.size() - 1;
   l_ftBias.wrench = l_ftData_vector[l_ft_samples];
 
   std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
   r_ft_samples    = r_ftData_vector.size() - 1;
-  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+  r_ftBias.wrench = r_ftData_vector[r_ft_samples];*/
 }
 
 
@@ -401,7 +409,10 @@ void PR2NeuroadptControllerClass::update()
 //	threeAccs[threeAccs.size()-1].y
 //	threeAccs[threeAccs.size()-1].z
 
-//  wristFTdata.update();
+
+
+/*
+   //  wristFTdata.update();
 	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 	l_ft_samples    = l_ftData_vector.size() - 1;
 //      l_ftData.wrench = l_ftData_vector[l_ft_samples];
@@ -421,6 +432,10 @@ void PR2NeuroadptControllerClass::update()
 	r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
 	r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
 	r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
+
+	*/
+
+
 
 //	if( (r_ftData.wrench.force.x > -18) && (r_ftData.wrench.force.x < 18) ){ r_ftData.wrench.force.x = 0; }
 //	if( (r_ftData.wrench.force.y > -18) && (r_ftData.wrench.force.y < 18) ){ r_ftData.wrench.force.y = 0; }
@@ -457,7 +472,7 @@ void PR2NeuroadptControllerClass::update()
   }
 
   // Follow a circle of 10cm at 3 rad/sec.
-  circle_phase_ += 1 * dt;
+  circle_phase_ += 3 * dt;
   KDL::Vector  circle(0,0,0);
   circle(2) = 0.1 * sin(circle_phase_);
   circle(1) = 0.1 * (cos(circle_phase_) - 1);
@@ -584,36 +599,36 @@ void PR2NeuroadptControllerClass::update()
 //	ode_init_x[12] = 0.0;
 //	ode_init_x[13] = 0.0;
 
-	ode_init_x[14] = t_r(0);
-	ode_init_x[15] = t_r(1);
-	ode_init_x[16] = t_r(2);
-	ode_init_x[17] = t_r(3);
-	ode_init_x[18] = t_r(4);
-	ode_init_x[19] = t_r(5);
-	ode_init_x[20] = t_r(6);
+//	ode_init_x[14] = t_r(0);
+//	ode_init_x[15] = t_r(1);
+//	ode_init_x[16] = t_r(2);
+//	ode_init_x[17] = t_r(3);
+//	ode_init_x[18] = t_r(4);
+//	ode_init_x[19] = t_r(5);
+//	ode_init_x[20] = t_r(6);
 
 //	integrate( reference_model , ode_init_x , 0.0 , 0.001 , 0.001 );
-	integrate( vanderpol_model , vpol_init_x , 0.0 , 0.001 , 0.001 );
+//	integrate( vanderpol_model , vpol_init_x , 0.0 , 0.001 , 0.001 );
 
 	// System Model END
 	/////////////////////////
 
-//	// DEBUG
-//	q_m(0)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-//	q_m(1)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-//	q_m(2)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-//	q_m(3)  =       - 0.5 * (sin(circle_phase_) + 1.5 );
-//	q_m(4)  = 0;
-//	q_m(5)  = 0;
-//	q_m(6)  = 0;
-//
-//	qd_m(0) = 0;
-//	qd_m(1) = 0;
-//	qd_m(2) = 0;
-//	qd_m(3) = - 10 * (cos(circle_phase_));
-//	qd_m(4) = 0;
-//	qd_m(5) = 0;
-//	qd_m(6) = 0;
+	// DEBUG
+	q_m(0)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(1)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(2)  = 0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(3)  =       - 0.5 * (sin(circle_phase_) + 1.5 );
+	q_m(4)  = 0;
+	q_m(5)  = 0;
+	q_m(6)  = 0;
+
+	qd_m(0) = 0;
+	qd_m(1) = 0;
+	qd_m(2) = 0;
+	qd_m(3) = 0.5 * (cos(circle_phase_));
+	qd_m(4) = 0;
+	qd_m(5) = 0;
+	qd_m(6) = 0;
 
 
     /////////////////////////
@@ -631,20 +646,20 @@ void PR2NeuroadptControllerClass::update()
 	vRobust = - Kz*(Z.norm() + Zb)*r;
 
 	x(0 ) =                    1 ;
-	x(1 ) =  (  q_m(0) -  q(0) ) ;
-	x(2 ) =  (  q_m(1) -  q(1) ) ;
-	x(3 ) =  (  q_m(2) -  q(2) ) ;
-	x(4 ) =  (  q_m(3) -  q(3) ) ;
-	x(5 ) =  (  q_m(4) -  q(4) ) ;
-	x(6 ) =  (  q_m(5) -  q(5) ) ;
-	x(7 ) =  (  q_m(6) -  q(6) ) ;
-	x(8 ) =  ( qd_m(0) - qd(0) ) ;
-	x(9 ) =  ( qd_m(1) - qd(1) ) ;
-	x(10) =  ( qd_m(2) - qd(2) ) ;
-	x(11) =  ( qd_m(3) - qd(3) ) ;
-	x(12) =  ( qd_m(4) - qd(4) ) ;
-	x(13) =  ( qd_m(5) - qd(5) ) ;
-	x(14) =  ( qd_m(6) - qd(6) ) ;
+	x(1 ) = (  q_m( 0 ) -  q(0) );
+	x(2 ) = (  q_m( 1 ) -  q(1) );
+	x(3 ) = (  q_m( 2 ) -  q(2) );
+	x(4 ) = (  q_m( 3 ) -  q(3) );
+	x(5 ) = (  q_m( 4 ) -  q(4) );
+	x(6 ) = (  q_m( 5 ) -  q(5) );
+	x(7 ) = (  q_m( 6 ) -  q(6) );
+	x(8 ) = ( qd_m( 0 ) - qd(0) );
+	x(9 ) = ( qd_m( 1 ) - qd(1) );
+	x(10) = ( qd_m( 2 ) - qd(2) );
+	x(11) = ( qd_m( 3 ) - qd(3) );
+	x(12) = ( qd_m( 4 ) - qd(4) );
+	x(13) = ( qd_m( 5 ) - qd(5) );
+	x(14) = ( qd_m( 6 ) - qd(6) );
 	x(15) =             q_m( 0 ) ;
 	x(16) =             q_m( 1 ) ;
 	x(17) =             q_m( 2 ) ;
@@ -687,15 +702,15 @@ void PR2NeuroadptControllerClass::update()
 	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
 
 	// Convert from Eigen to KDL
-//	tau_t = JointEigen2Kdl( tau );
+	tau_t = JointEigen2Kdl( tau );
 
-	tau_t(0) = tau(0);
-	tau_t(1) = tau(1);
-	tau_t(2) = tau(2);
-	tau_t(3) = tau(3);
-	tau_t(4) = tau(4);
-	tau_t(5) = tau(5);
-	tau_t(6) = tau(6);
+	//tau_t(0) = tau(0);
+	//tau_t(1) = tau(1);
+	//tau_t(2) = tau(2);
+	//tau_t(3) = tau(3);
+	//tau_t(4) = tau(4);
+	//tau_t(5) = tau(5);
+	//tau_t(6) = tau(6);
 
 	// NN END
 	/////////////////////////
@@ -729,13 +744,13 @@ void PR2NeuroadptControllerClass::update()
 	modelState.effort[5] = t_r(5);
 	modelState.effort[6] = t_r(6);
 
-	robotState.position[0] = q(0);;
-	robotState.position[1] = q(1);;
-	robotState.position[2] = q(2);;
-	robotState.position[3] = q(3);;
-	robotState.position[4] = q(4);;
-	robotState.position[5] = q(5);;
-	robotState.position[6] = q(6);;
+	robotState.position[0] = q(0);
+	robotState.position[1] = q(1);
+	robotState.position[2] = q(2);
+	robotState.position[3] = q(3);
+	robotState.position[4] = q(4);
+	robotState.position[5] = q(5);
+	robotState.position[6] = q(6);
 
 	robotState.velocity[0] = qd(0);
 	robotState.velocity[1] = qd(1);
@@ -796,8 +811,8 @@ void PR2NeuroadptControllerClass::update()
 		pubModelCartPos_.msg_.header.stamp = robot_state_->getTime();
 		pubRobotCartPos_.msg_.header.stamp = robot_state_->getTime();
 
-		tf::PoseKDLToMsg(x_m_, modelCartPos_);
-		tf::PoseKDLToMsg(x_  , robotCartPos_);
+//		tf::PoseKDLToMsg(x_m_, modelCartPos_);
+//		tf::PoseKDLToMsg(x_  , robotCartPos_);
 
 		pubModelCartPos_.msg_.pose = modelCartPos_;
 		pubRobotCartPos_.msg_.pose = robotCartPos_;
@@ -815,48 +830,43 @@ void PR2NeuroadptControllerClass::update()
 PR2NeuroadptControllerClass::SystemVector
 PR2NeuroadptControllerClass::JointKdl2Eigen( KDL::JntArray & joint_ )
 {
-	SystemVector joint;
-	joint(0) = joint_(0);
-	joint(1) = joint_(1);
-	joint(2) = joint_(2);
-	joint(3) = joint_(3);
-	joint(4) = joint_(4);
-	joint(5) = joint_(5);
-	joint(6) = joint_(6);
+	eigen_temp_joint(0) = joint_(0);
+	eigen_temp_joint(1) = joint_(1);
+	eigen_temp_joint(2) = joint_(2);
+	eigen_temp_joint(3) = joint_(3);
+	eigen_temp_joint(4) = joint_(4);
+	eigen_temp_joint(5) = joint_(5);
+	eigen_temp_joint(6) = joint_(6);
 
-	return joint;
+	return eigen_temp_joint;
 }
 
 PR2NeuroadptControllerClass::SystemVector
 PR2NeuroadptControllerClass::JointVelKdl2Eigen( KDL::JntArrayVel & joint_ )
 {
-	SystemVector joint;
-	joint(0) = joint_.qdot(0);
-	joint(1) = joint_.qdot(1);
-	joint(2) = joint_.qdot(2);
-	joint(3) = joint_.qdot(3);
-	joint(4) = joint_.qdot(4);
-	joint(5) = joint_.qdot(5);
-	joint(6) = joint_.qdot(6);
+	eigen_temp_joint(0) = joint_.qdot(0);
+	eigen_temp_joint(1) = joint_.qdot(1);
+	eigen_temp_joint(2) = joint_.qdot(2);
+	eigen_temp_joint(3) = joint_.qdot(3);
+	eigen_temp_joint(4) = joint_.qdot(4);
+	eigen_temp_joint(5) = joint_.qdot(5);
+	eigen_temp_joint(6) = joint_.qdot(6);
 
-	return joint;
+	return eigen_temp_joint;
 }
 
 KDL::JntArray
 PR2NeuroadptControllerClass::JointEigen2Kdl( SystemVector & joint )
 {
-	KDL::JntArray joint_;
-	joint_.resize(7);
+	kdl_temp_joint_ (0) = joint(0);
+	kdl_temp_joint_(1) = joint(1);
+	kdl_temp_joint_(2) = joint(2);
+	kdl_temp_joint_(3) = joint(3);
+	kdl_temp_joint_(4) = joint(4);
+	kdl_temp_joint_(5) = joint(5);
+	kdl_temp_joint_(6) = joint(6);
 
-	joint (0) = joint(0);
-	joint_(1) = joint(1);
-	joint_(2) = joint(2);
-	joint_(3) = joint(3);
-	joint_(4) = joint(4);
-	joint_(5) = joint(5);
-	joint_(6) = joint(6);
-
-	return joint_;
+	return kdl_temp_joint_;
 }
 
 Eigen::Matrix<double, PR2NeuroadptControllerClass::Hidden, 1>
@@ -873,7 +883,9 @@ PR2NeuroadptControllerClass::sigmoid( Eigen::Matrix<double, Hidden, 1> & z )
 
 /// Controller stopping in realtime
 void PR2NeuroadptControllerClass::stopping()
-{}
+{
+
+}
 
 
 // Register controller to pluginlib
