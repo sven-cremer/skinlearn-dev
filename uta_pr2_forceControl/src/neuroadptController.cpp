@@ -444,7 +444,7 @@ void PR2NeuroadptControllerClass::update()
 	r_ft_samples    = r_ftData_vector.size() - 1;
 //      r_ftData.wrench = r_ftData_vector[r_ft_samples];
 	r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
-	r_ftData.wrench.force.y  = - ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
+	r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
 	r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
 	r_ftData.wrench.torque.x = 0;  // ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
 	r_ftData.wrench.torque.y = 0;  // ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
@@ -548,13 +548,13 @@ void PR2NeuroadptControllerClass::update()
   // Reference torque from human interaction or trajectory following
 
   // Human
-	t_r(0) = tau_h_(0);
-	t_r(1) = tau_h_(1);
-	t_r(2) = tau_h_(2);
-	t_r(3) = tau_h_(3);
-	t_r(4) = tau_h_(4);
-	t_r(5) = tau_h_(5);
-	t_r(6) = tau_h_(6);
+	t_r(0) = - tau_h_(0);
+	t_r(1) =   tau_h_(1);
+	t_r(2) =   tau_h_(2);
+	t_r(3) =   tau_h_(3);
+	t_r(4) =   tau_h_(4);
+	t_r(5) =   tau_h_(5);
+	t_r(6) =   tau_h_(6);
 
 //    // Trajectory/impedance
 //	t_r(0) = tau_t_(0);
