@@ -18,6 +18,9 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "sensor_msgs/JointState.h"
 #include <uta_pr2_forceControl/controllerParam.h>
+#include <uta_pr2_forceControl/controllerFullData.h>
+
+#include <std_srvs/Empty.h>
 
 #include <Eigen/StdVector>
 #include <Eigen/Geometry>
@@ -34,6 +37,11 @@ typedef boost::array< double , 21 > state_type;
 typedef boost::array< double , 4 > state_type_4;
 
 namespace pr2_controller_ns{
+
+enum
+{
+  StoreLen = 10000
+};
 
 class PR2NeuroadptControllerClass: public pr2_controller_interface::Controller
 {
@@ -68,53 +76,55 @@ private:
   boost::scoped_ptr<KDL::ChainJntToJacSolver> jnt_to_jac_solver_;
 
   // The variables (which need to be pre-allocated).
-  KDL::JntArray  q_;            // Joint positions
-  KDL::JntArray  q0_;           // Joint initial positions
-  KDL::JntArrayVel  qdot_;      // Joint velocities
-  KDL::JntArray  tau_t;         // Joint torques
-  KDL::JntArray  tau_h;         // Joint torques from human
+  KDL::JntArray     q_;            // Joint positions
+  KDL::JntArray     q0_;           // Joint initial positions
+  KDL::JntArrayVel  qdot_;         // Joint velocities
+  KDL::JntArray     tau_t_;         // Joint torques from trajectory/impedance
+  KDL::JntArray     tau_h_;         // Joint torques from human
+  KDL::JntArray     tau_c_;         // Joint command joint torques
+  KDL::JntArray     tau_f_;         // Joint torques from robot feedback
 
-  KDL::JntArray  q_m_;          // Model Joint positions
-  KDL::JntArray  q0_m_;          // Joint initial positions
-  KDL::JntArray  qd_m_;         // Model Joint positions
-  KDL::JntArray  qdd_m_;        // Model Joint positions
+  KDL::JntArray     q_m_;          // Model Joint positions
+  KDL::JntArray     q0_m_;         // Joint initial positions
+  KDL::JntArray     qd_m_;         // Model Joint positions
+  KDL::JntArray     qdd_m_;        // Model Joint positions
 
-  KDL::JntArray  q_lower;       // Joint position lower limits
-  KDL::JntArray  q_upper;       // Joint position upper limits
-  KDL::JntArray  qd_limit;      // Joint velocity limits
+  KDL::JntArray     q_lower;       // Joint position lower limits
+  KDL::JntArray     q_upper;       // Joint position upper limits
+  KDL::JntArray     qd_limit;      // Joint velocity limits
 
-  KDL::Frame     x_;            // Robot Tip pose
-  KDL::Frame     xd_;           // Robot Tip desired pose
-  KDL::Frame     x0_;           // Robot Tip initial pose
+  KDL::Frame        x_;            // Robot Tip pose
+  KDL::Frame        xd_;           // Robot Tip desired pose
+  KDL::Frame        x0_;           // Robot Tip initial pose
 
-  KDL::Frame     x_m_;          // Model Tip pose
-  KDL::Frame     xd_m_;         // Model Tip desired pose
-  KDL::Frame     x0_m_;         // Model Tip initial pose
+  KDL::Frame        x_m_;          // Model Tip pose
+  KDL::Frame        xd_m_;         // Model Tip desired pose
+  KDL::Frame        x0_m_;         // Model Tip initial pose
 
-  KDL::Twist     xerr_;         // Cart error
-  KDL::Twist     xdot_;         // Cart velocity
-  KDL::Wrench    F_;            // Cart effort
-  KDL::Twist     ferr_;			// Cart effort error
+  KDL::Twist        xerr_;         // Cart error
+  KDL::Twist        xdot_;         // Cart velocity
+  KDL::Wrench       F_;            // Cart effort
+  KDL::Twist        ferr_;		   // Cart effort error
 
-  KDL::Jacobian  J_;            // Robot Jacobian
-  KDL::Jacobian  J_m_;          // Model Jacobian
+  KDL::Jacobian     J_;            // Robot Jacobian
+  KDL::Jacobian     J_m_;          // Model Jacobian
 
   // Note the gains are incorrectly typed as a twist,
   // as there is no appropriate type!
-  KDL::Twist     Kp_;           // Proportional gains
-  KDL::Twist     Kd_;           // Derivative gains
+  KDL::Twist        Kp_;           // Proportional gains
+  KDL::Twist        Kd_;           // Derivative gains
 
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle
   ros::Time last_time_;         // Time of the last servo cycle
 
   //! realtime publisher for max_force value
-  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_;
-  realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubModelStates_;
-  realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubRobotStates_;
-  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pubModelCartPos_;
-  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pubRobotCartPos_;
-  realtime_tools::RealtimePublisher<uta_pr2_forceControl::controllerParam> pubControllerParam_;
+//  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_;
+//  realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubModelStates_;
+//  realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubRobotStates_;
+//  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pubModelCartPos_;
+//  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pubRobotCartPos_;
+//  realtime_tools::RealtimePublisher<uta_pr2_forceControl::controllerParam> pubControllerParam_;
 
   geometry_msgs::WrenchStamped r_forceData;
   geometry_msgs::Pose modelCartPos_;
@@ -166,7 +176,7 @@ private:
 
   enum { Inputs  = 35 }; // n Size of the inputs
   enum { Outputs = 7 }; // m Size of the outputs
-  enum { Hidden  = 7 }; // l Size of the hidden layer
+  enum { Hidden  = 10 }; // l Size of the hidden layer
   enum { Error   = 7 }; // filtered error
 
   Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans;
@@ -188,7 +198,7 @@ private:
   Eigen::Matrix<double, Hidden, Hidden>   hiddenLayerIdentity ;
   Eigen::Matrix<double, Hidden, 1>        hiddenLayer_in      ;
   Eigen::Matrix<double, Outputs, 1>       outputLayer_out     ;
-  Eigen::Matrix<double, Outputs, Hidden>  sigmaPrime          ;
+  Eigen::Matrix<double, Hidden, Hidden>   sigmaPrime          ;
   Eigen::Matrix<double, Error, 1>         r                   ;
   Eigen::Matrix<double, Outputs, 1>       vRobust             ;
 
@@ -206,7 +216,33 @@ private:
   // NN END
   /////////////////////////
 
+  SystemVector eigen_temp_joint;
+  KDL::JntArray kdl_temp_joint_;
+
   urdf::Model urdf_model;
+
+  bool capture(std_srvs::Empty::Request& req,
+               std_srvs::Empty::Response& resp);
+  ros::ServiceServer capture_srv_;
+
+
+  ros::Publisher pubFTData_              ;
+  ros::Publisher pubModelStates_         ;
+  ros::Publisher pubRobotStates_         ;
+  ros::Publisher pubModelCartPos_        ;
+  ros::Publisher pubRobotCartPos_        ;
+  ros::Publisher pubControllerParam_     ;
+  ros::Publisher pubControllerFullData_ ;
+
+  geometry_msgs::WrenchStamped             msgFTData             [StoreLen];
+  sensor_msgs::JointState                  msgModelStates        [StoreLen];
+  sensor_msgs::JointState                  msgRobotStates        [StoreLen];
+  geometry_msgs::PoseStamped               msgModelCartPos       [StoreLen];
+  geometry_msgs::PoseStamped               msgRobotCartPos       [StoreLen];
+  uta_pr2_forceControl::controllerParam    msgControllerParam    [StoreLen];
+  uta_pr2_forceControl::controllerFullData msgControllerFullData [StoreLen];
+
+  volatile int storage_index_;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
