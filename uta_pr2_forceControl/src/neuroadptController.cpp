@@ -335,13 +335,13 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 
 
-/*  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
   r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
 
-  if( !l_ft_handle_ wristFTdata.getLeftHandle() )
+  if( !l_ft_handle_ )
       ROS_ERROR("Something wrong with getting l_ft handle");
-  if( !r_ft_handle_ wristFTdata.getRightHandle() )
-      ROS_ERROR("Something wrong with getting r_ft handle");*/
+  if( !r_ft_handle_ )
+      ROS_ERROR("Something wrong with getting r_ft handle");
 
 
 
@@ -406,14 +406,14 @@ void PR2NeuroadptControllerClass::starting()
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
 
-/*  // set FT sensor bias due to gravity
+  // set FT sensor bias due to gravity
   std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
   l_ft_samples    = l_ftData_vector.size() - 1;
   l_ftBias.wrench = l_ftData_vector[l_ft_samples];
 
   std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
   r_ft_samples    = r_ftData_vector.size() - 1;
-  r_ftBias.wrench = r_ftData_vector[r_ft_samples];*/
+  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
 }
 
 
@@ -429,9 +429,6 @@ void PR2NeuroadptControllerClass::update()
 //	threeAccs[threeAccs.size()-1].z
 
 
-
-/*
-   //  wristFTdata.update();
 	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 	l_ft_samples    = l_ftData_vector.size() - 1;
 //      l_ftData.wrench = l_ftData_vector[l_ft_samples];
@@ -452,7 +449,6 @@ void PR2NeuroadptControllerClass::update()
 	r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
 	r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
 
-	*/
 
 
 
@@ -517,12 +513,12 @@ void PR2NeuroadptControllerClass::update()
 
   // Human force input
   // Force error
-  ferr_(0) = 30*sin(circle_phase_); // r_ftData.wrench.force.x ;
-  ferr_(1) = 0				    ; // r_ftData.wrench.force.y ;
-  ferr_(2) = 0				    ; // r_ftData.wrench.force.z ;
-  ferr_(3) = 0                   ; // r_ftData.wrench.torque.x;
-  ferr_(4) = 0                   ; // r_ftData.wrench.torque.y;
-  ferr_(5) = 0                   ; // r_ftData.wrench.torque.z;
+  ferr_(0) = r_ftData.wrench.force.x ; // 30*sin(circle_phase_);
+  ferr_(1) = r_ftData.wrench.force.y ; // 0				       ;
+  ferr_(2) = r_ftData.wrench.force.z ; // 0				       ;
+  ferr_(3) = r_ftData.wrench.torque.x; // 0                    ;
+  ferr_(4) = r_ftData.wrench.torque.y; // 0                    ;
+  ferr_(5) = r_ftData.wrench.torque.z; // 0                    ;
 
   // Convert the force into a set of joint torques.
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
@@ -539,14 +535,14 @@ void PR2NeuroadptControllerClass::update()
     /////////////////////////
 	// System Model
 
-  	// Integrator
-	tau_h_(0) = 0 ; // tau_h(0);
-	tau_h_(1) = vpol_init_x[0]; //sin(circle_phase_);    // tau_h(1);
-	tau_h_(2) = 0 ; // tau_h(2);
-	tau_h_(3) = 0 ; // tau_h(3);
-	tau_h_(4) = 0 ; // tau_h(4);
-	tau_h_(5) = 0 ; // tau_h(5);
-	tau_h_(6) = 0 ; // tau_h(6);
+//  	// Integrator
+//	tau_h_(0) = 0 ; // tau_h(0);
+//	tau_h_(1) = vpol_init_x[0]; //sin(circle_phase_);    // tau_h(1);
+//	tau_h_(2) = 0 ; // tau_h(2);
+//	tau_h_(3) = 0 ; // tau_h(3);
+//	tau_h_(4) = 0 ; // tau_h(4);
+//	tau_h_(5) = 0 ; // tau_h(5);
+//	tau_h_(6) = 0 ; // tau_h(6);
 
   // Reference torque from human interaction or trajectory following
 
