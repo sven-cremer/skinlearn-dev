@@ -222,9 +222,9 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// System Model
 
-	double m = 1;
-	double d = 10;
-	double k = 1;
+	double m = 0.5;
+	double d =   1;
+	double k =   1;
 
 	Mm << m, 0, 0, 0, 0, 0, 0,
 		  0, m, 0, 0, 0, 0, 0,
@@ -394,8 +394,9 @@ void PR2NeuroadptControllerClass::starting()
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
   q0_m_ = q0_;
+
   // Model initial conditions
-  q_m = JointKdl2Eigen(q0_m_);
+  // q_m = JointKdl2Eigen(q0_m_);
 
   jnt_to_pose_solver_->JntToCart(q0_, x0_);
   x0_m_ = x0_;
