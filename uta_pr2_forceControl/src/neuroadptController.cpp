@@ -222,9 +222,9 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// System Model
 
-	double m = 0.5;
-	double d =   1;
-	double k =   1;
+	double m =  1;
+	double d = 10;
+	double k =  1;
 
 	Mm << m, 0, 0, 0, 0, 0, 0,
 		  0, m, 0, 0, 0, 0, 0,
