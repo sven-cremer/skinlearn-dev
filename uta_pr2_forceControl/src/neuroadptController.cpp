@@ -655,7 +655,7 @@ void PR2NeuroadptControllerClass::update()
 	V_trans = V_trans_next;
 
 	// Filtered error
-	r = lambda*(qd_m - qd) + (q_m - q);
+	r = (qd_m - qd) + lambda*(q_m - q);
 
 	// Robust term
 	Z.block(0,0,Hidden,Outputs) = W_trans.transpose();
