@@ -475,16 +475,26 @@ void PR2ImpedanceControllerClass::update()
 //		pub_.unlockAndPublish();
 //		pubModelStates_.unlockAndPublish();
 
+		double velGain = 3;
+
 		if( xerr_.vel.x() > 5 ||  xerr_.vel.x() < 5)
 		{
-			pubBaseMove_.msg_.linear.x = xerr_.vel.x();
+			pubBaseMove_.msg_.linear.x = velGain*xerr_.vel.x();
 		}
 		else
 		{
 			pubBaseMove_.msg_.linear.x = 0;
 		}
 
-		pubBaseMove_.msg_.linear.y = 0;
+		if( xerr_.vel.y() > 5 ||  xerr_.vel.y() < 5)
+		{
+			pubBaseMove_.msg_.linear.y = velGain*xerr_.vel.y();
+		}
+		else
+		{
+			pubBaseMove_.msg_.linear.y = 0;
+		}
+
 		pubBaseMove_.msg_.linear.z = 0;
 
 		pubBaseMove_.msg_.angular.x = 0;
