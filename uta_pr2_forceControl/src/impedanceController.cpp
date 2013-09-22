@@ -477,7 +477,7 @@ void PR2ImpedanceControllerClass::update()
 
 		double velGain = 3;
 
-		if( xerr_.vel.x() > 5 ||  xerr_.vel.x() < 5)
+		if( xerr_.vel.x() > 0.02 ||  xerr_.vel.x() < -0.02)
 		{
 			pubBaseMove_.msg_.linear.x = velGain*xerr_.vel.x();
 		}
@@ -486,7 +486,7 @@ void PR2ImpedanceControllerClass::update()
 			pubBaseMove_.msg_.linear.x = 0;
 		}
 
-		if( xerr_.vel.y() > 5 ||  xerr_.vel.y() < 5)
+		if( xerr_.vel.y() > 0.02 ||  xerr_.vel.y() < -0.02)
 		{
 			pubBaseMove_.msg_.linear.y = velGain*xerr_.vel.y();
 		}
