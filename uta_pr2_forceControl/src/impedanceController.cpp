@@ -457,13 +457,13 @@ void PR2ImpedanceControllerClass::update()
     chain_.setEfforts(tau_);
 
     // Publish data in ROS message every 10 cycles (about 100Hz)
-	if (++pub_cycle_count_ > 5)
+	if (++pub_cycle_count_ > 10)
 	{
 		should_publish_ = true;
 		pub_cycle_count_ = 0;
 	}
 
-	if (should_publish_ && pub_.trylock())
+	if (should_publish_ && pubBaseMove_.trylock())
 	{
 		should_publish_ = false;
 
