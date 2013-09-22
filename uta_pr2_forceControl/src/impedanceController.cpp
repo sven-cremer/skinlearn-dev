@@ -288,8 +288,8 @@ void PR2ImpedanceControllerClass::update()
 //  circle(2) = 0.1 * sin(circle_phase_);
 //  circle(1) = 0.1 * (cos(circle_phase_) - 1);
 
-  xd_ = x0_;
-  xd_.p += circle;
+  xd_    = x0_    ;
+//  xd_.p += circle ;
 
   // Calculate a Cartesian restoring force.
   xerr_.vel = x_.p - xd_.p;
@@ -320,10 +320,11 @@ void PR2ImpedanceControllerClass::update()
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
   {
     tau_(i) = 0;
+//    tau_h(i) = 0;
     for (unsigned int j = 0 ; j < 6 ; j++)
     {
       tau_(i) += J_(j,i) * F_(j);
-      tau_h(i)+= J_(j,i) * ferr_(j); // this will give the torque from interaction
+//      tau_h(i)+= J_(j,i) * ferr_(j); // this will give the torque from interaction
     }
   }
 
@@ -433,46 +434,46 @@ void PR2ImpedanceControllerClass::update()
 //	/////////////////////////
 
 
-	modelState.header.stamp = robot_state_->getTime();
-
-	modelState.position[0] = 0 ; // q_m(0);
-	modelState.position[1] = 0 ; // q_m(1);
-	modelState.position[2] = 0 ; // q_m(2);
-	modelState.position[3] = 0 ; // q_m(3);
-	modelState.position[4] = 0 ; // q_m(4);
-	modelState.position[5] = 0 ; // q_m(5);
-	modelState.position[6] = 0 ; // q_m(6);
-
-	modelState.velocity[0] = 0 ; // tau(0);
-	modelState.velocity[1] = 0 ; // tau(1);
-	modelState.velocity[2] = 0 ; // tau(2);
-	modelState.velocity[3] = 0 ; // tau(3);
-	modelState.velocity[4] = 0 ; // tau(4);
-	modelState.velocity[5] = 0 ; // tau(5);
-	modelState.velocity[6] = 0 ; // tau(6);
+//	modelState.header.stamp = robot_state_->getTime();
+//
+//	modelState.position[0] = 0 ; // q_m(0);
+//	modelState.position[1] = 0 ; // q_m(1);
+//	modelState.position[2] = 0 ; // q_m(2);
+//	modelState.position[3] = 0 ; // q_m(3);
+//	modelState.position[4] = 0 ; // q_m(4);
+//	modelState.position[5] = 0 ; // q_m(5);
+//	modelState.position[6] = 0 ; // q_m(6);
+//
+//	modelState.velocity[0] = 0 ; // tau(0);
+//	modelState.velocity[1] = 0 ; // tau(1);
+//	modelState.velocity[2] = 0 ; // tau(2);
+//	modelState.velocity[3] = 0 ; // tau(3);
+//	modelState.velocity[4] = 0 ; // tau(4);
+//	modelState.velocity[5] = 0 ; // tau(5);
+//	modelState.velocity[6] = 0 ; // tau(6);
 
 	// And finally send these torques out.
     chain_.setEfforts(tau_);
 
-    // Publish data in ROS message every 10 cycles (about 100Hz)
-	if (++pub_cycle_count_ > 10)
-	{
-		should_publish_ = true;
-		pub_cycle_count_ = 0;
-	}
-
-	if (should_publish_ && pub_.trylock())
-	{
-		should_publish_ = false;
-
-		pub_.msg_.header.stamp = robot_state_->getTime();
-		pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
-
-		pubModelStates_.msg_ = modelState;
-
-		pub_.unlockAndPublish();
-		pubModelStates_.unlockAndPublish();
-	}
+//    // Publish data in ROS message every 10 cycles (about 100Hz)
+//	if (++pub_cycle_count_ > 10)
+//	{
+//		should_publish_ = true;
+//		pub_cycle_count_ = 0;
+//	}
+//
+//	if (should_publish_ && pub_.trylock())
+//	{
+//		should_publish_ = false;
+//
+//		pub_.msg_.header.stamp = robot_state_->getTime();
+//		pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
+//
+//		pubModelStates_.msg_ = modelState;
+//
+//		pub_.unlockAndPublish();
+//		pubModelStates_.unlockAndPublish();
+//	}
 
 }
 
