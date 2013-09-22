@@ -205,6 +205,7 @@ bool PR2ImpedanceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   // Initialize realtime publisher to publish to ROS topic
   pub_.init(n, "force_torque_stats", 2);
   pubModelStates_.init(n, "model_joint_states", 2);
+  pubBaseMove_.init(n,"base_controller/command", 1);
 
   return true;
 }
@@ -455,17 +456,17 @@ void PR2ImpedanceControllerClass::update()
 	// And finally send these torques out.
     chain_.setEfforts(tau_);
 
-//    // Publish data in ROS message every 10 cycles (about 100Hz)
-//	if (++pub_cycle_count_ > 10)
-//	{
-//		should_publish_ = true;
-//		pub_cycle_count_ = 0;
-//	}
-//
-//	if (should_publish_ && pub_.trylock())
-//	{
-//		should_publish_ = false;
-//
+    // Publish data in ROS message every 10 cycles (about 100Hz)
+	if (++pub_cycle_count_ > 5)
+	{
+		should_publish_ = true;
+		pub_cycle_count_ = 0;
+	}
+
+	if (should_publish_ && pub_.trylock())
+	{
+		should_publish_ = false;
+
 //		pub_.msg_.header.stamp = robot_state_->getTime();
 //		pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
 //
@@ -473,7 +474,26 @@ void PR2ImpedanceControllerClass::update()
 //
 //		pub_.unlockAndPublish();
 //		pubModelStates_.unlockAndPublish();
-//	}
+
+		if( xerr_.vel.x() > 5 ||  xerr_.vel.x() < 5)
+		{
+			pubBaseMove_.msg_.linear.x = xerr_.vel.x();
+		}
+		else
+		{
+			pubBaseMove_.msg_.linear.x = 0;
+		}
+
+		pubBaseMove_.msg_.linear.y = 0;
+		pubBaseMove_.msg_.linear.z = 0;
+
+		pubBaseMove_.msg_.angular.x = 0;
+		pubBaseMove_.msg_.angular.y = 0;
+		pubBaseMove_.msg_.angular.z = 0;
+
+		pubBaseMove_.unlockAndPublish();
+
+	}
 
 }
 

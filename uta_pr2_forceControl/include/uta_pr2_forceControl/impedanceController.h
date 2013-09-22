@@ -14,7 +14,7 @@
 #include "realtime_tools/realtime_publisher.h"
 
 #include "geometry_msgs/WrenchStamped.h"
-
+#include "geometry_msgs/Twist.h"
 #include "sensor_msgs/JointState.h"
 
 #include <Eigen/StdVector>
@@ -95,6 +95,7 @@ private:
   //! realtime publisher for max_force value
   realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_;
   realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubModelStates_;
+  realtime_tools::RealtimePublisher<geometry_msgs::Twist> pubBaseMove_;
   geometry_msgs::WrenchStamped r_forceData;
 
   //! publish max_force values every X realtime cycles
