@@ -205,7 +205,7 @@ bool PR2ImpedanceControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   // Initialize realtime publisher to publish to ROS topic
   pub_.init(n, "force_torque_stats", 2);
   pubModelStates_.init(n, "model_joint_states", 2);
-  pubBaseMove_.init(n,"base_controller/command", 1);
+  pubBaseMove_.init(node,"base_controller/command", 1);
 
   return true;
 }
