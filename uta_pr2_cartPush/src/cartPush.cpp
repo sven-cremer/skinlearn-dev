@@ -142,7 +142,7 @@ bool PR2CartPushClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHa
   Kp_.vel(2) = 100.0;  Kd_.vel(2) = 1.0;        // Translation z
   Kp_.rot(0) = 100.0;  Kd_.rot(0) = 1.0;        // Rotation x
   Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
-  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
+  Kp_.rot(2) = 10.0;  Kd_.rot(2) = 1.0;        // Rotation z
 
 
 
@@ -298,10 +298,10 @@ void PR2CartPushClass::update()
     }
   }
 
-  double delY = abs((double)l_x_.p.y() - (double)r_x_.p.y() );
-  double delX =     (double)r_x_.p.x() - (double)l_x_.p.x()  ;
-  double delD = - delX / delY ;
-  double angZ = atan( delD );
+//  double delY = abs((double)l_x_.p.y() - (double)r_x_.p.y() );
+//  double delX =     (double)r_x_.p.x() - (double)l_x_.p.x()  ;
+//  double delD = - delX / delY ;
+//  double angZ = atan( delD );
 
 	if( controller_on )
 	{
@@ -320,7 +320,7 @@ void PR2CartPushClass::update()
 		{
 			should_publish_ = false;
 
-			if( r_xerr_.vel.x() > 0.02 ||  r_xerr_.vel.x() < -0.02)
+			if( r_xerr_.vel.x() > 0.02 ||  r_xerr_.vel.x() < -0.02 )
 			{
 				pubBaseMove_.msg_.linear.x = velGain*r_xerr_.vel.x();
 			}
@@ -329,7 +329,7 @@ void PR2CartPushClass::update()
 				pubBaseMove_.msg_.linear.x = 0;
 			}
 
-			if( r_xerr_.vel.y() > 0.02 ||  r_xerr_.vel.y() < -0.02)
+			if( r_xerr_.vel.y() > 0.02 ||  r_xerr_.vel.y() < -0.02 )
 			{
 				pubBaseMove_.msg_.linear.y = velGain*r_xerr_.vel.y();
 			}
@@ -338,13 +338,13 @@ void PR2CartPushClass::update()
 				pubBaseMove_.msg_.linear.y = 0;
 			}
 
-			if( angZ > 0.05            ||  angZ < -0.05           )
+			if( r_xerr_.rot.z() > 0.05 ||  r_xerr_.rot.z() < -0.05 )
 			{
-				pubBaseMove_.msg_.angular.z = rotGain*angZ;
+				pubBaseMove_.msg_.angular.z = rotGain*r_xerr_.rot.z();
 			}
 			else
 			{
-				pubBaseMove_.msg_.angular.z = angZ;
+				pubBaseMove_.msg_.angular.z = 0;
 			}
 
 			pubBaseMove_.msg_.linear.z = 0;
