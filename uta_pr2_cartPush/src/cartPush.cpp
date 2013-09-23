@@ -298,7 +298,9 @@ void PR2CartPushClass::update()
     }
   }
 
-
+  double delY = abs(    r_x_.p.y() - l_x_.p.y() );
+  double delX =         r_x_.p.x() - l_x_.p.x()  ;
+  double angZ = asin( - delX       / delY       );
 
 	if( controller_on )
 	{
@@ -335,9 +337,9 @@ void PR2CartPushClass::update()
 				pubBaseMove_.msg_.linear.y = 0;
 			}
 
-			if( r_xerr_.rot.z() > 0.05 ||  r_xerr_.rot.z() < -0.05)
+			if( angZ > 0.05            ||  angZ < -0.05           )
 			{
-				pubBaseMove_.msg_.angular.z = rotGain*r_xerr_.rot.z();
+				pubBaseMove_.msg_.angular.z = rotGain*angZ;
 			}
 			else
 			{
