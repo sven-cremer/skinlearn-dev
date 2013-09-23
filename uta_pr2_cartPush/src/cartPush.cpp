@@ -157,6 +157,11 @@ bool PR2CartPushClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHa
   // Initialize realtime publisher to publish to ROS topic
   pubBaseMove_.init(node,"base_controller/command", 1);
 
+  start_srv_   = n.advertiseService("start", &PR2CartPushClass::start, this);
+  stop_srv_    = n.advertiseService("stop" , &PR2CartPushClass::stop , this);
+
+  controller_on = false;
+
   return true;
 }
 
@@ -287,62 +292,72 @@ void PR2CartPushClass::update()
 
 
 
-
-	// And finally send these torques out.
-    r_chain_.setEfforts(r_tau_);
-    l_chain_.setEfforts(l_tau_);
-
-    // Publish data in ROS message every 10 cycles (about 100Hz)
-	if (++pub_cycle_count_ > 10)
+	if( controller_on )
 	{
-		should_publish_ = true;
-		pub_cycle_count_ = 0;
+		// And finally send these torques out.
+		r_chain_.setEfforts(r_tau_);
+		l_chain_.setEfforts(l_tau_);
+
+		// Publish data in ROS message every 10 cycles (about 100Hz)
+		if (++pub_cycle_count_ > 10)
+		{
+			should_publish_ = true;
+			pub_cycle_count_ = 0;
+		}
+
+		if (should_publish_ && pubBaseMove_.trylock())
+		{
+			should_publish_ = false;
+
+			double velGain = 3;
+
+			if( r_xerr_.vel.x() > 0.02 ||  r_xerr_.vel.x() < -0.02)
+			{
+				pubBaseMove_.msg_.linear.x = velGain*r_xerr_.vel.x();
+			}
+			else
+			{
+				pubBaseMove_.msg_.linear.x = 0;
+			}
+
+			if( r_xerr_.vel.y() > 0.02 ||  r_xerr_.vel.y() < -0.02)
+			{
+				pubBaseMove_.msg_.linear.y = velGain*r_xerr_.vel.y();
+			}
+			else
+			{
+				pubBaseMove_.msg_.linear.y = 0;
+			}
+
+			pubBaseMove_.msg_.linear.z = 0;
+			pubBaseMove_.msg_.angular.x = 0;
+			pubBaseMove_.msg_.angular.y = 0;
+			pubBaseMove_.msg_.angular.z = 0;
+
+			pubBaseMove_.unlockAndPublish();
+		}
 	}
 
-	if (should_publish_ && pubBaseMove_.trylock())
-	{
-		should_publish_ = false;
-
-//		pub_.msg_.header.stamp = robot_state_->getTime();
-//		pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
-//
-//		pubModelStates_.msg_ = modelState;
-//
-//		pub_.unlockAndPublish();
-//		pubModelStates_.unlockAndPublish();
-
-		double velGain = 3;
-
-		if( r_xerr_.vel.x() > 0.02 ||  r_xerr_.vel.x() < -0.02)
-		{
-			pubBaseMove_.msg_.linear.x = velGain*r_xerr_.vel.x();
-		}
-		else
-		{
-			pubBaseMove_.msg_.linear.x = 0;
-		}
-
-		if( r_xerr_.vel.y() > 0.02 ||  r_xerr_.vel.y() < -0.02)
-		{
-			pubBaseMove_.msg_.linear.y = velGain*r_xerr_.vel.y();
-		}
-		else
-		{
-			pubBaseMove_.msg_.linear.y = 0;
-		}
-
-		pubBaseMove_.msg_.linear.z = 0;
-
-		pubBaseMove_.msg_.angular.x = 0;
-		pubBaseMove_.msg_.angular.y = 0;
-		pubBaseMove_.msg_.angular.z = 0;
-
-		pubBaseMove_.unlockAndPublish();
-
-	}
 
 }
 
+/// Service call to start controller
+bool PR2CartPushClass::start( std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp )
+{
+  /* Mark the buffer as clear (which will start controller). */
+  controller_on = true;
+
+  return true;
+}
+
+/// Service call to start controller
+bool PR2CartPushClass::stop( std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp )
+{
+  /* Mark the buffer as clear (which will start controller). */
+  controller_on = false;
+
+  return true;
+}
 
 /// Controller stopping in realtime
 void PR2CartPushClass::stopping()

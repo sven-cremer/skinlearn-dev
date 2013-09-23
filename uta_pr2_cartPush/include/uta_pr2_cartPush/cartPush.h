@@ -17,6 +17,8 @@
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/JointState.h"
 
+#include <std_srvs/Empty.h>
+
 #include <Eigen/StdVector>
 #include <Eigen/Geometry>
 #include <Eigen/Core>
@@ -130,6 +132,14 @@ private:
   urdf::Model urdf_model;
 
   ros::NodeHandle node;
+
+  bool controller_on;
+
+  bool start( std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp );
+  bool stop(  std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp );
+
+  ros::ServiceServer start_srv_;
+  ros::ServiceServer stop_srv_;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
