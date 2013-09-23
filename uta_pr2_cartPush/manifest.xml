@@ -4,7 +4,7 @@
      uta_pr2_cartPush
 
   </description>
-  <author>Isura</author>
+  <author>Isura Ranatunga</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/uta_pr2_cartPush</url>
@@ -15,6 +15,10 @@
   <depend package="pluginlib"/>
   <depend package="kdl"/>
   <depend package="std_srvs"/>
+
+  <export>
+    <pr2_controller_interface plugin="${prefix}/controller_plugins.xml" />
+  </export>
 
 </package>
 

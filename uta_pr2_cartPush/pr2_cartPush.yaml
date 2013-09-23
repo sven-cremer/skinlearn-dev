@@ -1,4 +1,4 @@
-pr2_cartPushController:
+pr2_cartPush:
   type: PR2CartPushClass
   root_name: torso_lift_link
   r_tip_name: r_gripper_tool_frame
