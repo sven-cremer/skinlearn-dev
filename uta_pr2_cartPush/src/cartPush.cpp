@@ -298,10 +298,10 @@ void PR2CartPushClass::update()
     }
   }
 
-  double delY = abs(    r_x_.p.y() - l_x_.p.y() );
+  double delY = abs(    l_x_.p.y() - r_x_.p.y() );
   double delX =         r_x_.p.x() - l_x_.p.x()  ;
   double delD = - delX / delY                    ;
-  double angZ = asin( delD );
+  double angZ = atan( delD );
 
 	if( controller_on )
 	{
