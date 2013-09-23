@@ -60,6 +60,14 @@ bool PR2CartPushClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHa
   }
   ROS_INFO("Successfully parsed URDF file");
 
+  std::string para_velGain = "/velGain" ;
+  std::string para_rotGain = "/rotGain" ;
+
+  if (!n.getParam( para_velGain , velGain ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", para_velGain.c_str()) ; return false; }
+  if (!n.getParam( para_rotGain , rotGain ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", para_rotGain.c_str()) ; return false; }
+
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
 
@@ -309,8 +317,6 @@ void PR2CartPushClass::update()
 		{
 			should_publish_ = false;
 
-			double velGain = 3;
-
 			if( r_xerr_.vel.x() > 0.02 ||  r_xerr_.vel.x() < -0.02)
 			{
 				pubBaseMove_.msg_.linear.x = velGain*r_xerr_.vel.x();
@@ -329,10 +335,19 @@ void PR2CartPushClass::update()
 				pubBaseMove_.msg_.linear.y = 0;
 			}
 
+			if( r_xerr_.rot.z() > 0.05 ||  r_xerr_.rot.z() < -0.05)
+			{
+				pubBaseMove_.msg_.angular.z = rotGain*r_xerr_.rot.z();
+			}
+			else
+			{
+				pubBaseMove_.msg_.angular.z = 0;
+			}
+
 			pubBaseMove_.msg_.linear.z = 0;
+
 			pubBaseMove_.msg_.angular.x = 0;
 			pubBaseMove_.msg_.angular.y = 0;
-			pubBaseMove_.msg_.angular.z = 0;
 
 			pubBaseMove_.unlockAndPublish();
 		}

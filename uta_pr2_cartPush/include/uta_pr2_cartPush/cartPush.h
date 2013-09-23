@@ -141,6 +141,9 @@ private:
   ros::ServiceServer start_srv_;
   ros::ServiceServer stop_srv_;
 
+  double velGain;
+  double rotGain;
+
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
