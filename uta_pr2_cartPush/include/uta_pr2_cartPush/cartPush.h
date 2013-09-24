@@ -55,7 +55,7 @@ private:
   KDL::Chain r_kdl_chain_;
   KDL::Chain l_kdl_chain_;
 
-  pr2_hardware_interface::AnalogIn* analogin_handle_;
+  pr2_hardware_interface::AnalogIn*      analogin_handle_     ;
   pr2_hardware_interface::Accelerometer* accelerometer_handle_;
 
   pr2_hardware_interface::ForceTorque* l_ft_handle_;
@@ -77,58 +77,58 @@ private:
   boost::scoped_ptr<KDL::ChainJntToJacSolver> l_jnt_to_jac_solver_;
 
   // The variables (which need to be pre-allocated).
-  KDL::JntArray     r_q_;            // Joint positions
-  KDL::JntArray     r_q0_;           // Joint initial positions
-  KDL::JntArrayVel  r_qdot_;      // Joint velocities
-  KDL::JntArray  	r_tau_;          // Joint torques
-  KDL::JntArray  	tau_h;         // Joint torques from human
+  KDL::JntArray     r_q_;       // Joint positions
+  KDL::JntArray     r_q0_;      // Joint initial positions
+  KDL::JntArrayVel  r_qdot_;    // Joint velocities
+  KDL::JntArray     r_tau_;     // Joint torques
+  KDL::JntArray     tau_h;      // Joint torques from human
 
-  KDL::JntArray     q_m_;          // Model Joint positions
-  KDL::JntArray     qd_m_;         // Model Joint positions
-  KDL::JntArray     qdd_m_;        // Model Joint positions
+  KDL::JntArray     q_m_;       // Model Joint positions
+  KDL::JntArray     qd_m_;      // Model Joint positions
+  KDL::JntArray     qdd_m_;     // Model Joint positions
 
-  KDL::JntArray     q_lower;       // Joint position lower limits
-  KDL::JntArray     q_upper;       // Joint position upper limits
-  KDL::JntArray     qd_limit;      // Joint velocity limits
+  KDL::JntArray     q_lower;    // Joint position lower limits
+  KDL::JntArray     q_upper;    // Joint position upper limits
+  KDL::JntArray     qd_limit;   // Joint velocity limits
 
-  KDL::Frame        r_x_;            // Tip pose
-  KDL::Frame        r_xd_;           // Tip desired pose
-  KDL::Frame        r_x0_;           // Tip initial pose
+  KDL::Frame        r_x_;       // Tip pose
+  KDL::Frame        r_xd_;      // Tip desired pose
+  KDL::Frame        r_x0_;      // Tip initial pose
 
-  KDL::Twist        r_xerr_;         // Cart error
-  KDL::Twist        r_xdot_;         // Cart velocity
-  KDL::Wrench       r_F_;            // Cart effort
-  KDL::Twist        ferr_;			// Cart effort error
-  KDL::Jacobian     r_J_;            // Jacobian
+  KDL::Twist        r_xerr_;    // Cart error
+  KDL::Twist        r_xdot_;    // Cart velocity
+  KDL::Wrench       r_F_;       // Cart effort
+  KDL::Twist        ferr_;		// Cart effort error
+  KDL::Jacobian     r_J_;       // Jacobian
 
-  KDL::JntArray     l_q_;            // Joint positions
-  KDL::JntArray     l_q0_;           // Joint initial positions
-  KDL::JntArrayVel  l_qdot_;      // Joint velocities
-  KDL::JntArray  	l_tau_;          // Joint torques
-//  KDL::JntArray  	tau_h;         // Joint torques from human
+  KDL::JntArray     l_q_;       // Joint positions
+  KDL::JntArray     l_q0_;      // Joint initial positions
+  KDL::JntArrayVel  l_qdot_;    // Joint velocities
+  KDL::JntArray     l_tau_;     // Joint torques
+//  KDL::JntArray   tau_h;      // Joint torques from human
 
-//  KDL::JntArray     q_m_;          // Model Joint positions
-//  KDL::JntArray     qd_m_;         // Model Joint positions
-//  KDL::JntArray     qdd_m_;        // Model Joint positions
+//  KDL::JntArray   q_m_;       // Model Joint positions
+//  KDL::JntArray   qd_m_;      // Model Joint positions
+//  KDL::JntArray   qdd_m_;     // Model Joint positions
 //
-//  KDL::JntArray     q_lower;       // Joint position lower limits
-//  KDL::JntArray     q_upper;       // Joint position upper limits
-//  KDL::JntArray     qd_limit;      // Joint velocity limits
+//  KDL::JntArray   q_lower;    // Joint position lower limits
+//  KDL::JntArray   q_upper;    // Joint position upper limits
+//  KDL::JntArray   qd_limit;   // Joint velocity limits
 
-  KDL::Frame        l_x_;            // Tip pose
-  KDL::Frame        l_xd_;           // Tip desired pose
-  KDL::Frame        l_x0_;           // Tip initial pose
+  KDL::Frame        l_x_;       // Tip pose
+  KDL::Frame        l_xd_;      // Tip desired pose
+  KDL::Frame        l_x0_;      // Tip initial pose
 
-  KDL::Twist        l_xerr_;         // Cart error
-  KDL::Twist        l_xdot_;         // Cart velocity
-  KDL::Wrench       l_F_;            // Cart effort
-//  KDL::Twist        ferr_;			// Cart effort error
-  KDL::Jacobian     l_J_;            // Jacobian
+  KDL::Twist        l_xerr_;    // Cart error
+  KDL::Twist        l_xdot_;    // Cart velocity
+  KDL::Wrench       l_F_;       // Cart effort
+//  KDL::Twist      ferr_;	// Cart effort error
+  KDL::Jacobian     l_J_;       // Jacobian
 
   // Note the gains are incorrectly typed as a twist,
   // as there is no appropriate type!
-  KDL::Twist     Kp_;           // Proportional gains
-  KDL::Twist     Kd_;           // Derivative gains
+  KDL::Twist        Kp_;        // Proportional gains
+  KDL::Twist        Kd_;        // Derivative gains
 
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle
@@ -167,7 +167,6 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 public:
-
   bool init(pr2_mechanism_model::RobotState *robot,
             ros::NodeHandle &n);
   void starting();
@@ -176,3 +175,4 @@ public:
 
 };
 }
+
