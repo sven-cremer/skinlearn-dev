@@ -31,6 +31,7 @@
 #include "sensor_msgs/JointState.h"
 
 #include <std_srvs/Empty.h>
+#include <pr2_mechanism_msgs/SwitchController.h>
 
 #include <Eigen/StdVector>
 #include <Eigen/Geometry>
@@ -153,6 +154,11 @@ private:
 
   ros::ServiceServer start_srv_;
   ros::ServiceServer stop_srv_;
+
+  ros::ServiceClient arm_controller_client_;
+
+  pr2_mechanism_msgs::SwitchController arm_controllerStart_;
+  pr2_mechanism_msgs::SwitchController arm_controllerStop_;
 
   double velGain;
   double rotGain;

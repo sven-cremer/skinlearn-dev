@@ -181,6 +181,18 @@ bool PR2CartPushClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHa
   start_srv_   = n.advertiseService("start", &PR2CartPushClass::start, this);
   stop_srv_    = n.advertiseService("stop" , &PR2CartPushClass::stop , this);
 
+//  arm_controllerStart_.request.start_controllers.resize(2);
+//  arm_controllerStop_.request.stop_controllers.resize(2);
+  arm_controllerStart_.request.strictness = arm_controllerStart_.request.BEST_EFFORT;
+  arm_controllerStop_.request.strictness  = arm_controllerStart_.request.BEST_EFFORT;
+  arm_controllerStop_.request.stop_controllers.push_back(  "r_arm_controller");
+  arm_controllerStop_.request.stop_controllers.push_back(  "l_arm_controller");
+  arm_controllerStart_.request.start_controllers.push_back("r_arm_controller");
+  arm_controllerStart_.request.start_controllers.push_back("l_arm_controller");
+
+
+  arm_controller_client_  = node.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
+
   controller_on = false;
 
   return true;
@@ -375,19 +387,37 @@ void PR2CartPushClass::update()
 /// Service call to start controller
 bool PR2CartPushClass::start( std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp )
 {
-  /* Mark the buffer as clear (which will start controller). */
+
+  if( arm_controller_client_.call(arm_controllerStop_) )
+  {
+	  ROS_DEBUG("Successfully stopped the arm controllers!");
+	  return true;
+  }else
+  {
+      ROS_ERROR("Something wrong with stopping the arm controllers!");
+	  return false;
+  }
+  /* Mark boolean as true which will start the controller */
   controller_on = true;
 
-  return true;
 }
 
 /// Service call to start controller
 bool PR2CartPushClass::stop( std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp )
 {
-  /* Mark the buffer as clear (which will start controller). */
+
+  if( arm_controller_client_.call(arm_controllerStart_) )
+  {
+	  ROS_DEBUG("Successfully started the arm controllers!");
+	  return true;
+  }else
+  {
+	  ROS_ERROR("Something wrong with starting the arm controllers!");
+	  return false;
+  }
+  /* Mark boolean as false which will stop the controller */
   controller_on = false;
 
-  return true;
 }
 
 /// Controller stopping in realtime
