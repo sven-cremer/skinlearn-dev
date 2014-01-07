@@ -99,11 +99,13 @@ void PR2CartesianControllerClass::update()
   // Follow a circle of 10cm at 3 rad/sec.
   circle_phase_ += 3.0 * dt;
   KDL::Vector  circle(0,0,0);
-  circle(2) = 0.1 * sin(circle_phase_);
-  circle(1) = 0.1 * (cos(circle_phase_) - 1);
+  circle(2) = 0.1; //0.1 * sin(circle_phase_);
+  circle(1) = 0.1; //0.1 * (cos(circle_phase_) - 1);
 
   xd_ = x0_;
   xd_.p += circle;
+  xd_.M = KDL::Rotation::RPY( 0, 1.5, 0 );
+
 
   // Calculate a Cartesian restoring force.
   xerr_.vel = x_.p - xd_.p;
