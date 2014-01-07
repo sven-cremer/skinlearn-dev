@@ -129,6 +129,7 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
   wristFT.setLeftHandle ( l_ft_handle_ );
   wristFT.setRightHandle( r_ft_handle_ );
   wristFT.setBias();
+//  wristFT.update();
 
   // TEST END
 
@@ -154,8 +155,6 @@ void PR2CartesianControllerClass::starting()
 void PR2CartesianControllerClass::update()
 {
   double dt;                    // Servo loop time step
-
-  wristFT.update();
 
   // Calculate the dt between servo cycles.
   dt = (robot_state_->getTime() - last_time_).toSec();
