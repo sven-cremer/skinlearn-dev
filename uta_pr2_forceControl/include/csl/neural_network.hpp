@@ -87,7 +87,7 @@ public:
 
 	TwoLayerNeuralNetworkController()
 	{
-		init( 0.07 ,
+		Init( 0.07 ,
 			  10   ,
 			  0.5  ,
 			  0    ,
@@ -101,7 +101,7 @@ public:
 
 	}
 
-	void init( double p_kappa  ,
+	void Init( double p_kappa  ,
 			   double p_Kv     ,
 		       double p_lambda ,
 		       double p_Kz     ,
@@ -146,6 +146,8 @@ public:
 			     SystemVector & qdd_m ,
 			     SystemVector & t_r   ,
 			     SystemVector & tau    );
+
+	void UpdateDelT( double p_delT );
 
 	Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1>
 	sigmoid( Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1> & z );

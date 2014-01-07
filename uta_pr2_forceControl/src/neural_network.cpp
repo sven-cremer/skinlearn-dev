@@ -105,6 +105,11 @@ TwoLayerNeuralNetworkController::sigmoid( Eigen::Matrix<double, TwoLayerNeuralNe
   return z;
 }
 
+void TwoLayerNeuralNetworkController::UpdateDelT( double p_delT )
+{
+	delT = p_delT;
+}
+
 }
 
 }

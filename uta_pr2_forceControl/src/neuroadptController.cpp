@@ -128,7 +128,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kz.c_str())				 ; return false; }
   if (!n.getParam( nn_Zb               , Zb               ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())				 ; return false; }
-  if (!n.getParam( nn_feedForwardForce , feedForwardForce ))
+  if (!n.getParam( nn_feedForwardForce , fFForce ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str()) ; return false; }
   if (!n.getParam( nn_nnF              , nnF              ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())				 ; return false; }
@@ -260,6 +260,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 	delT  = 0.001;
 
+
+
 //	// initial conditions
 //	ode_init_x[0 ] = 0.0;
 //	ode_init_x[1 ] = 0.0;
@@ -306,7 +308,19 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 //	nnF              = 100  ;
 //	nnG              = 20   ;
 
-	hiddenLayerIdentity.setIdentity();
+    nnController.Init( kappa  ,
+    		           Kv     ,
+    		           lambda ,
+    		           Kz     ,
+    		           Zb     ,
+    		           fFForce,
+    		           nnF    ,
+    		           nnG    ,
+    		           nn_ON   );
+
+    nnController.UpdateDelT( delT );
+
+/*	hiddenLayerIdentity.setIdentity();
 
 	W_trans.setZero();
 	W_trans_next.setZero();
@@ -321,7 +335,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	Z.setZero();
 
 	F = nnF*F;
-	G = nnG*G;
+	G = nnG*G;*/
 
 	// NN END
 	/////////////////////////
@@ -648,6 +662,7 @@ void PR2NeuroadptControllerClass::update()
 //	qd_m(6) =   0;
 
 
+/*
     /////////////////////////
 	// NN
 
@@ -706,7 +721,7 @@ void PR2NeuroadptControllerClass::update()
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv*r + nn_ON*( y - vRobust ) - feedForwardForce*t_r ;
+	tau = Kv*r + nn_ON*( y - vRobust ) - fFForce*t_r ;
 //	tau = (qd_m - qd) + 100*(q_m - q);
 
 	//
@@ -717,6 +732,18 @@ void PR2NeuroadptControllerClass::update()
 
 	// Vk+1                  = Vk                  +  Vkdot                                                                                      			 * dt
 	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
+
+	// NN END
+	/////////////////////////
+*/
+
+	nnController.Update( qd_m  ,
+			             qd    ,
+			             q_m   ,
+			             q     ,
+			             qdd_m ,
+			             t_r   ,
+			             tau    );
 
 	// Convert from Eigen to KDL
 //	tau_c_ = JointEigen2Kdl( tau );
@@ -729,8 +756,6 @@ void PR2NeuroadptControllerClass::update()
 	tau_c_(5) = tau(5);
 	tau_c_(6) = tau(6);
 
-	// NN END
-	/////////////////////////
 
 
 	modelState.header.stamp = robot_state_->getTime();
@@ -1003,7 +1028,7 @@ void PR2NeuroadptControllerClass::update()
 		msgControllerFullData[index].outParams         = Outputs                     ;
 		msgControllerFullData[index].hiddenNodes       = Hidden                      ;
 		msgControllerFullData[index].errorParams       = Error  		             ;
-		msgControllerFullData[index].feedForwardForce  = feedForwardForce            ;
+		msgControllerFullData[index].feedForwardForce  = fFForce            ;
 		msgControllerFullData[index].nn_ON             = nn_ON                       ;
 
 		// Model Params

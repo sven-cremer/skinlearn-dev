@@ -213,9 +213,9 @@ private:
   double  nnG    ;
   double  nn_ON  ;
 
-  double  feedForwardForce;
+  double  fFForce;
 
-  csl::neural_network::TwoLayerNeuralNetworkController nnCOntroller;
+  csl::neural_network::TwoLayerNeuralNetworkController nnController;
 
   // NN END
   /////////////////////////
