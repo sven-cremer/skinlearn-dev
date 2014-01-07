@@ -23,8 +23,8 @@ rosbuild_genmsg()
 
 #common commands for building c++ executables and libraries
 
-#find_package(Eigen REQUIRED)
-#include_directories(${Eigen_INCLUDE_DIRS})
+find_package(Eigen REQUIRED)
+include_directories(${Eigen_INCLUDE_DIRS})
 
 rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
 

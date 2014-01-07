@@ -1,5 +1,6 @@
 #include "uta_pr2_forceControl/cartesianController.h"
 #include <pluginlib/class_list_macros.h>
+#include "oel/least_squares.hpp"
 
 using namespace pr2_controller_ns;
 
@@ -105,6 +106,28 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
   Kp_.rot(2) = cartRot_Kp_z;  Kd_.rot(2) = cartRot_Kd_z; // Rotation    z
 
   ROS_ERROR("Joint no: %d", kdl_chain_.getNrOfJoints());
+
+  // TEST
+
+  Eigen::MatrixXd Wk;
+  Eigen::MatrixXd Uk;
+  Eigen::MatrixXd Dk;
+  Eigen::MatrixXd Pk;
+  double          lm;
+
+
+  // This is example 2.3 from PG 75 of
+  // Optimal and Robust Estimation with an Introduction to Stochastic Control Theory, Second Edition by Lewis, F.L., et al; 2008
+
+  Wk   = Eigen::MatrixXd::Zero(3, 1);
+  Uk   = Eigen::MatrixXd::Zero(3, 1);
+  Dk   = Eigen::MatrixXd::Zero(1, 1);
+
+  Pk = Eigen::MatrixXd::Identity(3,3)/0.0001;
+  lm   = 1;
+  oel::ls::RLSFilter rls( Wk, Uk, Dk, Pk, lm );
+
+  // TEST END
 
   return true;
 }
