@@ -320,7 +320,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
     nnController.UpdateDelT( delT );
 
-/*	hiddenLayerIdentity.setIdentity();
+	hiddenLayerIdentity.setIdentity();
 
 	W_trans.setZero();
 	W_trans_next.setZero();
@@ -335,7 +335,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	Z.setZero();
 
 	F = nnF*F;
-	G = nnG*G;*/
+	G = nnG*G;
 
 	// NN END
 	/////////////////////////
@@ -662,7 +662,7 @@ void PR2NeuroadptControllerClass::update()
 //	qd_m(6) =   0;
 
 
-/*
+
     /////////////////////////
 	// NN
 
@@ -733,17 +733,18 @@ void PR2NeuroadptControllerClass::update()
 	// Vk+1                  = Vk                  +  Vkdot                                                                                      			 * dt
 	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
 
-	// NN END
-	/////////////////////////
-*/
-
-	nnController.Update( qd_m  ,
+/*	nnController.Update( qd_m  ,
 			             qd    ,
 			             q_m   ,
 			             q     ,
 			             qdd_m ,
 			             t_r   ,
-			             tau    );
+			             tau    );*/
+
+	// NN END
+	/////////////////////////
+
+
 
 	// Convert from Eigen to KDL
 //	tau_c_ = JointEigen2Kdl( tau );
