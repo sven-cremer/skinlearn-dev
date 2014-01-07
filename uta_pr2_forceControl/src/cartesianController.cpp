@@ -109,27 +109,6 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // TEST
 
-  /* get a handle to the hardware interface */
-  pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
-  if(!hardwareInterface)
-      ROS_ERROR("Something wrong with the hardware interface pointer!");
-
-
-
-
-
-  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
-  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
-
-  if( !l_ft_handle_ )
-      ROS_ERROR("Something wrong with getting l_ft handle");
-  if( !r_ft_handle_ )
-      ROS_ERROR("Something wrong with getting r_ft handle");
-
-  wristFT.setLeftHandle ( l_ft_handle_ );
-  wristFT.setRightHandle( r_ft_handle_ );
-  wristFT.setBias();
-//  wristFT.update();
 
   // TEST END
 
