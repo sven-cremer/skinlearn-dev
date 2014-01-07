@@ -31,6 +31,49 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
     return false;
   }
 
+  std::string para_cartPos_Kp_x = "/cartPos_Kp_x";
+  std::string para_cartPos_Kp_y = "/cartPos_Kp_y";
+  std::string para_cartPos_Kp_z = "/cartPos_Kp_z";
+  std::string para_cartPos_Kd_x = "/cartPos_Kd_x";
+  std::string para_cartPos_Kd_y = "/cartPos_Kd_y";
+  std::string para_cartPos_Kd_z = "/cartPos_Kd_z";
+
+  std::string para_cartRot_Kp_x = "/cartRot_Kp_x";
+  std::string para_cartRot_Kp_y = "/cartRot_Kp_y";
+  std::string para_cartRot_Kp_z = "/cartRot_Kp_z";
+  std::string para_cartRot_Kd_x = "/cartRot_Kd_x";
+  std::string para_cartRot_Kd_y = "/cartRot_Kd_y";
+  std::string para_cartRot_Kd_z = "/cartRot_Kd_z";
+
+  double cartPos_Kp_x = 0;
+  double cartPos_Kp_y = 0;
+  double cartPos_Kp_z = 0;
+  double cartPos_Kd_x = 0;
+  double cartPos_Kd_y = 0;
+  double cartPos_Kd_z = 0;
+
+  double cartRot_Kp_x = 0;
+  double cartRot_Kp_y = 0;
+  double cartRot_Kp_z = 0;
+  double cartRot_Kd_x = 0;
+  double cartRot_Kd_y = 0;
+  double cartRot_Kd_z = 0;
+
+  if (!n.getParam( para_cartPos_Kp_x , cartPos_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_x.c_str()) ; return false; }
+  if (!n.getParam( para_cartPos_Kp_y , cartPos_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_y.c_str()) ; return false; }
+  if (!n.getParam( para_cartPos_Kp_z , cartPos_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_z.c_str()) ; return false; }
+  if (!n.getParam( para_cartPos_Kd_x , cartPos_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_x.c_str()) ; return false; }
+  if (!n.getParam( para_cartPos_Kd_y , cartPos_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_y.c_str()) ; return false; }
+  if (!n.getParam( para_cartPos_Kd_z , cartPos_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_z.c_str()) ; return false; }
+
+  if (!n.getParam( para_cartRot_Kp_x , cartRot_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_x.c_str()) ; return false; }
+  if (!n.getParam( para_cartRot_Kp_y , cartRot_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_y.c_str()) ; return false; }
+  if (!n.getParam( para_cartRot_Kp_z , cartRot_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_z.c_str()) ; return false; }
+  if (!n.getParam( para_cartRot_Kd_x , cartRot_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_x.c_str()) ; return false; }
+  if (!n.getParam( para_cartRot_Kd_y , cartRot_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_y.c_str()) ; return false; }
+  if (!n.getParam( para_cartRot_Kd_z , cartRot_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_z.c_str()) ; return false; }
+
+
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
 
@@ -48,11 +91,11 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
-  Kp_.vel(1) = 0.0;  Kd_.vel(1) = 1.0;        // Translation y
+  Kp_.vel(1) = 000.0;  Kd_.vel(1) = 1.0;        // Translation y
   Kp_.vel(2) = 100.0;  Kd_.vel(2) = 1.0;        // Translation z
-  Kp_.rot(0) = 100.0;  Kd_.rot(0) = 1.0;        // Rotation x
-  Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
-  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
+  Kp_.rot(0) = 100.0;  Kd_.rot(0) = 1.0;        // Rotation    x
+  Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation    y
+  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation    z
 
   return true;
 }
