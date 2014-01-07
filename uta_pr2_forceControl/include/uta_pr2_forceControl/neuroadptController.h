@@ -33,6 +33,8 @@
 #include <boost/array.hpp>
 #include <boost/numeric/odeint.hpp>
 
+#include "csl/neural_network.hpp"
+
 typedef boost::array< double , 21 > state_type;
 typedef boost::array< double , 4 > state_type_4;
 
@@ -212,6 +214,8 @@ private:
   double  nn_ON  ;
 
   double  feedForwardForce;
+
+  csl::neural_network::TwoLayerNeuralNetworkController nnCOntroller;
 
   // NN END
   /////////////////////////
