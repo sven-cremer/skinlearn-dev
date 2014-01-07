@@ -10,6 +10,8 @@
 #include <kdl/jacobian.hpp>
 #include <kdl/jntarray.hpp>
 
+#include "wristForceTorque.h"
+
 
 namespace pr2_controller_ns{
 
@@ -50,6 +52,11 @@ private:
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle
   ros::Time last_time_;         // Time of the last servo cycle
+
+  pr2_hardware_interface::ForceTorque* l_ft_handle_;
+  pr2_hardware_interface::ForceTorque* r_ft_handle_;
+
+  WristForceTorque wristFT;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,

@@ -109,23 +109,27 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // TEST
 
-  Eigen::MatrixXd Wk;
-  Eigen::MatrixXd Uk;
-  Eigen::MatrixXd Dk;
-  Eigen::MatrixXd Pk;
-  double          lm;
+  /* get a handle to the hardware interface */
+  pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
+  if(!hardwareInterface)
+      ROS_ERROR("Something wrong with the hardware interface pointer!");
 
 
-  // This is example 2.3 from PG 75 of
-  // Optimal and Robust Estimation with an Introduction to Stochastic Control Theory, Second Edition by Lewis, F.L., et al; 2008
 
-  Wk   = Eigen::MatrixXd::Zero(3, 1);
-  Uk   = Eigen::MatrixXd::Zero(3, 1);
-  Dk   = Eigen::MatrixXd::Zero(1, 1);
 
-  Pk = Eigen::MatrixXd::Identity(3,3)/0.0001;
-  lm   = 1;
-  oel::ls::RLSFilter rls( Wk, Uk, Dk, Pk, lm );
+
+  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+
+  if( !l_ft_handle_ )
+      ROS_ERROR("Something wrong with getting l_ft handle");
+  if( !r_ft_handle_ )
+      ROS_ERROR("Something wrong with getting r_ft handle");
+
+  wristFT.setLeftHandle ( l_ft_handle_ );
+  wristFT.setRightHandle( r_ft_handle_ );
+  wristFT.setBias();
+//  wristFT.update();
 
   // TEST END
 
