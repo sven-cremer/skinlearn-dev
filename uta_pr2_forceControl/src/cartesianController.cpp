@@ -90,12 +90,19 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
   J_.resize(kdl_chain_.getNrOfJoints());
 
   // Pick the gains.
-  Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
-  Kp_.vel(1) = 000.0;  Kd_.vel(1) = 1.0;        // Translation y
-  Kp_.vel(2) = 100.0;  Kd_.vel(2) = 1.0;        // Translation z
-  Kp_.rot(0) = 100.0;  Kd_.rot(0) = 1.0;        // Rotation    x
-  Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation    y
-  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation    z
+//  Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
+//  Kp_.vel(1) = 000.0;  Kd_.vel(1) = 1.0;        // Translation y
+//  Kp_.vel(2) = 100.0;  Kd_.vel(2) = 1.0;        // Translation z
+//  Kp_.rot(0) = 100.0;  Kd_.rot(0) = 1.0;        // Rotation    x
+//  Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation    y
+//  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation    z
+
+  Kp_.vel(0) = cartPos_Kp_x;  Kd_.vel(0) = cartPos_Kd_x; // Translation x
+  Kp_.vel(1) = cartPos_Kp_y;  Kd_.vel(1) = cartPos_Kd_y; // Translation y
+  Kp_.vel(2) = cartPos_Kp_z;  Kd_.vel(2) = cartPos_Kd_z; // Translation z
+  Kp_.rot(0) = cartRot_Kp_x;  Kd_.rot(0) = cartRot_Kd_x; // Rotation    x
+  Kp_.rot(1) = cartRot_Kp_y;  Kd_.rot(1) = cartRot_Kd_y; // Rotation    y
+  Kp_.rot(2) = cartRot_Kp_z;  Kd_.rot(2) = cartRot_Kd_z; // Rotation    z
 
   ROS_ERROR("Joint no: %d", kdl_chain_.getNrOfJoints());
 
