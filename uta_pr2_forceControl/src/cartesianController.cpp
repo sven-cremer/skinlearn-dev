@@ -48,7 +48,7 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
-  Kp_.vel(1) = 100.0;  Kd_.vel(1) = 1.0;        // Translation y
+  Kp_.vel(1) = 0.0;  Kd_.vel(1) = 1.0;        // Translation y
   Kp_.vel(2) = 100.0;  Kd_.vel(2) = 1.0;        // Translation z
   Kp_.rot(0) = 100.0;  Kd_.rot(0) = 1.0;        // Rotation x
   Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
@@ -104,7 +104,7 @@ void PR2CartesianControllerClass::update()
 
   xd_ = x0_;
   xd_.p += circle;
-  xd_.M = KDL::Rotation::RPY( 0, 1.5, 0 );
+  xd_.M = KDL::Rotation::RPY( 0, 1.57079632679, 0 );
 
 
   // Calculate a Cartesian restoring force.
