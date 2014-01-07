@@ -28,10 +28,10 @@ rosbuild_genmsg()
 
 rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
 
-rosbuild_add_library(pr2_controller_lib src/neuroadptController.cpp )
+rosbuild_add_library(pr2_controller_lib src/neuroadptController.cpp
+                                        src/cartesianController.cpp )
 										#src/explforceController.cpp
 										#src/impedanceController.cpp
-										#src/cartesianController.cpp
 										#src/explforceController.cpp
 
 #target_link_libraries(${PROJECT_NAME} another_library)
