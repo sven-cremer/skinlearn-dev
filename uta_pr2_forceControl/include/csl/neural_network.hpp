@@ -112,8 +112,8 @@ public:
 		   double p_nn_ON   )
 		{
 			kappa            = p_kappa   ;
-			Kv               = p_Kv      ; // prop. gain for PID inner loop
-			lambda           = p_lambda  ; //*std::sqrt(Kp); // der. gain for PID inner loop
+			Kv               = p_Kv      ;
+			lambda           = p_lambda  ;
 			Kz               = p_Kz      ;
 			Zb               = p_Zb      ;
 			feedForwardForce = p_ffForce ;
@@ -121,22 +121,22 @@ public:
 			nnG              = p_nnG     ;
 			nn_ON		 = p_nn_ON   ;
 
-//			hiddenLayerIdentity.setIdentity();
-//
-//			W_trans.setZero();
-//			W_trans_next.setZero();
-//			V_trans.setZero();
-//			V_trans_next.setZero();
-//
-//			F.setIdentity();
-//			G.setIdentity();
-//			L.setIdentity();
-//
-//			// Very important
-//			Z.setZero();
-//
-//			F = nnF*F;
-//			G = nnG*G;
+			hiddenLayerIdentity.setIdentity();
+
+			W_trans.setZero();
+			W_trans_next.setZero();
+			V_trans.setZero();
+			V_trans_next.setZero();
+
+			F.setIdentity();
+			G.setIdentity();
+			L.setIdentity();
+
+			// Very important
+			Z.setZero();
+
+			F = nnF*F;
+			G = nnG*G;
 		}
 
 	void Update( SystemVector & qd_m  ,

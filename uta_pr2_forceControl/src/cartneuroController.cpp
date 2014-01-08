@@ -119,8 +119,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   // NN
 
   double kappa            = 0.07 ;
-  double Kv               = 10   ;  // prop. gain for PID inner loop
-  double lambda           = 0.5  ; //*std::sqrt(Kp); // der. gain for PID inner loop
+  double Kv               = 10   ;
+  double lambda           = 0.5  ;
   double Kz               = 0    ;
   double Zb               = 100  ;
   double fFForce          = 1    ;
@@ -128,17 +128,18 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   double nnG              = 20   ;
   double nn_ON            = 1    ;
 
-nnController.Init( 0.07,
-                   10  ,
-                   0.5 ,
-                   0   ,
-                   100 ,
-                   1   ,
-                   100 ,
-                   20  ,
-                   1    );
+nnController.Init( kappa,
+                   Kv  ,
+                   lambda,
+                   Kz   ,
+                   Zb ,
+                   fFForce   ,
+                   nnF ,
+                   nnG  ,
+                   nn_ON    );
 
-nnController.UpdateDelT( 0.001 );
+
+//nnController.UpdateDelT( 0.001 );
 
   // NN END
   /////////////////////////
