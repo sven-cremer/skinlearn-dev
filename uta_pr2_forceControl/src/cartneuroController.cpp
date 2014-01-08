@@ -109,7 +109,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // TEST
 
-  test_object_.Update( 10 );
+  test_object_.updateDouble( 10 );
+
+  Eigen::Matrix<double, 6, 1> & eigen_vector;
+  eigen_vector.Zero();
+  test_object_.updateEigen( eigen_vector );
 
   // TEST END
 
@@ -120,7 +124,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 void PR2CartneuroControllerClass::starting()
 {
 
-  test_object_.Update( 11 );
+  test_object_.updateDouble( 11 );
 
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
@@ -138,7 +142,7 @@ void PR2CartneuroControllerClass::starting()
 void PR2CartneuroControllerClass::update()
 {
 
-  test_object_.Update( 12 );
+  test_object_.updateDouble( 12 );
 
   double dt;                    // Servo loop time step
 

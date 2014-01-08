@@ -35,9 +35,14 @@ public:
   {
   }
 
-void Update( double testDouble )
+void updateDouble( double testDouble )
 {
   test_double_ = testDouble;
+}
+
+void updateEigen( Eigen::Matrix<double, 6, 1> & eigen_vector )
+{
+  eigen_vector_ = eigen_vector;
 }
 
 };
