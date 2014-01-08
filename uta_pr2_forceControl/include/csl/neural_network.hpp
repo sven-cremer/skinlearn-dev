@@ -121,22 +121,22 @@ public:
 			nnG              = p_nnG     ;
 			nn_ON		 = p_nn_ON   ;
 
-			hiddenLayerIdentity.setIdentity();
-
-			W_trans.setZero();
-			W_trans_next.setZero();
-			V_trans.setZero();
-			V_trans_next.setZero();
-
-			F.setIdentity();
-			G.setIdentity();
-			L.setIdentity();
-
-			// Very important
-			Z.setZero();
-
-			F = nnF*F;
-			G = nnG*G;
+//			hiddenLayerIdentity.setIdentity();
+//
+//			W_trans.setZero();
+//			W_trans_next.setZero();
+//			V_trans.setZero();
+//			V_trans_next.setZero();
+//
+//			F.setIdentity();
+//			G.setIdentity();
+//			L.setIdentity();
+//
+//			// Very important
+//			Z.setZero();
+//
+//			F = nnF*F;
+//			G = nnG*G;
 		}
 
 	void Update( SystemVector & qd_m  ,
