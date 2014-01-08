@@ -129,7 +129,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if (!n.getParam( nn_Zb               , Zb               ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())				 ; return false; }
   if (!n.getParam( nn_feedForwardForce , fFForce ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str()) ; return false; }
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str())             ; return false; }
   if (!n.getParam( nn_nnF              , nnF              ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())				 ; return false; }
   if (!n.getParam( nn_nnG              , nnG              ))
@@ -289,8 +289,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 	vpol_init_x[0 ] = 2.0;
 	vpol_init_x[1 ] = 2.0;
-    vpol_init_x[2 ] = 0.0;
-    vpol_init_x[3 ] = 0.0;
+        vpol_init_x[2 ] = 0.0;
+        vpol_init_x[3 ] = 0.0;
 
 	// System Model END
 	/////////////////////////

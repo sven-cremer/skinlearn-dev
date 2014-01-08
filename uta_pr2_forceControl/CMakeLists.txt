@@ -29,6 +29,7 @@ include_directories(${Eigen_INCLUDE_DIRS})
 rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
 
 rosbuild_add_library( cslLIB src/neural_network.cpp )
+rosbuild_add_library( oelLIB src/least_squares.cpp )
 
 rosbuild_add_library(pr2_controller_lib src/neuroadptController.cpp
 										src/cartesianController.cpp 
@@ -38,6 +39,7 @@ rosbuild_add_library(pr2_controller_lib src/neuroadptController.cpp
 								       #src/explforceController.cpp
 
 target_link_libraries(pr2_controller_lib cslLIB )
+target_link_libraries(pr2_controller_lib oelLIB )
 
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)

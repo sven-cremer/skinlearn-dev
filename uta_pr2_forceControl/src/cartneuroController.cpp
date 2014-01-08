@@ -115,30 +115,50 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 //  eigen_vector.Zero();
 //  test_object_.updateEigen( eigen_vector );
 
+  std::string nn_kappa            = "/nn_kappa"            ;
+  std::string nn_Kv               = "/nn_Kv"               ;
+  std::string nn_lambda           = "/nn_lambda"           ;
+  std::string nn_Kz               = "/nn_Kz"               ;
+  std::string nn_Zb               = "/nn_Zb"               ;
+  std::string nn_feedForwardForce = "/nn_feedForwardForce" ;
+  std::string nn_nnF              = "/nn_nnF"              ;
+  std::string nn_nnG              = "/nn_nnG"              ;
+  std::string nn_ONparam          = "/nn_ON"               ;
+
+  if (!n.getParam( nn_kappa            , kappa            ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_kappa.c_str())                        ; return false; }
+  if (!n.getParam( nn_Kv               , Kv               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kv.c_str())                           ; return false; }
+  if (!n.getParam( nn_lambda           , lambda           ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_lambda.c_str())                       ; return false; }
+  if (!n.getParam( nn_Kz               , Kz               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kz.c_str())                           ; return false; }
+  if (!n.getParam( nn_Zb               , Zb               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())                           ; return false; }
+  if (!n.getParam( nn_feedForwardForce , fFForce ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str())             ; return false; }
+  if (!n.getParam( nn_nnF              , nnF              ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())                          ; return false; }
+  if (!n.getParam( nn_nnG              , nnG              ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnG.c_str())                          ; return false; }
+  if (!n.getParam( nn_ONparam          , nn_ON            ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_ONparam.c_str())                      ; return false; }
+
+
   /////////////////////////
   // NN
 
-  double kappa            = 0.07 ;
-  double Kv               = 10   ;
-  double lambda           = 0.5  ;
-  double Kz               = 0    ;
-  double Zb               = 100  ;
-  double fFForce          = 1    ;
-  double nnF              = 100  ;
-  double nnG              = 20   ;
-  double nn_ON            = 1    ;
+  nnController.init( kappa   ,
+                     Kv      ,
+                     lambda  ,
+                     Kz      ,
+                     Zb      ,
+                     fFForce ,
+                     nnF     ,
+                     nnG     ,
+                     nn_ON    );
 
-nnController.init( kappa   ,
-                   Kv      ,
-                   lambda  ,
-                   Kz      ,
-                   Zb      ,
-                   fFForce ,
-                   nnF     ,
-                   nnG     ,
-                   nn_ON    );
-
-nnController.updateDelT( 0.001 );
+  nnController.updateDelT( 0.001 );
 
   // NN END
   /////////////////////////

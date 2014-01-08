@@ -12,6 +12,7 @@
 
 #include "objTest.h"
 #include "csl/neural_network.hpp"
+#include "oel/least_squares.hpp"
 
 namespace pr2_controller_ns{
 
@@ -53,9 +54,18 @@ private:
   double    circle_phase_;      // Phase along the circle
   ros::Time last_time_;         // Time of the last servo cycle
 
-  test::TestObjectClass test_object_;
-
   csl::neural_network::TwoLayerNeuralNetworkController nnController;
+  oel::ls::RLSFilter rlsFilter;
+
+  double  kappa  ;
+  double  Kv     ;
+  double  lambda ;
+  double  Kz     ;
+  double  Zb     ;
+  double  nnF    ;
+  double  nnG    ;
+  double  nn_ON  ;
+  double  fFForce;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,
