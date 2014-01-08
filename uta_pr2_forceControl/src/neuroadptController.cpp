@@ -308,17 +308,17 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 //	nnF              = 100  ;
 //	nnG              = 20   ;
 
-    nnController.Init( kappa  ,
-    		           Kv     ,
-    		           lambda ,
-    		           Kz     ,
-    		           Zb     ,
-    		           fFForce,
-    		           nnF    ,
-    		           nnG    ,
-    		           nn_ON   );
-
-    nnController.UpdateDelT( delT );
+//    nnController.Init( kappa  ,
+//    		       Kv     ,
+//    		       lambda ,
+//    		       Kz     ,
+//    		       Zb     ,
+//    		       fFForce,
+//    		       nnF    ,
+//    		       nnG    ,
+//    		       nn_ON   );
+//
+//    nnController.UpdateDelT( delT );
 
 	hiddenLayerIdentity.setIdentity();
 

@@ -88,28 +88,28 @@ public:
 	TwoLayerNeuralNetworkController()
 	{
 		Init( 0.07 ,
-			  10   ,
-			  0.5  ,
-			  0    ,
-			  100  ,
-			  1    ,
-			  100  ,
-			  20   ,
-			  1     );
+                      10   ,
+                      0.5  ,
+                      0    ,
+                      100  ,
+                      1    ,
+                      100  ,
+                      20   ,
+                      1     );
 
 		delT = 0.001; /// 1000 Hz by default
 
 	}
 
 	void Init( double p_kappa  ,
-			   double p_Kv     ,
-		       double p_lambda ,
-		       double p_Kz     ,
-		       double p_Zb     ,
-		       double p_ffForce,
-		       double p_nnF    ,
-		       double p_nnG    ,
-		       double p_nn_ON   )
+		   double p_Kv     ,
+		   double p_lambda ,
+		   double p_Kz     ,
+		   double p_Zb     ,
+		   double p_ffForce,
+		   double p_nnF    ,
+		   double p_nnG    ,
+		   double p_nn_ON   )
 		{
 			kappa            = p_kappa   ;
 			Kv               = p_Kv      ; // prop. gain for PID inner loop
@@ -119,7 +119,7 @@ public:
 			feedForwardForce = p_ffForce ;
 			nnF              = p_nnF     ;
 			nnG              = p_nnG     ;
-			nn_ON			 = p_nn_ON   ;
+			nn_ON		 = p_nn_ON   ;
 
 			hiddenLayerIdentity.setIdentity();
 
@@ -140,12 +140,12 @@ public:
 		}
 
 	void Update( SystemVector & qd_m  ,
-			     SystemVector & qd    ,
-			     SystemVector & q_m   ,
-			     SystemVector & q     ,
-			     SystemVector & qdd_m ,
-			     SystemVector & t_r   ,
-			     SystemVector & tau    );
+		     SystemVector & qd    ,
+		     SystemVector & q_m   ,
+		     SystemVector & q     ,
+		     SystemVector & qdd_m ,
+		     SystemVector & t_r   ,
+		     SystemVector & tau    );
 
 	void UpdateDelT( double p_delT );
 
