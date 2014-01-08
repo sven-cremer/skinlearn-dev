@@ -3,6 +3,11 @@ pr2_cartesianController:
   root_name: torso_lift_link
   tip_name: r_gripper_tool_frame
 
+pr2_cartneuroController:
+  type: PR2CartneuroControllerClass
+  root_name: torso_lift_link
+  tip_name: r_gripper_tool_frame
+
 pr2_explforceController:
   type: PR2ExplforceControllerClass
   root_name: torso_lift_link

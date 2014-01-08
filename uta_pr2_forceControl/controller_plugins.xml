@@ -1,6 +1,17 @@
 <library path="lib/libpr2_controller_lib">
-  <class name="PR2CartesianControllerClass" type="pr2_controller_ns::PR2CartesianControllerClass" base_class_type="pr2_controller_interface::Controller" />
-  <class name="PR2ExplforceControllerClass" type="pr2_controller_ns::PR2ExplforceControllerClass" base_class_type="pr2_controller_interface::Controller" />
-  <class name="PR2ImpedanceControllerClass" type="pr2_controller_ns::PR2ImpedanceControllerClass" base_class_type="pr2_controller_interface::Controller" />
-  <class name="PR2NeuroadptControllerClass" type="pr2_controller_ns::PR2NeuroadptControllerClass" base_class_type="pr2_controller_interface::Controller" />
+  <class name="PR2CartesianControllerClass"
+  		 type="pr2_controller_ns::PR2CartesianControllerClass"
+  		 base_class_type="pr2_controller_interface::Controller" />
+  <class name="PR2CartneuroControllerClass"
+  		 type="pr2_controller_ns::PR2CartneuroControllerClass"
+  		 base_class_type="pr2_controller_interface::Controller" />
+  <class name="PR2ExplforceControllerClass"
+  		 type="pr2_controller_ns::PR2ExplforceControllerClass"
+  		 base_class_type="pr2_controller_interface::Controller" />
+  <class name="PR2ImpedanceControllerClass"
+  		 type="pr2_controller_ns::PR2ImpedanceControllerClass"
+  		 base_class_type="pr2_controller_interface::Controller" />
+  <class name="PR2NeuroadptControllerClass"
+  		 type="pr2_controller_ns::PR2NeuroadptControllerClass"
+  		 base_class_type="pr2_controller_interface::Controller" />
 </library>

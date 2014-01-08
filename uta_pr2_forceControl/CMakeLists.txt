@@ -29,10 +29,11 @@ include_directories(${Eigen_INCLUDE_DIRS})
 rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
 
 rosbuild_add_library(pr2_controller_lib src/neuroadptController.cpp
-                                        src/cartesianController.cpp )
-										#src/explforceController.cpp
-										#src/impedanceController.cpp
-										#src/explforceController.cpp
+										src/cartesianController.cpp 
+                                        src/cartneuroController.cpp )
+								       #src/explforceController.cpp
+								       #src/impedanceController.cpp
+								       #src/explforceController.cpp
 
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
