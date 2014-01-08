@@ -139,6 +139,8 @@ public:
 			G = nnG*G;
 		}
 
+	void UpdateDelT( double p_delT );
+
 	void Update( SystemVector & qd_m  ,
 		     SystemVector & qd    ,
 		     SystemVector & q_m   ,
@@ -146,8 +148,6 @@ public:
 		     SystemVector & qdd_m ,
 		     SystemVector & t_r   ,
 		     SystemVector & tau    );
-
-	void UpdateDelT( double p_delT );
 
 	Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1>
 	sigmoid( Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1> & z );

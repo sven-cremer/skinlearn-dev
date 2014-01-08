@@ -138,7 +138,6 @@ nnController.Init( kappa   ,
                    nnG     ,
                    nn_ON    );
 
-
 nnController.UpdateDelT( 0.001 );
 
   // NN END

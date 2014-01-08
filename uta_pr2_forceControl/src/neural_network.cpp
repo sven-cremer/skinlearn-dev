@@ -113,6 +113,3 @@ void TwoLayerNeuralNetworkController::UpdateDelT( double p_delT )
 }
 
 }
-
-
-
