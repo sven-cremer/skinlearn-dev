@@ -109,6 +109,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // TEST
 
+  test_object_.Update( 10 );
 
   // TEST END
 

@@ -10,6 +10,7 @@
 #include <kdl/jacobian.hpp>
 #include <kdl/jntarray.hpp>
 
+#include "objTest.h"
 
 namespace pr2_controller_ns{
 
@@ -50,6 +51,8 @@ private:
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle
   ros::Time last_time_;         // Time of the last servo cycle
+
+  test::TestObjectClass test_object_;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,
