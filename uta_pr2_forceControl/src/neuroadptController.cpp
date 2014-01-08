@@ -296,51 +296,23 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 
 
-	/////////////////////////
-	// NN
+  /////////////////////////
+  // NN
 
-//	kappa            = 0.07 ;
-//	Kv               = 10   ;  // prop. gain for PID inner loop
-//	lambda           = 0.5  ; //*std::sqrt(Kp); // der. gain for PID inner loop
-//	Kz               = 0    ;
-//	Zb               = 100  ;
-//	feedForwardForce = 1    ;
-//	nnF              = 100  ;
-//	nnG              = 20   ;
+  nnController.init( kappa  ,
+                     Kv     ,
+                     lambda ,
+                     Kz     ,
+                     Zb     ,
+                     fFForce,
+                     nnF    ,
+                     nnG    ,
+                     nn_ON   );
 
-    nnController.init( kappa  ,
-    		       Kv     ,
-    		       lambda ,
-    		       Kz     ,
-    		       Zb     ,
-    		       fFForce,
-    		       nnF    ,
-    		       nnG    ,
-    		       nn_ON   );
+  nnController.updateDelT( delT );
 
-    nnController.updateDelT( delT );
-
-    /*
-	hiddenLayerIdentity.setIdentity();
-
-	W_trans.setZero();
-	W_trans_next.setZero();
-	V_trans.setZero();
-	V_trans_next.setZero();
-
-	F.setIdentity();
-	G.setIdentity();
-	L.setIdentity();
-
-	// Very important
-	Z.setZero();
-
-	F = nnF*F;
-	G = nnG*G;
-	*/
-
-	// NN END
-	/////////////////////////
+  // NN END
+  /////////////////////////
 
   /* get a handle to the hardware interface */
   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
@@ -661,88 +633,18 @@ void PR2NeuroadptControllerClass::update()
 
 
 
-    /////////////////////////
-	// NN
+  /////////////////////////
 
-	/*
-	W_trans = W_trans_next;
-	V_trans = V_trans_next;
-
-	// Filtered error
-	r = (qd_m - qd) + lambda*(q_m - q);
-
-	// Robust term
-	Z.block(0,0,Hidden,Outputs) = W_trans.transpose();
-	Z.block(Hidden,Outputs,Inputs+1,Hidden) = V_trans.transpose();
-	vRobust = - Kz*(Z.norm() + Zb)*r;
-
-	x(0 ) =                  1   ;
-	x(1 ) = (  q_m( 0 ) -  q(0) ); //   q( 0 ) ;
-	x(2 ) = (  q_m( 1 ) -  q(1) ); //   q( 1 ) ;
-	x(3 ) = (  q_m( 2 ) -  q(2) ); //   q( 2 ) ;
-	x(4 ) = (  q_m( 3 ) -  q(3) ); //   q( 3 ) ;
-	x(5 ) = (  q_m( 4 ) -  q(4) ); //   q( 4 ) ;
-	x(6 ) = (  q_m( 5 ) -  q(5) ); //   q( 5 ) ;
-	x(7 ) = (  q_m( 6 ) -  q(6) ); //   q( 6 ) ;
-	x(8 ) = ( qd_m( 0 ) - qd(0) ); //  qd( 0 ) ;
-	x(9 ) = ( qd_m( 1 ) - qd(1) ); //  qd( 1 ) ;
-	x(10) = ( qd_m( 2 ) - qd(2) ); //  qd( 2 ) ;
-	x(11) = ( qd_m( 3 ) - qd(3) ); //  qd( 3 ) ;
-	x(12) = ( qd_m( 4 ) - qd(4) ); //  qd( 4 ) ;
-	x(13) = ( qd_m( 5 ) - qd(5) ); //  qd( 5 ) ;
-	x(14) = ( qd_m( 6 ) - qd(6) ); //  qd( 6 ) ;
-	x(15) =             q_m( 0 ) ;
-	x(16) =             q_m( 1 ) ;
-	x(17) =             q_m( 2 ) ;
-	x(18) =             q_m( 3 ) ;
-	x(19) =             q_m( 4 ) ;
-	x(20) =             q_m( 5 ) ;
-	x(21) =             q_m( 6 ) ;
-	x(22) =            qd_m( 0 ) ;
-	x(23) =            qd_m( 1 ) ;
-	x(24) =            qd_m( 2 ) ;
-	x(25) =            qd_m( 3 ) ;
-	x(26) =            qd_m( 4 ) ;
-	x(27) =            qd_m( 5 ) ;
-	x(28) =            qd_m( 6 ) ;
-	x(29) =           qdd_m( 0 ) ;
-	x(30) =           qdd_m( 1 ) ;
-	x(31) =           qdd_m( 2 ) ;
-	x(32) =           qdd_m( 3 ) ;
-	x(33) =           qdd_m( 4 ) ;
-	x(34) =           qdd_m( 5 ) ;
-	x(35) =           qdd_m( 6 ) ;
-
-	hiddenLayer_in = V_trans*x;
-	hiddenLayer_out = sigmoid(hiddenLayer_in);
-	outputLayer_out = W_trans*hiddenLayer_out;
-
-	y = outputLayer_out;
-
-	// control torques
-	tau = Kv*r + nn_ON*( y - vRobust ) - fFForce*t_r ;
-//	tau = (qd_m - qd) + 100*(q_m - q);
-
-	//
-	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
-
-	// Wk+1                  = Wk                  +  Wkdot                                                                                                          * dt
-	W_trans_next.transpose() = W_trans.transpose() + (F*hiddenLayer_out*r.transpose() - F*sigmaPrime*V_trans*x*r.transpose() - kappa*F*r.norm()*W_trans.transpose()) * delT;
-
-	// Vk+1                  = Vk                  +  Vkdot                                                                                      			 * dt
-	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
-*/
-
-	nnController.Update( qd_m  ,
-			     qd    ,
-			     q_m   ,
-			     q     ,
-			     qdd_m ,
-			     t_r   ,
-			     tau    );
-
-	// NN END
-	/////////////////////////
+  // NN
+  nnController.Update( qd_m  ,
+                       qd    ,
+                       q_m   ,
+                       q     ,
+                       qdd_m ,
+                       t_r   ,
+                       tau    );
+  // NN END
+  /////////////////////////
 
 
 
