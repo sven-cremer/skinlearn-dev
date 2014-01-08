@@ -308,17 +308,17 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 //	nnF              = 100  ;
 //	nnG              = 20   ;
 
-//    nnController.Init( kappa  ,
-//    		       Kv     ,
-//    		       lambda ,
-//    		       Kz     ,
-//    		       Zb     ,
-//    		       fFForce,
-//    		       nnF    ,
-//    		       nnG    ,
-//    		       nn_ON   );
-//
-//    nnController.UpdateDelT( delT );
+    nnController.init( kappa  ,
+    		       Kv     ,
+    		       lambda ,
+    		       Kz     ,
+    		       Zb     ,
+    		       fFForce,
+    		       nnF    ,
+    		       nnG    ,
+    		       nn_ON   );
+
+    nnController.updateDelT( delT );
 
 	hiddenLayerIdentity.setIdentity();
 
@@ -344,10 +344,6 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
   if(!hardwareInterface)
       ROS_ERROR("Something wrong with the hardware interface pointer!");
-
-
-
-
 
   l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
   r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");

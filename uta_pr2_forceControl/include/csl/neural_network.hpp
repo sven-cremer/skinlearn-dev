@@ -144,16 +144,16 @@ public:
 	  delT = p_delT;
 	}
 
-//	void Update( SystemVector & qd_m  ,
-//		     SystemVector & qd    ,
-//		     SystemVector & q_m   ,
-//		     SystemVector & q     ,
-//		     SystemVector & qdd_m ,
-//		     SystemVector & t_r   ,
-//		     SystemVector & tau    );
-//
-//	Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1>
-//	sigmoid( Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1> & z );
+	void Update( SystemVector & qd_m  ,
+		     SystemVector & qd    ,
+		     SystemVector & q_m   ,
+		     SystemVector & q     ,
+		     SystemVector & qdd_m ,
+		     SystemVector & t_r   ,
+		     SystemVector & tau    );
+
+	Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1>
+	sigmoid( Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1> & z ) const;
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
