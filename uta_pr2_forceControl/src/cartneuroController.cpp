@@ -111,7 +111,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   test_object_.updateDouble( 10 );
 
-  Eigen::Matrix<double, 6, 1> eigen_vector;
+  test::TestObjectClass::SystemVector eigen_vector;
   eigen_vector.Zero();
   test_object_.updateEigen( eigen_vector );
 
