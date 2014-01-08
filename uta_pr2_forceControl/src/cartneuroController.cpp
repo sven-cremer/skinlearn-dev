@@ -128,7 +128,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   double nnG              = 20   ;
   double nn_ON            = 1    ;
 
-nnController.Init( kappa   ,
+nnController.init( kappa   ,
                    Kv      ,
                    lambda  ,
                    Kz      ,
@@ -138,7 +138,7 @@ nnController.Init( kappa   ,
                    nnG     ,
                    nn_ON    );
 
-nnController.UpdateDelT( 0.001 );
+nnController.updateDelT( 0.001 );
 
   // NN END
   /////////////////////////

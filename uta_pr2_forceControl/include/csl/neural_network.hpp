@@ -87,7 +87,7 @@ public:
 
 	TwoLayerNeuralNetworkController()
 	{
-		Init( 0.07 ,
+		init( 0.07 ,
                       10   ,
                       0.5  ,
                       0    ,
@@ -101,7 +101,7 @@ public:
 
 	}
 
-	void Init( double p_kappa  ,
+	void init( double p_kappa  ,
 		   double p_Kv     ,
 		   double p_lambda ,
 		   double p_Kz     ,
@@ -139,18 +139,18 @@ public:
 			G = nnG*G;
 		}
 
-	void UpdateDelT( double p_delT );
+	void updateDelT( double p_delT );
 
-	void Update( SystemVector & qd_m  ,
-		     SystemVector & qd    ,
-		     SystemVector & q_m   ,
-		     SystemVector & q     ,
-		     SystemVector & qdd_m ,
-		     SystemVector & t_r   ,
-		     SystemVector & tau    );
-
-	Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1>
-	sigmoid( Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1> & z );
+//	void Update( SystemVector & qd_m  ,
+//		     SystemVector & qd    ,
+//		     SystemVector & q_m   ,
+//		     SystemVector & q     ,
+//		     SystemVector & qdd_m ,
+//		     SystemVector & t_r   ,
+//		     SystemVector & tau    );
+//
+//	Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1>
+//	sigmoid( Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1> & z );
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
