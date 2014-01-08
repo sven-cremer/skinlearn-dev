@@ -46,8 +46,13 @@ class RLSFilter
             Eigen::MatrixXd Kk;
 
   public:
+            RLSFilter()
+            {
+              lmInv = 1;
+            }
 
-            RLSFilter( const Eigen::MatrixXd & w ,
+
+            void init( const Eigen::MatrixXd & w ,
                        const Eigen::MatrixXd & u ,
                        const Eigen::MatrixXd & d ,
                        const Eigen::MatrixXd & P0,

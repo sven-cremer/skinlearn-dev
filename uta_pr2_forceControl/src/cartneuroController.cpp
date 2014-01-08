@@ -107,14 +107,6 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   ROS_ERROR("Joint no: %d", kdl_chain_.getNrOfJoints());
 
-  // TEST
-
-//  test_object_.updateDouble( 10 );
-//
-//  test::TestObjectClass::SystemVector eigen_vector;
-//  eigen_vector.Zero();
-//  test_object_.updateEigen( eigen_vector );
-
   std::string nn_kappa            = "/nn_kappa"            ;
   std::string nn_Kv               = "/nn_Kv"               ;
   std::string nn_lambda           = "/nn_lambda"           ;
@@ -163,7 +155,13 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   // NN END
   /////////////////////////
 
-  // TEST END
+  /////////////////////////
+  // RLS
+
+
+
+  // RLS END
+  /////////////////////////
 
   return true;
 }
