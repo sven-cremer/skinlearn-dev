@@ -139,7 +139,10 @@ public:
 			G = nnG*G;
 		}
 
-	void updateDelT( double p_delT );
+	void updateDelT( double p_delT )
+	{
+	  delT = p_delT;
+	}
 
 //	void Update( SystemVector & qd_m  ,
 //		     SystemVector & qd    ,

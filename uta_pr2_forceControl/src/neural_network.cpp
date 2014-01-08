@@ -18,11 +18,6 @@ namespace csl
 namespace neural_network
 {
 
-void TwoLayerNeuralNetworkController::updateDelT( double p_delT )
-{
-	delT = p_delT;
-}
-
 //void TwoLayerNeuralNetworkController::Update( SystemVector & qd_m  ,
 //					      SystemVector & qd    ,
 //					      SystemVector & q_m   ,
