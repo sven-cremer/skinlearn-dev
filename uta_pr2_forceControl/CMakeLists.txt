@@ -35,7 +35,8 @@ rosbuild_add_library(pr2_controller_lib src/neuroadptController.cpp
 								       #src/impedanceController.cpp
 								       #src/explforceController.cpp
 
-#target_link_libraries(${PROJECT_NAME} another_library)
+#target_link_libraries(pr2_controller_lib src/neural_network.cpp)
+
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 #rosbuild_add_executable(example examples/example.cpp)
