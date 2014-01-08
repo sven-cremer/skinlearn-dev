@@ -11,6 +11,7 @@
 #include <kdl/jntarray.hpp>
 
 #include "objTest.h"
+#include "csl/neural_network.hpp"
 
 namespace pr2_controller_ns{
 
@@ -53,6 +54,8 @@ private:
   ros::Time last_time_;         // Time of the last servo cycle
 
   test::TestObjectClass test_object_;
+
+  csl::neural_network::TwoLayerNeuralNetworkController nnController;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,

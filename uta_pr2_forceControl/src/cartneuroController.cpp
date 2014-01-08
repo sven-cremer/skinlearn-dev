@@ -109,11 +109,39 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // TEST
 
-  test_object_.updateDouble( 10 );
+//  test_object_.updateDouble( 10 );
+//
+//  test::TestObjectClass::SystemVector eigen_vector;
+//  eigen_vector.Zero();
+//  test_object_.updateEigen( eigen_vector );
 
-  test::TestObjectClass::SystemVector eigen_vector;
-  eigen_vector.Zero();
-  test_object_.updateEigen( eigen_vector );
+  /////////////////////////
+  // NN
+
+  double kappa            = 0.07 ;
+  double Kv               = 10   ;  // prop. gain for PID inner loop
+  double lambda           = 0.5  ; //*std::sqrt(Kp); // der. gain for PID inner loop
+  double Kz               = 0    ;
+  double Zb               = 100  ;
+  double fFForce          = 1    ;
+  double nnF              = 100  ;
+  double nnG              = 20   ;
+  double nn_ON            = 1    ;
+
+nnController.Init( kappa  ,
+                   Kv     ,
+                   lambda ,
+                   Kz     ,
+                   Zb     ,
+                   fFForce,
+                   nnF    ,
+                   nnG    ,
+                   nn_ON   );
+
+nnController.UpdateDelT( 0.001 );
+
+  // NN END
+  /////////////////////////
 
   // TEST END
 
@@ -123,8 +151,6 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 /// Controller startup in realtime
 void PR2CartneuroControllerClass::starting()
 {
-
-  test_object_.updateDouble( 11 );
 
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
@@ -141,8 +167,6 @@ void PR2CartneuroControllerClass::starting()
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
 {
-
-  test_object_.updateDouble( 12 );
 
   double dt;                    // Servo loop time step
 
