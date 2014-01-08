@@ -119,6 +119,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 /// Controller startup in realtime
 void PR2CartneuroControllerClass::starting()
 {
+
+  test_object_.Update( 11 );
+
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
   jnt_to_pose_solver_->JntToCart(q0_, x0_);
@@ -134,6 +137,9 @@ void PR2CartneuroControllerClass::starting()
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
 {
+
+  test_object_.Update( 12 );
+
   double dt;                    // Servo loop time step
 
   // Calculate the dt between servo cycles.
