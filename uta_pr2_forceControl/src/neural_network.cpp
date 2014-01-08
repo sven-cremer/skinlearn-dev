@@ -19,12 +19,12 @@ namespace neural_network
 {
 
 void TwoLayerNeuralNetworkController::Update( SystemVector & qd_m  ,
-											  SystemVector & qd    ,
-											  SystemVector & q_m   ,
-											  SystemVector & q     ,
-											  SystemVector & qdd_m ,
-											  SystemVector & t_r   ,
-											  SystemVector & tau    )
+					      SystemVector & qd    ,
+					      SystemVector & q_m   ,
+					      SystemVector & q     ,
+					      SystemVector & qdd_m ,
+					      SystemVector & t_r   ,
+					      SystemVector & tau    )
 {
 	W_trans = W_trans_next;
 	V_trans = V_trans_next;
