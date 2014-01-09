@@ -117,6 +117,19 @@ public:
 
 	}
 
+	void changeNNstructure( double para_num_Inputs  ,
+	                        double para_num_Outputs ,
+	                        double para_num_Hidden  ,
+	                        double para_num_Error   ,
+	                        double para_num_Joints   )
+	{
+	  num_Inputs  = para_num_Inputs  ;
+	  num_Outputs = para_num_Outputs ;
+	  num_Hidden  = para_num_Hidden  ;
+	  num_Error   = para_num_Error   ;
+	  num_Joints  = para_num_Joints  ;
+	}
+
 	void init( double p_kappa  ,
 		   double p_Kv     ,
 		   double p_lambda ,

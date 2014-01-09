@@ -314,6 +314,12 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   /////////////////////////
   // NN
 
+  nnController.changeNNstructure( 35  ,   // num_Inputs
+                                  7   ,   // num_Outputs
+                                  10  ,   // num_Hidden
+                                  7   ,   // num_Error
+                                  7    ); // num_Joints
+
   nnController.init( kappa  ,
                      Kv     ,
                      lambda ,
