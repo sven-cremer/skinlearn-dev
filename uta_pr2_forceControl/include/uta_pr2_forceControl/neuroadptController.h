@@ -144,22 +144,22 @@ private:
   // Define the joint/cart vector types accordingly (using a fixed
   // size to avoid dynamic allocations and make the code realtime safe).
   typedef Eigen::Matrix<double, Joints, Joints>  SystemMatrix;
-  typedef Eigen::Matrix<double, Joints, 1>		 SystemVector;
+  typedef Eigen::Matrix<double, Joints, 1>	 SystemVector;
 
-  SystemMatrix  Mm;
-  SystemMatrix  Dm;
-  SystemMatrix  Km;
-  SystemMatrix  MmInv;
+  Eigen::MatrixXd Mm;
+  Eigen::MatrixXd Dm;
+  Eigen::MatrixXd Km;
+  Eigen::MatrixXd MmInv;
 
-  SystemVector	q;
-  SystemVector  qd;
-  SystemVector 	qdd;
+  Eigen::MatrixXd q;
+  Eigen::MatrixXd qd;
+  Eigen::MatrixXd qdd;
 
-  SystemVector	q_m;
-  SystemVector  qd_m;
-  SystemVector 	qdd_m;
-  SystemVector 	t_r;
-  SystemVector 	tau;
+  Eigen::MatrixXd q_m;
+  Eigen::MatrixXd qd_m;
+  Eigen::MatrixXd qdd_m;
+  Eigen::MatrixXd t_r;
+  Eigen::MatrixXd tau;
 
   double delT;
 
@@ -180,29 +180,6 @@ private:
   enum { Outputs = 7 }; // m Size of the outputs
   enum { Hidden  = 10 }; // l Size of the hidden layer
   enum { Error   = 7 }; // filtered error
-
-  Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans;
-  Eigen::Matrix<double, Outputs, Hidden>                     W_trans;
-  Eigen::Matrix<double, Hidden, Inputs+1>                    V_trans_next;
-  Eigen::Matrix<double, Outputs, Hidden>                     W_trans_next;
-  Eigen::Matrix<double, Inputs+1, Inputs+1>                  G;
-  Eigen::Matrix<double, Hidden, Hidden>                      F;
-  Eigen::Matrix<double, Outputs, Outputs>                    L;
-  Eigen::Matrix<double, Hidden+Inputs+1, Hidden+Outputs>     Z;
-
-//  V_trans_next
-//  W_trans_next
-//  sigmaPrime
-
-  Eigen::Matrix<double, Inputs+1, 1>      x                   ;
-  Eigen::Matrix<double, Outputs, 1>       y                   ;
-  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_out     ;
-  Eigen::Matrix<double, Hidden, Hidden>   hiddenLayerIdentity ;
-  Eigen::Matrix<double, Hidden, 1>        hiddenLayer_in      ;
-  Eigen::Matrix<double, Outputs, 1>       outputLayer_out     ;
-  Eigen::Matrix<double, Hidden, Hidden>   sigmaPrime          ;
-  Eigen::Matrix<double, Error, 1>         r                   ;
-  Eigen::Matrix<double, Outputs, 1>       vRobust             ;
 
   double  kappa  ;
   double  Kv     ;
@@ -259,14 +236,11 @@ public:
   void update();
   void stopping();
 
-  Eigen::Matrix<double, Hidden, 1>
-  sigmoid( Eigen::Matrix<double, Hidden, 1> & z );
+  Eigen::MatrixXd JointKdl2Eigen( KDL::JntArray & joint_ );
 
-  SystemVector JointKdl2Eigen( KDL::JntArray & joint_ );
+  Eigen::MatrixXd JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
 
-  SystemVector JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
-
-  KDL::JntArray JointEigen2Kdl( SystemVector & joint );
+  KDL::JntArray JointEigen2Kdl( Eigen::MatrixXd & joint );
 
 };
 }

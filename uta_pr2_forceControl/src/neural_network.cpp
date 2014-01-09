@@ -18,13 +18,13 @@ namespace csl
 namespace neural_network
 {
 
-void TwoLayerNeuralNetworkController::Update( SystemVector & qd_m  ,
-					      SystemVector & qd    ,
-					      SystemVector & q_m   ,
-					      SystemVector & q     ,
-					      SystemVector & qdd_m ,
-					      SystemVector & t_r   ,
-					      SystemVector & tau    )
+void TwoLayerNeuralNetworkController::Update( Eigen::MatrixXd & qd_m  ,
+					      Eigen::MatrixXd & qd    ,
+					      Eigen::MatrixXd & q_m   ,
+					      Eigen::MatrixXd & q     ,
+					      Eigen::MatrixXd & qdd_m ,
+					      Eigen::MatrixXd & t_r   ,
+					      Eigen::MatrixXd & tau    )
 {
 	W_trans = W_trans_next;
 	V_trans = V_trans_next;
@@ -33,8 +33,8 @@ void TwoLayerNeuralNetworkController::Update( SystemVector & qd_m  ,
 	r = (qd_m - qd) + lambda*(q_m - q);
 
 	// Robust term
-	Z.block(0,0,Hidden,Outputs) = W_trans.transpose();
-	Z.block(Hidden,Outputs,Inputs+1,Hidden) = V_trans.transpose();
+	Z.block(0,0,num_Hidden,num_Outputs) = W_trans.transpose();
+	Z.block(num_Hidden,num_Outputs,num_Inputs+1,num_Hidden) = V_trans.transpose();
 	vRobust = - Kz*(Z.norm() + Zb)*r;
 
 	x(0 ) =                  1   ;
@@ -90,13 +90,15 @@ void TwoLayerNeuralNetworkController::Update( SystemVector & qd_m  ,
 	// Wk+1                  = Wk                  +  Wkdot                                                                                                          * dt
 	W_trans_next.transpose() = W_trans.transpose() + (F*hiddenLayer_out*r.transpose() - F*sigmaPrime*V_trans*x*r.transpose() - kappa*F*r.norm()*W_trans.transpose()) * delT;
 
+	sigmaPrimeTrans_W_r = sigmaPrime.transpose()*W_trans.transpose()*r;
+
 	// Vk+1                  = Vk                  +  Vkdot                                                                                      			 * dt
-	V_trans_next.transpose() = V_trans.transpose() + (G*x*(sigmaPrime.transpose()*W_trans.transpose()*r).transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
+	V_trans_next.transpose() = V_trans.transpose() + (G*x*sigmaPrimeTrans_W_r.transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
 
 }
 
-Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1>
-TwoLayerNeuralNetworkController::sigmoid( Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1> & z ) const
+Eigen::MatrixXd
+TwoLayerNeuralNetworkController::sigmoid( Eigen::MatrixXd & z ) const
 {
   for(uint i=0;i<z.size();i++)
   {

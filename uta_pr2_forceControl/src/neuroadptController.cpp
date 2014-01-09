@@ -226,6 +226,21 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	double d = 10;
 	double k =  1;
 
+	Mm    .resize( Joints, Joints ) ;
+	Dm    .resize( Joints, Joints ) ;
+	Km    .resize( Joints, Joints ) ;
+	MmInv .resize( Joints, Joints ) ;
+
+	q     .resize( Joints, 1 ) ;
+	qd    .resize( Joints, 1 ) ;
+	qdd   .resize( Joints, 1 ) ;
+
+	q_m   .resize( Joints, 1 ) ;
+	qd_m  .resize( Joints, 1 ) ;
+	qdd_m .resize( Joints, 1 ) ;
+	t_r   .resize( Joints, 1 ) ;
+	tau   .resize( Joints, 1 ) ;
+
 	Mm << m, 0, 0, 0, 0, 0, 0,
 		  0, m, 0, 0, 0, 0, 0,
 		  0, 0, m, 0, 0, 0, 0,
@@ -989,7 +1004,7 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
   return true;
 }
 
-PR2NeuroadptControllerClass::SystemVector
+Eigen::MatrixXd
 PR2NeuroadptControllerClass::JointKdl2Eigen( KDL::JntArray & joint_ )
 {
 	eigen_temp_joint(0) = joint_(0);
@@ -1003,7 +1018,7 @@ PR2NeuroadptControllerClass::JointKdl2Eigen( KDL::JntArray & joint_ )
 	return eigen_temp_joint;
 }
 
-PR2NeuroadptControllerClass::SystemVector
+Eigen::MatrixXd
 PR2NeuroadptControllerClass::JointVelKdl2Eigen( KDL::JntArrayVel & joint_ )
 {
 	eigen_temp_joint(0) = joint_.qdot(0);
@@ -1018,7 +1033,7 @@ PR2NeuroadptControllerClass::JointVelKdl2Eigen( KDL::JntArrayVel & joint_ )
 }
 
 KDL::JntArray
-PR2NeuroadptControllerClass::JointEigen2Kdl( SystemVector & joint )
+PR2NeuroadptControllerClass::JointEigen2Kdl( Eigen::MatrixXd & joint )
 {
 	kdl_temp_joint_(0) = joint(0);
 	kdl_temp_joint_(1) = joint(1);
@@ -1030,18 +1045,6 @@ PR2NeuroadptControllerClass::JointEigen2Kdl( SystemVector & joint )
 
 	return kdl_temp_joint_;
 }
-
-Eigen::Matrix<double, PR2NeuroadptControllerClass::Hidden, 1>
-PR2NeuroadptControllerClass::sigmoid( Eigen::Matrix<double, Hidden, 1> & z )
-{
-  for(uint i=0;i<z.size();i++)
-  {
-	z(i) = 1.0/(1.0 + exp(-(double)z(i)));
-  }
-  return z;
-}
-
-
 
 /// Controller stopping in realtime
 void PR2NeuroadptControllerClass::stopping()

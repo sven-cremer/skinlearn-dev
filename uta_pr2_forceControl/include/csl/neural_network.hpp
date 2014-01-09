@@ -26,49 +26,59 @@ namespace neural_network {
  */
 class TwoLayerNeuralNetworkController {
 
-	enum {
-		Inputs = 35
-	}; // n Size of the inputs
-	enum {
-		Outputs = 7
-	}; // m Size of the outputs
-	enum {
-		Hidden = 10
-	}; // l Size of the hidden layer
-	enum {
-		Error = 7
-	}; // filtered error
-
-	// Declare the number of joints.
-	enum { Joints = 7 };
+        double num_Inputs  ; // n Size of the inputs
+        double num_Outputs ; // m Size of the outputs
+        double num_Hidden  ; // l Size of the hidden layer
+        double num_Error   ; // filtered error
+        double num_Joints  ; // number of joints.
 
 	// Define the joint/cart vector types accordingly (using a fixed
 	// size to avoid dynamic allocations and make the code realtime safe).
-	typedef Eigen::Matrix<double, Joints, Joints>  SystemMatrix;
-	typedef Eigen::Matrix<double, Joints, 1>	   SystemVector;
+//	typedef Eigen::Matrix<double, num_Joints, num_Joints>  SystemMatrix;
+//	typedef Eigen::Matrix<double, num_Joints, 1>       SystemVector;
 
-	Eigen::Matrix<double, Hidden, Inputs + 1> V_trans;
-	Eigen::Matrix<double, Outputs, Hidden> W_trans;
-	Eigen::Matrix<double, Hidden, Inputs + 1> V_trans_next;
-	Eigen::Matrix<double, Outputs, Hidden> W_trans_next;
-	Eigen::Matrix<double, Inputs + 1, Inputs + 1> G;
-	Eigen::Matrix<double, Hidden, Hidden> F;
-	Eigen::Matrix<double, Outputs, Outputs> L;
-	Eigen::Matrix<double, Hidden + Inputs + 1, Hidden + Outputs> Z;
+//	Eigen::Matrix<double, num_Hidden, num_Inputs + 1> V_trans;
+//	Eigen::Matrix<double, num_Outputs, num_Hidden> W_trans;
+//	Eigen::Matrix<double, num_Hidden, num_Inputs + 1> V_trans_next;
+//	Eigen::Matrix<double, num_Outputs, num_Hidden> W_trans_next;
+//	Eigen::Matrix<double, num_Inputs + 1, num_Inputs + 1> G;
+//	Eigen::Matrix<double, num_Hidden, num_Hidden> F;
+//	Eigen::Matrix<double, num_Outputs, num_Outputs> L;
+//	Eigen::Matrix<double, num_Hidden + num_Inputs + 1, num_Hidden + num_Outputs> Z;
+
+        Eigen::MatrixXd V_trans;
+        Eigen::MatrixXd W_trans;
+        Eigen::MatrixXd V_trans_next;
+        Eigen::MatrixXd W_trans_next;
+        Eigen::MatrixXd G;
+        Eigen::MatrixXd F;
+        Eigen::MatrixXd L;
+        Eigen::MatrixXd Z;
 
 	//  V_trans_next
 	//  W_trans_next
 	//  sigmaPrime
 
-	Eigen::Matrix<double, Inputs + 1, 1> x;
-	Eigen::Matrix<double, Outputs, 1> y;
-	Eigen::Matrix<double, Hidden, 1> hiddenLayer_out;
-	Eigen::Matrix<double, Hidden, Hidden> hiddenLayerIdentity;
-	Eigen::Matrix<double, Hidden, 1> hiddenLayer_in;
-	Eigen::Matrix<double, Outputs, 1> outputLayer_out;
-	Eigen::Matrix<double, Hidden, Hidden> sigmaPrime;
-	Eigen::Matrix<double, Error, 1> r;
-	Eigen::Matrix<double, Outputs, 1> vRobust;
+//	Eigen::Matrix<double, num_Inputs + 1, 1> x;
+//	Eigen::Matrix<double, num_Outputs, 1> y;
+//	Eigen::Matrix<double, num_Hidden, 1> hiddenLayer_out;
+//	Eigen::Matrix<double, num_Hidden, num_Hidden> hiddenLayerIdentity;
+//	Eigen::Matrix<double, num_Hidden, 1> hiddenLayer_in;
+//	Eigen::Matrix<double, num_Outputs, 1> outputLayer_out;
+//	Eigen::Matrix<double, num_Hidden, num_Hidden> sigmaPrime;
+//	Eigen::Matrix<double, num_Error, 1> r;
+//	Eigen::Matrix<double, num_Outputs, 1> vRobust;
+
+        Eigen::MatrixXd x;
+        Eigen::MatrixXd y;
+        Eigen::MatrixXd hiddenLayer_out;
+        Eigen::MatrixXd hiddenLayerIdentity;
+        Eigen::MatrixXd hiddenLayer_in;
+        Eigen::MatrixXd outputLayer_out;
+        Eigen::MatrixXd sigmaPrime;
+        Eigen::MatrixXd r;
+        Eigen::MatrixXd vRobust;
+        Eigen::MatrixXd sigmaPrimeTrans_W_r;
 
 	double kappa;
 	double Kv;
@@ -87,7 +97,15 @@ public:
 
 	TwoLayerNeuralNetworkController()
 	{
-		init( 0.07 ,
+		num_Inputs  = 35 ;
+		num_Outputs = 7  ;
+		num_Hidden  = 10 ;
+		num_Error   = 7  ;
+		num_Joints  = 7  ;
+
+		delT = 0.001; /// 1000 Hz by default
+
+                init( 0.07 ,
                       10   ,
                       0.5  ,
                       0    ,
@@ -96,8 +114,6 @@ public:
                       100  ,
                       20   ,
                       1     );
-
-		delT = 0.001; /// 1000 Hz by default
 
 	}
 
@@ -121,6 +137,27 @@ public:
 			nnG              = p_nnG     ;
 			nn_ON		 = p_nn_ON   ;
 
+			V_trans       .resize( num_Hidden                  , num_Inputs + 1           ) ;
+			W_trans       .resize( num_Outputs                 , num_Hidden               ) ;
+			V_trans_next  .resize( num_Hidden                  , num_Inputs + 1           ) ;
+			W_trans_next  .resize( num_Outputs                 , num_Hidden               ) ;
+			G             .resize( num_Inputs + 1              , num_Inputs + 1           ) ;
+			F             .resize( num_Hidden                  , num_Hidden               ) ;
+			L             .resize( num_Outputs                 , num_Outputs              ) ;
+			Z             .resize( num_Hidden + num_Inputs + 1 , num_Hidden + num_Outputs ) ;
+
+			x                   .resize( num_Inputs + 1, 1              ) ;
+			y                   .resize( num_Outputs   , 1              ) ;
+			hiddenLayer_out     .resize( num_Hidden    , 1              ) ;
+			hiddenLayerIdentity .resize( num_Hidden    , num_Hidden     ) ;
+			hiddenLayer_in      .resize( num_Hidden    , 1              ) ;
+			outputLayer_out     .resize( num_Outputs   , 1              ) ;
+			sigmaPrime          .resize( num_Hidden    , num_Hidden     ) ;
+			r                   .resize( num_Error     , 1              ) ;
+			vRobust             .resize( num_Outputs   , 1              ) ;
+			sigmaPrimeTrans_W_r .resize( num_Hidden    , 1              ) ;
+
+
 			hiddenLayerIdentity.setIdentity();
 
 			W_trans.setZero();
@@ -137,6 +174,7 @@ public:
 
 			F = nnF*F;
 			G = nnG*G;
+
 		}
 
 	void updateDelT( double p_delT )
@@ -144,16 +182,16 @@ public:
 	  delT = p_delT;
 	}
 
-	void Update( SystemVector & qd_m  ,
-		     SystemVector & qd    ,
-		     SystemVector & q_m   ,
-		     SystemVector & q     ,
-		     SystemVector & qdd_m ,
-		     SystemVector & t_r   ,
-		     SystemVector & tau    );
+	void Update( Eigen::MatrixXd & qd_m  ,
+	             Eigen::MatrixXd & qd    ,
+	             Eigen::MatrixXd & q_m   ,
+	             Eigen::MatrixXd & q     ,
+	             Eigen::MatrixXd & qdd_m ,
+	             Eigen::MatrixXd & t_r   ,
+	             Eigen::MatrixXd & tau    );
 
-	Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1>
-	sigmoid( Eigen::Matrix<double, TwoLayerNeuralNetworkController::Hidden, 1> & z ) const;
+	Eigen::MatrixXd
+	sigmoid( Eigen::MatrixXd & z ) const;
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
