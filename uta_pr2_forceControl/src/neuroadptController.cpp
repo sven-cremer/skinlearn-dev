@@ -7,40 +7,6 @@ using namespace pr2_controller_ns;
 using namespace std;
 using namespace boost::numeric::odeint;
 
-//void reference_model( const state_type &x , state_type &dxdt , double t )
-//{
-//
-//	double m = 1;
-//	double d = 10;
-//	double k = 1;
-//
-//	dxdt[0 ] = x[7 ];
-//	dxdt[1 ] = x[8 ];
-//	dxdt[2 ] = x[9 ];
-//	dxdt[3 ] = x[10];
-//	dxdt[4 ] = x[11];
-//	dxdt[5 ] = x[12];
-//	dxdt[6 ] = x[13];
-//
-//	//             f_r		 qd_m      q_m
-//	dxdt[7 ] = m*( x[14] - d*x[7 ] - k*x[0 ] );
-//	dxdt[8 ] = m*( x[15] - d*x[8 ] - k*x[1 ] );
-//	dxdt[9 ] = m*( x[16] - d*x[9 ] - k*x[2 ] );
-//	dxdt[10] = m*( x[17] - d*x[10] - k*x[3 ] );
-//	dxdt[11] = m*( x[18] - d*x[11] - k*x[4 ] );
-//	dxdt[12] = m*( x[19] - d*x[12] - k*x[5 ] );
-//	dxdt[13] = m*( x[20] - d*x[13] - k*x[6 ] );
-//
-//	dxdt[14] = x[14];
-//	dxdt[15] = x[15];
-//	dxdt[16] = x[16];
-//	dxdt[17] = x[17];
-//	dxdt[18] = x[18];
-//	dxdt[19] = x[19];
-//	dxdt[20] = x[20];
-//
-//}
-
 void vanderpol_model( const state_type_4 &x , state_type_4 &dxdt , double t )
 {
 	double Mu1 = 0.2;
@@ -52,16 +18,6 @@ void vanderpol_model( const state_type_4 &x , state_type_4 &dxdt , double t )
 	dxdt[3 ] = Mu2*(1-x[1]*x[1])*x[3]-x[1];
 
 }
-
-//void write_lorenz( const state_type &x , const double t )
-//{
-//    cout << t << '\t' << x[0] << '\t' << x[1] << '\t' << x[2] << endl;
-//}
-
-
-
-
-
 
 
 /// Controller initialization in non-realtime
@@ -219,98 +175,14 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
   Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
 
-	/////////////////////////
-	// System Model
+  /////////////////////////
+  // System Model
 
-	double m =  1;
-	double d = 10;
-	double k =  1;
+  eigen_temp_joint.resize(7,1);
+  outerLoopMSDmodel.updateDelT( delT );
 
-	Mm    .resize( Joints, Joints ) ;
-	Dm    .resize( Joints, Joints ) ;
-	Km    .resize( Joints, Joints ) ;
-	MmInv .resize( Joints, Joints ) ;
-
-	q     .resize( Joints, 1 ) ;
-	qd    .resize( Joints, 1 ) ;
-	qdd   .resize( Joints, 1 ) ;
-
-	q_m   .resize( Joints, 1 ) ;
-	qd_m  .resize( Joints, 1 ) ;
-	qdd_m .resize( Joints, 1 ) ;
-	t_r   .resize( Joints, 1 ) ;
-	tau   .resize( Joints, 1 ) ;
-
-	Mm << m, 0, 0, 0, 0, 0, 0,
-		  0, m, 0, 0, 0, 0, 0,
-		  0, 0, m, 0, 0, 0, 0,
-		  0, 0, 0, m, 0, 0, 0,
-		  0, 0, 0, 0, m, 0, 0,
-		  0, 0, 0, 0, 0, m, 0,
-		  0, 0, 0, 0, 0, 0, m;
-
-	Dm << d, 0, 0, 0, 0, 0, 0,
-		  0, d, 0, 0, 0, 0, 0,
-		  0, 0, d, 0, 0, 0, 0,
-		  0, 0, 0, d, 0, 0, 0,
-		  0, 0, 0, 0, d, 0, 0,
-		  0, 0, 0, 0, 0, d, 0,
-		  0, 0, 0, 0, 0, 0, d;
-
-	Km << k, 0, 0, 0, 0, 0, 0,
-		  0, k, 0, 0, 0, 0, 0,
-		  0, 0, k, 0, 0, 0, 0,
-		  0, 0, 0, k, 0, 0, 0,
-		  0, 0, 0, 0, k, 0, 0,
-		  0, 0, 0, 0, 0, k, 0,
-		  0, 0, 0, 0, 0, 0, k;
-
-	q_m   << 0, 0, 0, 0, 0, 0, 0 ;
-	qd_m  << 0, 0, 0, 0, 0, 0, 0 ;
-	qdd_m << 0, 0, 0, 0, 0, 0, 0 ;
-
-	t_r   << 0, 0, 0, 0, 0, 0, 0 ;
-
-	MmInv = Mm;
-
-	delT  = 0.001;
-
-
-
-//	// initial conditions
-//	ode_init_x[0 ] = 0.0;
-//	ode_init_x[1 ] = 0.0;
-//	ode_init_x[2 ] = 0.0;
-//	ode_init_x[3 ] = 0.0;
-//	ode_init_x[4 ] = 0.0;
-//	ode_init_x[5 ] = 0.0;
-//	ode_init_x[6 ] = 0.0;
-//
-//	ode_init_x[7 ] = 0.0;
-//	ode_init_x[8 ] = 0.0;
-//	ode_init_x[9 ] = 0.0;
-//	ode_init_x[10] = 0.0;
-//	ode_init_x[11] = 0.0;
-//	ode_init_x[12] = 0.0;
-//	ode_init_x[13] = 0.0;
-//
-//	ode_init_x[14] = 0.0;
-//	ode_init_x[15] = 0.0;
-//	ode_init_x[16] = 0.0;
-//	ode_init_x[17] = 0.0;
-//	ode_init_x[18] = 0.0;
-//	ode_init_x[19] = 0.0;
-//	ode_init_x[20] = 0.0;
-
-	vpol_init_x[0 ] = 2.0;
-	vpol_init_x[1 ] = 2.0;
-        vpol_init_x[2 ] = 0.0;
-        vpol_init_x[3 ] = 0.0;
-
-        outerLoopMSDmodel.updateDelT( delT );
-
-	// System Model END
-	/////////////////////////
+  // System Model END
+  /////////////////////////
 
 
   /////////////////////////
@@ -584,11 +456,6 @@ void PR2NeuroadptControllerClass::update()
 	                          qdd_m ,
 	                          t_r    );
 
-
-//	q_m   = q_m + delT*qd_m;
-//	qd_m  = qd_m + delT*qdd_m;
-//	qdd_m = MmInv*( t_r - Dm*qd_m - Km*q_m );
-
 	// Check for joint limits and reset
 	// (condition) ? (if_true) : (if_false)
 	q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
@@ -615,31 +482,6 @@ void PR2NeuroadptControllerClass::update()
 	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
 	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
 
-//	ode_init_x[0 ] = 0.0;
-//	ode_init_x[1 ] = 0.0;
-//	ode_init_x[2 ] = 0.0;
-//	ode_init_x[3 ] = 0.0;
-//	ode_init_x[4 ] = 0.0;
-//	ode_init_x[5 ] = 0.0;
-//	ode_init_x[6 ] = 0.0;
-//
-//	ode_init_x[7 ] = 0.0;
-//	ode_init_x[8 ] = 0.0;
-//	ode_init_x[9 ] = 0.0;
-//	ode_init_x[10] = 0.0;
-//	ode_init_x[11] = 0.0;
-//	ode_init_x[12] = 0.0;
-//	ode_init_x[13] = 0.0;
-
-//	ode_init_x[14] = t_r(0);
-//	ode_init_x[15] = t_r(1);
-//	ode_init_x[16] = t_r(2);
-//	ode_init_x[17] = t_r(3);
-//	ode_init_x[18] = t_r(4);
-//	ode_init_x[19] = t_r(5);
-//	ode_init_x[20] = t_r(6);
-
-//	integrate( reference_model , ode_init_x , 0.0 , 0.001 , 0.001 );
 	integrate( vanderpol_model , vpol_init_x , 0.0 , 0.001 , 0.001 );
 
 	// System Model END
@@ -961,14 +803,14 @@ void PR2NeuroadptControllerClass::update()
 		msgControllerFullData[index].inParams          = Inputs                      ;
 		msgControllerFullData[index].outParams         = Outputs                     ;
 		msgControllerFullData[index].hiddenNodes       = Hidden                      ;
-		msgControllerFullData[index].errorParams       = Error  		             ;
-		msgControllerFullData[index].feedForwardForce  = fFForce            ;
+		msgControllerFullData[index].errorParams       = Error  		     ;
+		msgControllerFullData[index].feedForwardForce  = fFForce                     ;
 		msgControllerFullData[index].nn_ON             = nn_ON                       ;
 
 		// Model Params
-		msgControllerFullData[index].m                 = Mm(0,0)                     ;
-		msgControllerFullData[index].d                 = Dm(0,0)                     ;
-		msgControllerFullData[index].k                 = Km(0,0)                     ;
+		msgControllerFullData[index].m                 =   outerLoopMSDmodel.getMass(  )(0,0) ;
+		msgControllerFullData[index].d                 =   outerLoopMSDmodel.getSpring()(0,0) ;
+		msgControllerFullData[index].k                 =   outerLoopMSDmodel.getDamper()(0,0) ;
 
 		// Increment for the next cycle.
 		storage_index_ = index+1;

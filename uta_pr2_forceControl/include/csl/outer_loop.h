@@ -13,7 +13,6 @@
 
 #include <Eigen/Core>
 
-
 // TODO take this inside class
 typedef boost::array<double, 21> state_type;
 
@@ -73,13 +72,8 @@ class MsdModel
   Eigen::MatrixXd qd_m;
   Eigen::MatrixXd qdd_m;
   Eigen::MatrixXd t_r;
-  Eigen::MatrixXd tau;
 
   double delT; // Time step
-
-  double sigma;
-  double R;
-  double b;
 
   state_type ode_init_x;
 
@@ -120,7 +114,6 @@ public:
     qd_m  .resize( num_Joints, 1 ) ;
     qdd_m .resize( num_Joints, 1 ) ;
     t_r   .resize( num_Joints, 1 ) ;
-    tau   .resize( num_Joints, 1 ) ;
 
     Mm << m, 0, 0, 0, 0, 0, 0,
          0, m, 0, 0, 0, 0, 0,
@@ -185,6 +178,21 @@ public:
     delT = p_delT;
   }
 
+  Eigen::MatrixXd getMass()
+  {
+    return Mm;
+  }
+
+  Eigen::MatrixXd getSpring()
+  {
+    return Km;
+  }
+
+  Eigen::MatrixXd getDamper()
+  {
+    return Dm;
+  }
+
   void Update( Eigen::MatrixXd & qd_m  ,
                Eigen::MatrixXd & qd    ,
                Eigen::MatrixXd & q_m   ,
@@ -237,18 +245,132 @@ public:
 class FirModel
 {
 
-private:
+  double num_Joints; // number of joints.
+
+  Eigen::MatrixXd q;
+  Eigen::MatrixXd qd;
+  Eigen::MatrixXd qdd;
+
+  Eigen::MatrixXd q_m;
+  Eigen::MatrixXd qd_m;
+  Eigen::MatrixXd qdd_m;
+  Eigen::MatrixXd t_r;
+
+  double delT; // Time step
+
+  state_type ode_init_x;
 
 public:
   FirModel()
   {
+    num_Joints = 7;
+    delT = 0.001; /// 1000 Hz by default
 
+    init();
   }
   ~FirModel()
   {
-
   }
 
+  void changeModelstructure(double para_num_Joints)
+  {
+    num_Joints = para_num_Joints;
+  }
+
+  void init( )
+  {
+    q     .resize( num_Joints, 1 ) ;
+    qd    .resize( num_Joints, 1 ) ;
+    qdd   .resize( num_Joints, 1 ) ;
+
+    q_m   .resize( num_Joints, 1 ) ;
+    qd_m  .resize( num_Joints, 1 ) ;
+    qdd_m .resize( num_Joints, 1 ) ;
+    t_r   .resize( num_Joints, 1 ) ;
+
+    q_m   << 0, 0, 0, 0, 0, 0, 0 ;
+    qd_m  << 0, 0, 0, 0, 0, 0, 0 ;
+    qdd_m << 0, 0, 0, 0, 0, 0, 0 ;
+
+    t_r   << 0, 0, 0, 0, 0, 0, 0 ;
+
+    // initial conditions
+    ode_init_x[0 ] = 0.0;
+    ode_init_x[1 ] = 0.0;
+    ode_init_x[2 ] = 0.0;
+    ode_init_x[3 ] = 0.0;
+    ode_init_x[4 ] = 0.0;
+    ode_init_x[5 ] = 0.0;
+    ode_init_x[6 ] = 0.0;
+
+    ode_init_x[7 ] = 0.0;
+    ode_init_x[8 ] = 0.0;
+    ode_init_x[9 ] = 0.0;
+    ode_init_x[10] = 0.0;
+    ode_init_x[11] = 0.0;
+    ode_init_x[12] = 0.0;
+    ode_init_x[13] = 0.0;
+
+    ode_init_x[14] = 0.0;
+    ode_init_x[15] = 0.0;
+    ode_init_x[16] = 0.0;
+    ode_init_x[17] = 0.0;
+    ode_init_x[18] = 0.0;
+    ode_init_x[19] = 0.0;
+    ode_init_x[20] = 0.0;
+  }
+
+  void updateDelT(double p_delT)
+  {
+    delT = p_delT;
+  }
+
+  void Update( Eigen::MatrixXd & qd_m  ,
+               Eigen::MatrixXd & qd    ,
+               Eigen::MatrixXd & q_m   ,
+               Eigen::MatrixXd & q     ,
+               Eigen::MatrixXd & qdd_m ,
+               Eigen::MatrixXd & t_r    )
+  {
+
+//      q_m   = q_m + delT*qd_m;
+//      qd_m  = qd_m + delT*qdd_m;
+//      qdd_m = MmInv*( t_r - Dm*qd_m - Km*q_m );
+
+      ode_init_x[14] = t_r(0);
+      ode_init_x[15] = t_r(1);
+      ode_init_x[16] = t_r(2);
+      ode_init_x[17] = t_r(3);
+      ode_init_x[18] = t_r(4);
+      ode_init_x[19] = t_r(5);
+      ode_init_x[20] = t_r(6);
+
+      //boost::numeric::odeint::integrate( mass_spring_damper_model , ode_init_x , 0.0 , delT , delT );
+
+      q_m(0)   = ode_init_x[0 ] ;
+      q_m(1)   = ode_init_x[1 ] ;
+      q_m(2)   = ode_init_x[2 ] ;
+      q_m(3)   = ode_init_x[3 ] ;
+      q_m(4)   = ode_init_x[4 ] ;
+      q_m(5)   = ode_init_x[5 ] ;
+      q_m(6)   = ode_init_x[6 ] ;
+
+      qd_m(0)  = ode_init_x[7 ] ;
+      qd_m(1)  = ode_init_x[8 ] ;
+      qd_m(2)  = ode_init_x[9 ] ;
+      qd_m(3)  = ode_init_x[10] ;
+      qd_m(4)  = ode_init_x[11] ;
+      qd_m(5)  = ode_init_x[12] ;
+      qd_m(6)  = ode_init_x[13] ;
+
+      qdd_m(0) = ode_init_x[14] ;
+      qdd_m(1) = ode_init_x[15] ;
+      qdd_m(2) = ode_init_x[16] ;
+      qdd_m(3) = ode_init_x[17] ;
+      qdd_m(4) = ode_init_x[18] ;
+      qdd_m(5) = ode_init_x[19] ;
+      qdd_m(6) = ode_init_x[20] ;
+  }
 };
 
 }

@@ -139,18 +139,6 @@ private:
 
   /////////////////////////
   // System Model
-  // Declare the number of joints.
-  enum { Joints = 7 };
-
-  // Define the joint/cart vector types accordingly (using a fixed
-  // size to avoid dynamic allocations and make the code realtime safe).
-  typedef Eigen::Matrix<double, Joints, Joints>  SystemMatrix;
-  typedef Eigen::Matrix<double, Joints, 1>	 SystemVector;
-
-  Eigen::MatrixXd Mm;
-  Eigen::MatrixXd Dm;
-  Eigen::MatrixXd Km;
-  Eigen::MatrixXd MmInv;
 
   Eigen::MatrixXd q;
   Eigen::MatrixXd qd;
@@ -164,11 +152,6 @@ private:
 
   double delT;
 
-  double sigma;
-  double R;
-  double b;
-
-  state_type   ode_init_x;
   state_type_4 vpol_init_x;
 
   csl::outer_loop::MsdModel outerLoopMSDmodel;
@@ -200,7 +183,7 @@ private:
   // NN END
   /////////////////////////
 
-  SystemVector eigen_temp_joint;
+  Eigen::MatrixXd eigen_temp_joint;
   KDL::JntArray kdl_temp_joint_;
 
   urdf::Model urdf_model;
