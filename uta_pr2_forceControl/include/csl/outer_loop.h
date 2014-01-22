@@ -13,6 +13,42 @@
 
 #include <Eigen/Core>
 
+
+// TODO take this inside class
+typedef boost::array<double, 21> state_type;
+
+void mass_spring_damper_model( const state_type &x , state_type &dxdt , double t )
+{
+      double m = 1;
+      double d = 10;
+      double k = 1;
+
+      dxdt[0 ] = x[7 ];
+      dxdt[1 ] = x[8 ];
+      dxdt[2 ] = x[9 ];
+      dxdt[3 ] = x[10];
+      dxdt[4 ] = x[11];
+      dxdt[5 ] = x[12];
+      dxdt[6 ] = x[13];
+
+      //             f_r               qd_m      q_m
+      dxdt[7 ] = m*( x[14] - d*x[7 ] - k*x[0 ] );
+      dxdt[8 ] = m*( x[15] - d*x[8 ] - k*x[1 ] );
+      dxdt[9 ] = m*( x[16] - d*x[9 ] - k*x[2 ] );
+      dxdt[10] = m*( x[17] - d*x[10] - k*x[3 ] );
+      dxdt[11] = m*( x[18] - d*x[11] - k*x[4 ] );
+      dxdt[12] = m*( x[19] - d*x[12] - k*x[5 ] );
+      dxdt[13] = m*( x[20] - d*x[13] - k*x[6 ] );
+
+      dxdt[14] = x[14];
+      dxdt[15] = x[15];
+      dxdt[16] = x[16];
+      dxdt[17] = x[17];
+      dxdt[18] = x[18];
+      dxdt[19] = x[19];
+      dxdt[20] = x[20];
+}
+
 namespace csl
 {
 
@@ -22,13 +58,6 @@ namespace outer_loop
 class MsdModel
 {
 
-private:
-  typedef boost::array<double, 21> state_type;
-
-  enum
-  {
-    Joints = 7
-  };
   double num_Joints; // number of joints.
 
   Eigen::MatrixXd Mm;
@@ -54,37 +83,6 @@ private:
 
   state_type ode_init_x;
 
-  void reference_model( const state_type &x , state_type &dxdt , double t )
-  {
-        double m = 1;
-        double d = 10;
-        double k = 1;
-
-        dxdt[0 ] = x[7 ];
-        dxdt[1 ] = x[8 ];
-        dxdt[2 ] = x[9 ];
-        dxdt[3 ] = x[10];
-        dxdt[4 ] = x[11];
-        dxdt[5 ] = x[12];
-        dxdt[6 ] = x[13];
-
-        //             f_r               qd_m      q_m
-        dxdt[7 ] = m*( x[14] - d*x[7 ] - k*x[0 ] );
-        dxdt[8 ] = m*( x[15] - d*x[8 ] - k*x[1 ] );
-        dxdt[9 ] = m*( x[16] - d*x[9 ] - k*x[2 ] );
-        dxdt[10] = m*( x[17] - d*x[10] - k*x[3 ] );
-        dxdt[11] = m*( x[18] - d*x[11] - k*x[4 ] );
-        dxdt[12] = m*( x[19] - d*x[12] - k*x[5 ] );
-        dxdt[13] = m*( x[20] - d*x[13] - k*x[6 ] );
-
-        dxdt[14] = x[14];
-        dxdt[15] = x[15];
-        dxdt[16] = x[16];
-        dxdt[17] = x[17];
-        dxdt[18] = x[18];
-        dxdt[19] = x[19];
-        dxdt[20] = x[20];
-  }
 
 public:
   MsdModel()
@@ -207,7 +205,7 @@ public:
       ode_init_x[19] = t_r(5);
       ode_init_x[20] = t_r(6);
 
-      integrate( reference_model , ode_init_x , 0.0 , delT , delT );
+      boost::numeric::odeint::integrate( mass_spring_damper_model , ode_init_x , 0.0 , delT , delT );
 
       q_m(0)   = ode_init_x[0 ] ;
       q_m(1)   = ode_init_x[1 ] ;
