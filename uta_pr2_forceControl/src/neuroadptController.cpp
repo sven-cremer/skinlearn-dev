@@ -307,6 +307,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
         vpol_init_x[2 ] = 0.0;
         vpol_init_x[3 ] = 0.0;
 
+        outerLoopMSDmodel.updateDelT( delT );
+
 	// System Model END
 	/////////////////////////
 
@@ -570,14 +572,22 @@ void PR2NeuroadptControllerClass::update()
 //	t_r(5) = tau_t_(5);
 //	t_r(6) = tau_t_(6);
 
-
 	// Current joint positions and velocities
 	q = JointKdl2Eigen( q_ );
 	qd = JointVelKdl2Eigen( qdot_ );
 
-	q_m   = q_m + delT*qd_m;
-	qd_m  = qd_m + delT*qdd_m;
-	qdd_m = MmInv*( t_r - Dm*qd_m - Km*q_m );
+
+	outerLoopMSDmodel.Update( qd_m  ,
+	                          qd    ,
+	                          q_m   ,
+	                          q     ,
+	                          qdd_m ,
+	                          t_r    );
+
+
+//	q_m   = q_m + delT*qd_m;
+//	qd_m  = qd_m + delT*qdd_m;
+//	qdd_m = MmInv*( t_r - Dm*qd_m - Km*q_m );
 
 	// Check for joint limits and reset
 	// (condition) ? (if_true) : (if_false)

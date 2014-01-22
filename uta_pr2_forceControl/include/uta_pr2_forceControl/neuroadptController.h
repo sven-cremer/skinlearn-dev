@@ -34,6 +34,7 @@
 #include <boost/numeric/odeint.hpp>
 
 #include "csl/neural_network.hpp"
+#include "csl/outer_loop.h"
 
 typedef boost::array< double , 21 > state_type;
 typedef boost::array< double , 4 > state_type_4;
@@ -169,6 +170,8 @@ private:
 
   state_type   ode_init_x;
   state_type_4 vpol_init_x;
+
+  csl::outer_loop::MsdModel outerLoopMSDmodel;
 
   // System Model END
   /////////////////////////
