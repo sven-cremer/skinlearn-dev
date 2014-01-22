@@ -242,6 +242,7 @@ public:
 
 };
 
+/*
 class FirModel
 {
 
@@ -372,6 +373,7 @@ public:
       qdd_m(6) = ode_init_x[20] ;
   }
 };
+*/
 
 }
 }

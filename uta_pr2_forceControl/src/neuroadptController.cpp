@@ -175,6 +175,9 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
   Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
 
+
+  delT = 0.001;
+
   /////////////////////////
   // System Model
 
