@@ -807,10 +807,11 @@ void PR2NeuroadptControllerClass::update()
 		msgControllerFullData[index].feedForwardForce  = fFForce                     ;
 		msgControllerFullData[index].nn_ON             = nn_ON                       ;
 
+		// TODO fix this
 		// Model Params
-		msgControllerFullData[index].m                 =   outerLoopMSDmodel.getMass(  )(0,0) ;
-		msgControllerFullData[index].d                 =   outerLoopMSDmodel.getSpring()(0,0) ;
-		msgControllerFullData[index].k                 =   outerLoopMSDmodel.getDamper()(0,0) ;
+		msgControllerFullData[index].m                 =   0 ; // outerLoopMSDmodel.getMass(  )(0,0) ;
+		msgControllerFullData[index].d                 =   0 ; // outerLoopMSDmodel.getSpring()(0,0) ;
+		msgControllerFullData[index].k                 =   0 ; // outerLoopMSDmodel.getDamper()(0,0) ;
 
 		// Increment for the next cycle.
 		storage_index_ = index+1;
