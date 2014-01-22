@@ -32,20 +32,6 @@ class TwoLayerNeuralNetworkController {
         double num_Error   ; // filtered error
         double num_Joints  ; // number of joints.
 
-	// Define the joint/cart vector types accordingly (using a fixed
-	// size to avoid dynamic allocations and make the code realtime safe).
-//	typedef Eigen::Matrix<double, num_Joints, num_Joints>  SystemMatrix;
-//	typedef Eigen::Matrix<double, num_Joints, 1>       SystemVector;
-
-//	Eigen::Matrix<double, num_Hidden, num_Inputs + 1> V_trans;
-//	Eigen::Matrix<double, num_Outputs, num_Hidden> W_trans;
-//	Eigen::Matrix<double, num_Hidden, num_Inputs + 1> V_trans_next;
-//	Eigen::Matrix<double, num_Outputs, num_Hidden> W_trans_next;
-//	Eigen::Matrix<double, num_Inputs + 1, num_Inputs + 1> G;
-//	Eigen::Matrix<double, num_Hidden, num_Hidden> F;
-//	Eigen::Matrix<double, num_Outputs, num_Outputs> L;
-//	Eigen::Matrix<double, num_Hidden + num_Inputs + 1, num_Hidden + num_Outputs> Z;
-
         Eigen::MatrixXd V_trans;
         Eigen::MatrixXd W_trans;
         Eigen::MatrixXd V_trans_next;
@@ -54,20 +40,6 @@ class TwoLayerNeuralNetworkController {
         Eigen::MatrixXd F;
         Eigen::MatrixXd L;
         Eigen::MatrixXd Z;
-
-	//  V_trans_next
-	//  W_trans_next
-	//  sigmaPrime
-
-//	Eigen::Matrix<double, num_Inputs + 1, 1> x;
-//	Eigen::Matrix<double, num_Outputs, 1> y;
-//	Eigen::Matrix<double, num_Hidden, 1> hiddenLayer_out;
-//	Eigen::Matrix<double, num_Hidden, num_Hidden> hiddenLayerIdentity;
-//	Eigen::Matrix<double, num_Hidden, 1> hiddenLayer_in;
-//	Eigen::Matrix<double, num_Outputs, 1> outputLayer_out;
-//	Eigen::Matrix<double, num_Hidden, num_Hidden> sigmaPrime;
-//	Eigen::Matrix<double, num_Error, 1> r;
-//	Eigen::Matrix<double, num_Outputs, 1> vRobust;
 
         Eigen::MatrixXd x;
         Eigen::MatrixXd y;
