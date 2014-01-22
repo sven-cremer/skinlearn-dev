@@ -197,6 +197,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
                                   7   ,   // num_Error
                                   7    ); // num_Joints
 
+  tau.resize(7, 1);
+
   nnController.init( kappa  ,
                      Kv     ,
                      lambda ,
