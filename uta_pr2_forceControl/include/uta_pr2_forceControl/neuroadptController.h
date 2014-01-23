@@ -155,7 +155,7 @@ private:
   state_type_4 vpol_init_x;
 
   csl::outer_loop::MsdModel outerLoopMSDmodel;
-  csl::outer_loop::MsdModel outerLoopFIRmodel;
+  csl::outer_loop::FirModel outerLoopFIRmodel;
 
   // System Model END
   /////////////////////////
