@@ -47,7 +47,7 @@ target_link_libraries(pr2_controller_lib oelLIB )
 
 #rosbuild_add_executable(odeTest src/odeTest.cpp)
 
-#rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
-#target_link_libraries( SystemModel_test	${PROJECT_NAME} )
+rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
+target_link_libraries( SystemModel_test	oelLIB )
 
 #target_link_libraries(example ${PROJECT_NAME})
