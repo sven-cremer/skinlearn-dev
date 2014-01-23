@@ -177,11 +177,15 @@ public:
          0, 0, 0, 0, 0, k, 0,
          0, 0, 0, 0, 0, 0, k;
 
-    q_m   << 0, 0, 0, 0, 0, 0, 0 ;
-    qd_m  << 0, 0, 0, 0, 0, 0, 0 ;
-    qdd_m << 0, 0, 0, 0, 0, 0, 0 ;
+    q         = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    qd        = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    qdd       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    t_r   << 0, 0, 0, 0, 0, 0, 0 ;
+    q_m       = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    qd_m      = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    qdd_m     = Eigen::MatrixXd::Zero( num_Joints, 1 );
+
+    t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
     MmInv = Mm;
 
@@ -329,7 +333,7 @@ class FirModel
     // TODO parameterize this
     // Moves up from bottom, rows are time series, columns are joints
     // First in First out top most location 0 th row is dumped
-    Uk_plus.block<1,7>(8,0) = in;
+    Uk_plus.block<1,7>(7,0) = in.transpose();
     Uk_plus.block<8 - 1, 7>(0,0) = Uk.block<8 - 1, 7>(1,0);
     Uk = Uk_plus;
   }
@@ -338,7 +342,7 @@ public:
   FirModel()
   {
     delT = 0.001; /// 1000 Hz by default
-    iter = 0;
+    iter = 1;
 
     double a = 10;
 
@@ -387,19 +391,19 @@ public:
     Uk_plus.resize( num_Fir, num_Joints ) ;
     Uk_plus = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
 
-    q   << 0, 0, 0, 0, 0, 0, 0 ;
-    qd  << 0, 0, 0, 0, 0, 0, 0 ;
-    qdd << 0, 0, 0, 0, 0, 0, 0 ;
+    q         = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    qd        = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    qdd       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    q_m   << 0, 0, 0, 0, 0, 0, 0 ;
-    qd_m  << 0, 0, 0, 0, 0, 0, 0 ;
-    qdd_m << 0, 0, 0, 0, 0, 0, 0 ;
+    q_m       = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    qd_m      = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    qdd_m     = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    ref_q_m   << 0, 0, 0, 0, 0, 0, 0 ;
-    ref_qd_m  << 0, 0, 0, 0, 0, 0, 0 ;
-    ref_qdd_m << 0, 0, 0, 0, 0, 0, 0 ;
+    ref_q_m   = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    ref_qd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    ref_qdd_m = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    t_r   << 0, 0, 0, 0, 0, 0, 0 ;
+    t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
     lm = 1; // Forgetting factor
 
