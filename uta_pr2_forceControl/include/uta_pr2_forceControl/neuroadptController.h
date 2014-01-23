@@ -167,6 +167,12 @@ private:
   enum { Hidden  = 10 }; // l Size of the hidden layer
   enum { Error   = 7 }; // filtered error
 
+  double num_Inputs  ; // n Size of the inputs
+  double num_Outputs ; // m Size of the outputs
+  double num_Hidden  ; // l Size of the hidden layer
+  double num_Error   ; // filtered error
+  double num_Joints  ; // number of joints.
+
   double  kappa  ;
   double  Kv     ;
   double  lambda ;

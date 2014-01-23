@@ -181,7 +181,24 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   /////////////////////////
   // System Model
 
-  eigen_temp_joint.resize(7,1);
+  num_Inputs  = 35 ;
+  num_Outputs = 7  ;
+  num_Hidden  = 10 ;
+  num_Error   = 7  ;
+  num_Joints  = 7  ;
+
+  eigen_temp_joint.resize( num_Joints,1 );
+
+  q     .resize( num_Joints, 1 ) ;
+  qd    .resize( num_Joints, 1 ) ;
+  qdd   .resize( num_Joints, 1 ) ;
+  q_m   .resize( num_Joints, 1 ) ;
+  qd_m  .resize( num_Joints, 1 ) ;
+  qdd_m .resize( num_Joints, 1 ) ;
+  t_r   .resize( num_Joints, 1 ) ;
+  tau   .resize( num_Joints, 1 ) ;
+
+
   outerLoopMSDmodel.updateDelT( delT );
 
   // System Model END
@@ -191,13 +208,12 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   /////////////////////////
   // NN
 
-  nnController.changeNNstructure( 35  ,   // num_Inputs
-                                  7   ,   // num_Outputs
-                                  10  ,   // num_Hidden
-                                  7   ,   // num_Error
-                                  7    ); // num_Joints
+  nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
+                                  num_Outputs ,   // num_Outputs
+                                  num_Hidden  ,   // num_Hidden
+                                  num_Error   ,   // num_Error
+                                  num_Joints   ); // num_Joints
 
-  tau.resize(7, 1);
 
   nnController.init( kappa  ,
                      Kv     ,
