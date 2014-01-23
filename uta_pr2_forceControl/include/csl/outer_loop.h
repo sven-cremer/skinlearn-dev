@@ -331,10 +331,10 @@ class FirModel
   void stackFirIn( Eigen::MatrixXd & in )
   {
     // TODO parameterize this
-    // Moves up from bottom, rows are time series, columns are joints
-    // First in First out top most location 0 th row is dumped
-    Uk_plus.block<1,7>(7,0) = in.transpose();
-    Uk_plus.block<8 - 1, 7>(0,0) = Uk.block<8 - 1, 7>(1,0);
+    // Moves top to bottom rows are time series, columns are joints
+    // First in First out bottom most location nth row is dumped
+    Uk_plus.block<1,7>(0,0) = in.transpose();
+    Uk_plus.block<8-1, 7>(1,0) = Uk.block<8-1, 7>(0,0);
     Uk = Uk_plus;
   }
 
@@ -376,12 +376,13 @@ public:
 
     t_r   .resize( num_Joints, 1 ) ;
 
-    Wk    .resize( num_Fir, 1 ) ;
+    Wk    .resize( num_Fir, num_Joints ) ;
     Wk = Eigen::MatrixXd::Zero( num_Fir, 1 );
 
     Dk    .resize( num_Joints, 1 ) ;
     Dk = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
+    // FIXME need to make this a 3 dimensional matrix
     Pk    .resize( num_Fir, num_Fir       ) ;
     Pk = Eigen::MatrixXd::Identity( num_Fir, num_Fir )/0.0001;
 
@@ -460,7 +461,7 @@ public:
 
     if( iter > num_Fir )
     {
-      rls_filter.Update( Wk, Uk, Dk, Pk );
+      rls_filter.Update( Wk.column(1), Uk.column(1), Dk(1), Pk );
 
       Wk = rls_filter.getEstimate();
       Pk = rls_filter.getCovariance();
@@ -506,6 +507,8 @@ public:
       ref_qdd_m(4) = m*( t_r(4) - d*ode_init_x[11] - k*ode_init_x[4 ] );
       ref_qdd_m(5) = m*( t_r(5) - d*ode_init_x[12] - k*ode_init_x[5 ] );
       ref_qdd_m(6) = m*( t_r(6) - d*ode_init_x[13] - k*ode_init_x[6 ] );
+
+      std::cout<< Uk <<"\n\n";
   }
 };
 

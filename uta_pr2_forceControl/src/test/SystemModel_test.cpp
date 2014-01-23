@@ -70,17 +70,29 @@ int main()
   qd_m      = Eigen::MatrixXd::Zero( num_Joints, 1 );
   qdd_m     = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-  t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
+  t_r       = Eigen::MatrixXd::Ones( num_Joints, 1 );
 
   csl::outer_loop::FirModel outerLoopFIRmodel;
   outerLoopFIRmodel.updateDelT( 0.001 );
 
-  outerLoopFIRmodel.Update( qd_m  ,
-                            qd    ,
-                            q_m   ,
-                            q     ,
-                            qdd_m ,
-                            t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  t_r = t_r*7;
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  t_r = t_r*7;
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
 
 	return 0;
 }
