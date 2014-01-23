@@ -200,6 +200,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 
   outerLoopMSDmodel.updateDelT( delT );
+  outerLoopFIRmodel.updateDelT( delT );
 
   // System Model END
   /////////////////////////
@@ -470,12 +471,19 @@ void PR2NeuroadptControllerClass::update()
 	qd = JointVelKdl2Eigen( qdot_ );
 
 
-	outerLoopMSDmodel.Update( qd_m  ,
-	                          qd    ,
-	                          q_m   ,
-	                          q     ,
-	                          qdd_m ,
-	                          t_r    );
+//	outerLoopMSDmodel.Update( qd_m  ,
+//	                          qd    ,
+//	                          q_m   ,
+//	                          q     ,
+//	                          qdd_m ,
+//	                          t_r    );
+
+	outerLoopFIRmodel.Update( qd_m  ,
+                                  qd    ,
+                                  q_m   ,
+                                  q     ,
+                                  qdd_m ,
+                                  t_r    );
 
 	// Check for joint limits and reset
 	// (condition) ? (if_true) : (if_false)
