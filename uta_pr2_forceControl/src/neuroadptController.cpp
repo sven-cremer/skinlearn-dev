@@ -418,10 +418,10 @@ void PR2NeuroadptControllerClass::update()
   // Force error
   ferr_(0) = r_ftData.wrench.force.x ; // 30*sin(circle_phase_);
   ferr_(1) = r_ftData.wrench.force.y ; // 0				       ;
-  ferr_(2) = r_ftData.wrench.force.z ; // 0				       ;
-  ferr_(3) = r_ftData.wrench.torque.x; // 0                    ;
-  ferr_(4) = r_ftData.wrench.torque.y; // 0                    ;
-  ferr_(5) = r_ftData.wrench.torque.z; // 0                    ;
+  ferr_(2) = 0 ; // r_ftData.wrench.force.z ; // 0				       ;
+  ferr_(3) = 0 ; // r_ftData.wrench.torque.x; // 0                    ;
+  ferr_(4) = 0 ; // r_ftData.wrench.torque.y; // 0                    ;
+  ferr_(5) = 0 ; // r_ftData.wrench.torque.z; // 0                    ;
 
   // Convert the force into a set of joint torques.
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
