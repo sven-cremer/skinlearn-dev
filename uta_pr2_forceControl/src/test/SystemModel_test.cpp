@@ -52,7 +52,7 @@ int main()
   double num_Outputs = 7  ;
   double num_Hidden  = 10 ;
   double num_Error   = 7  ;
-  double num_Joints  = 7  ;
+  double num_Joints  = 1  ;
 
   q     .resize( num_Joints, 1 ) ;
   qd    .resize( num_Joints, 1 ) ;

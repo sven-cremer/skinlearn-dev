@@ -16,6 +16,7 @@
 
 // TODO take this inside class
 typedef boost::array<double, 21> state_type;
+typedef boost::array<double, 3> fir_state_type;
 
 void mass_spring_damper_model( const state_type &x , state_type &dxdt , double t )
 {
@@ -49,37 +50,20 @@ void mass_spring_damper_model( const state_type &x , state_type &dxdt , double t
       dxdt[20] = 0 ;
 }
 
-void task_model( const state_type &x , state_type &dxdt , double t )
+void task_model( const fir_state_type &x , fir_state_type &dxdt , double t )
 {
       double a = 10;
       double m = a*a;
       double d = 2*a;
       double k = a*a;
 
-      dxdt[0 ] = x[7 ];
-      dxdt[1 ] = x[8 ];
-      dxdt[2 ] = x[9 ];
-      dxdt[3 ] = x[10];
-      dxdt[4 ] = x[11];
-      dxdt[5 ] = x[12];
-      dxdt[6 ] = x[13];
+      dxdt[0 ] = x[1 ];
 
-      //             f_r               qd_m      q_m
-      dxdt[7 ] = m*( x[14] - d*x[7 ] - k*x[0 ] );
-      dxdt[8 ] = m*( x[15] - d*x[8 ] - k*x[1 ] );
-      dxdt[9 ] = m*( x[16] - d*x[9 ] - k*x[2 ] );
-      dxdt[10] = m*( x[17] - d*x[10] - k*x[3 ] );
-      dxdt[11] = m*( x[18] - d*x[11] - k*x[4 ] );
-      dxdt[12] = m*( x[19] - d*x[12] - k*x[5 ] );
-      dxdt[13] = m*( x[20] - d*x[13] - k*x[6 ] );
+      //             f_r      qd_m      q_m
+      dxdt[1 ] = m*( x[2] - d*x[1 ] - k*x[0 ] );
 
-      dxdt[14] = 0 ;
-      dxdt[15] = 0 ;
-      dxdt[16] = 0 ;
-      dxdt[17] = 0 ;
-      dxdt[18] = 0 ;
-      dxdt[19] = 0 ;
-      dxdt[20] = 0 ;
+      dxdt[2] = 0 ;
+
 }
 
 namespace csl
@@ -324,7 +308,7 @@ class FirModel
   double d ;
   double k ;
 
-  state_type ode_init_x;
+  fir_state_type ode_init_x;
 
   oel::ls::RLSFilter rls_filter;
 
@@ -333,8 +317,8 @@ class FirModel
     // TODO parameterize this
     // Moves top to bottom rows are time series, columns are joints
     // First in First out bottom most location nth row is dumped
-    Uk_plus.block<1,7>(0,0) = in.transpose();
-    Uk_plus.block<8-1, 7>(1,0) = Uk.block<8-1, 7>(0,0);
+    Uk_plus.block<1,1>(0,0) = in.transpose();
+    Uk_plus.block<8-1, 1>(1,0) = Uk.block<8-1, 1>(0,0);
     Uk = Uk_plus;
   }
 
@@ -347,7 +331,7 @@ public:
     double a = 10;
 
     //          m    d    k
-    init( 7, 8, a*a, 2*a, a*a );
+    init( 1, 8, a*a, 2*a, a*a );
   }
   ~FirModel()
   {
@@ -377,7 +361,7 @@ public:
     t_r   .resize( num_Joints, 1 ) ;
 
     Wk    .resize( num_Fir, num_Joints ) ;
-    Wk = Eigen::MatrixXd::Zero( num_Fir, 1 );
+    Wk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
 
     Dk    .resize( num_Joints, 1 ) ;
     Dk = Eigen::MatrixXd::Zero( num_Joints, 1 );
@@ -412,26 +396,6 @@ public:
     ode_init_x[0 ] = 0.0;
     ode_init_x[1 ] = 0.0;
     ode_init_x[2 ] = 0.0;
-    ode_init_x[3 ] = 0.0;
-    ode_init_x[4 ] = 0.0;
-    ode_init_x[5 ] = 0.0;
-    ode_init_x[6 ] = 0.0;
-
-    ode_init_x[7 ] = 0.0;
-    ode_init_x[8 ] = 0.0;
-    ode_init_x[9 ] = 0.0;
-    ode_init_x[10] = 0.0;
-    ode_init_x[11] = 0.0;
-    ode_init_x[12] = 0.0;
-    ode_init_x[13] = 0.0;
-
-    ode_init_x[14] = 0.0;
-    ode_init_x[15] = 0.0;
-    ode_init_x[16] = 0.0;
-    ode_init_x[17] = 0.0;
-    ode_init_x[18] = 0.0;
-    ode_init_x[19] = 0.0;
-    ode_init_x[20] = 0.0;
 
     rls_filter.init( Wk, Uk, Dk, Pk, lm );
 
@@ -442,16 +406,52 @@ public:
     delT = p_delT;
   }
 
-  void Update( Eigen::MatrixXd & qd_m  ,
-               Eigen::MatrixXd & qd    ,
-               Eigen::MatrixXd & q_m   ,
-               Eigen::MatrixXd & q     ,
-               Eigen::MatrixXd & qdd_m ,
-               Eigen::MatrixXd & t_r    )
+  void Update( double param_qd_m  ,
+               double param_qd    ,
+               double param_q_m   ,
+               double param_q     ,
+               double param_qdd_m ,
+               double param_t_r    )
   {
+    qd_m  (0)= param_qd_m ;
+    qd    (0)= param_qd   ;
+    q_m   (0)= param_q_m  ;
+    q     (0)= param_q    ;
+    qdd_m (0)= param_qdd_m;
+    t_r   (0)= param_t_r  ;
 
+    Update();
+  }
+
+  void Update( Eigen::MatrixXd & param_qd_m  ,
+               Eigen::MatrixXd & param_qd    ,
+               Eigen::MatrixXd & param_q_m   ,
+               Eigen::MatrixXd & param_q     ,
+               Eigen::MatrixXd & param_qdd_m ,
+               Eigen::MatrixXd & param_t_r    )
+  {
+    qd_m  = param_qd_m ;
+    qd    = param_qd   ;
+    q_m   = param_q_m  ;
+    q     = param_q    ;
+    qdd_m = param_qdd_m;
+    t_r   = param_t_r  ;
+
+    Update();
+  }
+
+  void Update()
+  {
     // Save input forces/torques
     stackFirIn( t_r );
+
+    ode_init_x[2] = t_r(0);
+
+    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
+
+    ref_q_m(0)   = ode_init_x[0 ] ;
+    ref_qd_m(0)  = ode_init_x[1 ] ;
+    ref_qdd_m(0) = m*( t_r(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
 
     // Save iteration number
     iter = iter + 1;
@@ -461,7 +461,7 @@ public:
 
     if( iter > num_Fir )
     {
-      rls_filter.Update( Wk.column(1), Uk.column(1), Dk(1), Pk );
+      rls_filter.Update( Wk, Uk, Dk, Pk );
 
       Wk = rls_filter.getEstimate();
       Pk = rls_filter.getCovariance();
@@ -474,41 +474,8 @@ public:
       qdd_m = (qd_m - qd_m)/delT ;
     }
 
-      ode_init_x[14] = t_r(0);
-      ode_init_x[15] = t_r(1);
-      ode_init_x[16] = t_r(2);
-      ode_init_x[17] = t_r(3);
-      ode_init_x[18] = t_r(4);
-      ode_init_x[19] = t_r(5);
-      ode_init_x[20] = t_r(6);
-
-      boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
-
-      ref_q_m(0)   = ode_init_x[0 ] ;
-      ref_q_m(1)   = ode_init_x[1 ] ;
-      ref_q_m(2)   = ode_init_x[2 ] ;
-      ref_q_m(3)   = ode_init_x[3 ] ;
-      ref_q_m(4)   = ode_init_x[4 ] ;
-      ref_q_m(5)   = ode_init_x[5 ] ;
-      ref_q_m(6)   = ode_init_x[6 ] ;
-
-      ref_qd_m(0)  = ode_init_x[7 ] ;
-      ref_qd_m(1)  = ode_init_x[8 ] ;
-      ref_qd_m(2)  = ode_init_x[9 ] ;
-      ref_qd_m(3)  = ode_init_x[10] ;
-      ref_qd_m(4)  = ode_init_x[11] ;
-      ref_qd_m(5)  = ode_init_x[12] ;
-      ref_qd_m(6)  = ode_init_x[13] ;
-
-      ref_qdd_m(0) = m*( t_r(0) - d*ode_init_x[7 ] - k*ode_init_x[0 ] );
-      ref_qdd_m(1) = m*( t_r(1) - d*ode_init_x[8 ] - k*ode_init_x[1 ] );
-      ref_qdd_m(2) = m*( t_r(2) - d*ode_init_x[9 ] - k*ode_init_x[2 ] );
-      ref_qdd_m(3) = m*( t_r(3) - d*ode_init_x[10] - k*ode_init_x[3 ] );
-      ref_qdd_m(4) = m*( t_r(4) - d*ode_init_x[11] - k*ode_init_x[4 ] );
-      ref_qdd_m(5) = m*( t_r(5) - d*ode_init_x[12] - k*ode_init_x[5 ] );
-      ref_qdd_m(6) = m*( t_r(6) - d*ode_init_x[13] - k*ode_init_x[6 ] );
-
-      std::cout<< Uk <<"\n\n";
+//      std::cout<< "Uk : " << Uk.transpose() <<"\n\n";
+//      std::cout<< "q  : " << q_m <<"\n\n";
   }
 };
 

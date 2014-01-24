@@ -200,7 +200,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
 
   outerLoopMSDmodel.updateDelT( delT );
-  outerLoopFIRmodel.updateDelT( delT );
+  outerLoopFIRmodelJoint1.updateDelT( delT );
+  outerLoopFIRmodelJoint2.updateDelT( delT );
 
   // System Model END
   /////////////////////////
@@ -471,19 +472,44 @@ void PR2NeuroadptControllerClass::update()
 	qd = JointVelKdl2Eigen( qdot_ );
 
 
-//	outerLoopMSDmodel.Update( qd_m  ,
-//	                          qd    ,
-//	                          q_m   ,
-//	                          q     ,
-//	                          qdd_m ,
-//	                          t_r    );
+//	0 - 'r_upper_arm_roll_joint' || "r_shoulder_pan_joint"   -0.309261  : 18 : r_shoulder_pan_joint
+//	1 - 'r_shoulder_pan_joint'    | "r_shoulder_lift_joint"  -0.0340454 : 19 : r_shoulder_lift_joint
+//	2 - 'r_shoulder_lift_joint'   | "r_upper_arm_roll_joint" -1.55365   : 17 : r_upper_arm_roll_joint
+//	3 - 'r_forearm_roll_joint'   || "r_elbow_flex_joint"     -1.84681   : 21 : r_elbow_flex_joint
+//	4 - 'r_elbow_flex_joint'      | "r_forearm_roll_joint"   -1.57489   : 20 : r_forearm_roll_joint
+//	5 - 'r_wrist_flex_joint'      | "r_wrist_flex_joint"     -1.54739   : 22 : r_wrist_flex_joint
+//	6 - 'r_wrist_roll_joint'      | "r_wrist_roll_joint"     -0.0322204 : 23 : r_wrist_roll_joint
 
-	outerLoopFIRmodel.Update( qd_m  ,
+	// MSD
+        outerLoopMSDmodel.Update( qd_m  ,
                                   qd    ,
                                   q_m   ,
                                   q     ,
                                   qdd_m ,
                                   t_r    );
+//	// FIR
+//	outerLoopFIRmodelJoint1.Update( qd_m  (0) ,
+//                                        qd    (0) ,
+//                                        q_m   (0) ,
+//                                        q     (0) ,
+//                                        qdd_m (0) ,
+//                                        t_r   (0)  );
+//
+//        outerLoopFIRmodelJoint2.Update( qd_m  (3) ,
+//                                        qd    (3) ,
+//                                        q_m   (3) ,
+//                                        q     (3) ,
+//                                        qdd_m (3) ,
+//                                        t_r   (3)  );
+
+//	q_m(0) = -0.309261  ;  qd_m(0) = 0;  qdd_m(0) = 0;
+	q_m(1) = -0.0340454 ;  qd_m(1) = 0;  qdd_m(1) = 0;
+	q_m(2) = -1.55365   ;  qd_m(2) = 0;  qdd_m(2) = 0;
+//	q_m(3) = -1.84681   ;  qd_m(3) = 0;  qdd_m(3) = 0;
+	q_m(4) = -1.57489   ;  qd_m(4) = 0;  qdd_m(4) = 0;
+	q_m(5) = -1.54739   ;  qd_m(5) = 0;  qdd_m(5) = 0;
+	q_m(6) = -0.0322204 ;  qd_m(6) = 0;  qdd_m(6) = 0;
+
 
 	// Check for joint limits and reset
 	// (condition) ? (if_true) : (if_false)

@@ -45,9 +45,12 @@ target_link_libraries(pr2_controller_lib oelLIB )
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 #rosbuild_add_executable(example examples/example.cpp)
 
+
 #rosbuild_add_executable(odeTest src/odeTest.cpp)
 
 rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
 target_link_libraries( SystemModel_test	oelLIB )
+
+rosbuild_add_executable( pr2_joint_listener src/pr2_joint_listener.cpp )
 
 #target_link_libraries(example ${PROJECT_NAME})
