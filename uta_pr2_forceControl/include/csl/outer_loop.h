@@ -20,9 +20,10 @@ typedef boost::array<double, 3> fir_state_type;
 
 void mass_spring_damper_model( const state_type &x , state_type &dxdt , double t )
 {
-      double m = 1;
-      double d = 10;
-      double k = 1;
+      double a = 10; //  double m = 1;
+      double m = a*a ;//  double d = 10;
+      double d = 2*a ;//  double k = 1;
+      double k = a*a ;
 
       dxdt[0 ] = x[7 ];
       dxdt[1 ] = x[8 ];

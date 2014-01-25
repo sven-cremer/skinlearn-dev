@@ -492,13 +492,13 @@ void PR2NeuroadptControllerClass::update()
 //	5 - 'r_wrist_flex_joint'      | "r_wrist_flex_joint"     -1.54739   : 22 : r_wrist_flex_joint
 //	6 - 'r_wrist_roll_joint'      | "r_wrist_roll_joint"     -0.0322204 : 23 : r_wrist_roll_joint
 
-//	// MSD
-//        outerLoopMSDmodel.Update( qd_m  ,
-//                                  qd    ,
-//                                  q_m   ,
-//                                  q     ,
-//                                  qdd_m ,
-//                                  t_r    );
+	// MSD
+        outerLoopMSDmodel.Update( qd_m  ,
+                                  qd    ,
+                                  q_m   ,
+                                  q     ,
+                                  qdd_m ,
+                                  t_r    );
 
 
 	if( (robot_state_->getTime() - start_time_).toSec() > 5 )
@@ -512,22 +512,22 @@ void PR2NeuroadptControllerClass::update()
           task_ref   (3) = -1.42669  ;
         }
 
-	// FIR
-	outerLoopFIRmodelJoint1.Update( qd_m    (0) ,
-                                        qd      (0) ,
-                                        q_m     (0) ,
-                                        q       (0) ,
-                                        qdd_m   (0) ,
-                                        t_r     (0) ,
-                                        task_ref(0) );
-
-        outerLoopFIRmodelJoint2.Update( qd_m    (3) ,
-                                        qd      (3) ,
-                                        q_m     (3) ,
-                                        q       (3) ,
-                                        qdd_m   (3) ,
-                                        t_r     (3) ,
-                                        task_ref(3) );
+//	// FIR
+//	outerLoopFIRmodelJoint1.Update( qd_m    (0) ,
+//                                        qd      (0) ,
+//                                        q_m     (0) ,
+//                                        q       (0) ,
+//                                        qdd_m   (0) ,
+//                                        t_r     (0) ,
+//                                        task_ref(0) );
+//
+//        outerLoopFIRmodelJoint2.Update( qd_m    (3) ,
+//                                        qd      (3) ,
+//                                        q_m     (3) ,
+//                                        q       (3) ,
+//                                        qdd_m   (3) ,
+//                                        t_r     (3) ,
+//                                        task_ref(3) );
 
 //	q_m(0) = -0.309261  ;  qd_m(0) = 0;  qdd_m(0) = 0;
 	q_m(1) = -0.0340454 ;  qd_m(1) = 0;  qdd_m(1) = 0;
