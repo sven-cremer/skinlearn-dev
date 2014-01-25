@@ -308,6 +308,7 @@ void PR2NeuroadptControllerClass::starting()
 
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
+  start_time_ = robot_state_->getTime();
 
   // set FT sensor bias due to gravity
   std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
@@ -480,27 +481,40 @@ void PR2NeuroadptControllerClass::update()
 //	5 - 'r_wrist_flex_joint'      | "r_wrist_flex_joint"     -1.54739   : 22 : r_wrist_flex_joint
 //	6 - 'r_wrist_roll_joint'      | "r_wrist_roll_joint"     -0.0322204 : 23 : r_wrist_roll_joint
 
-	// MSD
-        outerLoopMSDmodel.Update( qd_m  ,
-                                  qd    ,
-                                  q_m   ,
-                                  q     ,
-                                  qdd_m ,
-                                  t_r    );
-//	// FIR
-//	outerLoopFIRmodelJoint1.Update( qd_m  (0) ,
-//                                        qd    (0) ,
-//                                        q_m   (0) ,
-//                                        q     (0) ,
-//                                        qdd_m (0) ,
-//                                        t_r   (0)  );
-//
-//        outerLoopFIRmodelJoint2.Update( qd_m  (3) ,
-//                                        qd    (3) ,
-//                                        q_m   (3) ,
-//                                        q     (3) ,
-//                                        qdd_m (3) ,
-//                                        t_r   (3)  );
+//	// MSD
+//        outerLoopMSDmodel.Update( qd_m  ,
+//                                  qd    ,
+//                                  q_m   ,
+//                                  q     ,
+//                                  qdd_m ,
+//                                  t_r    );
+
+
+	if( (robot_state_->getTime() - start_time_).toSec() > 5 )
+        {
+          t_r   (0) = -0.821127 ;
+          t_r   (3) = -1.70016  ;
+        }else
+        {
+          start_time_ = robot_state_->getTime();
+          t_r   (0) = -0.190788 ;
+          t_r   (3) = -1.42669  ;
+        }
+
+	// FIR
+	outerLoopFIRmodelJoint1.Update( qd_m  (0) ,
+                                        qd    (0) ,
+                                        q_m   (0) ,
+                                        q     (0) ,
+                                        qdd_m (0) ,
+                                        t_r   (0)  );
+
+        outerLoopFIRmodelJoint2.Update( qd_m  (3) ,
+                                        qd    (3) ,
+                                        q_m   (3) ,
+                                        q     (3) ,
+                                        qdd_m (3) ,
+                                        t_r   (3)  );
 
 //	q_m(0) = -0.309261  ;  qd_m(0) = 0;  qdd_m(0) = 0;
 	q_m(1) = -0.0340454 ;  qd_m(1) = 0;  qdd_m(1) = 0;

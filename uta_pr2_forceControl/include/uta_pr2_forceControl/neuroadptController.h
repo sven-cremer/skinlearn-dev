@@ -119,7 +119,8 @@ private:
 
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle
-  ros::Time last_time_;         // Time of the last servo cycle
+  ros::Time last_time_ ;        // Time of the last servo cycle
+  ros::Time start_time_;        // Time of the first servo cycle
 
   //! realtime publisher for max_force value
 //  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_;
