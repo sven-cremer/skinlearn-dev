@@ -149,6 +149,7 @@ private:
   Eigen::MatrixXd qd_m;
   Eigen::MatrixXd qdd_m;
   Eigen::MatrixXd t_r;
+  Eigen::MatrixXd task_ref;
   Eigen::MatrixXd tau;
 
   double delT;

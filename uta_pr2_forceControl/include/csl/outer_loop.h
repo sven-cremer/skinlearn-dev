@@ -288,6 +288,8 @@ class FirModel
   Eigen::MatrixXd ref_qd_m;
   Eigen::MatrixXd ref_qdd_m;
 
+  Eigen::MatrixXd task_ref;
+
   Eigen::MatrixXd t_r;
 
 
@@ -358,6 +360,8 @@ public:
     ref_qd_m  .resize( num_Joints, 1 ) ;
     ref_qdd_m .resize( num_Joints, 1 ) ;
 
+    task_ref  .resize( num_Joints, 1 ) ;
+
     t_r   .resize( num_Joints, 1 ) ;
 
     Wk    .resize( num_Fir, num_Joints ) ;
@@ -387,6 +391,8 @@ public:
     ref_q_m   = Eigen::MatrixXd::Zero( num_Joints, 1 );
     ref_qd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
     ref_qdd_m = Eigen::MatrixXd::Zero( num_Joints, 1 );
+
+    task_ref   = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
     t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
@@ -423,20 +429,40 @@ public:
     Update();
   }
 
-  void Update( Eigen::MatrixXd & param_qd_m  ,
-               Eigen::MatrixXd & param_qd    ,
-               Eigen::MatrixXd & param_q_m   ,
-               Eigen::MatrixXd & param_q     ,
-               Eigen::MatrixXd & param_qdd_m ,
-               Eigen::MatrixXd & param_t_r    )
+  void Update( double param_qd_m     ,
+               double param_qd       ,
+               double param_q_m      ,
+               double param_q        ,
+               double param_qdd_m    ,
+               double param_t_r      ,
+               double param_task_ref  )
   {
-    qd_m  = param_qd_m ;
-    qd    = param_qd   ;
-    q_m   = param_q_m  ;
-    q     = param_q    ;
-    qdd_m = param_qdd_m;
-    t_r   = param_t_r  ;
+    qd_m    (0) = param_qd_m ;
+    qd      (0) = param_qd   ;
+    q_m     (0) = param_q_m  ;
+    q       (0) = param_q    ;
+    qdd_m   (0) = param_qdd_m;
+    t_r     (0) = param_t_r  ;
+    task_ref(0) = param_task_ref;
 
+    Update();
+  }
+
+  void Update( Eigen::MatrixXd & param_qd_m    ,
+               Eigen::MatrixXd & param_qd      ,
+               Eigen::MatrixXd & param_q_m     ,
+               Eigen::MatrixXd & param_q       ,
+               Eigen::MatrixXd & param_qdd_m   ,
+               Eigen::MatrixXd & param_t_r     ,
+               Eigen::MatrixXd & param_task_ref )
+  {
+    qd_m     = param_qd_m    ;
+    qd       = param_qd      ;
+    q_m      = param_q_m     ;
+    q        = param_q       ;
+    qdd_m    = param_qdd_m   ;
+    t_r      = param_t_r     ;
+    task_ref = param_task_ref;
     Update();
   }
 
@@ -451,7 +477,7 @@ public:
 
     ref_q_m(0)   = ode_init_x[0 ] ;
     ref_qd_m(0)  = ode_init_x[1 ] ;
-    ref_qdd_m(0) = m*( t_r(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
+    ref_qdd_m(0) = m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
 
     // Save iteration number
     iter = iter + 1;

@@ -189,14 +189,25 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   eigen_temp_joint.resize( num_Joints,1 );
 
-  q     .resize( num_Joints, 1 ) ;
-  qd    .resize( num_Joints, 1 ) ;
-  qdd   .resize( num_Joints, 1 ) ;
-  q_m   .resize( num_Joints, 1 ) ;
-  qd_m  .resize( num_Joints, 1 ) ;
-  qdd_m .resize( num_Joints, 1 ) ;
-  t_r   .resize( num_Joints, 1 ) ;
-  tau   .resize( num_Joints, 1 ) ;
+  q       .resize( num_Joints, 1 ) ;
+  qd      .resize( num_Joints, 1 ) ;
+  qdd     .resize( num_Joints, 1 ) ;
+  q_m     .resize( num_Joints, 1 ) ;
+  qd_m    .resize( num_Joints, 1 ) ;
+  qdd_m   .resize( num_Joints, 1 ) ;
+  t_r     .resize( num_Joints, 1 ) ;
+  task_ref.resize( num_Joints, 1 ) ;
+  tau     .resize( num_Joints, 1 ) ;
+
+  q        = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
+  qd       = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
+  qdd      = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
+  q_m      = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
+  qd_m     = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
+  qdd_m    = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
+  t_r      = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
+  task_ref = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
+  tau      = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
 
 
   outerLoopMSDmodel.updateDelT( delT );
@@ -492,29 +503,31 @@ void PR2NeuroadptControllerClass::update()
 
 	if( (robot_state_->getTime() - start_time_).toSec() > 5 )
         {
-          t_r   (0) = -0.821127 ;
-          t_r   (3) = -1.70016  ;
+	  task_ref   (0) = -0.821127 ;
+	  task_ref   (3) = -1.70016  ;
         }else
         {
           start_time_ = robot_state_->getTime();
-          t_r   (0) = -0.190788 ;
-          t_r   (3) = -1.42669  ;
+          task_ref   (0) = -0.190788 ;
+          task_ref   (3) = -1.42669  ;
         }
 
 	// FIR
-	outerLoopFIRmodelJoint1.Update( qd_m  (0) ,
-                                        qd    (0) ,
-                                        q_m   (0) ,
-                                        q     (0) ,
-                                        qdd_m (0) ,
-                                        t_r   (0)  );
+	outerLoopFIRmodelJoint1.Update( qd_m    (0) ,
+                                        qd      (0) ,
+                                        q_m     (0) ,
+                                        q       (0) ,
+                                        qdd_m   (0) ,
+                                        t_r     (0) ,
+                                        task_ref(0) );
 
-        outerLoopFIRmodelJoint2.Update( qd_m  (3) ,
-                                        qd    (3) ,
-                                        q_m   (3) ,
-                                        q     (3) ,
-                                        qdd_m (3) ,
-                                        t_r   (3)  );
+        outerLoopFIRmodelJoint2.Update( qd_m    (3) ,
+                                        qd      (3) ,
+                                        q_m     (3) ,
+                                        q       (3) ,
+                                        qdd_m   (3) ,
+                                        t_r     (3) ,
+                                        task_ref(3) );
 
 //	q_m(0) = -0.309261  ;  qd_m(0) = 0;  qdd_m(0) = 0;
 	q_m(1) = -0.0340454 ;  qd_m(1) = 0;  qdd_m(1) = 0;

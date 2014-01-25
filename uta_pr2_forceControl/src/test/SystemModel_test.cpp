@@ -46,6 +46,7 @@ int main()
   Eigen::MatrixXd qd_m;
   Eigen::MatrixXd qdd_m;
   Eigen::MatrixXd t_r;
+  Eigen::MatrixXd task_ref;
   Eigen::MatrixXd tau;
 
   double num_Inputs  = 35 ;
@@ -54,13 +55,15 @@ int main()
   double num_Error   = 7  ;
   double num_Joints  = 1  ;
 
-  q     .resize( num_Joints, 1 ) ;
-  qd    .resize( num_Joints, 1 ) ;
-  qdd   .resize( num_Joints, 1 ) ;
-  q_m   .resize( num_Joints, 1 ) ;
-  qd_m  .resize( num_Joints, 1 ) ;
-  qdd_m .resize( num_Joints, 1 ) ;
-  t_r   .resize( num_Joints, 1 ) ;
+  q       .resize( num_Joints, 1 ) ;
+  qd      .resize( num_Joints, 1 ) ;
+  qdd     .resize( num_Joints, 1 ) ;
+  q_m     .resize( num_Joints, 1 ) ;
+  qd_m    .resize( num_Joints, 1 ) ;
+  qdd_m   .resize( num_Joints, 1 ) ;
+  t_r     .resize( num_Joints, 1 ) ;
+  task_ref.resize( num_Joints, 1 ) ;
+  tau     .resize( num_Joints, 1 ) ;
 
   q         = Eigen::MatrixXd::Zero( num_Joints, 1 );
   qd        = Eigen::MatrixXd::Zero( num_Joints, 1 );
@@ -71,28 +74,30 @@ int main()
   qdd_m     = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
   t_r       = Eigen::MatrixXd::Ones( num_Joints, 1 );
+  task_ref  = Eigen::MatrixXd::Ones( num_Joints, 1 );
+  tau       = Eigen::MatrixXd::Ones( num_Joints, 1 );
 
   csl::outer_loop::FirModel outerLoopFIRmodel;
   outerLoopFIRmodel.updateDelT( 0.001 );
 
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
   t_r = t_r*7;
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
   t_r = t_r*7;
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r    );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
 
 	return 0;
 }
