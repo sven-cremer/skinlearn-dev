@@ -417,10 +417,10 @@ void PR2NeuroadptControllerClass::update()
                      xd_.M.UnitY() * x_.M.UnitY() +
                      xd_.M.UnitZ() * x_.M.UnitZ());
 
-  for (unsigned int i = 0 ; i < 6 ; i++)
-  {
-    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
-  }
+//  for (unsigned int i = 0 ; i < 6 ; i++)
+//  {
+//    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+//  }
 
   // Force control only ferr Z in ft sensor frame is x in robot frame
 //  F_(0) = ferr_(2); // - Kd_(i) * xdot_(i);
@@ -438,11 +438,11 @@ void PR2NeuroadptControllerClass::update()
   // Convert the force into a set of joint torques.
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
   {
-    tau_t_(i) = 0;
+//    tau_t_(i) = 0;
     tau_h_(i) = 0;
     for (unsigned int j = 0 ; j < 6 ; j++)
     {
-      tau_t_(i) += J_(j,i) * F_(j);   // This will give the impedance to a trajectory
+//      tau_t_(i) += J_(j,i) * F_(j);   // This will give the impedance to a trajectory
       tau_h_(i)+= J_(j,i) * ferr_(j); // this will give the torque from human interaction
     }
   }
