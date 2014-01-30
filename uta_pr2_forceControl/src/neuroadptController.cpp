@@ -431,11 +431,12 @@ void PR2NeuroadptControllerClass::update()
 
   Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
 
+  //                               w       x       y      z
   Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
   Eigen::Vector3d transformed_force = ft_to_acc._transformVector( forceFT );
 
-  if( abs(transformed_force(0)) < 1 ){ transformed_force(0) = 0; }
-  if( abs(transformed_force(1)) < 1 ){ transformed_force(1) = 0; }
+  if( abs( double (transformed_force(0)) ) < 1 ){ transformed_force(0) = 0; }
+  if( abs( double (transformed_force(1)) ) < 1 ){ transformed_force(1) = 0; }
 
   ferr_(0) =   transformed_force(0) ; // 30*sin(circle_phase_);
   ferr_(1) =  -transformed_force(1) ; // 0				       ;
