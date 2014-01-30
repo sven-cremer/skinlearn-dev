@@ -15,6 +15,7 @@
   <depend package="pluginlib"/>
   <depend package="kdl" />
   <depend package="std_srvs"/>
+  <depend package="pr2_msgs"/>
   
   <rosdep name="eigen" />
 

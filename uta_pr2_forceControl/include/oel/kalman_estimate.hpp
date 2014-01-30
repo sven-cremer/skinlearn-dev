@@ -48,6 +48,11 @@ class DiscreteTimeKalmanFilter
 
   public:
 
+            DiscreteTimeKalmanFilter(  )
+            {
+
+            }
+
             DiscreteTimeKalmanFilter( const Eigen::MatrixXd & A,
                                       const Eigen::MatrixXd & B,
                                       const Eigen::MatrixXd & H,
@@ -58,6 +63,27 @@ class DiscreteTimeKalmanFilter
                                       const Eigen::MatrixXd & P0 )
             {
 
+             init( A ,
+                   B ,
+                   H ,
+                   G ,
+                   Q ,
+                   R ,
+                  X0 ,
+                  P0  );
+
+            }
+
+            void init( const Eigen::MatrixXd & A,
+                       const Eigen::MatrixXd & B,
+                       const Eigen::MatrixXd & H,
+                       const Eigen::MatrixXd & G,
+                       const Eigen::MatrixXd & Q,
+                       const Eigen::MatrixXd & R,
+                       const Eigen::MatrixXd & X0,
+                       const Eigen::MatrixXd & P0 )
+            {
+
               Ak     = A;
               Bk     = B;
               Hk     = H;
@@ -65,8 +91,8 @@ class DiscreteTimeKalmanFilter
               Qk     = Q;
               Rk     = R;
 
-              Pk     = P0; // Eigen::MatrixXd::Zero( 1, 1 );
               Xk_hat = X0; // Eigen::MatrixXd::Zero( A.cols(), 1 );
+              Pk     = P0; // Eigen::MatrixXd::Zero( 1, 1 );
               // Gk     = Eigen::MatrixXd( Eigen::VectorXd::Ones( A.cols() ).asDiagonal() );
 
             }

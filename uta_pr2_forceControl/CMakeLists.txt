@@ -29,7 +29,7 @@ include_directories(${Eigen_INCLUDE_DIRS})
 rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
 
 rosbuild_add_library( cslLIB src/neural_network.cpp )
-rosbuild_add_library( oelLIB src/least_squares.cpp )
+rosbuild_add_library( oelLIB src/least_squares.cpp src/kalman_estimate.cpp )
 
 rosbuild_add_library(pr2_controller_lib src/neuroadptController.cpp
 										src/cartesianController.cpp 
@@ -52,5 +52,8 @@ rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
 target_link_libraries( SystemModel_test	oelLIB )
 
 rosbuild_add_executable( pr2_joint_listener src/pr2_joint_listener.cpp )
+
+rosbuild_add_executable( interaction_force_estimator src/interaction_force_estimator.cpp )
+target_link_libraries( interaction_force_estimator	oelLIB )
 
 #target_link_libraries(example ${PROJECT_NAME})
