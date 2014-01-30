@@ -428,12 +428,18 @@ void PR2NeuroadptControllerClass::update()
 
   // Human force input
   // Force error
-  ferr_(0) = -r_ftData.wrench.force.x ; // 30*sin(circle_phase_);
-  ferr_(1) =  r_ftData.wrench.force.y ; // 0				       ;
-  ferr_(2) =  r_ftData.wrench.force.z ; // 0				       ;
+
+  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
+
+  Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
+  Eigen::Vector3d transformed_force = ft_to_acc._transformVector( forceFT );
+
+  ferr_(0) =  - transformed_force(0) ; // 30*sin(circle_phase_);
+  ferr_(1) =  - transformed_force(1) ; // 0				       ;
+  ferr_(2) =  - transformed_force(2) ; // 0				       ;
   ferr_(3) =  0 ; // r_ftData.wrench.torque.x; // 0                    ;
   ferr_(4) =  0 ; // r_ftData.wrench.torque.y; // 0                    ;
-  ferr_(5) =  0 ; // r_ftData.wrench.torque.z; // 0                    ;
+  ferr_(5) =  0 ; // r_ftData.wrench.torque.z; // 0         s           ;
 
   // Convert the force into a set of joint torques.
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
