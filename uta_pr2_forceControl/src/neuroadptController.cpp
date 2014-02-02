@@ -702,33 +702,33 @@ void PR2NeuroadptControllerClass::update()
 
 //        qd_m = pseudoInverse( J_.data )*xd_m;
 
-        vel_to_jnt_solver_->CartToJnt( q_, kdl_xd_m_, kdl_qmdot_ );
-
-        joint_vel_qd[0] = kdl_qmdot_(0);
-        joint_vel_qd[1] = kdl_qmdot_(1);
-        joint_vel_qd[2] = kdl_qmdot_(2);
-        joint_vel_qd[3] = kdl_qmdot_(3);
-        joint_vel_qd[4] = kdl_qmdot_(4);
-        joint_vel_qd[5] = kdl_qmdot_(5);
-
-        qd_m(0) = kdl_qmdot_(0);
-        qd_m(1) = kdl_qmdot_(1);
-        qd_m(2) = kdl_qmdot_(2);
-        qd_m(3) = kdl_qmdot_(3);
-        qd_m(4) = kdl_qmdot_(4);
-        qd_m(5) = kdl_qmdot_(5);
-        qd_m(6) = kdl_qmdot_(6);
-
-        // joint_integrator
-        integrate( joint_integrator , joint_vel_qd , 0.0 , 0.001 , 0.001 );
-
-        q_m(0) = joint_vel_qd[0];
-        q_m(1) = joint_vel_qd[1];
-        q_m(2) = joint_vel_qd[2];
-        q_m(3) = joint_vel_qd[3];
-        q_m(4) = joint_vel_qd[4];
-        q_m(5) = joint_vel_qd[5];
-        q_m(6) = joint_vel_qd[6];
+//        vel_to_jnt_solver_->CartToJnt( q_, kdl_xd_m_, kdl_qmdot_ );
+//
+//        joint_vel_qd[0] = kdl_qmdot_(0);
+//        joint_vel_qd[1] = kdl_qmdot_(1);
+//        joint_vel_qd[2] = kdl_qmdot_(2);
+//        joint_vel_qd[3] = kdl_qmdot_(3);
+//        joint_vel_qd[4] = kdl_qmdot_(4);
+//        joint_vel_qd[5] = kdl_qmdot_(5);
+//
+//        qd_m(0) = kdl_qmdot_(0);
+//        qd_m(1) = kdl_qmdot_(1);
+//        qd_m(2) = kdl_qmdot_(2);
+//        qd_m(3) = kdl_qmdot_(3);
+//        qd_m(4) = kdl_qmdot_(4);
+//        qd_m(5) = kdl_qmdot_(5);
+//        qd_m(6) = kdl_qmdot_(6);
+//
+//        // joint_integrator
+//        integrate( joint_integrator , joint_vel_qd , 0.0 , 0.001 , 0.001 );
+//
+//        q_m(0) = joint_vel_qd[0];
+//        q_m(1) = joint_vel_qd[1];
+//        q_m(2) = joint_vel_qd[2];
+//        q_m(3) = joint_vel_qd[3];
+//        q_m(4) = joint_vel_qd[4];
+//        q_m(5) = joint_vel_qd[5];
+//        q_m(6) = joint_vel_qd[6];
 
 /*
 	// Check for joint limits and reset
@@ -764,22 +764,22 @@ void PR2NeuroadptControllerClass::update()
 	// System Model END
 	/////////////////////////
 
-//	// DEBUG
-//	q_m(0)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-//	q_m(1)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-//	q_m(2)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-//	q_m(3)  = - 0.5 * (sin(circle_phase_) + 1.5 );
-//	q_m(4)  =   0;
-//	q_m(5)  =   0;
-//	q_m(6)  =   0;
-//
-//	qd_m(0) =   0;
-//	qd_m(1) =   0;
-//	qd_m(2) =   0;
-//	qd_m(3) =   0.5 * (cos(circle_phase_));
-//	qd_m(4) =   0;
-//	qd_m(5) =   0;
-//	qd_m(6) =   0;
+	// DEBUG
+	q_m(0)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(1)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(2)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(3)  = - 0.5 * (sin(circle_phase_) + 1.5 );
+	q_m(4)  =   0;
+	q_m(5)  =   0;
+	q_m(6)  =   0;
+
+	qd_m(0) =   0;
+	qd_m(1) =   0;
+	qd_m(2) =   0;
+	qd_m(3) =   0.5 * (cos(circle_phase_));
+	qd_m(4) =   0;
+	qd_m(5) =   0;
+	qd_m(6) =   0;
 
 
 
