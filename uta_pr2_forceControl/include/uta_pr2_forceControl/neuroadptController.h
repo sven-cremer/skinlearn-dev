@@ -190,6 +190,10 @@ private:
   double  nnG    ;
   double  nn_ON  ;
 
+  double  m_M    ;
+  double  m_S    ;
+  double  m_D    ;
+
   double  fFForce;
 
   csl::neural_network::TwoLayerNeuralNetworkController nnController;

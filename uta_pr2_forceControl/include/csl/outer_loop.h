@@ -354,7 +354,7 @@ public:
     iter = 1;
 
     //       m  s    d
-    init( 1, 1, 1, 0.5 );
+    init( 1, 1, 1,   10 );
   }
   ~MsdModel()
   {
@@ -425,6 +425,14 @@ public:
     delT = p_delT;
   }
 
+  void updateMsd( double param_m_M,
+                  double param_m_S,
+                  double param_m_D )
+  {
+    m = param_m_M ; // mass
+    k = param_m_S ; // spring
+    d = param_m_D ; // damper
+  }
   void update( double param_xd_m  ,
                double param_xd    ,
                double param_x_m   ,

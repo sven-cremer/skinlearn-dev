@@ -33,6 +33,10 @@ nn_nnF              : 100
 nn_nnG              : 20
 nn_ON               : 0
 
+m_M                 : 1
+m_S                 : 1
+m_D                 : 10
+
 cartPos_Kp_x : 100.0
 cartPos_Kp_y : 100.0
 cartPos_Kp_z : 100.0

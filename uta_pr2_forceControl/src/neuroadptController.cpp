@@ -93,6 +93,18 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if (!n.getParam( nn_ONparam          , nn_ON            ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_ONparam.c_str())			 ; return false; }
 
+  std::string para_m_M                 = "/m_M"              ;
+  std::string para_m_S                 = "/m_S"              ;
+  std::string para_m_D                 = "/m_D"              ;
+
+  if (!n.getParam( para_m_M           , m_M            ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_M.c_str())                          ; return false; }
+  if (!n.getParam( para_m_S           , m_S            ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_S.c_str())                          ; return false; }
+  if (!n.getParam( para_m_D           , m_D            ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_D.c_str())                      ; return false; }
+
+
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
 
@@ -216,6 +228,10 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   outerLoopMSDmodelJoint1.updateDelT( delT );
   outerLoopMSDmodelJoint2.updateDelT( delT );
+
+  outerLoopMSDmodelJoint1.updateMsd( m_M,
+                                     m_S,
+                                     m_D );
 
   // System Model END
   /////////////////////////
