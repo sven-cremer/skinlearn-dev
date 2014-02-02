@@ -395,21 +395,29 @@ public:
     k = param_m_S ; // spring
     d = param_m_D ; // damper
   }
-  void update( double param_xd_m  ,
-               double param_xd    ,
-               double param_x_m   ,
-               double param_x     ,
-               double param_xdd_m ,
-               double param_f_r    )
+  void update( double & param_xd_m  ,
+               double & param_xd    ,
+               double & param_x_m   ,
+               double & param_x     ,
+               double & param_xdd_m ,
+               double & param_f_r    )
   {
-    xd_m  (0)= param_xd_m ;
-    xd    (0)= param_xd   ;
-    x_m   (0)= param_x_m  ;
-    x     (0)= param_x    ;
-    xdd_m (0)= param_xdd_m;
-    f_r   (0)= param_f_r  ;
+    xd_m  (0) = param_xd_m ;
+    xd    (0) = param_xd   ;
+    x_m   (0) = param_x_m  ;
+    x     (0) = param_x    ;
+    xdd_m (0) = param_xdd_m;
+    f_r   (0) = param_f_r  ;
 
     update();
+
+    param_xd_m  = xd_m  (0);
+    param_xd    = xd    (0);
+    param_x_m   = x_m   (0);
+    param_x     = x     (0);
+    param_xdd_m = xdd_m (0);
+    param_f_r   = f_r   (0);
+
   }
 
   void update( Eigen::MatrixXd & param_xd_m    ,
@@ -588,12 +596,12 @@ public:
     delT = p_delT;
   }
 
-  void Update( double param_qd_m  ,
-               double param_qd    ,
-               double param_q_m   ,
-               double param_q     ,
-               double param_qdd_m ,
-               double param_t_r    )
+  void Update( double & param_qd_m  ,
+               double & param_qd    ,
+               double & param_q_m   ,
+               double & param_q     ,
+               double & param_qdd_m ,
+               double & param_t_r    )
   {
     qd_m  (0)= param_qd_m ;
     qd    (0)= param_qd   ;
@@ -605,13 +613,13 @@ public:
     Update();
   }
 
-  void Update( double param_qd_m     ,
-               double param_qd       ,
-               double param_q_m      ,
-               double param_q        ,
-               double param_qdd_m    ,
-               double param_t_r      ,
-               double param_task_ref  )
+  void Update( double & param_qd_m     ,
+               double & param_qd       ,
+               double & param_q_m      ,
+               double & param_q        ,
+               double & param_qdd_m    ,
+               double & param_t_r      ,
+               double & param_task_ref  )
   {
     qd_m    (0) = param_qd_m ;
     qd      (0) = param_qd   ;
