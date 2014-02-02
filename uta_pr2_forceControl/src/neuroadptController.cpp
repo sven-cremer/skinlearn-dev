@@ -229,9 +229,13 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   outerLoopMSDmodelJoint1.updateDelT( delT );
   outerLoopMSDmodelJoint2.updateDelT( delT );
 
-  outerLoopMSDmodelJoint1.updateMsd( m_M,
-                                     m_S,
-                                     m_D );
+//  outerLoopMSDmodelJoint1.updateMsd( m_M,
+//                                     m_S,
+//                                     m_D );
+//  outerLoopMSDmodelJoint2.updateMsd( m_M,
+//                                     m_S,
+//                                     m_D );
+
 
   // System Model END
   /////////////////////////
@@ -326,6 +330,26 @@ void PR2NeuroadptControllerClass::starting()
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
   q0_m_ = q0_;
+
+  /////////////////////////
+  // System Model
+
+  outerLoopMSDmodelJoint2.init( m_M     ,
+                                m_S     ,
+                                m_D     ,
+                                q0_m_(0),
+                                0       ,
+                                0        );
+
+  outerLoopMSDmodelJoint2.init( m_M     ,
+                                m_S     ,
+                                m_D     ,
+                                q0_m_(3),
+                                0       ,
+                                0        );
+
+  // System Model END
+  /////////////////////////
 
   // Model initial conditions
   // q_m = JointKdl2Eigen(q0_m_);
