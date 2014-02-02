@@ -400,7 +400,7 @@ public:
                double & param_x_m   ,
                double & param_x     ,
                double & param_xdd_m ,
-               double & param_f_r    )
+               double   param_f_r    )
   {
     xd_m  (0) = param_xd_m ;
     xd    (0) = param_xd   ;

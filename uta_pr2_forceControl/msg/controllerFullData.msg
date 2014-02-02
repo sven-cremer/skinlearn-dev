@@ -35,6 +35,18 @@ float64 m_cartPos_Qy
 float64 m_cartPos_Qz
 float64 m_cartPos_QW
 
+float64 m_pos_x
+float64 m_pos_y
+float64 m_pos_z
+       
+float64 m_vel_x
+float64 m_vel_y
+float64 m_vel_z
+       
+float64 m_acc_x
+float64 m_acc_y
+float64 m_acc_z
+
 float64 m_pos_j0
 float64 m_pos_j1
 float64 m_pos_j2

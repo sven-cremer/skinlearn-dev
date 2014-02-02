@@ -2,6 +2,8 @@
 #include <pluginlib/class_list_macros.h>
 #include <tf_conversions/tf_kdl.h>
 
+#include "pinv.hpp"
+
 using namespace pr2_controller_ns;
 
 using namespace std;
@@ -19,6 +21,16 @@ void vanderpol_model( const state_type_4 &x , state_type_4 &dxdt , double t )
 
 }
 
+void joint_integrator( const joint_type_6 &x , joint_type_6 &dxdt , double t )
+{
+      dxdt[0 ] = x[0];
+      dxdt[1 ] = x[1];
+      dxdt[2 ] = x[2];
+      dxdt[3 ] = x[3];
+      dxdt[4 ] = x[4];
+      dxdt[5 ] = x[5];
+      dxdt[6 ] = x[6];
+}
 
 /// Controller initialization in non-realtime
 bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n )
@@ -112,11 +124,16 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   chain_.toKDL(kdl_chain_);
   jnt_to_pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
   jnt_to_jac_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
+//  pos_to_jnt_solver_.reset(new KDL::ChainIkSolverPos_LMA(kdl_chain_));
+  vel_to_jnt_solver_.reset(new KDL::ChainIkSolverVel_wdls(kdl_chain_));
+//  acc_to_jnt_solver_.reset(new KDL::ChainIkSolverAcc(kdl_chain_));
 
   // Resize (pre-allocate) the variables in non-realtime.
   q_.resize(kdl_chain_.getNrOfJoints());
   q0_.resize(kdl_chain_.getNrOfJoints());
   qdot_.resize(kdl_chain_.getNrOfJoints());
+
+  kdl_qmdot_.resize(kdl_chain_.getNrOfJoints());
 
   tau_t_.resize(kdl_chain_.getNrOfJoints());
   tau_h_.resize(kdl_chain_.getNrOfJoints());
@@ -207,6 +224,12 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   q_m     .resize( num_Joints, 1 ) ;
   qd_m    .resize( num_Joints, 1 ) ;
   qdd_m   .resize( num_Joints, 1 ) ;
+
+  // Cartesian states
+  x_m     .resize( 6         , 1 ) ;
+  xd_m    .resize( 6         , 1 ) ;
+  xdd_m   .resize( 6         , 1 ) ;
+
   t_r     .resize( num_Joints, 1 ) ;
   task_ref.resize( num_Joints, 1 ) ;
   tau     .resize( num_Joints, 1 ) ;
@@ -222,12 +245,12 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   tau      = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
 
 
-  outerLoopMSDmodel.updateDelT( delT );
-  outerLoopFIRmodelJoint1.updateDelT( delT );
-  outerLoopFIRmodelJoint2.updateDelT( delT );
+//  outerLoopMSDmodel.updateDelT( delT );
+//  outerLoopFIRmodelJoint1.updateDelT( delT );
+//  outerLoopFIRmodelJoint2.updateDelT( delT );
 
-  outerLoopMSDmodelJoint1.updateDelT( delT );
-  outerLoopMSDmodelJoint2.updateDelT( delT );
+//  outerLoopMSDmodelJoint1.updateDelT( delT );
+//  outerLoopMSDmodelJoint2.updateDelT( delT );
 
 //  outerLoopMSDmodelJoint1.updateMsd( m_M,
 //                                     m_S,
@@ -236,6 +259,15 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 //                                     m_S,
 //                                     m_D );
 
+  outerLoopMSDmodelX.updateDelT( delT );
+  outerLoopMSDmodelY.updateDelT( delT );
+
+//  outerLoopMSDmodelX.updateMsd( m_M,
+//                                m_S,
+//                                m_D );
+//  outerLoopMSDmodelY.updateMsd( m_M,
+//                                m_S,
+//                                m_D );
 
   // System Model END
   /////////////////////////
@@ -331,31 +363,45 @@ void PR2NeuroadptControllerClass::starting()
   chain_.getPositions(q0_);
   q0_m_ = q0_;
 
-  /////////////////////////
-  // System Model
-
-  outerLoopMSDmodelJoint2.init( m_M     ,
-                                m_S     ,
-                                m_D     ,
-                                q0_m_(0),
-                                0       ,
-                                0        );
-
-  outerLoopMSDmodelJoint2.init( m_M     ,
-                                m_S     ,
-                                m_D     ,
-                                q0_m_(3),
-                                0       ,
-                                0        );
-
-  // System Model END
-  /////////////////////////
-
   // Model initial conditions
   // q_m = JointKdl2Eigen(q0_m_);
 
   jnt_to_pose_solver_->JntToCart(q0_, x0_);
   x0_m_ = x0_;
+
+  /////////////////////////
+  // System Model
+
+//  outerLoopMSDmodelJoint2.init( m_M     ,
+//                                m_S     ,
+//                                m_D     ,
+//                                q0_m_(0),
+//                                0       ,
+//                                0        );
+//
+//  outerLoopMSDmodelJoint2.init( m_M     ,
+//                                m_S     ,
+//                                m_D     ,
+//                                q0_m_(3),
+//                                0       ,
+//                                0        );
+
+  outerLoopMSDmodelX.init( m_M     ,
+                           m_S     ,
+                           m_D     ,
+                           x0_m_.p.x(),
+                           0       ,
+                           0        );
+  outerLoopMSDmodelY.init( m_M     ,
+                           m_S     ,
+                           m_D     ,
+                           x0_m_.p.y(),
+                           0       ,
+                           0        );
+
+  // System Model END
+  /////////////////////////
+
 
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
@@ -435,7 +481,7 @@ void PR2NeuroadptControllerClass::update()
 
   // Compute the forward kinematics and Jacobian of the model (at this location).
   jnt_to_pose_solver_->JntToCart(q_m_, x_m_);
-  jnt_to_jac_solver_->JntToJac(q_m_, J_m_);
+//  jnt_to_jac_solver_->JntToJac(q_m_, J_m_);
 
 
   for (unsigned int i = 0 ; i < 6 ; i++)
@@ -553,19 +599,33 @@ void PR2NeuroadptControllerClass::update()
 //                                  qdd_m ,
 //                                  t_r    );
 
-        outerLoopMSDmodelJoint1.update( qd_m  (0),
-                                        qd    (0),
-                                        q_m   (0),
-                                        q     (0),
-                                        qdd_m (0),
-                                        t_r   (0) );
+//        outerLoopMSDmodelJoint1.update( qd_m  (0),
+//                                        qd    (0),
+//                                        q_m   (0),
+//                                        q     (0),
+//                                        qdd_m (0),
+//                                        t_r   (0) );
+//
+//        outerLoopMSDmodelJoint2.update( qd_m  (3),
+//                                        qd    (3),
+//                                        q_m   (3),
+//                                        q     (3),
+//                                        qdd_m (3),
+//                                        t_r   (3) );
 
-        outerLoopMSDmodelJoint2.update( qd_m  (3),
-                                        qd    (3),
-                                        q_m   (3),
-                                        q     (3),
-                                        qdd_m (3),
-                                        t_r   (3) );
+//        outerLoopMSDmodelJoint1.update( qd_m  (0),
+//                                        qd    (0),
+//                                        q_m   (0),
+//                                        q     (0),
+//                                        qdd_m (0),
+//                                        t_r   (0) );
+//
+//        outerLoopMSDmodelJoint2.update( qd_m  (3),
+//                                        qd    (3),
+//                                        q_m   (3),
+//                                        q     (3),
+//                                        qdd_m (3),
+//                                        t_r   (3) );
 
 
 	if( (robot_state_->getTime() - start_time_).toSec() > 5 )
@@ -596,13 +656,81 @@ void PR2NeuroadptControllerClass::update()
 //                                        t_r     (3) ,
 //                                        task_ref(3) );
 
-//	q_m(0) = -0.48577   ;  qd_m(0) = 0;  qdd_m(0) = 0;
+	q_m(0) = -0.48577   ;  qd_m(0) = 0;  qdd_m(0) = 0;
 	q_m(1) = -0.0190721 ;  qd_m(1) = 0;  qdd_m(1) = 0;
 	q_m(2) = -1.51115   ;  qd_m(2) = 0;  qdd_m(2) = 0;
-//	q_m(3) = -1.70928   ;  qd_m(3) = 0;  qdd_m(3) = 0;
+	q_m(3) = -1.70928   ;  qd_m(3) = 0;  qdd_m(3) = 0;
 	q_m(4) =  1.54561   ;  qd_m(4) = 0;  qdd_m(4) = 0;
 	q_m(5) =  0.046854  ;  qd_m(5) = 0;  qdd_m(5) = 0;
 	q_m(6) = -0.0436174 ;  qd_m(6) = 0;  qdd_m(6) = 0;
+
+
+	// Cartesian space MSD model
+        outerLoopMSDmodelX.update( xd_m  (0),
+                                   xdot_ (0),
+                                   x_m   (0),
+                                   x_.p.data[0],
+                                   xdd_m (0),
+                                   ferr_ (0) );
+
+        outerLoopMSDmodelY.update( xd_m  (1),
+                                   xdot_ (1),
+                                   x_m   (1),
+                                   x_.p.data[1],
+                                   xdd_m (1),
+                                   ferr_ (1) );
+
+        x_m(2) = 0.03 ;
+        x_m(3) = 0 ;
+        x_m(4) = 0 ;
+        x_m(5) = 0 ;
+
+        xd_m(2) = 0          ;
+        xd_m(3) = xdot_  (3) ;
+        xd_m(4) = xdot_  (4) ;
+        xd_m(5) = xdot_  (5) ;
+
+        xdd_m(2) = 0 ;
+        xdd_m(3) = 0 ;
+        xdd_m(4) = 0 ;
+        xdd_m(5) = 0 ;
+
+        kdl_xd_m_(0) = xd_m(0);
+        kdl_xd_m_(1) = xd_m(1);
+        kdl_xd_m_(2) = xd_m(2);
+        kdl_xd_m_(3) = xd_m(3);
+        kdl_xd_m_(4) = xd_m(4);
+        kdl_xd_m_(5) = xd_m(5);
+
+//        qd_m = pseudoInverse( J_.data )*xd_m;
+
+        vel_to_jnt_solver_->CartToJnt( q_, kdl_xd_m_, kdl_qmdot_ );
+
+        joint_vel_qd[0] = kdl_qmdot_(0);
+        joint_vel_qd[1] = kdl_qmdot_(1);
+        joint_vel_qd[2] = kdl_qmdot_(2);
+        joint_vel_qd[3] = kdl_qmdot_(3);
+        joint_vel_qd[4] = kdl_qmdot_(4);
+        joint_vel_qd[5] = kdl_qmdot_(5);
+
+        qd_m(0) = kdl_qmdot_(0);
+        qd_m(1) = kdl_qmdot_(1);
+        qd_m(2) = kdl_qmdot_(2);
+        qd_m(3) = kdl_qmdot_(3);
+        qd_m(4) = kdl_qmdot_(4);
+        qd_m(5) = kdl_qmdot_(5);
+        qd_m(6) = kdl_qmdot_(6);
+
+        // joint_integrator
+        integrate( joint_integrator , joint_vel_qd , 0.0 , 0.001 , 0.001 );
+
+        q_m(0) = joint_vel_qd[0];
+        q_m(1) = joint_vel_qd[1];
+        q_m(2) = joint_vel_qd[2];
+        q_m(3) = joint_vel_qd[3];
+        q_m(4) = joint_vel_qd[4];
+        q_m(5) = joint_vel_qd[5];
+        q_m(6) = joint_vel_qd[6];
 
 /*
 	// Check for joint limits and reset
@@ -632,7 +760,8 @@ void PR2NeuroadptControllerClass::update()
 	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
 	*/
 
-	integrate( vanderpol_model , vpol_init_x , 0.0 , 0.001 , 0.001 );
+	// Van der poll
+//	integrate( vanderpol_model , vpol_init_x , 0.0 , 0.001 , 0.001 );
 
 	// System Model END
 	/////////////////////////
@@ -859,6 +988,18 @@ void PR2NeuroadptControllerClass::update()
 		msgControllerFullData[index].m_cartPos_Qy      = modelCartPos_.orientation.y ;
 		msgControllerFullData[index].m_cartPos_Qz      = modelCartPos_.orientation.z ;
 		msgControllerFullData[index].m_cartPos_QW      = modelCartPos_.orientation.w ;
+
+		msgControllerFullData[index].m_pos_x           = x_m(0)                      ;
+		msgControllerFullData[index].m_pos_y           = x_m(1)                      ;
+		msgControllerFullData[index].m_pos_z           = x_m(2)                      ;
+
+		msgControllerFullData[index].m_vel_x           = xd_m(0)                     ;
+                msgControllerFullData[index].m_vel_y           = xd_m(1)                     ;
+                msgControllerFullData[index].m_vel_z           = xd_m(2)                     ;
+
+                msgControllerFullData[index].m_acc_x           = xdd_m(0)                    ;
+                msgControllerFullData[index].m_acc_y           = xdd_m(1)                    ;
+                msgControllerFullData[index].m_acc_z           = xdd_m(2)                    ;
 
 		msgControllerFullData[index].m_pos_j0          = q_m(0)                      ;
 		msgControllerFullData[index].m_pos_j1          = q_m(1)                      ;

@@ -7,6 +7,9 @@
 #include <kdl/chain.hpp>
 #include <kdl/chainjnttojacsolver.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl/chainiksolver.hpp>
+//#include <kdl/chainiksolvervel_pinv_nso.hpp>
+#include <kdl/chainiksolvervel_wdls.hpp>
 #include <kdl/frames.hpp>
 #include <kdl/jacobian.hpp>
 #include <kdl/jntarray.hpp>
@@ -38,6 +41,7 @@
 
 typedef boost::array< double , 21 > state_type;
 typedef boost::array< double , 4 > state_type_4;
+typedef boost::array< double , 6 > joint_type_6;
 
 namespace pr2_controller_ns{
 
@@ -76,7 +80,11 @@ private:
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
-  boost::scoped_ptr<KDL::ChainJntToJacSolver> jnt_to_jac_solver_;
+  boost::scoped_ptr<KDL::ChainJntToJacSolver> jnt_to_jac_solver_ ;
+
+//  boost::scoped_ptr<KDL::ChainIkSolverPos_LMA>    pos_to_jnt_solver_ ;
+  boost::scoped_ptr<KDL::ChainIkSolverVel_wdls>   vel_to_jnt_solver_ ;
+//  boost::scoped_ptr<KDL::ChainIkSolverAcc>    acc_to_jnt_solver_ ;
 
   // The variables (which need to be pre-allocated).
   KDL::JntArray     q_;            // Joint positions
@@ -148,13 +156,22 @@ private:
   Eigen::MatrixXd q_m;
   Eigen::MatrixXd qd_m;
   Eigen::MatrixXd qdd_m;
+
+  Eigen::MatrixXd x_m;
+  Eigen::MatrixXd xd_m;
+  Eigen::MatrixXd xdd_m;
+
   Eigen::MatrixXd t_r;
   Eigen::MatrixXd task_ref;
   Eigen::MatrixXd tau;
 
+  KDL::JntArray  kdl_qmdot_;
+  KDL::Twist     kdl_xd_m_;
+
   double delT;
 
   state_type_4 vpol_init_x;
+  joint_type_6 joint_vel_qd;
 
   csl::outer_loop::JSpaceMsdModel outerLoopMSDmodel;
 
@@ -163,6 +180,9 @@ private:
 
   csl::outer_loop::FirModel outerLoopFIRmodelJoint1;
   csl::outer_loop::FirModel outerLoopFIRmodelJoint2;
+
+  csl::outer_loop::MsdModel outerLoopMSDmodelX     ;
+  csl::outer_loop::MsdModel outerLoopMSDmodelY     ;
 
   // System Model END
   /////////////////////////
