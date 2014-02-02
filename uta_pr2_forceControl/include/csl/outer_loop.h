@@ -17,6 +17,7 @@
 // TODO take this inside class
 typedef boost::array<double, 21> state_type;
 typedef boost::array<double, 3> fir_state_type;
+typedef boost::array<double, 6> oneDmsd_state_type;
 
 void mass_spring_damper_model( const state_type &x , state_type &dxdt , double t )
 {
@@ -51,6 +52,25 @@ void mass_spring_damper_model( const state_type &x , state_type &dxdt , double t
       dxdt[20] = 0 ;
 }
 
+void oneDmsd_model( const oneDmsd_state_type &x , oneDmsd_state_type &dxdt , double t )
+{
+      double  m = x[3 ]  ; // mass
+      double  k = x[4 ]  ; // spring
+      double  d = x[5 ]  ; // damper
+
+      dxdt[0 ] = x[1 ];
+
+      //           f_r      xd_m      x_m
+      dxdt[1 ] = ( x[2] - d*x[1 ] - k*x[0 ] )/m;
+
+      dxdt[2] = 0 ;
+
+      dxdt[3 ] = 0  ; // mass
+      dxdt[4 ] = 0  ; // spring
+      dxdt[5 ] = 0  ; // damper
+
+}
+
 void task_model( const fir_state_type &x , fir_state_type &dxdt , double t )
 {
       double a = 10;
@@ -73,7 +93,7 @@ namespace csl
 namespace outer_loop
 {
 
-class MsdModel
+class JSpaceMsdModel
 {
 
   double num_Joints; // number of joints.
@@ -102,14 +122,14 @@ class MsdModel
 
 
 public:
-  MsdModel()
+  JSpaceMsdModel()
   {
     num_Joints = 7;
     delT = 0.001; /// 1000 Hz by default
 
     init( 1, 10, 1 );
   }
-  ~MsdModel()
+  ~JSpaceMsdModel()
   {
   }
 
@@ -270,6 +290,191 @@ public:
 };
 
 
+
+
+class MsdModel
+{
+
+  int num_Joints; // number of joints.
+  int num_Fir   ; // number of FIR parameters.
+
+  Eigen::MatrixXd x;
+  Eigen::MatrixXd xd;
+  Eigen::MatrixXd xdd;
+
+  Eigen::MatrixXd x_m;
+  Eigen::MatrixXd xd_m;
+  Eigen::MatrixXd xdd_m;
+
+  // Reference task model
+  Eigen::MatrixXd ref_q_m;
+  Eigen::MatrixXd ref_qd_m;
+  Eigen::MatrixXd ref_qdd_m;
+
+  Eigen::MatrixXd task_ref;
+
+  Eigen::MatrixXd f_r;
+
+
+  Eigen::MatrixXd Wk           ; // FIR weights
+  Eigen::MatrixXd Uk           ; // Input
+  Eigen::MatrixXd Uk_plus      ; // FIR inputs time series t_r temp to use for update
+  Eigen::MatrixXd Dk           ; // Desired
+  Eigen::MatrixXd Pk           ; // Covariance matrix
+
+  double delT; // Time step
+
+  double lm;
+
+  int iter;
+
+  // Task model
+  double m ;
+  double d ;
+  double k ;
+
+  oneDmsd_state_type ode_init_x;
+
+  oel::ls::RLSFilter rls_filter;
+
+  void stackFirIn( Eigen::MatrixXd & in )
+  {
+    // TODO parameterize this
+    // Moves top to bottom rows are time series, columns are joints
+    // First in First out bottom most location nth row is dumped
+    Uk_plus.block<1,1>(0,0) = in.transpose();
+    Uk_plus.block<8-1, 1>(1,0) = Uk.block<8-1, 1>(0,0);
+    Uk = Uk_plus;
+  }
+
+public:
+  MsdModel()
+  {
+    delT = 0.001; /// 1000 Hz by default
+    iter = 1;
+
+    //       m  s    d
+    init( 1, 1, 1, 0.5 );
+  }
+  ~MsdModel()
+  {
+  }
+
+  void init( int para_num_Joints, double p_m, double p_k, double p_d )
+  {
+    m = p_m; // mass
+    k = p_k; // spring
+    d = p_d; // damper
+
+    num_Joints = para_num_Joints;
+
+    x     .resize( num_Joints, 1 ) ;
+    xd    .resize( num_Joints, 1 ) ;
+    xdd   .resize( num_Joints, 1 ) ;
+
+    x_m   .resize( num_Joints, 1 ) ;
+    xd_m  .resize( num_Joints, 1 ) ;
+    xdd_m .resize( num_Joints, 1 ) ;
+
+    ref_q_m   .resize( num_Joints, 1 ) ;
+    ref_qd_m  .resize( num_Joints, 1 ) ;
+    ref_qdd_m .resize( num_Joints, 1 ) ;
+
+    task_ref  .resize( num_Joints, 1 ) ;
+
+    f_r   .resize( num_Joints, 1 ) ;
+
+    Wk    .resize( num_Fir, num_Joints ) ;
+    Wk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
+
+    Dk    .resize( num_Joints, 1 ) ;
+    Dk = Eigen::MatrixXd::Zero( num_Joints, 1 );
+
+    // FIXME need to make this a 3 dimensional matrix
+    Pk    .resize( num_Fir, num_Fir       ) ;
+    Pk = Eigen::MatrixXd::Identity( num_Fir, num_Fir )/0.0001;
+
+    Uk.resize( num_Fir, num_Joints ) ;
+    Uk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
+
+    Uk_plus.resize( num_Fir, num_Joints ) ;
+    Uk_plus = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
+
+    x         = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    xd        = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    xdd       = Eigen::MatrixXd::Zero( num_Joints, 1 );
+
+    x_m       = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    xd_m      = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    xdd_m     = Eigen::MatrixXd::Zero( num_Joints, 1 );
+
+    f_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
+
+    // initial conditions
+    ode_init_x[0 ] = 0.0;
+    ode_init_x[1 ] = 0.0;
+    ode_init_x[2 ] = 0.0;
+    ode_init_x[3 ] = m  ; // mass
+    ode_init_x[4 ] = k  ; // spring
+    ode_init_x[5 ] = d  ; // damper
+
+  }
+
+  void updateDelT(double p_delT)
+  {
+    delT = p_delT;
+  }
+
+  void update( double param_xd_m  ,
+               double param_xd    ,
+               double param_x_m   ,
+               double param_x     ,
+               double param_xdd_m ,
+               double param_f_r    )
+  {
+    xd_m  (0)= param_xd_m ;
+    xd    (0)= param_xd   ;
+    x_m   (0)= param_x_m  ;
+    x     (0)= param_x    ;
+    xdd_m (0)= param_xdd_m;
+    f_r   (0)= param_f_r  ;
+
+    update();
+  }
+
+  void update( Eigen::MatrixXd & param_xd_m    ,
+               Eigen::MatrixXd & param_xd      ,
+               Eigen::MatrixXd & param_x_m     ,
+               Eigen::MatrixXd & param_x       ,
+               Eigen::MatrixXd & param_xdd_m   ,
+               Eigen::MatrixXd & param_f_r      )
+  {
+    xd_m     = param_xd_m    ;
+    xd       = param_xd      ;
+    x_m      = param_x_m     ;
+    x        = param_x       ;
+    xdd_m    = param_xdd_m   ;
+    f_r      = param_f_r     ;
+
+    update();
+  }
+
+  void update()
+  {
+
+    ode_init_x[2] = f_r(0);
+
+    boost::numeric::odeint::integrate( oneDmsd_model , ode_init_x , 0.0 , delT , delT );
+
+    x_m  (0) = ode_init_x[0 ] ;
+    xd_m (0) = ode_init_x[1 ] ;
+    xdd_m(0) = m*( ode_init_x[2] - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
+
+  }
+};
+
+
+
 class FirModel
 {
 
@@ -296,14 +501,14 @@ class FirModel
 
   Eigen::MatrixXd Wk           ; // FIR weights
   Eigen::MatrixXd Uk           ; // Input
-  Eigen::MatrixXd Uk_plus      ; // FIR inputs time series t_r temp to use for update
+  Eigen::MatrixXd Uk_plus      ; // FIR inputs time series f_r temp to use for update
   Eigen::MatrixXd Dk           ; // Desired
   Eigen::MatrixXd Pk           ; // Covariance matrix
 
   double delT; // Time step
 
   double lm;
-  
+
   int iter;
 
   // Task model
@@ -505,6 +710,8 @@ public:
 //      std::cout<< "q  : " << q_m <<"\n\n";
   }
 };
+
+
 
 }
 }

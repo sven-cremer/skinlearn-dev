@@ -214,6 +214,9 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   outerLoopFIRmodelJoint1.updateDelT( delT );
   outerLoopFIRmodelJoint2.updateDelT( delT );
 
+  outerLoopMSDmodelJoint1.updateDelT( delT );
+  outerLoopMSDmodelJoint2.updateDelT( delT );
+
   // System Model END
   /////////////////////////
 
@@ -503,12 +506,26 @@ void PR2NeuroadptControllerClass::update()
 //	6 - 'r_wrist_roll_joint'      | "r_wrist_roll_joint"     -0.0322204 : 23 : r_wrist_roll_joint
 
 	// MSD
-        outerLoopMSDmodel.Update( qd_m  ,
-                                  qd    ,
-                                  q_m   ,
-                                  q     ,
-                                  qdd_m ,
-                                  t_r    );
+//        outerLoopMSDmodel.Update( qd_m  ,
+//                                  qd    ,
+//                                  q_m   ,
+//                                  q     ,
+//                                  qdd_m ,
+//                                  t_r    );
+
+        outerLoopMSDmodelJoint1.update( qd_m  (0),
+                                        qd    (0),
+                                        q_m   (0),
+                                        q     (0),
+                                        qdd_m (0),
+                                        t_r   (0) );
+
+        outerLoopMSDmodelJoint2.update( qd_m  (3),
+                                        qd    (3),
+                                        q_m   (3),
+                                        q     (3),
+                                        qdd_m (3),
+                                        t_r   (3) );
 
 
 	if( (robot_state_->getTime() - start_time_).toSec() > 5 )
@@ -917,7 +934,7 @@ void PR2NeuroadptControllerClass::update()
 
 /// Service call to capture and extract the data
 bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
-                               	   	   	   std_srvs::Empty::Response& resp )
+                               	   	   std_srvs::Empty::Response& resp )
 {
   /* Record the starting time. */
   ros::Time started = ros::Time::now();

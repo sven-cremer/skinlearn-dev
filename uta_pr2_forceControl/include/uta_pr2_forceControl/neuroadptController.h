@@ -156,7 +156,11 @@ private:
 
   state_type_4 vpol_init_x;
 
-  csl::outer_loop::MsdModel outerLoopMSDmodel;
+  csl::outer_loop::JSpaceMsdModel outerLoopMSDmodel;
+
+  csl::outer_loop::MsdModel outerLoopMSDmodelJoint1;
+  csl::outer_loop::MsdModel outerLoopMSDmodelJoint2;
+
   csl::outer_loop::FirModel outerLoopFIRmodelJoint1;
   csl::outer_loop::FirModel outerLoopFIRmodelJoint2;
 
