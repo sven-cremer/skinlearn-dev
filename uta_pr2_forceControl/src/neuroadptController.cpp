@@ -2,8 +2,6 @@
 #include <pluginlib/class_list_macros.h>
 #include <tf_conversions/tf_kdl.h>
 
-#include "pinv.hpp"
-
 using namespace pr2_controller_ns;
 
 using namespace std;
