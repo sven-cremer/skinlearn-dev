@@ -1,13 +1,21 @@
 # Time
 float64  dt
 
-# Force Data
+# Raw Force Data
 float64 force_x
 float64 force_y
 float64 force_z
 float64 torque_x
 float64 torque_y
 float64 torque_z
+
+# Input Force Data
+float64 r_eff_x
+float64 r_eff_y
+float64 r_eff_z
+float64 r_trq_x
+float64 r_trq_y
+float64 r_trq_z
 
 # Input reference efforts(torques)
 float64 reference_eff_j0

@@ -909,13 +909,20 @@ void PR2NeuroadptControllerClass::update()
 		msgControllerFullData[index].r_acc_j5          = 0                           ;
 		msgControllerFullData[index].r_acc_j6          = 0                           ;
 
-		msgControllerFullData[index].r_eff_j0          = tau_f_(0)                    ;
-		msgControllerFullData[index].r_eff_j1          = tau_f_(1)                    ;
-		msgControllerFullData[index].r_eff_j2          = tau_f_(2)                    ;
-		msgControllerFullData[index].r_eff_j3          = tau_f_(3)                    ;
-		msgControllerFullData[index].r_eff_j4          = tau_f_(4)                    ;
-		msgControllerFullData[index].r_eff_j5          = tau_f_(5)                    ;
-		msgControllerFullData[index].r_eff_j6          = tau_f_(6)                    ;
+                msgControllerFullData[index].r_eff_x           = ferr_(0)                    ;
+                msgControllerFullData[index].r_eff_y           = ferr_(1)                    ;
+                msgControllerFullData[index].r_eff_z           = ferr_(2)                    ;
+                msgControllerFullData[index].r_trq_x           = ferr_(3)                    ;
+                msgControllerFullData[index].r_trq_y           = ferr_(4)                    ;
+                msgControllerFullData[index].r_trq_z           = ferr_(5)                    ;
+
+		msgControllerFullData[index].r_eff_j0          = tau_f_(0)                   ;
+		msgControllerFullData[index].r_eff_j1          = tau_f_(1)                   ;
+		msgControllerFullData[index].r_eff_j2          = tau_f_(2)                   ;
+		msgControllerFullData[index].r_eff_j3          = tau_f_(3)                   ;
+		msgControllerFullData[index].r_eff_j4          = tau_f_(4)                   ;
+		msgControllerFullData[index].r_eff_j5          = tau_f_(5)                   ;
+		msgControllerFullData[index].r_eff_j6          = tau_f_(6)                   ;
 
 		// NN Params
 		msgControllerFullData[index].kappa             = kappa                       ;
