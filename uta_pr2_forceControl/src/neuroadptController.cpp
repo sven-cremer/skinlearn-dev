@@ -580,7 +580,7 @@ void PR2NeuroadptControllerClass::update()
 	q_m(5) =  0.046854  ;  qd_m(5) = 0;  qdd_m(5) = 0;
 	q_m(6) = -0.0436174 ;  qd_m(6) = 0;  qdd_m(6) = 0;
 
-
+/*
 	// Check for joint limits and reset
 	// (condition) ? (if_true) : (if_false)
 	q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
@@ -606,6 +606,7 @@ void PR2NeuroadptControllerClass::update()
 	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
 	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
 	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
+	*/
 
 	integrate( vanderpol_model , vpol_init_x , 0.0 , 0.001 , 0.001 );
 
