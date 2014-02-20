@@ -69,24 +69,23 @@ public:
 
 	TwoLayerNeuralNetworkController()
 	{
-		num_Inputs  = 35 ;
-		num_Outputs = 7  ;
-		num_Hidden  = 10 ;
-		num_Error   = 7  ;
-		num_Joints  = 7  ;
+          changeNNstructure( 35 ,   // num_Inputs
+                             7  ,   // num_Outputs
+                             10 ,   // num_Hidden
+                             7  ,   // num_Error
+                             7   ); // num_Joints
 
-		delT = 0.001; /// 1000 Hz by default
+          delT = 0.001; /// 1000 Hz by default
 
-                init( 0.07 ,
-                      10   ,
-                      0.5  ,
-                      0    ,
-                      100  ,
-                      1    ,
-                      100  ,
-                      20   ,
-                      1     );
-
+          init( 0.07 ,
+                10   ,
+                0.5  ,
+                0    ,
+                100  ,
+                1    ,
+                100  ,
+                20   ,
+                1     );
 	}
 
 	void changeNNstructure( double para_num_Inputs  ,
