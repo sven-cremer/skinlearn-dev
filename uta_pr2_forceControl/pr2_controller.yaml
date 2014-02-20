@@ -25,16 +25,16 @@ pr2_neuroadptController:
 
 nnNum_Inputs        : 35 
 nnNum_Outputs       : 7  
-nnNum_Hidden        : 100
+nnNum_Hidden        : 10
 nnNum_Error         : 7  
 nnNum_Joints        : 7  
 
 nn_kappa            : 0.07
-nn_Kv               : 1
-nn_lambda           : 0.5 
-nn_Kz               : 1   
+nn_Kv               : 3
+nn_lambda           : 9 
+nn_Kz               : 0   
 nn_Zb               : 100 
-nn_feedForwardForce : 1   
+nn_feedForwardForce : 0   
 nn_nnF              : 100 
 nn_nnG              : 20
 nn_ON               : 1
