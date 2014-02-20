@@ -120,6 +120,13 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   std::string para_nnNum_Error   = "/nnNum_Error  " ;
   std::string para_nnNum_Joints  = "/nnNum_Joints " ;
 
+  // DEBUG
+  num_Inputs  = 35 ;
+  num_Outputs = 7  ;
+  num_Hidden  = 100;
+  num_Error   = 7  ;
+  num_Joints  = 7  ;
+
   if (!n.getParam( para_nnNum_Inputs , num_Inputs  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Inputs .c_str()) ; return false; }
   if (!n.getParam( para_nnNum_Outputs, num_Outputs )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Outputs.c_str()) ; return false; }
   if (!n.getParam( para_nnNum_Hidden , num_Hidden  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Hidden .c_str()) ; return false; }
@@ -1108,11 +1115,11 @@ void PR2NeuroadptControllerClass::update()
 		msgControllerFullData[index].Zb                = Zb                          ;
 		msgControllerFullData[index].F                 = nnF                         ;
 		msgControllerFullData[index].G                 = nnG                         ;
-		msgControllerFullData[index].inParams          = Inputs                      ;
-		msgControllerFullData[index].outParams         = Outputs                     ;
-		msgControllerFullData[index].hiddenNodes       = Hidden                      ;
-		msgControllerFullData[index].errorParams       = Error  		     ;
-		msgControllerFullData[index].feedForwardForce  = fFForce                     ;
+		msgControllerFullData[index].inParams          = num_Inputs                  ;
+		msgControllerFullData[index].outParams         = num_Outputs                 ;
+		msgControllerFullData[index].hiddenNodes       = num_Hidden                  ;
+		msgControllerFullData[index].errorParams       = num_Error                   ;
+		msgControllerFullData[index].feedForwardForce  = num_Joints                  ;
 		msgControllerFullData[index].nn_ON             = nn_ON                       ;
 
 		// TODO fix this

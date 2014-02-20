@@ -190,10 +190,10 @@ private:
   /////////////////////////
   // NN
 
-  enum { Inputs  = 35 }; // n Size of the inputs
-  enum { Outputs = 7 }; // m Size of the outputs
-  enum { Hidden  = 10 }; // l Size of the hidden layer
-  enum { Error   = 7 }; // filtered error
+//  enum { Inputs  = 35 }; // n Size of the inputs
+//  enum { Outputs = 7 }; // m Size of the outputs
+//  enum { Hidden  = 10 }; // l Size of the hidden layer
+//  enum { Error   = 7 }; // filtered error
 
   double num_Inputs  ; // n Size of the inputs
   double num_Outputs ; // m Size of the outputs
