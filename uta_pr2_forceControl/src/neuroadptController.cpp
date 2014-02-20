@@ -103,9 +103,9 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if (!n.getParam( nn_ONparam          , nn_ON            ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_ONparam.c_str())			 ; return false; }
 
-  std::string para_m_M                 = "/m_M"              ;
-  std::string para_m_S                 = "/m_S"              ;
-  std::string para_m_D                 = "/m_D"              ;
+  std::string para_m_M                 = "/m_M" ;
+  std::string para_m_S                 = "/m_S" ;
+  std::string para_m_D                 = "/m_D" ;
 
   if (!n.getParam( para_m_M           , m_M            ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_M.c_str())                          ; return false; }
@@ -114,6 +114,17 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if (!n.getParam( para_m_D           , m_D            ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_D.c_str())                      ; return false; }
 
+  std::string para_nnNum_Inputs  = "/nnNum_Inputs " ;
+  std::string para_nnNum_Outputs = "/nnNum_Outputs" ;
+  std::string para_nnNum_Hidden  = "/nnNum_Hidden " ;
+  std::string para_nnNum_Error   = "/nnNum_Error  " ;
+  std::string para_nnNum_Joints  = "/nnNum_Joints " ;
+
+  if (!n.getParam( para_nnNum_Inputs , num_Inputs  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Inputs .c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Outputs, num_Outputs )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Outputs.c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Hidden , num_Hidden  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Hidden .c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Error  , num_Error   )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Error  .c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Joints , num_Joints  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Joints .c_str()) ; return false; }
 
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
@@ -208,11 +219,12 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   /////////////////////////
   // System Model
 
-  num_Inputs  = 35 ;
-  num_Outputs = 7  ;
-  num_Hidden  = 100;
-  num_Error   = 7  ;
-  num_Joints  = 7  ;
+  // FIXME remove below stuff
+//  num_Inputs  = 35 ;
+//  num_Outputs = 7  ;
+//  num_Hidden  = 100;
+//  num_Error   = 7  ;
+//  num_Joints  = 7  ;
 
   eigen_temp_joint.resize( num_Joints,1 );
 
