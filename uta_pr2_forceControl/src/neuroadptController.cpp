@@ -502,7 +502,7 @@ void PR2NeuroadptControllerClass::update()
   }
 
   // Follow a circle of 10cm at 3 rad/sec.
-  circle_phase_ += 3 * dt;
+  circle_phase_ += 6 * dt;
   KDL::Vector  circle(0,0,0);
   circle(2) = 0.1 * sin(circle_phase_);
   circle(1) = 0.1 * (cos(circle_phase_) - 1);
@@ -780,7 +780,7 @@ void PR2NeuroadptControllerClass::update()
 	q_m(0)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
 	q_m(1)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
 	q_m(2)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(3)  = - 0.5 * (sin(circle_phase_) + 1.5 );
+	q_m(3)  = - 0.8 * (sin(circle_phase_) + 1.5 );
 	q_m(4)  =   0;
 	q_m(5)  =   0;
 	q_m(6)  =   0;
@@ -788,7 +788,7 @@ void PR2NeuroadptControllerClass::update()
 	qd_m(0) =   0;
 	qd_m(1) =   0;
 	qd_m(2) =   0;
-	qd_m(3) =   0.5 * (cos(circle_phase_));
+	qd_m(3) =   0.8 * (cos(circle_phase_));
 	qd_m(4) =   0;
 	qd_m(5) =   0;
 	qd_m(6) =   0;
@@ -878,7 +878,7 @@ void PR2NeuroadptControllerClass::update()
 
 
 	// And finally send these torques out.
-    chain_.setEfforts(tau_c_);
+        chain_.setEfforts(tau_c_);
 
 //    // Publish data in ROS message every 10 cycles (about 100Hz)
 //	if (++pub_cycle_count_ > 10)
