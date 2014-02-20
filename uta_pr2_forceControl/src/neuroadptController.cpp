@@ -210,7 +210,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 
   num_Inputs  = 35 ;
   num_Outputs = 7  ;
-  num_Hidden  = 10 ;
+  num_Hidden  = 100;
   num_Error   = 7  ;
   num_Joints  = 7  ;
 
