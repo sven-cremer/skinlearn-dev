@@ -139,7 +139,6 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if (!n.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; return false; }
   if (!n.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
 
-
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
 
@@ -792,11 +791,13 @@ void PR2NeuroadptControllerClass::update()
 
 //        0.8 -1.5
 
+        double circleAmpl = (circleUlim - circleLlim)/2 ;
+
 	// DEBUG
 	q_m(0)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
 	q_m(1)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
 	q_m(2)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(3)  =  (circleUlim - circleLlim) * sin(circle_phase_) + (circleUlim - circleLlim)/2;
+	q_m(3)  = - ( circleAmpl * sin(circle_phase_) + circleAmpl );
 	q_m(4)  =   0;
 	q_m(5)  =   0;
 	q_m(6)  =   0;
@@ -804,7 +805,7 @@ void PR2NeuroadptControllerClass::update()
 	qd_m(0) =   0;
 	qd_m(1) =   0;
 	qd_m(2) =   0;
-	qd_m(3) =   (circleUlim - circleLlim) * (cos(circle_phase_));
+	qd_m(3) = - circleAmpl * (cos(circle_phase_));
 	qd_m(4) =   0;
 	qd_m(5) =   0;
 	qd_m(6) =   0;
