@@ -221,6 +221,10 @@ private:
   // NN END
   /////////////////////////
 
+  double circle_rate;
+  double circleUlim ;
+  double circleLlim ;
+
   Eigen::MatrixXd eigen_temp_joint;
   KDL::JntArray kdl_temp_joint_;
 

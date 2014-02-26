@@ -126,6 +126,20 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   if (!n.getParam( para_nnNum_Error  , num_Error   )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Error  .c_str()) ; return false; }
   if (!n.getParam( para_nnNum_Joints , num_Joints  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Joints .c_str()) ; return false; }
 
+  // Circle rate 3 rad/sec
+  circle_rate = 3  ;
+  circleLlim  = 0  ;
+  circleUlim  = 1.5;
+
+  std::string para_circleRate  = "/circleRate" ;
+  std::string para_circleLlim  = "/circleLlim" ;
+  std::string para_circleUlim  = "/circleUlim" ;
+
+  if (!n.getParam( para_circleRate , circle_rate )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleRate .c_str()) ; return false; }
+  if (!n.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; return false; }
+  if (!n.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
+
+
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
 
@@ -502,7 +516,7 @@ void PR2NeuroadptControllerClass::update()
   }
 
   // Follow a circle of 10cm at 3 rad/sec.
-  circle_phase_ += 6 * dt;
+  circle_phase_ += circle_rate * dt;
   KDL::Vector  circle(0,0,0);
   circle(2) = 0.1 * sin(circle_phase_);
   circle(1) = 0.1 * (cos(circle_phase_) - 1);
@@ -776,11 +790,13 @@ void PR2NeuroadptControllerClass::update()
 	// System Model END
 	/////////////////////////
 
+//        0.8 -1.5
+
 	// DEBUG
 	q_m(0)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
 	q_m(1)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
 	q_m(2)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(3)  = - 0.8 * (sin(circle_phase_) + 1.5 );
+	q_m(3)  =  (circleUlim - circleLlim) * sin(circle_phase_) + (circleUlim - circleLlim)/2;
 	q_m(4)  =   0;
 	q_m(5)  =   0;
 	q_m(6)  =   0;
@@ -788,7 +804,7 @@ void PR2NeuroadptControllerClass::update()
 	qd_m(0) =   0;
 	qd_m(1) =   0;
 	qd_m(2) =   0;
-	qd_m(3) =   0.8 * (cos(circle_phase_));
+	qd_m(3) =   (circleUlim - circleLlim) * (cos(circle_phase_));
 	qd_m(4) =   0;
 	qd_m(5) =   0;
 	qd_m(6) =   0;

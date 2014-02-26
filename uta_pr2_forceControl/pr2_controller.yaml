@@ -23,6 +23,10 @@ pr2_neuroadptController:
   root_name: torso_lift_link
   tip_name: r_gripper_tool_frame
 
+circleRate          : 3
+circleLlim          : 0
+circleUlim          : 1.5
+
 nnNum_Inputs        : 35 
 nnNum_Outputs       : 7  
 nnNum_Hidden        : 10
