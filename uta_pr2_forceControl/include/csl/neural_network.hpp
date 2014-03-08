@@ -166,15 +166,15 @@ public:
 	  delT = p_delT;
 	}
 
-	void Update( Eigen::MatrixXd & qd_m  ,
-	             Eigen::MatrixXd & qd    ,
-	             Eigen::MatrixXd & q_m   ,
-	             Eigen::MatrixXd & q     ,
-	             Eigen::MatrixXd & qdd_m ,
-	             Eigen::MatrixXd & t_r   ,
-	             Eigen::MatrixXd & tau    );
+	void Update( Eigen::VectorXd & qd_m  ,
+	             Eigen::VectorXd & qd    ,
+	             Eigen::VectorXd & q_m   ,
+	             Eigen::VectorXd & q     ,
+	             Eigen::VectorXd & qdd_m ,
+	             Eigen::VectorXd & t_r   ,
+	             Eigen::VectorXd & tau    );
 
-	Eigen::MatrixXd
+	Eigen::VectorXd
 	sigmoid( Eigen::MatrixXd & z ) const;
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW

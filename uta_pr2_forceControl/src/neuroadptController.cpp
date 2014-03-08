@@ -1230,7 +1230,7 @@ PR2NeuroadptControllerClass::JointVelKdl2Eigen( KDL::JntArrayVel & joint_ )
 }
 
 KDL::JntArray
-PR2NeuroadptControllerClass::JointEigen2Kdl( Eigen::MatrixXd & joint )
+PR2NeuroadptControllerClass::JointEigen2Kdl( Eigen::VectorXd & joint )
 {
 	kdl_temp_joint_(0) = joint(0);
 	kdl_temp_joint_(1) = joint(1);

@@ -149,21 +149,21 @@ private:
   /////////////////////////
   // System Model
 
-  Eigen::MatrixXd q;
-  Eigen::MatrixXd qd;
-  Eigen::MatrixXd qdd;
+  Eigen::VectorXd q;
+  Eigen::VectorXd qd;
+  Eigen::VectorXd qdd;
 
-  Eigen::MatrixXd q_m;
-  Eigen::MatrixXd qd_m;
-  Eigen::MatrixXd qdd_m;
+  Eigen::VectorXd q_m;
+  Eigen::VectorXd qd_m;
+  Eigen::VectorXd qdd_m;
 
-  Eigen::MatrixXd x_m;
-  Eigen::MatrixXd xd_m;
-  Eigen::MatrixXd xdd_m;
+  Eigen::VectorXd x_m;
+  Eigen::VectorXd xd_m;
+  Eigen::VectorXd xdd_m;
 
-  Eigen::MatrixXd t_r;
-  Eigen::MatrixXd task_ref;
-  Eigen::MatrixXd tau;
+  Eigen::VectorXd t_r;
+  Eigen::VectorXd task_ref;
+  Eigen::VectorXd tau;
 
   KDL::JntArray  kdl_qmdot_;
   KDL::Twist     kdl_xd_m_;
@@ -268,7 +268,7 @@ public:
 
   Eigen::MatrixXd JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
 
-  KDL::JntArray JointEigen2Kdl( Eigen::MatrixXd & joint );
+  KDL::JntArray JointEigen2Kdl( Eigen::VectorXd & joint );
 
 };
 }
