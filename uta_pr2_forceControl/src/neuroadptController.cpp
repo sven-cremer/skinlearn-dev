@@ -325,15 +325,16 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
   if(!hardwareInterface)
       ROS_ERROR("Something wrong with the hardware interface pointer!");
-
+/*
   l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
   r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+
 
   if( !l_ft_handle_ )
       ROS_ERROR("Something wrong with getting l_ft handle");
   if( !r_ft_handle_ )
       ROS_ERROR("Something wrong with getting r_ft handle");
-
+   */
 
 
 //  /* get a handle to the left gripper accelerometer */
@@ -428,11 +429,12 @@ void PR2NeuroadptControllerClass::starting()
 
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
+  startCircleTraj = false;
 
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
   start_time_ = robot_state_->getTime();
-
+/*
   // set FT sensor bias due to gravity
   std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
   l_ft_samples    = l_ftData_vector.size() - 1;
@@ -441,6 +443,7 @@ void PR2NeuroadptControllerClass::starting()
   std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
   r_ft_samples    = r_ftData_vector.size() - 1;
   r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+  */
 }
 
 
@@ -455,7 +458,7 @@ void PR2NeuroadptControllerClass::update()
 //	threeAccs[threeAccs.size()-1].y
 //	threeAccs[threeAccs.size()-1].z
 
-
+/*
 	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 	l_ft_samples    = l_ftData_vector.size() - 1;
 //      l_ftData.wrench = l_ftData_vector[l_ft_samples];
@@ -475,7 +478,7 @@ void PR2NeuroadptControllerClass::update()
 	r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
 	r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
 	r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
-
+*/
 
 
 
@@ -515,7 +518,11 @@ void PR2NeuroadptControllerClass::update()
   }
 
   // Follow a circle of 10cm at 3 rad/sec.
-  circle_phase_ += circle_rate * dt;
+  if( startCircleTraj == true )
+  {
+    circle_phase_ += circle_rate * dt;
+  }
+
   KDL::Vector  circle(0,0,0);
   circle(2) = 0.1 * sin(circle_phase_);
   circle(1) = 0.1 * (cos(circle_phase_) - 1);
@@ -1155,6 +1162,9 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
   /* Record the starting time. */
   ros::Time started = ros::Time::now();
 
+  // Start circle traj
+  startCircleTraj = true;
+
   /* Mark the buffer as clear (which will start storing). */
   storage_index_ = 0;
 
@@ -1171,6 +1181,9 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
 		  return false;
 		}
 	}
+
+  // Start circle traj
+  startCircleTraj = false;
 
   /* Then we can publish the buffer contents. */
   int  index;

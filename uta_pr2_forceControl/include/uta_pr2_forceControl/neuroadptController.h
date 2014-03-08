@@ -224,7 +224,7 @@ private:
   double circle_rate;
   double circleUlim ;
   double circleLlim ;
-
+  bool startCircleTraj;
   Eigen::MatrixXd eigen_temp_joint;
   KDL::JntArray kdl_temp_joint_;
 

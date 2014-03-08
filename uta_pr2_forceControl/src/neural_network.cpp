@@ -75,13 +75,13 @@ void TwoLayerNeuralNetworkController::Update( Eigen::MatrixXd & qd_m  ,
 	x(34) =            qdd_m( 5 );
 	x(35) =            qdd_m( 6 );
 
-//	??????
-//        x <<                 1   ,
-//            (  q_m( 0 ) -  q(0) ), //   q( 0 ) ;
-//            ( qd_m( 0 ) - qd(0) ), //  qd( 0 ) ;
-//                         q_m( 0 ),
-//                        qd_m( 0 ),
-//                       qdd_m( 0 );
+/*//	??????
+        x <<                 1   ,
+            (  q_m( 0 ) -  q(0) ), //   q( 0 ) ;
+            ( qd_m( 0 ) - qd(0) ), //  qd( 0 ) ;
+                         q_m( 0 ),
+                        qd_m( 0 ),
+                       qdd_m( 0 );*/
 
 
 	hiddenLayer_in = V_trans*x;
