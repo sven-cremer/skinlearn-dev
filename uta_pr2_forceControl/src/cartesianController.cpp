@@ -75,6 +75,45 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_cartRot_Kd_z , cartRot_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_z.c_str()) ; return false; }
 
 
+  // Desired cartesian pose
+  cartDesX     = 0.0           ;
+  cartDesY     = 0.1           ;
+  cartDesZ     = 0.1           ;
+  cartDesRoll  = 0             ;
+  cartDesPitch = 1.57079632679 ;
+  cartDesYaw   = 0             ;
+
+  std::string para_cartDesX     = "/cartDesX";
+  std::string para_cartDesY     = "/cartDesY";
+  std::string para_cartDesZ     = "/cartDesZ";
+  std::string para_cartDesRoll  = "/cartDesRoll";
+  std::string para_cartDesPitch = "/cartDesPitch";
+  std::string para_cartDesYaw   = "/cartDesYaw";
+
+  if (!n.getParam( para_cartDesX     , cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX    .c_str()) ; return false; }
+  if (!n.getParam( para_cartDesY     , cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY    .c_str()) ; return false; }
+  if (!n.getParam( para_cartDesZ     , cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ    .c_str()) ; return false; }
+  if (!n.getParam( para_cartDesRoll  , cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; return false; }
+  if (!n.getParam( para_cartDesPitch , cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; return false; }
+  if (!n.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; return false; }
+
+  // Initial cartesian pose
+  cartIniX     = 0.1           ;
+  cartIniY     = 0.1           ;
+  cartIniZ     = 0             ;
+
+  std::string para_cartIniX     = "/cartIniX";
+  std::string para_cartIniY     = "/cartIniY";
+  std::string para_cartIniZ     = "/cartIniZ";
+
+  if (!n.getParam( para_cartIniX, cartIniX )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
+  if (!n.getParam( para_cartIniY, cartIniY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
+  if (!n.getParam( para_cartIniZ, cartIniZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
+
+  useCurrentCartPose = false ;
+  std::string para_useCurrentCartPose     = "/useCurrentCartPose";
+  if (!n.getParam( para_useCurrentCartPose, useCurrentCartPose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCurrentCartPose.c_str()) ; return false; }
+
   // Store the robot handle for later use (to get time).
   robot_state_ = robot;
 
@@ -87,7 +126,7 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
   q_.resize(kdl_chain_.getNrOfJoints());
   q0_.resize(kdl_chain_.getNrOfJoints());
   qdot_.resize(kdl_chain_.getNrOfJoints());
-  tau_.resize(kdl_chain_.getNrOfJoints());
+  tau_c_.resize(kdl_chain_.getNrOfJoints());
   J_.resize(kdl_chain_.getNrOfJoints());
 
   // Pick the gains.
@@ -105,7 +144,7 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
   Kp_.rot(1) = cartRot_Kp_y;  Kd_.rot(1) = cartRot_Kd_y; // Rotation    y
   Kp_.rot(2) = cartRot_Kp_z;  Kd_.rot(2) = cartRot_Kd_z; // Rotation    z
 
-  ROS_ERROR("Joint no: %d", kdl_chain_.getNrOfJoints());
+//  ROS_ERROR("Joint no: %d", kdl_chain_.getNrOfJoints());
 
   // TEST
 
@@ -156,14 +195,24 @@ void PR2CartesianControllerClass::update()
 
   // Follow a circle of 10cm at 3 rad/sec.
   circle_phase_ += 3.0 * dt;
-  KDL::Vector  circle(0,0,0);
-  circle(2) = 0.1; //0.1 * sin(circle_phase_);
-  circle(1) = 0.1; //0.1 * (cos(circle_phase_) - 1);
+  KDL::Vector  circle(cartDesX,cartDesY,cartDesZ);
 
-  xd_ = x0_;
+  circle(1) = cartDesY * (cos(circle_phase_) - 1);
+  circle(2) = cartDesZ * sin(circle_phase_)      ;
+
+
+  if( useCurrentCartPose )
+  {
+    // Start from current
+    xd_ = x0_;
+  }else
+  {
+    // Start from specified
+    xd_.p = KDL::Vector(cartIniX,cartIniY,cartIniZ);
+  }
+
   xd_.p += circle;
-  xd_.M = KDL::Rotation::RPY( 0, 1.57079632679, 0 );
-
+  xd_.M =  KDL::Rotation::RPY( cartDesRoll, cartDesPitch, cartDesYaw );
 
   // Calculate a Cartesian restoring force.
   xerr_.vel = x_.p - xd_.p;
@@ -177,13 +226,13 @@ void PR2CartesianControllerClass::update()
   // Convert the force into a set of joint torques.
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
   {
-    tau_(i) = 0;
+    tau_c_(i) = 0;
     for (unsigned int j = 0 ; j < 6 ; j++)
-      tau_(i) += J_(j,i) * F_(j);
+      tau_c_(i) += J_(j,i) * F_(j);
   }
 
   // And finally send these torques out.
-  chain_.setEfforts(tau_);
+  chain_.setEfforts(tau_c_);
 
 }
 

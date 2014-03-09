@@ -15,7 +15,7 @@ namespace pr2_controller_ns{
 
 class PR2CartesianControllerClass: public pr2_controller_interface::Controller
 {
-private:
+public:
   // The current robot state (to get the time stamp)
   pr2_mechanism_model::RobotState* robot_state_;
 
@@ -31,7 +31,7 @@ private:
   KDL::JntArray  q_;            // Joint positions
   KDL::JntArray  q0_;           // Joint initial positions
   KDL::JntArrayVel  qdot_;      // Joint velocities
-  KDL::JntArray  tau_;          // Joint torques
+  KDL::JntArray  tau_c_;          // Joint torques
 
   KDL::Frame     x_;            // Tip pose
   KDL::Frame     xd_;           // Tip desired pose
@@ -46,6 +46,22 @@ private:
   // as there is no appropriate type!
   KDL::Twist     Kp_;           // Proportional gains
   KDL::Twist     Kd_;           // Derivative gains
+
+  // Desired cartesian pose
+  double cartDesX     ;
+  double cartDesY     ;
+  double cartDesZ     ;
+  double cartDesRoll  ;
+  double cartDesPitch ;
+  double cartDesYaw   ;
+
+  // Initial cartesian pose
+  double cartIniX ;
+  double cartIniY ;
+  double cartIniZ ;
+
+  // Use current cart pose or use specifiec cart pose
+  bool useCurrentCartPose ;
 
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle

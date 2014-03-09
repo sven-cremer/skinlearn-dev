@@ -171,8 +171,6 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   q_upper.resize(kdl_chain_.getNrOfJoints());
   qd_limit.resize(kdl_chain_.getNrOfJoints());
 
-  kdl_temp_joint_.resize(kdl_chain_.getNrOfJoints());
-
   J_.resize(kdl_chain_.getNrOfJoints());
   J_m_.resize(kdl_chain_.getNrOfJoints());
 
@@ -240,6 +238,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 //  num_Joints  = 7  ;
 
   eigen_temp_joint.resize( num_Joints,1 );
+  kdl_temp_joint_.resize(kdl_chain_.getNrOfJoints());
 
   q       .resize( num_Joints, 1 ) ;
   qd      .resize( num_Joints, 1 ) ;
@@ -429,7 +428,7 @@ void PR2NeuroadptControllerClass::starting()
 
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
-  startCircleTraj = false;
+  startCircleTraj = true;
 
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
@@ -822,13 +821,13 @@ void PR2NeuroadptControllerClass::update()
   /////////////////////////
 
   // NN
-  nnController.Update( qd_m  ,
-                       qd    ,
-                       q_m   ,
-                       q     ,
-                       qdd_m ,
-                       t_r   ,
-                       tau    );
+  nnController.UpdateJoint( q     ,
+                            qd    ,
+                            q_m   ,
+                            qd_m  ,
+                            qdd_m ,
+                            t_r   ,
+                            tau    );
   // NN END
   /////////////////////////
 

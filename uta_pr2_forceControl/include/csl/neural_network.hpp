@@ -166,15 +166,32 @@ public:
 	  delT = p_delT;
 	}
 
-	void Update( Eigen::VectorXd & qd_m  ,
-	             Eigen::VectorXd & qd    ,
-	             Eigen::VectorXd & q_m   ,
-	             Eigen::VectorXd & q     ,
-	             Eigen::VectorXd & qdd_m ,
-	             Eigen::VectorXd & t_r   ,
-	             Eigen::VectorXd & tau    );
+	void UpdateCart( Eigen::VectorXd & X     ,
+	                 Eigen::VectorXd & Xd    ,
+	                 Eigen::VectorXd & X_m   ,
+	                 Eigen::VectorXd & Xd_m  ,
+	                 Eigen::VectorXd & Xdd_m ,
+	                 Eigen::VectorXd & q     ,
+	                 Eigen::VectorXd & qd    ,
+	                 Eigen::VectorXd & t_r   ,
+	                 Eigen::VectorXd & tau    );
 
-	Eigen::VectorXd
+        void UpdateJoint( Eigen::VectorXd & q     ,
+                          Eigen::VectorXd & qd    ,
+                          Eigen::VectorXd & q_m   ,
+                          Eigen::VectorXd & qd_m  ,
+                          Eigen::VectorXd & qdd_m ,
+                          Eigen::VectorXd & t_r   ,
+                          Eigen::VectorXd & tau    );
+
+	void Update( Eigen::VectorXd & q    ,
+                     Eigen::VectorXd & qd   ,
+                     Eigen::VectorXd & q_m  ,
+                     Eigen::VectorXd & qd_m ,
+                     Eigen::VectorXd & t_r  ,
+                     Eigen::VectorXd & tau   );
+
+	Eigen::MatrixXd
 	sigmoid( Eigen::MatrixXd & z ) const;
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW

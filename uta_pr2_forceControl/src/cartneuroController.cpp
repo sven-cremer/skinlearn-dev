@@ -87,7 +87,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   q_.resize(kdl_chain_.getNrOfJoints());
   q0_.resize(kdl_chain_.getNrOfJoints());
   qdot_.resize(kdl_chain_.getNrOfJoints());
-  tau_.resize(kdl_chain_.getNrOfJoints());
+  tau_c_.resize(kdl_chain_.getNrOfJoints());
   J_.resize(kdl_chain_.getNrOfJoints());
 
   // Pick the gains.
@@ -136,19 +136,107 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( nn_ONparam          , nn_ON            ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_ONparam.c_str())                      ; return false; }
 
+  std::string para_nnNum_Inputs  = "/nnNum_Inputs" ;
+  std::string para_nnNum_Outputs = "/nnNum_Outputs" ;
+  std::string para_nnNum_Hidden  = "/nnNum_Hidden" ;
+  std::string para_nnNum_Error   = "/nnNum_Error" ;
+  std::string para_nnNum_Joints  = "/nnNum_Joints" ;
+
+  if (!n.getParam( para_nnNum_Inputs , num_Inputs  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Inputs .c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Outputs, num_Outputs )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Outputs.c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Hidden , num_Hidden  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Hidden .c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Error  , num_Error   )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Error  .c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Joints , num_Joints  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Joints .c_str()) ; return false; }
+
+  // Circle rate 3 rad/sec
+  circle_rate = 3  ;
+  circleLlim  = 0  ;
+  circleUlim  = 1.5;
+
+  std::string para_circleRate  = "/circleRate" ;
+  std::string para_circleLlim  = "/circleLlim" ;
+  std::string para_circleUlim  = "/circleUlim" ;
+
+  if (!n.getParam( para_circleRate , circle_rate )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleRate .c_str()) ; return false; }
+  if (!n.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; return false; }
+  if (!n.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
+
+  /////////////////////////
+  // System Model
+
+  // FIXME remove below stuff
+  num_Inputs  = 44 ;
+  num_Outputs = 6  ;
+  num_Hidden  = 100;
+  num_Error   = 6  ;
+  num_Joints  = 7  ;
+
+  kdl_temp_joint_.resize( num_Joints );
+  eigen_temp_joint.resize( num_Joints,1 );
+
+  q       .resize( num_Joints, 1 ) ;
+  qd      .resize( num_Joints, 1 ) ;
+  qdd     .resize( num_Joints, 1 ) ;
+
+  q_m     .resize( 6, 1 ) ;
+  qd_m    .resize( 6, 1 ) ;
+  qdd_m   .resize( 6, 1 ) ;
+
+  // desired Cartesian states
+  X_m     .resize( 6         , 1 ) ;
+  Xd_m    .resize( 6         , 1 ) ;
+  Xdd_m   .resize( 6         , 1 ) ;
+
+  // Cartesian states
+  X       .resize( 6         , 1 ) ;
+  Xd      .resize( 6         , 1 ) ;
+
+  t_r     .resize( num_Joints, 1 ) ;
+  task_ref.resize( num_Joints, 1 ) ;
+  tau     .resize( num_Joints, 1 ) ;
+
+  q        = Eigen::VectorXd::Zero( num_Joints ) ;
+  qd       = Eigen::VectorXd::Zero( num_Joints ) ;
+  qdd      = Eigen::VectorXd::Zero( num_Joints ) ;
+  q_m      = Eigen::VectorXd::Zero( num_Joints ) ;
+  qd_m     = Eigen::VectorXd::Zero( num_Joints ) ;
+  qdd_m    = Eigen::VectorXd::Zero( num_Joints ) ;
+
+  X_m      = Eigen::VectorXd::Zero( 6 ) ;
+  Xd_m     = Eigen::VectorXd::Zero( 6 ) ;
+  Xdd_m    = Eigen::VectorXd::Zero( 6 ) ;
+  X        = Eigen::VectorXd::Zero( 6 ) ;
+  Xd       = Eigen::VectorXd::Zero( 6 ) ;
+
+  t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
+  task_ref = Eigen::VectorXd::Zero( num_Outputs ) ;
+  tau      = Eigen::VectorXd::Zero( num_Outputs ) ;
+  force    = Eigen::VectorXd::Zero( num_Outputs ) ;
+
+  Jacobian = Eigen::MatrixXd::Zero( 6, num_Joints ) ;
+
+  // System Model END
+  /////////////////////////
+
 
   /////////////////////////
   // NN
 
-  nnController.init( kappa   ,
-                     Kv      ,
-                     lambda  ,
-                     Kz      ,
-                     Zb      ,
-                     fFForce ,
-                     nnF     ,
-                     nnG     ,
-                     nn_ON    );
+  nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
+                                  num_Outputs ,   // num_Outputs
+                                  num_Hidden  ,   // num_Hidden
+                                  num_Error   ,   // num_Error
+                                  num_Joints   ); // num_Joints
+
+  nnController.init( kappa  ,
+                     Kv     ,
+                     lambda ,
+                     Kz     ,
+                     Zb     ,
+                     fFForce,
+                     nnF    ,
+                     nnG    ,
+                     nn_ON   );
 
   nnController.updateDelT( 0.001 );
 
@@ -174,11 +262,20 @@ void PR2CartneuroControllerClass::starting()
   chain_.getPositions(q0_);
   jnt_to_pose_solver_->JntToCart(q0_, x0_);
 
+  /////////////////////////
+  // System Model
+
+  // System Model END
+  /////////////////////////
+
+
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
+  startCircleTraj = true;
 
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
+//  start_time_ = robot_state_->getTime();
 }
 
 
@@ -204,14 +301,22 @@ void PR2CartneuroControllerClass::update()
   {
     xdot_(i) = 0;
     for (unsigned int j = 0 ; j < kdl_chain_.getNrOfJoints() ; j++)
+    {
       xdot_(i) += J_(i,j) * qdot_.qdot(j);
+      // Eigen Jacobian
+      Jacobian(i,j) = J_(i,j);
+    }
   }
 
   // Follow a circle of 10cm at 3 rad/sec.
-  circle_phase_ += 3.0 * dt;
+  if( startCircleTraj == true )
+  {
+    circle_phase_ += circle_rate * dt;
+  }
+
   KDL::Vector  circle(0,0,0);
-  circle(2) = 0.1; //0.1 * sin(circle_phase_);
-  circle(1) = 0.1; //0.1 * (cos(circle_phase_) - 1);
+  circle(2) = 0.1 * sin(circle_phase_);
+  circle(1) = 0.1 * (cos(circle_phase_) - 1);
 
   xd_ = x0_;
   xd_.p += circle;
@@ -224,19 +329,68 @@ void PR2CartneuroControllerClass::update()
                      xd_.M.UnitY() * x_.M.UnitY() +
                      xd_.M.UnitZ() * x_.M.UnitZ());
 
-  for (unsigned int i = 0 ; i < 6 ; i++)
-    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+//  for (unsigned int i = 0 ; i < 6 ; i++)
+//    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+//
+//  // Convert the force into a set of joint torques.
+//  for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
+//  {
+//    tau_(i) = 0;
+//    for (unsigned int j = 0 ; j < 6 ; j++)
+//      tau_(i) += J_(j,i) * F_(j);
+//  }
+//
 
-  // Convert the force into a set of joint torques.
-  for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
-  {
-    tau_(i) = 0;
-    for (unsigned int j = 0 ; j < 6 ; j++)
-      tau_(i) += J_(j,i) * F_(j);
-  }
+
+  // Current joint positions and velocities
+  q = JointKdl2Eigen( q_ );
+  qd = JointVelKdl2Eigen( qdot_ );
+
+  double circleAmpl = (circleUlim - circleLlim)/2 ;
+
+  X_m(0) = xd_.p(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;
+  X_m(1) = xd_.p(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
+  X_m(2) = xd_.p(2);  Xd_m(2) = 0;  Xdd_m(2) = 0;
+  X_m(3) = 0;         Xd_m(3) = 0;  Xdd_m(3) = 0;
+  X_m(4) = 0;         Xd_m(4) = 0;  Xdd_m(4) = 0;
+  X_m(5) = 0;         Xd_m(5) = 0;  Xdd_m(5) = 0;
+
+  X(0) = x_.p(0);  Xd(0) = xdot_(0);
+  X(1) = x_.p(1);  Xd(1) = xdot_(1);
+  X(2) = x_.p(2);  Xd(2) = xdot_(2);
+  X(3) = 0;        Xd(3) = xdot_(3);
+  X(4) = 0;        Xd(4) = xdot_(4);
+  X(5) = 0;        Xd(5) = xdot_(5);
+
+  /////////////////////////
+  // NN
+    nnController.UpdateCart( X     ,
+                             Xd    ,
+                             X_m   ,
+                             Xd_m  ,
+                             Xdd_m ,
+                             q     ,
+                             qd    ,
+                             t_r   ,
+                             force  );
+  // NN END
+  /////////////////////////
+
+  tau = Jacobian.transpose()*force;
+
+  // Convert from Eigen to KDL
+//      tau_c_ = JointEigen2Kdl( tau );
+
+  tau_c_(0) = tau(0);
+  tau_c_(1) = tau(1);
+  tau_c_(2) = tau(2);
+  tau_c_(3) = tau(3);
+  tau_c_(4) = tau(4);
+  tau_c_(5) = tau(5);
+  tau_c_(6) = tau(6);
 
   // And finally send these torques out.
-  chain_.setEfforts(tau_);
+  chain_.setEfforts(tau_c_);
 
 }
 
@@ -244,6 +398,48 @@ void PR2CartneuroControllerClass::update()
 /// Controller stopping in realtime
 void PR2CartneuroControllerClass::stopping()
 {}
+
+Eigen::MatrixXd
+PR2CartneuroControllerClass::JointKdl2Eigen( KDL::JntArray & joint_ )
+{
+        eigen_temp_joint(0) = joint_(0);
+        eigen_temp_joint(1) = joint_(1);
+        eigen_temp_joint(2) = joint_(2);
+        eigen_temp_joint(3) = joint_(3);
+        eigen_temp_joint(4) = joint_(4);
+        eigen_temp_joint(5) = joint_(5);
+        eigen_temp_joint(6) = joint_(6);
+
+        return eigen_temp_joint;
+}
+
+Eigen::MatrixXd
+PR2CartneuroControllerClass::JointVelKdl2Eigen( KDL::JntArrayVel & joint_ )
+{
+        eigen_temp_joint(0) = joint_.qdot(0);
+        eigen_temp_joint(1) = joint_.qdot(1);
+        eigen_temp_joint(2) = joint_.qdot(2);
+        eigen_temp_joint(3) = joint_.qdot(3);
+        eigen_temp_joint(4) = joint_.qdot(4);
+        eigen_temp_joint(5) = joint_.qdot(5);
+        eigen_temp_joint(6) = joint_.qdot(6);
+
+        return eigen_temp_joint;
+}
+
+KDL::JntArray
+PR2CartneuroControllerClass::JointEigen2Kdl( Eigen::VectorXd & joint )
+{
+        kdl_temp_joint_(0) = joint(0);
+        kdl_temp_joint_(1) = joint(1);
+        kdl_temp_joint_(2) = joint(2);
+        kdl_temp_joint_(3) = joint(3);
+        kdl_temp_joint_(4) = joint(4);
+        kdl_temp_joint_(5) = joint(5);
+        kdl_temp_joint_(6) = joint(6);
+
+        return kdl_temp_joint_;
+}
 
 // Register controller to pluginlib
 PLUGINLIB_REGISTER_CLASS( PR2CartneuroControllerClass,

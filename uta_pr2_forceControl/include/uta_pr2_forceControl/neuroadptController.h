@@ -234,7 +234,6 @@ private:
                std_srvs::Empty::Response& resp);
   ros::ServiceServer capture_srv_;
 
-
   ros::Publisher pubFTData_              ;
   ros::Publisher pubModelStates_         ;
   ros::Publisher pubRobotStates_         ;

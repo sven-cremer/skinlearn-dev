@@ -1,4 +1,4 @@
-#include <pr2_controller_interface/controller.h>
+#include "uta_pr2_forceControl/cartesianController.h"
 #include <pr2_mechanism_model/chain.h>
 #include <pr2_mechanism_model/robot.h>
 
@@ -12,50 +12,55 @@
 
 #include "objTest.h"
 #include "csl/neural_network.hpp"
-#include "oel/least_squares.hpp"
 
 namespace pr2_controller_ns{
 
-class PR2CartneuroControllerClass: public pr2_controller_interface::Controller
+class PR2CartneuroControllerClass: public pr2_controller_ns::PR2CartesianControllerClass
 {
 private:
-  // The current robot state (to get the time stamp)
-  pr2_mechanism_model::RobotState* robot_state_;
 
-  // The chain of links and joints
-  pr2_mechanism_model::Chain chain_;
-  KDL::Chain kdl_chain_;
+  /////////////////////////
+  // System Model
+//  oel::ls::RLSFilter rlsFilter;
 
-  // KDL Solvers performing the actual computations
-  boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
-  boost::scoped_ptr<KDL::ChainJntToJacSolver> jnt_to_jac_solver_;
+  Eigen::VectorXd q;
+  Eigen::VectorXd qd;
+  Eigen::VectorXd qdd;
 
-  // The variables (which need to be pre-allocated).
-  KDL::JntArray  q_;            // Joint positions
-  KDL::JntArray  q0_;           // Joint initial positions
-  KDL::JntArrayVel  qdot_;      // Joint velocities
-  KDL::JntArray  tau_;          // Joint torques
+  Eigen::VectorXd q_m;
+  Eigen::VectorXd qd_m;
+  Eigen::VectorXd qdd_m;
 
-  KDL::Frame     x_;            // Tip pose
-  KDL::Frame     xd_;           // Tip desired pose
-  KDL::Frame     x0_;           // Tip initial pose
+  Eigen::VectorXd X_m;
+  Eigen::VectorXd Xd_m;
+  Eigen::VectorXd Xdd_m;
 
-  KDL::Twist     xerr_;         // Cart error
-  KDL::Twist     xdot_;         // Cart velocity
-  KDL::Wrench    F_;            // Cart effort
-  KDL::Jacobian  J_;            // Jacobian
+  Eigen::VectorXd X;
+  Eigen::VectorXd Xd;
 
-  // Note the gains are incorrectly typed as a twist,
-  // as there is no appropriate type!
-  KDL::Twist     Kp_;           // Proportional gains
-  KDL::Twist     Kd_;           // Derivative gains
+  Eigen::VectorXd t_r;
+  Eigen::VectorXd task_ref;
+  Eigen::VectorXd tau;
+  Eigen::VectorXd force;
 
-  // The trajectory variables
-  double    circle_phase_;      // Phase along the circle
-  ros::Time last_time_;         // Time of the last servo cycle
+  Eigen::MatrixXd Jacobian;
 
-  csl::neural_network::TwoLayerNeuralNetworkController nnController;
-  oel::ls::RLSFilter rlsFilter;
+  // System Model END
+  /////////////////////////
+
+  /////////////////////////
+  // NN
+
+//  enum { Inputs  = 35 }; // n Size of the inputs
+//  enum { Outputs = 7 }; // m Size of the outputs
+//  enum { Hidden  = 10 }; // l Size of the hidden layer
+//  enum { Error   = 7 }; // filtered error
+
+  double num_Inputs  ; // n Size of the inputs
+  double num_Outputs ; // m Size of the outputs
+  double num_Hidden  ; // l Size of the hidden layer
+  double num_Error   ; // filtered error
+  double num_Joints  ; // number of joints.
 
   double  kappa  ;
   double  Kv     ;
@@ -65,7 +70,24 @@ private:
   double  nnF    ;
   double  nnG    ;
   double  nn_ON  ;
+
+  double  m_M    ;
+  double  m_S    ;
+  double  m_D    ;
+
   double  fFForce;
+
+  csl::neural_network::TwoLayerNeuralNetworkController nnController;
+
+  // NN END
+  /////////////////////////
+
+  double circle_rate;
+  double circleUlim ;
+  double circleLlim ;
+  bool startCircleTraj;
+  Eigen::MatrixXd eigen_temp_joint;
+  KDL::JntArray kdl_temp_joint_;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,
@@ -73,5 +95,10 @@ public:
   void starting();
   void update();
   void stopping();
+
+  Eigen::MatrixXd JointKdl2Eigen( KDL::JntArray & joint_ );
+  Eigen::MatrixXd JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
+  KDL::JntArray JointEigen2Kdl( Eigen::VectorXd & joint );
+
 };
 }
