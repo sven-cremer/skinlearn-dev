@@ -37,15 +37,15 @@ nnNum_Joints        : 7
 # r = (qd_m - qd) + lambda*(q_m - q);
 # Kv*r
 
-nn_Kv               : 3
-nn_lambda           : 50
+nn_Kv               : 2
+nn_lambda           : 10
 nn_kappa            : 0.07
-nn_Kz               : 0.001   
+nn_Kz               : 0  
 nn_Zb               : 1000 
 nn_feedForwardForce : 0   
 nn_nnF              : 100 
 nn_nnG              : 20
-nn_ON               : 0
+nn_ON               : 1
 
 m_M                 : 1
 m_S                 : 5
@@ -64,3 +64,17 @@ cartRot_Kp_z : 100.0
 cartRot_Kd_x : 1.0
 cartRot_Kd_y : 1.0
 cartRot_Kd_z : 1.0
+
+useCurrentCartPose : false
+
+cartIniX     :  0.8
+cartIniY     : -0.2
+cartIniZ     :  0.1
+
+cartDesX     : 0.0
+cartDesY     : 0.1
+cartDesZ     : 0.1
+cartDesRoll  : 0.0
+cartDesPitch : 0.0
+cartDesYaw   : 0.0
+
