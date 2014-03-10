@@ -831,8 +831,6 @@ void PR2NeuroadptControllerClass::update()
   // NN END
   /////////////////////////
 
-
-
 	// Convert from Eigen to KDL
 //	tau_c_ = JointEigen2Kdl( tau );
 
@@ -843,8 +841,6 @@ void PR2NeuroadptControllerClass::update()
 	tau_c_(4) = tau(4);
 	tau_c_(5) = tau(5);
 	tau_c_(6) = tau(6);
-
-
 
 	modelState.header.stamp = robot_state_->getTime();
 	robotState.header.stamp = robot_state_->getTime();
@@ -899,100 +895,83 @@ void PR2NeuroadptControllerClass::update()
 	robotState.effort[5] = tau_c_(5);
 	robotState.effort[6] = tau_c_(6);
 
-
 	// And finally send these torques out.
         chain_.setEfforts(tau_c_);
-
-//    // Publish data in ROS message every 10 cycles (about 100Hz)
-//	if (++pub_cycle_count_ > 10)
-//	{
-//		should_publish_ = true;
-//		pub_cycle_count_ = 0;
-//	}
-
-//	if (should_publish_ && pub_.trylock())
-//	{
-//		should_publish_ = false;
-//
-//		pub_.msg_.header.stamp = robot_state_->getTime();
-//		pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
-//
-//		pubModelStates_.msg_ = modelState;
-//		pubRobotStates_.msg_ = robotState;
-//
-//		pubControllerParam_.msg_.kappa            = kappa            ;
-//		pubControllerParam_.msg_.Kv               = Kv               ;
-//		pubControllerParam_.msg_.lambda           = lambda           ;
-//		pubControllerParam_.msg_.Kz               = Kz               ;
-//		pubControllerParam_.msg_.Zb               = Zb               ;
-//		pubControllerParam_.msg_.feedForwardForce = feedForwardForce ;
-//		pubControllerParam_.msg_.F				  = nnF              ;
-//		pubControllerParam_.msg_.G				  = nnG              ;
-//		pubControllerParam_.msg_.nn_ON			  = nn_ON            ;
-//		pubControllerParam_.msg_.inParams   	  = Inputs           ;
-//		pubControllerParam_.msg_.outParams		  = Outputs          ;
-//		pubControllerParam_.msg_.hiddenNodes	  = Hidden           ;
-//		pubControllerParam_.msg_.errorParams      = Error  			 ;
-//
-//		pubControllerParam_.msg_.m				  = Mm(0,0)          ;
-//		pubControllerParam_.msg_.d				  = Dm(0,0)          ;
-//		pubControllerParam_.msg_.k				  = Km(0,0)          ;
-//
-//		pubModelCartPos_.msg_.header.stamp = robot_state_->getTime();
-//		pubRobotCartPos_.msg_.header.stamp = robot_state_->getTime();
-//
-////		tf::PoseKDLToMsg(x_m_, modelCartPos_);
-////		tf::PoseKDLToMsg(x_  , robotCartPos_);
-//
-//		pubModelCartPos_.msg_.pose = modelCartPos_;
-//		pubRobotCartPos_.msg_.pose = robotCartPos_;
-//
-//		pub_.unlockAndPublish();
-//		pubModelStates_.unlockAndPublish();
-//		pubRobotStates_.unlockAndPublish();
-//		pubModelCartPos_.unlockAndPublish();
-//		pubRobotCartPos_.unlockAndPublish();
-//		pubControllerParam_.unlockAndPublish();
-//	}
 
 	/////////////////////////
 	// DATA COLLECTION
 
+        bufferData( dt );
+
+	// DATA COLLECTION END
+	/////////////////////////
+
+}
+
+/*
+void publishData()
+{
+      // Publish data in ROS message every 10 cycles (about 100Hz)
+        if (++pub_cycle_count_ > 10)
+        {
+                should_publish_ = true;
+                pub_cycle_count_ = 0;
+        }
+
+        if (should_publish_ && pub_.trylock())
+        {
+                should_publish_ = false;
+
+                pub_.msg_.header.stamp = robot_state_->getTime();
+                pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
+
+                pubModelStates_.msg_ = modelState;
+                pubRobotStates_.msg_ = robotState;
+
+                pubControllerParam_.msg_.kappa            = kappa            ;
+                pubControllerParam_.msg_.Kv               = Kv               ;
+                pubControllerParam_.msg_.lambda           = lambda           ;
+                pubControllerParam_.msg_.Kz               = Kz               ;
+                pubControllerParam_.msg_.Zb               = Zb               ;
+                pubControllerParam_.msg_.feedForwardForce = feedForwardForce ;
+                pubControllerParam_.msg_.F                                = nnF              ;
+                pubControllerParam_.msg_.G                                = nnG              ;
+                pubControllerParam_.msg_.nn_ON                    = nn_ON            ;
+                pubControllerParam_.msg_.inParams         = Inputs           ;
+                pubControllerParam_.msg_.outParams                = Outputs          ;
+                pubControllerParam_.msg_.hiddenNodes      = Hidden           ;
+                pubControllerParam_.msg_.errorParams      = Error                        ;
+
+                pubControllerParam_.msg_.m                                = Mm(0,0)          ;
+                pubControllerParam_.msg_.d                                = Dm(0,0)          ;
+                pubControllerParam_.msg_.k                                = Km(0,0)          ;
+
+                pubModelCartPos_.msg_.header.stamp = robot_state_->getTime();
+                pubRobotCartPos_.msg_.header.stamp = robot_state_->getTime();
+
+  //            tf::PoseKDLToMsg(x_m_, modelCartPos_);
+  //            tf::PoseKDLToMsg(x_  , robotCartPos_);
+
+                pubModelCartPos_.msg_.pose = modelCartPos_;
+                pubRobotCartPos_.msg_.pose = robotCartPos_;
+
+                pub_.unlockAndPublish();
+                pubModelStates_.unlockAndPublish();
+                pubRobotStates_.unlockAndPublish();
+                pubModelCartPos_.unlockAndPublish();
+                pubRobotCartPos_.unlockAndPublish();
+                pubControllerParam_.unlockAndPublish();
+        }
+}
+*/
+
+void PR2NeuroadptControllerClass::bufferData( double & dt )
+{
 	int index = storage_index_;
 	if ((index >= 0) && (index < StoreLen))
 	{
 		tf::PoseKDLToMsg(x_m_, modelCartPos_);
 		tf::PoseKDLToMsg(x_  , robotCartPos_);
-
-//		msgFTData[index].header.stamp       = robot_state_->getTime();
-//		msgFTData[index].wrench             = r_ftData.wrench;
-//		msgModelCartPos[index].header.stamp = robot_state_->getTime();
-//		msgRobotCartPos[index].header.stamp = robot_state_->getTime();
-//
-//		msgModelStates[index] = modelState;
-//		msgRobotStates[index] = robotState;
-//
-//
-//		msgModelCartPos[index].pose = modelCartPos_;
-//		msgRobotCartPos[index].pose = robotCartPos_;
-//
-//		msgControllerParam[index].kappa            = kappa            ;
-//		msgControllerParam[index].Kv               = Kv               ;
-//		msgControllerParam[index].lambda           = lambda           ;
-//		msgControllerParam[index].Kz               = Kz               ;
-//		msgControllerParam[index].Zb               = Zb               ;
-//		msgControllerParam[index].feedForwardForce = feedForwardForce ;
-//		msgControllerParam[index].F				   = nnF              ;
-//		msgControllerParam[index].G				   = nnG              ;
-//		msgControllerParam[index].nn_ON			   = nn_ON            ;
-//		msgControllerParam[index].inParams   	   = Inputs           ;
-//		msgControllerParam[index].outParams		   = Outputs          ;
-//		msgControllerParam[index].hiddenNodes	   = Hidden           ;
-//		msgControllerParam[index].errorParams      = Error  		  ;
-//
-//		msgControllerParam[index].m				  = Mm(0,0)          ;
-//		msgControllerParam[index].d				  = Dm(0,0)          ;
-//		msgControllerParam[index].k				  = Km(0,0)          ;
 
 		msgControllerFullData[index].dt                = dt                          ;
 
@@ -1146,12 +1125,7 @@ void PR2NeuroadptControllerClass::update()
 
 		// Increment for the next cycle.
 		storage_index_ = index+1;
-
 	}
-
-	// DATA COLLECTION END
-	/////////////////////////
-
 }
 
 /// Service call to capture and extract the data

@@ -1,6 +1,7 @@
 #include "uta_pr2_forceControl/cartesianController.h"
 #include <pluginlib/class_list_macros.h>
 #include "oel/least_squares.hpp"
+#include "pinv.hpp"
 
 using namespace pr2_controller_ns;
 
@@ -144,6 +145,14 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
   Kp_.rot(1) = cartRot_Kp_y;  Kd_.rot(1) = cartRot_Kd_y; // Rotation    y
   Kp_.rot(2) = cartRot_Kp_z;  Kd_.rot(2) = cartRot_Kd_z; // Rotation    z
 
+  Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
+  JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
+  JacobianTransPinv= Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  cartControlForce = Eigen::VectorXd::Zero( 6 ) ;
+  nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+  controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+
 //  ROS_ERROR("Joint no: %d", kdl_chain_.getNrOfJoints());
 
   // TEST
@@ -190,7 +199,11 @@ void PR2CartesianControllerClass::update()
   {
     xdot_(i) = 0;
     for (unsigned int j = 0 ; j < kdl_chain_.getNrOfJoints() ; j++)
+    {
       xdot_(i) += J_(i,j) * qdot_.qdot(j);
+      // Eigen Jacobian
+      Jacobian(i,j) = J_(i,j);
+    }
   }
 
   // Follow a circle of 10cm at 3 rad/sec.
@@ -221,15 +234,30 @@ void PR2CartesianControllerClass::update()
                      xd_.M.UnitZ() * x_.M.UnitZ());
 
   for (unsigned int i = 0 ; i < 6 ; i++)
-    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+    cartControlForce(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
 
-  // Convert the force into a set of joint torques.
+//  // Convert the force into a set of joint torques.
+//  for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
+//  {
+//    tau_c_(i) = 0;
+//    for (unsigned int j = 0 ; j < 6 ; j++)
+//      tau_c_(i) += J_(j,i) * cartControlForce(j);
+//  }
+
+  JacobianTrans = Jacobian.transpose();
+
+  JacobianTransPinv = pseudoInverse( JacobianTrans, 0.00001 ); // Jacobian * (JacobianTrans*Jacobian).inverse();
+  JacobianPinv      = pseudoInverse( Jacobian, 0.00001 );
+
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
-  {
-    tau_c_(i) = 0;
-    for (unsigned int j = 0 ; j < 6 ; j++)
-      tau_c_(i) += J_(j,i) * F_(j);
-  }
+    nullspaceTorque(i) = 1*( q0_(i) - q_(i)) + 0.5*qdot_.qdot(i);
+
+  controlTorque = JacobianTrans*cartControlForce
+      // nullspace controller
+    + ( Eigen::MatrixXd::Identity(kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints()) - JacobianTrans*JacobianPinv.transpose() )*nullspaceTorque;
+
+  for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
+    tau_c_(i) = controlTorque(i);
 
   // And finally send these torques out.
   chain_.setEfforts(tau_c_);

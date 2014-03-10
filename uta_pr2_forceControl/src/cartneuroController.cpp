@@ -161,6 +161,45 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; return false; }
   if (!n.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
 
+  // Desired cartesian pose
+  cartDesX     = 0.0           ;
+  cartDesY     = 0.1           ;
+  cartDesZ     = 0.1           ;
+  cartDesRoll  = 0             ;
+  cartDesPitch = 1.57079632679 ;
+  cartDesYaw   = 0             ;
+
+  std::string para_cartDesX     = "/cartDesX";
+  std::string para_cartDesY     = "/cartDesY";
+  std::string para_cartDesZ     = "/cartDesZ";
+  std::string para_cartDesRoll  = "/cartDesRoll";
+  std::string para_cartDesPitch = "/cartDesPitch";
+  std::string para_cartDesYaw   = "/cartDesYaw";
+
+  if (!n.getParam( para_cartDesX     , cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX    .c_str()) ; return false; }
+  if (!n.getParam( para_cartDesY     , cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY    .c_str()) ; return false; }
+  if (!n.getParam( para_cartDesZ     , cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ    .c_str()) ; return false; }
+  if (!n.getParam( para_cartDesRoll  , cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; return false; }
+  if (!n.getParam( para_cartDesPitch , cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; return false; }
+  if (!n.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; return false; }
+
+  // Initial cartesian pose
+  cartIniX     = 0.1           ;
+  cartIniY     = 0.1           ;
+  cartIniZ     = 0             ;
+
+  std::string para_cartIniX     = "/cartIniX";
+  std::string para_cartIniY     = "/cartIniY";
+  std::string para_cartIniZ     = "/cartIniZ";
+
+  if (!n.getParam( para_cartIniX, cartIniX )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
+  if (!n.getParam( para_cartIniY, cartIniY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
+  if (!n.getParam( para_cartIniZ, cartIniZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
+
+  useCurrentCartPose = false ;
+  std::string para_useCurrentCartPose     = "/useCurrentCartPose";
+  if (!n.getParam( para_useCurrentCartPose, useCurrentCartPose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCurrentCartPose.c_str()) ; return false; }
+
   /////////////////////////
   // System Model
 
@@ -309,19 +348,25 @@ void PR2CartneuroControllerClass::update()
   }
 
   // Follow a circle of 10cm at 3 rad/sec.
-  if( startCircleTraj == true )
+  circle_phase_ += 3.0 * dt;
+  KDL::Vector  circle(cartDesX,cartDesY,cartDesZ);
+
+  circle(1) = cartDesY * (cos(circle_phase_) - 1);
+  circle(2) = cartDesZ * sin(circle_phase_)      ;
+
+
+  if( useCurrentCartPose )
   {
-    circle_phase_ += circle_rate * dt;
+    // Start from current
+    xd_ = x0_;
+  }else
+  {
+    // Start from specified
+    xd_.p = KDL::Vector(cartIniX,cartIniY,cartIniZ);
   }
 
-  KDL::Vector  circle(0,0,0);
-  circle(2) = 0.1 * sin(circle_phase_);
-  circle(1) = 0.1 * (cos(circle_phase_) - 1);
-
-  xd_ = x0_;
   xd_.p += circle;
-  xd_.M = KDL::Rotation::RPY( 0, 1.57079632679, 0 );
-
+  xd_.M =  KDL::Rotation::RPY( cartDesRoll, cartDesPitch, cartDesYaw );
 
   // Calculate a Cartesian restoring force.
   xerr_.vel = x_.p - xd_.p;

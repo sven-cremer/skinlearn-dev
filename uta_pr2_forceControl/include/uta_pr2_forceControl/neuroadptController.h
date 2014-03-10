@@ -263,6 +263,8 @@ public:
   void update();
   void stopping();
 
+  void bufferData( double & dt );
+
   Eigen::MatrixXd JointKdl2Eigen( KDL::JntArray & joint_ );
 
   Eigen::MatrixXd JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );

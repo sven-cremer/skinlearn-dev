@@ -60,6 +60,14 @@ public:
   double cartIniY ;
   double cartIniZ ;
 
+  Eigen::MatrixXd Jacobian;
+  Eigen::MatrixXd JacobianPinv;
+  Eigen::MatrixXd JacobianTrans;
+  Eigen::MatrixXd JacobianTransPinv;
+  Eigen::VectorXd cartControlForce;
+  Eigen::VectorXd nullspaceTorque;
+  Eigen::VectorXd controlTorque;
+
   // Use current cart pose or use specifiec cart pose
   bool useCurrentCartPose ;
 
@@ -73,5 +81,8 @@ public:
   void starting();
   void update();
   void stopping();
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 };
 }
