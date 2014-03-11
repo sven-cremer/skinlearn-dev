@@ -428,7 +428,7 @@ void PR2NeuroadptControllerClass::starting()
 
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
-  startCircleTraj = true;
+  startCircleTraj = false;
 
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
