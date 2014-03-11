@@ -428,7 +428,7 @@ void PR2NeuroadptControllerClass::starting()
 
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
-  startCircleTraj = true;
+  startCircleTraj = false;
 
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
@@ -1159,7 +1159,7 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
   ros::Time started = ros::Time::now();
 
   // Start circle traj
-  startCircleTraj = true;
+  startCircleTraj = false;
 
   /* Mark the buffer as clear (which will start storing). */
   storage_index_ = 0;
