@@ -22,6 +22,7 @@
 #include "sensor_msgs/JointState.h"
 #include <uta_pr2_forceControl/controllerParam.h>
 #include <uta_pr2_forceControl/controllerFullData.h>
+#include <uta_pr2_forceControl/controllerParamUpdate.h>
 
 #include <std_srvs/Empty.h>
 
@@ -230,9 +231,14 @@ private:
 
   urdf::Model urdf_model;
 
+  bool paramUpdate( uta_pr2_forceControl::controllerParamUpdate::Request  & req ,
+                    uta_pr2_forceControl::controllerParamUpdate::Response & resp );
+
   bool capture(std_srvs::Empty::Request& req,
                std_srvs::Empty::Response& resp);
+
   ros::ServiceServer capture_srv_;
+  ros::ServiceServer paramUpdate_srv_;
 
   void bufferData( double & dt );
   Eigen::MatrixXd JointKdl2Eigen( KDL::JntArray & joint_ );

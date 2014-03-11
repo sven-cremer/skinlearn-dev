@@ -1,0 +1,5 @@
+#request constants
+controllerParam msg
+---
+#response constants
+bool success

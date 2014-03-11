@@ -358,10 +358,13 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 //  pubRobotCartPos_.init(    n, "robot_cart_pos"     , 1 );
 //  pubControllerParam_.init( n, "controller_params"  , 1 );
 
+  // Update controller paramters
+  paramUpdate_srv_ = n.advertiseService("paramUpdate", &PR2NeuroadptControllerClass::paramUpdate, this);
+
 	/////////////////////////
 	// DATA COLLECTION
 
-	capture_srv_   = n.advertiseService("capture", &PR2NeuroadptControllerClass::capture, this);
+	capture_srv_     = n.advertiseService("capture",     &PR2NeuroadptControllerClass::capture    , this);
 
 	pubFTData_             = n.advertise< geometry_msgs::WrenchStamped             >( "FT_data"              , StoreLen);
 	pubModelStates_        = n.advertise< sensor_msgs::JointState                  >( "model_joint_states"   , StoreLen);
@@ -1149,6 +1152,51 @@ void PR2NeuroadptControllerClass::bufferData( double & dt )
 		// Increment for the next cycle.
 		storage_index_ = index+1;
 	}
+}
+
+/// Service call to capture and extract the data
+bool PR2NeuroadptControllerClass::paramUpdate( uta_pr2_forceControl::controllerParamUpdate::Request  & req ,
+                                               uta_pr2_forceControl::controllerParamUpdate::Response & resp )
+{
+
+//  req.msg.m                ;
+//  req.msg.d                ;
+//  req.msg.k                ;
+
+  num_Inputs  = req.msg.inParams         ;
+  num_Outputs = req.msg.outParams        ;
+  num_Hidden  = req.msg.hiddenNodes      ;
+  num_Error   = req.msg.errorParams      ;
+
+  kappa       = req.msg.kappa            ;
+  Kv          = req.msg.Kv               ;
+  lambda      = req.msg.lambda           ;
+  Kz          = req.msg.Kz               ;
+  Zb          = req.msg.Zb               ;
+  fFForce     = req.msg.feedForwardForce ;
+  nn_ON       = req.msg.nn_ON            ;
+  nnF         = req.msg.F                ;
+  nnG         = req.msg.G                ;
+
+  nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
+                                  num_Outputs ,   // num_Outputs
+                                  num_Hidden  ,   // num_Hidden
+                                  num_Error   ,   // num_Error
+                                  num_Joints   ); // num_Joints
+
+  nnController.init( kappa  ,
+                     Kv     ,
+                     lambda ,
+                     Kz     ,
+                     Zb     ,
+                     fFForce,
+                     nnF    ,
+                     nnG    ,
+                     nn_ON   );
+
+  resp.success = true;
+
+  return true;
 }
 
 /// Service call to capture and extract the data
