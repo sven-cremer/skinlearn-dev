@@ -89,6 +89,12 @@ private:
   Eigen::MatrixXd eigen_temp_joint;
   KDL::JntArray kdl_temp_joint_;
 
+  bool capture(std_srvs::Empty::Request& req,
+               std_srvs::Empty::Response& resp);
+  ros::ServiceServer capture_srv_;
+
+  void bufferData( double & dt );
+
 public:
   bool init(pr2_mechanism_model::RobotState *robot,
             ros::NodeHandle &n);

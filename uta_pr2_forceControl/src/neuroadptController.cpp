@@ -489,7 +489,7 @@ void PR2NeuroadptControllerClass::update()
   double dt;                    // Servo loop time step
 
   // Calculate the dt between servo cycles.
-  dt = (robot_state_->getTime() - last_time_).toSec();
+  dt = (robot_state_->getTime() - last_time_).toNSec();
   last_time_ = robot_state_->getTime();
 
   // Get the current joint positions and velocities.
@@ -504,10 +504,13 @@ void PR2NeuroadptControllerClass::update()
   jnt_to_pose_solver_->JntToCart(q_, x_);
   jnt_to_jac_solver_->JntToJac(q_, J_);
 
-  // Compute the forward kinematics and Jacobian of the model (at this location).
-  jnt_to_pose_solver_->JntToCart(q_m_, x_m_);
-//  jnt_to_jac_solver_->JntToJac(q_m_, J_m_);
-
+  robotCartPos_.position.x    = x_.p(0);
+  robotCartPos_.position.y    = x_.p(1);
+  robotCartPos_.position.z    = x_.p(2);
+  x_.M.GetQuaternion( robotCartPos_.orientation.x ,
+                      robotCartPos_.orientation.y ,
+                      robotCartPos_.orientation.z ,
+                      robotCartPos_.orientation.w  );
 
   for (unsigned int i = 0 ; i < 6 ; i++)
   {
@@ -713,6 +716,18 @@ void PR2NeuroadptControllerClass::update()
         x_m(3) = 0 ;
         x_m(4) = 0 ;
         x_m(5) = 0 ;
+
+        // Compute the forward kinematics and Jacobian of the model (at this location).
+        jnt_to_pose_solver_->JntToCart(q_m_, x_m_);
+        //  jnt_to_jac_solver_->JntToJac(q_m_, J_m_);
+
+        modelCartPos_.position.x    = x_m_.p(0);
+        modelCartPos_.position.y    = x_m_.p(1);
+        modelCartPos_.position.z    = x_m_.p(2);
+        x_m_.M.GetQuaternion( modelCartPos_.orientation.x ,
+                            modelCartPos_.orientation.y ,
+                            modelCartPos_.orientation.z ,
+                            modelCartPos_.orientation.w  );
 
         xd_m(2) = 0          ;
         xd_m(3) = xdot_  (3) ;
@@ -970,8 +985,8 @@ void PR2NeuroadptControllerClass::bufferData( double & dt )
 	int index = storage_index_;
 	if ((index >= 0) && (index < StoreLen))
 	{
-		tf::PoseKDLToMsg(x_m_, modelCartPos_);
-		tf::PoseKDLToMsg(x_  , robotCartPos_);
+//		tf::PoseKDLToMsg(x_m_, modelCartPos_);
+//		tf::PoseKDLToMsg(x_  , robotCartPos_);
 
 		msgControllerFullData[index].dt                = dt                          ;
 

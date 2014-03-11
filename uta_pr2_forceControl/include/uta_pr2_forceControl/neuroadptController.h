@@ -234,6 +234,11 @@ private:
                std_srvs::Empty::Response& resp);
   ros::ServiceServer capture_srv_;
 
+  void bufferData( double & dt );
+  Eigen::MatrixXd JointKdl2Eigen( KDL::JntArray & joint_ );
+  Eigen::MatrixXd JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
+  KDL::JntArray JointEigen2Kdl( Eigen::VectorXd & joint );
+
   ros::Publisher pubFTData_              ;
   ros::Publisher pubModelStates_         ;
   ros::Publisher pubRobotStates_         ;
@@ -262,14 +267,6 @@ public:
   void starting();
   void update();
   void stopping();
-
-  void bufferData( double & dt );
-
-  Eigen::MatrixXd JointKdl2Eigen( KDL::JntArray & joint_ );
-
-  Eigen::MatrixXd JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
-
-  KDL::JntArray JointEigen2Kdl( Eigen::VectorXd & joint );
 
 };
 }

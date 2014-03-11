@@ -10,8 +10,22 @@
 #include <kdl/jacobian.hpp>
 #include <kdl/jntarray.hpp>
 
+#include "geometry_msgs/WrenchStamped.h"
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/PoseStamped.h"
+#include "sensor_msgs/JointState.h"
+
+#include <uta_pr2_forceControl/controllerParam.h>
+#include <uta_pr2_forceControl/controllerFullData.h>
+
+#include <std_srvs/Empty.h>
 
 namespace pr2_controller_ns{
+
+enum
+{
+  StoreLen = 10000
+};
 
 class PR2CartesianControllerClass: public pr2_controller_interface::Controller
 {
@@ -47,6 +61,9 @@ public:
   KDL::Twist     Kp_;           // Proportional gains
   KDL::Twist     Kd_;           // Derivative gains
 
+  geometry_msgs::Pose modelCartPos_;
+  geometry_msgs::Pose robotCartPos_;
+
   // Desired cartesian pose
   double cartDesX     ;
   double cartDesY     ;
@@ -74,6 +91,36 @@ public:
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle
   ros::Time last_time_;         // Time of the last servo cycle
+
+  double circleUlim ;
+  double circleLlim ;
+  bool startCircleTraj;
+  Eigen::MatrixXd eigen_temp_joint;
+  KDL::JntArray kdl_temp_joint_;
+
+  bool capture(std_srvs::Empty::Request& req,
+               std_srvs::Empty::Response& resp);
+  ros::ServiceServer capture_srv_;
+
+  void bufferData( double & dt );
+
+  ros::Publisher pubFTData_              ;
+  ros::Publisher pubModelStates_         ;
+  ros::Publisher pubRobotStates_         ;
+  ros::Publisher pubModelCartPos_        ;
+  ros::Publisher pubRobotCartPos_        ;
+  ros::Publisher pubControllerParam_     ;
+  ros::Publisher pubControllerFullData_ ;
+
+  geometry_msgs::WrenchStamped             msgFTData             [StoreLen];
+  sensor_msgs::JointState                  msgModelStates        [StoreLen];
+  sensor_msgs::JointState                  msgRobotStates        [StoreLen];
+  geometry_msgs::PoseStamped               msgModelCartPos       [StoreLen];
+  geometry_msgs::PoseStamped               msgRobotCartPos       [StoreLen];
+  uta_pr2_forceControl::controllerParam    msgControllerParam    [StoreLen];
+  uta_pr2_forceControl::controllerFullData msgControllerFullData [StoreLen];
+
+  volatile int storage_index_;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,
