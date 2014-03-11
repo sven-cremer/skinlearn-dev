@@ -489,7 +489,7 @@ void PR2NeuroadptControllerClass::update()
   double dt;                    // Servo loop time step
 
   // Calculate the dt between servo cycles.
-  dt = (robot_state_->getTime() - last_time_).toNSec();
+  dt = (robot_state_->getTime() - last_time_).toSec();
   last_time_ = robot_state_->getTime();
 
   // Get the current joint positions and velocities.
