@@ -110,7 +110,7 @@ public:
   ros::Publisher pubModelCartPos_        ;
   ros::Publisher pubRobotCartPos_        ;
   ros::Publisher pubControllerParam_     ;
-  ros::Publisher pubControllerFullData_ ;
+  ros::Publisher pubControllerFullData_  ;
 
   geometry_msgs::WrenchStamped             msgFTData             [StoreLen];
   sensor_msgs::JointState                  msgModelStates        [StoreLen];

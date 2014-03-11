@@ -427,20 +427,24 @@ void PR2CartneuroControllerClass::update()
 
   double circleAmpl = (circleUlim - circleLlim)/2 ;
 
-  X_m(0) = xd_(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;
-  X_m(1) = xd_(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
-  X_m(2) = xd_(2);  Xd_m(2) = 0;  Xdd_m(2) = 0;
-  X_m(3) = xd_(3);  Xd_m(3) = 0;  Xdd_m(3) = 0;
-  X_m(4) = xd_(4);  Xd_m(4) = 0;  Xdd_m(4) = 0;
-  X_m(5) = xd_(5);  Xd_m(5) = 0;  Xdd_m(5) = 0;
+  {
+    double R, P, Y;
+    xd_.M.GetRPY(R, P, Y);
+    X_m(0) = xd_.p(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;
+    X_m(1) = xd_.p(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
+    X_m(2) = xd_.p(2);  Xd_m(2) = 0;  Xdd_m(2) = 0;
+    X_m(3) = R       ;  Xd_m(3) = 0;  Xdd_m(3) = 0;
+    X_m(4) = P       ;  Xd_m(4) = 0;  Xdd_m(4) = 0;
+    X_m(5) = Y       ;  Xd_m(5) = 0;  Xdd_m(5) = 0;
 
-  X(0)   = x_(0);   Xd(0)   = xdot_(0);
-  X(1)   = x_(1);   Xd(1)   = xdot_(1);
-  X(2)   = x_(2);   Xd(2)   = xdot_(2);
-  X(3)   = x_(3);   Xd(3)   = xdot_(3);
-  X(4)   = x_(4);   Xd(4)   = xdot_(4);
-  X(5)   = x_(5);   Xd(5)   = xdot_(5);
-
+    x_.M.GetRPY(R, P, Y);
+    X(0)   = x_.p(0);   Xd(0)   = xdot_(0);
+    X(1)   = x_.p(1);   Xd(1)   = xdot_(1);
+    X(2)   = x_.p(2);   Xd(2)   = xdot_(2);
+    X(3)   = R      ;   Xd(3)   = xdot_(3);
+    X(4)   = P      ;   Xd(4)   = xdot_(4);
+    X(5)   = Y      ;   Xd(5)   = xdot_(5);
+  }
 
   /////////////////////////
   // NN
