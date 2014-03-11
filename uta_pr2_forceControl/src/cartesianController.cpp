@@ -281,9 +281,9 @@ void PR2CartesianControllerClass::update()
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
     nullspaceTorque(i) = 1*( q0_(i) - q_(i)) + 0.5*qdot_.qdot(i);
 
-  controlTorque = JacobianTrans*cartControlForce
+  controlTorque = JacobianTrans*cartControlForce ;
       // nullspace controller
-    + ( Eigen::MatrixXd::Identity(kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints()) - JacobianTrans*JacobianPinv.transpose() )*nullspaceTorque;
+  //+ ( Eigen::MatrixXd::Identity(kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints()) - JacobianTrans*JacobianPinv.transpose() )*nullspaceTorque;
 
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
     tau_c_(i) = controlTorque(i);

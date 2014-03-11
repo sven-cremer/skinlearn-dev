@@ -207,7 +207,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   // FIXME remove below stuff
   num_Inputs  = 44 ;
   num_Outputs = 6  ;
-  num_Hidden  = 100;
+//  num_Hidden  = 100;
   num_Error   = 6  ;
   num_Joints  = 7  ;
 
