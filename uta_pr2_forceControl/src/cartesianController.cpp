@@ -208,14 +208,6 @@ void PR2CartesianControllerClass::update()
   jnt_to_pose_solver_->JntToCart(q_, x_);
   jnt_to_jac_solver_->JntToJac(q_, J_);
 
-  robotCartPos_.position.x    = x_.p(0);
-  robotCartPos_.position.y    = x_.p(1);
-  robotCartPos_.position.z    = x_.p(2);
-  x_.M.GetQuaternion( robotCartPos_.orientation.x ,
-                      robotCartPos_.orientation.y ,
-                      robotCartPos_.orientation.z ,
-                      robotCartPos_.orientation.w  );
-
   for (unsigned int i = 0 ; i < 6 ; i++)
   {
     xdot_(i) = 0;
@@ -248,6 +240,20 @@ void PR2CartesianControllerClass::update()
   xd_.p += circle;
   xd_.M =  KDL::Rotation::RPY( cartDesRoll, cartDesPitch, cartDesYaw );
 
+  // Calculate a Cartesian restoring force.
+  xerr_.vel = x_.p - xd_.p;
+  xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
+                     xd_.M.UnitY() * x_.M.UnitY() +
+                     xd_.M.UnitZ() * x_.M.UnitZ());
+
+  robotCartPos_.position.x    = x_.p(0);
+  robotCartPos_.position.y    = x_.p(1);
+  robotCartPos_.position.z    = x_.p(2);
+  x_.M.GetQuaternion( robotCartPos_.orientation.x ,
+                      robotCartPos_.orientation.y ,
+                      robotCartPos_.orientation.z ,
+                      robotCartPos_.orientation.w  );
+
   modelCartPos_.position.x    = xd_.p(0);
   modelCartPos_.position.y    = xd_.p(1);
   modelCartPos_.position.z    = xd_.p(2);
@@ -255,12 +261,6 @@ void PR2CartesianControllerClass::update()
                        modelCartPos_.orientation.y ,
                        modelCartPos_.orientation.z ,
                        modelCartPos_.orientation.w  );
-
-  // Calculate a Cartesian restoring force.
-  xerr_.vel = x_.p - xd_.p;
-  xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
-                     xd_.M.UnitY() * x_.M.UnitY() +
-                     xd_.M.UnitZ() * x_.M.UnitZ());
 
   for (unsigned int i = 0 ; i < 6 ; i++)
     cartControlForce(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
