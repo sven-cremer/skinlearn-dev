@@ -37,11 +37,11 @@ nnNum_Joints        : 7
 # r = (qd_m - qd) + lambda*(q_m - q);
 # Kv*r
 
-nn_Kv               : 2
-nn_lambda           : 10
+nn_Kv               : 3
+nn_lambda           : 9
 nn_kappa            : 0.07
 nn_Kz               : 0  
-nn_Zb               : 1000 
+nn_Zb               : 100 
 nn_feedForwardForce : 0   
 nn_nnF              : 100 
 nn_nnG              : 20
@@ -72,8 +72,8 @@ cartIniY     : -0.2
 cartIniZ     :  0.1
 
 cartDesX     : 0.0
-cartDesY     : 0.1
-cartDesZ     : 0.1
+cartDesY     : 0.2
+cartDesZ     : 0.2
 cartDesRoll  : 0.0
 cartDesPitch : 0.0
 cartDesYaw   : 0.0
