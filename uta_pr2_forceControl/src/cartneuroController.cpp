@@ -373,7 +373,6 @@ void PR2CartneuroControllerClass::update()
   circle(1) = cartDesY * (cos(circle_phase_) - 1);
   circle(2) = cartDesZ * sin(circle_phase_)      ;
 
-
   if( useCurrentCartPose )
   {
     // Start from current
@@ -392,6 +391,22 @@ void PR2CartneuroControllerClass::update()
   xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
                      xd_.M.UnitY() * x_.M.UnitY() +
                      xd_.M.UnitZ() * x_.M.UnitZ());
+
+  robotCartPos_.position.x    = x_.p(0);
+  robotCartPos_.position.y    = x_.p(1);
+  robotCartPos_.position.z    = x_.p(2);
+  x_.M.GetQuaternion( robotCartPos_.orientation.x ,
+                      robotCartPos_.orientation.y ,
+                      robotCartPos_.orientation.z ,
+                      robotCartPos_.orientation.w  );
+
+  modelCartPos_.position.x    = xd_.p(0);
+  modelCartPos_.position.y    = xd_.p(1);
+  modelCartPos_.position.z    = xd_.p(2);
+  xd_.M.GetQuaternion( modelCartPos_.orientation.x ,
+                       modelCartPos_.orientation.y ,
+                       modelCartPos_.orientation.z ,
+                       modelCartPos_.orientation.w  );
 
 //  for (unsigned int i = 0 ; i < 6 ; i++)
 //    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
@@ -412,27 +427,20 @@ void PR2CartneuroControllerClass::update()
 
   double circleAmpl = (circleUlim - circleLlim)/2 ;
 
-  X_m(0) = xd_.p(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;
-  X_m(1) = xd_.p(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
-  X_m(2) = xd_.p(2);  Xd_m(2) = 0;  Xdd_m(2) = 0;
-  X_m(3) = 0;         Xd_m(3) = 0;  Xdd_m(3) = 0;
-  X_m(4) = 0;         Xd_m(4) = 0;  Xdd_m(4) = 0;
-  X_m(5) = 0;         Xd_m(5) = 0;  Xdd_m(5) = 0;
+  X_m(0) = xd_(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;
+  X_m(1) = xd_(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
+  X_m(2) = xd_(2);  Xd_m(2) = 0;  Xdd_m(2) = 0;
+  X_m(3) = xd_(3);  Xd_m(3) = 0;  Xdd_m(3) = 0;
+  X_m(4) = xd_(4);  Xd_m(4) = 0;  Xdd_m(4) = 0;
+  X_m(5) = xd_(5);  Xd_m(5) = 0;  Xdd_m(5) = 0;
 
-  X(0) = x_.p(0);  Xd(0) = xdot_(0);
-  X(1) = x_.p(1);  Xd(1) = xdot_(1);
-  X(2) = x_.p(2);  Xd(2) = xdot_(2);
-  X(3) = 0;        Xd(3) = xdot_(3);
-  X(4) = 0;        Xd(4) = xdot_(4);
-  X(5) = 0;        Xd(5) = xdot_(5);
+  X(0)   = x_(0);   Xd(0)   = xdot_(0);
+  X(1)   = x_(1);   Xd(1)   = xdot_(1);
+  X(2)   = x_(2);   Xd(2)   = xdot_(2);
+  X(3)   = x_(3);   Xd(3)   = xdot_(3);
+  X(4)   = x_(4);   Xd(4)   = xdot_(4);
+  X(5)   = x_(5);   Xd(5)   = xdot_(5);
 
-  modelCartPos_.position.x    = X_m(0) ;
-  modelCartPos_.position.y    = X_m(1) ;
-  modelCartPos_.position.z    = X_m(2) ;
-  modelCartPos_.orientation.x = X_m(3) ;
-  modelCartPos_.orientation.y = X_m(4) ;
-  modelCartPos_.orientation.z = X_m(5) ;
-  modelCartPos_.orientation.w = 9999   ;
 
   /////////////////////////
   // NN
