@@ -48,6 +48,9 @@ target_link_libraries(pr2_controller_lib oelLIB )
 
 #rosbuild_add_executable(odeTest src/odeTest.cpp)
 
+rosbuild_add_executable(controllerExperimenter src/controllerExperimenter.cpp)
+target_link_libraries(controllerExperimenter yaml-cpp )
+
 rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
 target_link_libraries( SystemModel_test	oelLIB )
 
