@@ -1207,7 +1207,7 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
   ros::Time started = ros::Time::now();
 
   // Start circle traj
-  startCircleTraj = false;
+  startCircleTraj = true;
 
   /* Mark the buffer as clear (which will start storing). */
   storage_index_ = 0;
@@ -1227,6 +1227,7 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
 	}
 
   // Start circle traj
+  circle_phase_   = 0.0;
   startCircleTraj = false;
 
   /* Then we can publish the buffer contents. */
