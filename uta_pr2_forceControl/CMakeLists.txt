@@ -30,6 +30,7 @@ rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
 
 rosbuild_add_library( cslLIB src/neural_network.cpp )
 rosbuild_add_library( oelLIB src/least_squares.cpp src/kalman_estimate.cpp )
+rosbuild_add_library( rbdlUtilLIB src/rbdl_urdfreader.cc )
 
 rosbuild_add_library(pr2_controller_lib src/neuroadptController.cpp
 										src/cartesianController.cpp 
@@ -45,11 +46,12 @@ target_link_libraries(pr2_controller_lib oelLIB )
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 #rosbuild_add_executable(example examples/example.cpp)
 
+rosbuild_add_executable(rbdlTest src/test/rbdlTest.cpp)
+target_link_libraries(rbdlTest rbdlUtilLIB )
 
 #rosbuild_add_executable(odeTest src/odeTest.cpp)
-
-rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
-target_link_libraries( SystemModel_test	oelLIB )
+#rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
+#target_link_libraries( SystemModel_test	oelLIB )
 
 rosbuild_add_executable( pr2_joint_listener src/pr2_joint_listener.cpp )
 rosbuild_add_executable( position_rarm src/position_rarm.cpp )

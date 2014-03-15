@@ -2,7 +2,6 @@
 #include <pluginlib/class_list_macros.h>
 #include "oel/least_squares.hpp"
 
-
 using namespace pr2_controller_ns;
 
 /// Controller initialization in non-realtime
@@ -31,6 +30,23 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
     ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'",
               root_name.c_str(), tip_name.c_str());
     return false;
+  }
+
+  std::string urdf_param_ = "/robot_description";
+  std::string urdf_string;
+
+  if (!n.getParam(urdf_param_, urdf_string))
+  {
+    ROS_ERROR("URDF not loaded from parameter: %s)", urdf_param_.c_str());
+    return false;
+  }
+
+  if (!urdf_model.initString(urdf_string))
+  {
+        ROS_ERROR("Failed to parse URDF file");
+    return -1;
+  }else {
+        ROS_INFO("Successfully parsed URDF file");
   }
 
   std::string para_cartPos_Kp_x = "/cartPos_Kp_x";
@@ -91,6 +107,35 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   tau_c_.resize(kdl_chain_.getNrOfJoints());
   J_.resize(kdl_chain_.getNrOfJoints());
 
+  qnom.resize(kdl_chain_.getNrOfJoints());
+  q_lower.resize(kdl_chain_.getNrOfJoints());
+  q_upper.resize(kdl_chain_.getNrOfJoints());
+  qd_limit.resize(kdl_chain_.getNrOfJoints());
+
+  q_lower(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->lower;
+  q_lower(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->lower;
+  q_lower(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->lower;
+  q_lower(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->lower;
+  q_lower(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->lower;
+  q_lower(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->lower;
+  q_lower(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->lower;
+
+  q_upper(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->upper;
+  q_upper(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->upper;
+  q_upper(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->upper;
+  q_upper(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->upper;
+  q_upper(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->upper;
+  q_upper(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->upper;
+  q_upper(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->upper;
+
+  qnom(0) = ( q_upper(0) - q_lower(0) ) / 2 ;
+  qnom(1) = ( q_upper(1) - q_lower(1) ) / 2 ;
+  qnom(2) = ( q_upper(2) - q_lower(2) ) / 2 ;
+  qnom(3) = ( q_upper(3) - q_lower(3) ) / 2 ;
+  qnom(4) = ( q_upper(4) - q_lower(4) ) / 2 ;
+  qnom(5) = ( q_upper(5) - q_lower(5) ) / 2 ;
+  qnom(6) = ( q_upper(6) - q_lower(6) ) / 2 ;
+
   // Pick the gains.
 //  Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
 //  Kp_.vel(1) = 000.0;  Kd_.vel(1) = 1.0;        // Translation y
@@ -99,14 +144,17 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 //  Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation    y
 //  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation    z
 
-  Kp_.vel(0) = cartPos_Kp_x;  Kd_.vel(0) = cartPos_Kd_x; // Translation x
-  Kp_.vel(1) = cartPos_Kp_y;  Kd_.vel(1) = cartPos_Kd_y; // Translation y
-  Kp_.vel(2) = cartPos_Kp_z;  Kd_.vel(2) = cartPos_Kd_z; // Translation z
-  Kp_.rot(0) = cartRot_Kp_x;  Kd_.rot(0) = cartRot_Kd_x; // Rotation    x
-  Kp_.rot(1) = cartRot_Kp_y;  Kd_.rot(1) = cartRot_Kd_y; // Rotation    y
-  Kp_.rot(2) = cartRot_Kp_z;  Kd_.rot(2) = cartRot_Kd_z; // Rotation    z
+  Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
+  JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
+  JacobianTransPinv= Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  nullSpace        = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints() ) ;
 
-  ROS_ERROR("Joint no: %d", kdl_chain_.getNrOfJoints());
+  cartControlForce = Eigen::VectorXd::Zero( 6 ) ;
+  nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+  controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+
+//  ROS_ERROR("Joint no: %d", kdl_chain_.getNrOfJoints());
 
   std::string nn_kappa            = "/nn_kappa"            ;
   std::string nn_Kv               = "/nn_Kv"               ;
@@ -253,7 +301,25 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   tau      = Eigen::VectorXd::Zero( num_Outputs ) ;
   force    = Eigen::VectorXd::Zero( num_Outputs ) ;
 
-  Jacobian = Eigen::MatrixXd::Zero( 6, num_Joints ) ;
+  Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
+  JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
+  JacobianTransPinv= Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  nullSpace        = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints() ) ;
+
+  cartControlForce = Eigen::VectorXd::Zero( 6 ) ;
+  nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+  controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+
+  Kp_.resize( num_Joints ) ;
+  Kd_.resize( num_Joints ) ;
+
+  Kp_(0) = cartPos_Kp_x;  Kd_(0) = cartPos_Kd_x; // Translation x
+  Kp_(1) = cartPos_Kp_y;  Kd_(1) = cartPos_Kd_y; // Translation y
+  Kp_(2) = cartPos_Kp_z;  Kd_(2) = cartPos_Kd_z; // Translation z
+  Kp_(3) = cartRot_Kp_x;  Kd_(3) = cartRot_Kd_x; // Rotation    x
+  Kp_(4) = cartRot_Kp_y;  Kd_(4) = cartRot_Kd_y; // Rotation    y
+  Kp_(5) = cartRot_Kp_z;  Kd_(5) = cartRot_Kd_z; // Rotation    z
 
   // System Model END
   /////////////////////////
@@ -326,7 +392,6 @@ void PR2CartneuroControllerClass::starting()
   // System Model END
   /////////////////////////
 
-
   // Initialize the phase of the circle as zero.
   circle_phase_ = 0.0;
   startCircleTraj = true;
@@ -340,7 +405,6 @@ void PR2CartneuroControllerClass::starting()
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
 {
-
   double dt;                    // Servo loop time step
 
   // Calculate the dt between servo cycles.
@@ -408,19 +472,6 @@ void PR2CartneuroControllerClass::update()
                        modelCartPos_.orientation.z ,
                        modelCartPos_.orientation.w  );
 
-//  for (unsigned int i = 0 ; i < 6 ; i++)
-//    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
-//
-//  // Convert the force into a set of joint torques.
-//  for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
-//  {
-//    tau_(i) = 0;
-//    for (unsigned int j = 0 ; j < 6 ; j++)
-//      tau_(i) += J_(j,i) * F_(j);
-//  }
-//
-
-
   // Current joint positions and velocities
   q = JointKdl2Eigen( q_ );
   qd = JointVelKdl2Eigen( qdot_ );
@@ -460,7 +511,75 @@ void PR2CartneuroControllerClass::update()
   // NN END
   /////////////////////////
 
-  tau = Jacobian.transpose()*force;
+//    for (unsigned int i = 0 ; i < 6 ; i++)
+//      cartControlForce(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+
+    JacobianTrans = Jacobian.transpose();
+
+    // ======== J psuedo-inverse and Nullspace computation
+
+    double k_posture = 25.0;
+    double jacobian_inverse_damping = 0.01;
+
+    JointVec joint_dd_ff_;
+
+    joint_dd_ff_(0) = 3.33   ;
+    joint_dd_ff_(1) = 1.16   ;
+    joint_dd_ff_(2) = 0.1    ;
+    joint_dd_ff_(3) = 0.25   ;
+    joint_dd_ff_(4) = 0.133  ;
+    joint_dd_ff_(5) = 0.0727 ;
+    joint_dd_ff_(6) = 0.0727 ;
+
+    // Computes pseudo-inverse of J
+    Eigen::Matrix<double,6,6> I6; I6.setIdentity();
+    Eigen::Matrix<double,6,6> JJt_damped = Jacobian * JacobianTrans + jacobian_inverse_damping * I6;
+    Eigen::Matrix<double,6,6> JJt_inv_damped = JJt_damped.inverse();
+    Eigen::Matrix<double,7,6> J_pinv = JacobianTrans * JJt_inv_damped;
+
+    // Computes the nullspace of J
+    Eigen::Matrix<double,7,7> I; I.setIdentity();
+    nullSpace = I - J_pinv * Jacobian;
+
+    // ======== Posture control
+
+    // Computes the desired joint torques for achieving the posture
+    bool use_posture_ = true;
+
+    nullspaceTorque.setZero();
+    if (use_posture_)
+    {
+      JointVec posture_err ;
+
+      posture_err(0) = qnom(0) - q_(0) ;
+      posture_err(1) = qnom(1) - q_(1) ;
+      posture_err(2) = qnom(2) - q_(2) ;
+      posture_err(3) = qnom(3) - q_(3) ;
+      posture_err(4) = qnom(4) - q_(4) ;
+      posture_err(5) = qnom(5) - q_(5) ;
+      posture_err(6) = qnom(6) - q_(6) ;
+
+      for (size_t j = 0; j < 7; ++j)
+      {
+        if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
+          posture_err[j] = angles::normalize_angle(posture_err[j]);
+      }
+
+      for (size_t j = 0; j < 7; ++j)
+      {
+        if (fabs(qnom(j) - 9999) < 1e-5)
+          posture_err[j] = 0.0;
+      }
+
+      JointVec qdd_posture = k_posture * posture_err;
+      nullspaceTorque = joint_dd_ff_.array() * (nullSpace * qdd_posture).array();
+    }
+
+
+    // dynamically consistent generalized inverse is defined to
+    // J^T# = (J M^−1 J^T)^-1 JM^−1
+
+  tau = Jacobian.transpose()*force + nullspaceTorque;
 
   // Convert from Eigen to KDL
 //      tau_c_ = JointEigen2Kdl( tau );

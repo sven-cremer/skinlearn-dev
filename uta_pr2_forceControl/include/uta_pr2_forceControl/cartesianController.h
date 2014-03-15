@@ -20,6 +20,8 @@
 
 #include <std_srvs/Empty.h>
 
+#include <angles/angles.h>
+
 namespace pr2_controller_ns{
 
 enum
@@ -30,6 +32,9 @@ enum
 class PR2CartesianControllerClass: public pr2_controller_interface::Controller
 {
 public:
+  // FIXME remove after testing
+  typedef Eigen::Matrix<double, 7, 1> JointVec;
+
   // The current robot state (to get the time stamp)
   pr2_mechanism_model::RobotState* robot_state_;
 
@@ -51,6 +56,13 @@ public:
   KDL::Frame     xd_;           // Tip desired pose
   KDL::Frame     x0_;           // Tip initial pose
 
+  KDL::JntArray  qnom;
+  KDL::JntArray  q_lower;       // Joint position lower limits
+  KDL::JntArray  q_upper;       // Joint position upper limits
+  KDL::JntArray  qd_limit;      // Joint velocity limits
+
+  urdf::Model urdf_model;
+
   KDL::Twist     xerr_;         // Cart error
   KDL::Twist     xdot_;         // Cart velocity
   KDL::Wrench    F_;            // Cart effort
@@ -58,8 +70,8 @@ public:
 
   // Note the gains are incorrectly typed as a twist,
   // as there is no appropriate type!
-  KDL::Twist     Kp_;           // Proportional gains
-  KDL::Twist     Kd_;           // Derivative gains
+  Eigen::VectorXd     Kp_;           // Proportional gains
+  Eigen::VectorXd     Kd_;           // Derivative gains
 
   geometry_msgs::Pose modelCartPos_;
   geometry_msgs::Pose robotCartPos_;
@@ -81,6 +93,8 @@ public:
   Eigen::MatrixXd JacobianPinv;
   Eigen::MatrixXd JacobianTrans;
   Eigen::MatrixXd JacobianTransPinv;
+  Eigen::MatrixXd nullSpace;
+
   Eigen::VectorXd cartControlForce;
   Eigen::VectorXd nullspaceTorque;
   Eigen::VectorXd controlTorque;
