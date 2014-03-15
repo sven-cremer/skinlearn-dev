@@ -53,6 +53,12 @@ target_link_libraries(rbdlTest rbdlUtilLIB )
 #rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
 #target_link_libraries( SystemModel_test	oelLIB )
 
+rosbuild_add_executable(controllerExperimenter src/controllerExperimenter.cpp)
+target_link_libraries(controllerExperimenter yaml-cpp )
+
+rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
+target_link_libraries( SystemModel_test	oelLIB )
+
 rosbuild_add_executable( pr2_joint_listener src/pr2_joint_listener.cpp )
 rosbuild_add_executable( position_rarm src/position_rarm.cpp )
 

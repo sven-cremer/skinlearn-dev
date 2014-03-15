@@ -1,0 +1,12 @@
+<launch>
+
+  <!-- these are the arguments you can pass this launch file, for example paused:=true -->
+  <arg name="load_experimentParameterFile" default="true"/>
+
+  <group if="$(arg load_experimentParameterFile)">
+    <param name="experimentParameterFile"  value="$(find uta_pr2_forceControl)/experiments/experimentParameterFile.yaml" />
+  </group>
+ 
+  <node name="controllerExperimenter" pkg="uta_pr2_forceControl" type="controllerExperimenter" respawn="false" />
+  
+</launch>
