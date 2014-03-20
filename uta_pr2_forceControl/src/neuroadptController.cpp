@@ -364,7 +364,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// DATA COLLECTION
 
-	capture_srv_     = n.advertiseService("capture",     &PR2NeuroadptControllerClass::capture    , this);
+	capture_srv_     = n.advertiseService("capture",     &PR2NeuroadptControllerClass::capture            , this);
+	save_srv_        = n.advertiseService("saveData",    &PR2NeuroadptControllerClass::saveControllerData , this);
 
 	pubFTData_             = n.advertise< geometry_msgs::WrenchStamped             >( "FT_data"              , StoreLen);
 	pubModelStates_        = n.advertise< sensor_msgs::JointState                  >( "model_joint_states"   , StoreLen);
@@ -1244,6 +1245,49 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
   }
 
   return true;
+}
+
+/// Service call to capture and extract the data
+bool PR2NeuroadptControllerClass::saveControllerData( uta_pr2_forceControl::saveControllerData::Request&  req,
+                                                      uta_pr2_forceControl::saveControllerData::Response& resp )
+{
+
+  /* Record the starting time. */
+  ros::Time started = ros::Time::now();
+
+  // Start circle traj
+  startCircleTraj = true;
+
+  /* Mark the buffer as clear (which will start storing). */
+  storage_index_ = 0;
+
+  /* Now wait until the buffer is full. */
+  while (storage_index_ < StoreLen)
+        {
+          /* Sleep for 1ms as not to hog the CPU. */
+          ros::Duration(0.001).sleep();
+
+          /* Make sure we don't hang here forever. */
+          if (ros::Time::now() - started > ros::Duration(20))
+                {
+                  ROS_ERROR("Waiting for buffer to fill up took longer than 20 seconds!");
+                  return false;
+                }
+        }
+
+  // Start circle traj
+  circle_phase_   = 0.0;
+  startCircleTraj = false;
+
+  /* Then we can publish the buffer contents. */
+  int  index;
+  for (index = 0 ; index < StoreLen ; index++)
+  {
+          msgControllerFullData[index];
+  }
+
+  return true;
+
 }
 
 Eigen::MatrixXd

@@ -28,6 +28,29 @@ void TwoLayerNeuralNetworkController::UpdateCart( Eigen::VectorXd & X     ,
                                                   Eigen::VectorXd & t_r   ,
                                                   Eigen::VectorXd & tau    )
 {
+
+//// Debug
+//  X(3) =  0;
+//  X(4) =  0;
+//  X(5) =  0;
+//
+// Xd(3) =  0;
+// Xd(4) =  0;
+// Xd(5) =  0;
+//
+// X_m(3) =  0;
+// X_m(4) =  0;
+// X_m(5) =  0;
+//
+// Xd_m(3) =  0;
+// Xd_m(4) =  0;
+// Xd_m(5) =  0;
+//
+// Xdd_m(3) =  0;
+// Xdd_m(4) =  0;
+// Xdd_m(5) =  0;
+//// Debug
+
         // NN Input Vector
         x <<           1 ,
             (  X_m -  X) , //   q( 0 ) ;

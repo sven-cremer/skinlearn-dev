@@ -286,9 +286,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   q        = Eigen::VectorXd::Zero( num_Joints ) ;
   qd       = Eigen::VectorXd::Zero( num_Joints ) ;
   qdd      = Eigen::VectorXd::Zero( num_Joints ) ;
-  q_m      = Eigen::VectorXd::Zero( num_Joints ) ;
-  qd_m     = Eigen::VectorXd::Zero( num_Joints ) ;
-  qdd_m    = Eigen::VectorXd::Zero( num_Joints ) ;
+  q_m      = Eigen::VectorXd::Zero( 6 ) ;
+  qd_m     = Eigen::VectorXd::Zero( 6 ) ;
+  qdd_m    = Eigen::VectorXd::Zero( 6 ) ;
 
   X_m      = Eigen::VectorXd::Zero( 6 ) ;
   Xd_m     = Eigen::VectorXd::Zero( 6 ) ;
@@ -579,7 +579,7 @@ void PR2CartneuroControllerClass::update()
     // dynamically consistent generalized inverse is defined to
     // J^T# = (J M^−1 J^T)^-1 JM^−1
 
-  tau = Jacobian.transpose()*force + nullspaceTorque;
+  tau = JacobianTrans*force + nullspaceTorque;
 
   // Convert from Eigen to KDL
 //      tau_c_ = JointEigen2Kdl( tau );

@@ -8,13 +8,18 @@
 #include <ros/ros.h>
 #include <uta_pr2_forceControl/controllerFullData.h>
 #include <uta_pr2_forceControl/controllerParam.h>
+
 #include <uta_pr2_forceControl/controllerParamUpdate.h>
+#include <uta_pr2_forceControl/saveControllerData.h>
 #include <std_srvs/Empty.h>
 
 #include <yaml-cpp/yaml.h>
 
 #include <iostream>
 #include <fstream>
+
+#include <string>
+
 using namespace std;
 
 class controllerExperimenter
@@ -22,6 +27,7 @@ class controllerExperimenter
   ros::NodeHandle  node;
 
   ros::ServiceClient capture_client;
+  ros::ServiceClient save_client;
   ros::ServiceClient paramUpdate_client;
 
   ros::Subscriber subControllerFullData;
@@ -49,10 +55,12 @@ public:
     paramUpdate_client = node.serviceClient<uta_pr2_forceControl::controllerParamUpdate>("pr2_neuroadptController/paramUpdate");
     capture_client     = node.serviceClient<std_srvs::Empty>("pr2_neuroadptController/capture");
 
-    subControllerFullData = node.subscribe("pr2_neuroadptController/controllerFullData", 10000, &controllerExperimenter::fullDataCallback, this );
+    save_client     = node.serviceClient<uta_pr2_forceControl::saveControllerData>("pr2_neuroadptController/saveData");
+
+    subControllerFullData = node.subscribe("pr2_neuroadptController/controllerFullData", 1, &controllerExperimenter::fullDataCallback, this );
 
     dataCounter = 0;
-    dataLength  = 100000;
+    dataLength  = 10000;
 
     dataCollectedFlag = true;
 
@@ -151,6 +159,14 @@ public:
 
             ROS_ERROR_STREAM("RESPONSE");
 
+            ROS_ERROR_STREAM("Checking if processor is available...");
+
+            std::ostringstream convert;
+            convert << trialNumber;
+            std::string fileName = std::string("rostopic echo -p /pr2_neuroadptController/controllerFullData > ") + "~/testDatafile" +  convert.str() + ".rtp";
+
+            system( fileName.c_str() );
+
             dataCollectedFlag = false;
             std_srvs::Empty captureSrv;
             capture_client.call(captureSrv);
@@ -159,7 +175,9 @@ public:
             ROS_ERROR_STREAM("NO RESPONSE");
           }
 
-          usleep(1000);
+          //usleep(1000);
+
+          ros::spinOnce();
 
           trialNumber += 1;
         }
@@ -176,7 +194,6 @@ main( int argc, char** argv )
     ros::init (argc, argv, "controllerExperimenter");
     ros::NodeHandle nh;
 
-    ROS_ERROR_STREAM("### DEBUG ###");
     controllerExperimenter controllerExperimenterObj;
 
     controllerExperimenterObj.go();

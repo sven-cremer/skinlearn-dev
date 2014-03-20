@@ -23,6 +23,7 @@
 #include <uta_pr2_forceControl/controllerParam.h>
 #include <uta_pr2_forceControl/controllerFullData.h>
 #include <uta_pr2_forceControl/controllerParamUpdate.h>
+#include <uta_pr2_forceControl/saveControllerData.h>
 
 #include <std_srvs/Empty.h>
 
@@ -237,7 +238,11 @@ private:
   bool capture(std_srvs::Empty::Request& req,
                std_srvs::Empty::Response& resp);
 
+  bool saveControllerData( uta_pr2_forceControl::saveControllerData::Request&  req,
+                           uta_pr2_forceControl::saveControllerData::Response& resp );
+
   ros::ServiceServer capture_srv_;
+  ros::ServiceServer save_srv_;
   ros::ServiceServer paramUpdate_srv_;
 
   void bufferData( double & dt );
