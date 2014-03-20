@@ -1,0 +1,5 @@
+#request constants
+string fileName
+---
+#response constants
+bool success
