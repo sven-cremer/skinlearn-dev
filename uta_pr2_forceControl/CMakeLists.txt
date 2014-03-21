@@ -34,7 +34,8 @@ rosbuild_add_library( rbdlUtilLIB src/rbdl_urdfreader.cc )
 
 rosbuild_add_library(pr2_controller_lib src/neuroadptController.cpp
 										src/cartesianController.cpp 
-                                        src/cartneuroController.cpp )
+                                        src/cartneuroController.cpp
+                                        src/cartresnnController.cpp )
 								       #src/explforceController.cpp
 								       #src/impedanceController.cpp
 								       #src/explforceController.cpp
