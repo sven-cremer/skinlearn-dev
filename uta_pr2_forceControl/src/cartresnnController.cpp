@@ -6,7 +6,7 @@ using namespace pr2_controller_ns;
 
 /// Controller initialization in non-realtime
 bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
-                                 ros::NodeHandle &n)
+                                       ros::NodeHandle &n)
 {
   // Get the root and tip link names from parameter server.
   std::string root_name, tip_name;
@@ -252,13 +252,6 @@ bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
   /////////////////////////
   // System Model
 
-  // FIXME remove below stuff
-  num_Inputs  = 44 ;
-  num_Outputs = 6  ;
-//  num_Hidden  = 100;
-  num_Error   = 6  ;
-  num_Joints  = 7  ;
-
   kdl_temp_joint_.resize( num_Joints );
   eigen_temp_joint.resize( num_Joints,1 );
 
@@ -270,31 +263,43 @@ bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
   qd_m    .resize( 6, 1 ) ;
   qdd_m   .resize( 6, 1 ) ;
 
+  prev_q_m     .resize( 6, 1 ) ;
+  prev_qd_m    .resize( 6, 1 ) ;
+
   // desired Cartesian states
-  X_m     .resize( 6         , 1 ) ;
-  Xd_m    .resize( 6         , 1 ) ;
-  Xdd_m   .resize( 6         , 1 ) ;
+  X_m     .resize( 6, 1 ) ;
+  Xd_m    .resize( 6, 1 ) ;
+  Xdd_m   .resize( 6, 1 ) ;
+
+  prevX_m .resize( 6, 1 ) ;
+  prevXd_m.resize( 6, 1 ) ;
 
   // Cartesian states
-  X       .resize( 6         , 1 ) ;
-  Xd      .resize( 6         , 1 ) ;
+  X       .resize( 6, 1 ) ;
+  Xd      .resize( 6, 1 ) ;
 
-  t_r     .resize( num_Joints, 1 ) ;
-  task_ref.resize( num_Joints, 1 ) ;
-  tau     .resize( num_Joints, 1 ) ;
+  t_r     .resize( num_Joints, num_Joints ) ;
+  task_ref.resize( num_Joints, num_Joints ) ;
+  tau     .resize( num_Joints, num_Joints ) ;
 
   q        = Eigen::VectorXd::Zero( num_Joints ) ;
   qd       = Eigen::VectorXd::Zero( num_Joints ) ;
   qdd      = Eigen::VectorXd::Zero( num_Joints ) ;
-  q_m      = Eigen::VectorXd::Zero( 6 ) ;
-  qd_m     = Eigen::VectorXd::Zero( 6 ) ;
-  qdd_m    = Eigen::VectorXd::Zero( 6 ) ;
+  q_m      = Eigen::VectorXd::Zero( num_Joints ) ;
+  qd_m     = Eigen::VectorXd::Zero( num_Joints ) ;
+  qdd_m    = Eigen::VectorXd::Zero( num_Joints ) ;
+
+  prev_q_m = Eigen::VectorXd::Zero( num_Joints ) ;
+  prev_qd_m= Eigen::VectorXd::Zero( num_Joints ) ;
 
   X_m      = Eigen::VectorXd::Zero( 6 ) ;
   Xd_m     = Eigen::VectorXd::Zero( 6 ) ;
   Xdd_m    = Eigen::VectorXd::Zero( 6 ) ;
   X        = Eigen::VectorXd::Zero( 6 ) ;
   Xd       = Eigen::VectorXd::Zero( 6 ) ;
+
+  prevX_m  = Eigen::VectorXd::Zero( 6 ) ;
+  prevXd_m = Eigen::VectorXd::Zero( 6 ) ;
 
   t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
   task_ref = Eigen::VectorXd::Zero( num_Outputs ) ;
@@ -481,12 +486,15 @@ void PR2CartresnnControllerClass::update()
   {
     double R, P, Y;
     xd_.M.GetRPY(R, P, Y);
-    X_m(0) = xd_.p(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;
-    X_m(1) = xd_.p(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
-    X_m(2) = xd_.p(2);  Xd_m(2) = 0;  Xdd_m(2) = 0;
-    X_m(3) = R       ;  Xd_m(3) = 0;  Xdd_m(3) = 0;
-    X_m(4) = P       ;  Xd_m(4) = 0;  Xdd_m(4) = 0;
-    X_m(5) = Y       ;  Xd_m(5) = 0;  Xdd_m(5) = 0;
+    X_m(0) = xd_.p(0);
+    X_m(1) = xd_.p(1);
+    X_m(2) = xd_.p(2);
+    X_m(3) = R       ;
+    X_m(4) = P       ;
+    X_m(5) = Y       ;
+
+    Xd_m  = (X_m - prevX_m)/0.001;
+    //Xdd_m = (Xd_m - prevXd_m)/0.001;
 
     x_.M.GetRPY(R, P, Y);
     X(0)   = x_.p(0);   Xd(0)   = xdot_(0);
@@ -497,19 +505,7 @@ void PR2CartresnnControllerClass::update()
     X(5)   = Y      ;   Xd(5)   = xdot_(5);
   }
 
-  /////////////////////////
-  // NN
-    nnController.UpdateCart( X     ,
-                             Xd    ,
-                             X_m   ,
-                             Xd_m  ,
-                             Xdd_m ,
-                             q     ,
-                             qd    ,
-                             t_r   ,
-                             force  );
-  // NN END
-  /////////////////////////
+
 
 //    for (unsigned int i = 0 ; i < 6 ; i++)
 //      cartControlForce(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
@@ -572,17 +568,44 @@ void PR2CartresnnControllerClass::update()
       }
 
       JointVec qdd_posture = k_posture * posture_err;
-      nullspaceTorque = joint_dd_ff_.array() * (nullSpace * qdd_posture).array();
+
+      qd_m = J_pinv*Xd_m + nullSpace*qdd_posture;
+
+    }else
+    {
+      qd_m  = J_pinv*Xd_m;
     }
 
+    q_m   = q_m + qd_m*0.001;
+//    qdd_m = (qd_m - prev_qd_m)/0.001;
 
     // dynamically consistent generalized inverse is defined to
     // J^T# = (J M^−1 J^T)^-1 JM^−1
 
-  tau = JacobianTrans*force + nullspaceTorque;
+//  tau = JacobianTrans*force + nullspaceTorque;
 
   // Convert from Eigen to KDL
 //      tau_c_ = JointEigen2Kdl( tau );
+
+  /////////////////////////
+
+  // NN
+  nnController.UpdateJoint( q     ,
+                            qd    ,
+                            q_m   ,
+                            qd_m  ,
+                            qdd_m ,
+                            t_r   ,
+                            tau    );
+
+  prevX_m  = X_m ;
+  prevXd_m = Xd_m;
+
+  prev_q_m  = q_m;
+  prev_qd_m = qd_m;
+
+  // NN END
+  /////////////////////////
 
   tau_c_(0) = tau(0);
   tau_c_(1) = tau(1);

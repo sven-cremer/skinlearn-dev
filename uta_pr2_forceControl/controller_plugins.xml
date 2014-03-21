@@ -5,6 +5,9 @@
   <class name="PR2CartneuroControllerClass"
   		 type="pr2_controller_ns::PR2CartneuroControllerClass"
   		 base_class_type="pr2_controller_interface::Controller" />
+  <class name="PR2CartresnnControllerClass"
+  		 type="pr2_controller_ns::PR2CartresnnControllerClass"
+  		 base_class_type="pr2_controller_interface::Controller" />
   <class name="PR2ExplforceControllerClass"
   		 type="pr2_controller_ns::PR2ExplforceControllerClass"
   		 base_class_type="pr2_controller_interface::Controller" />

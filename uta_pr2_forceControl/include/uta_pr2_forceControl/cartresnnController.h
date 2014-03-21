@@ -31,9 +31,15 @@ private:
   Eigen::VectorXd qd_m;
   Eigen::VectorXd qdd_m;
 
+  Eigen::VectorXd prev_q_m;
+  Eigen::VectorXd prev_qd_m;
+
   Eigen::VectorXd X_m;
   Eigen::VectorXd Xd_m;
   Eigen::VectorXd Xdd_m;
+
+  Eigen::VectorXd prevX_m;
+  Eigen::VectorXd prevXd_m;
 
   Eigen::VectorXd X;
   Eigen::VectorXd Xd;
