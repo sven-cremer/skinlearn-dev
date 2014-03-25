@@ -545,7 +545,7 @@ void PR2CartresnnControllerClass::update()
     nullspaceTorque.setZero();
     if (use_posture_)
     {
-      JointVec posture_err ;
+/*      JointVec posture_err ;
 
       posture_err(0) = qnom(0) - q_(0) ;
       posture_err(1) = qnom(1) - q_(1) ;
@@ -569,15 +569,32 @@ void PR2CartresnnControllerClass::update()
 
       JointVec qdd_posture = k_posture * posture_err;
 
-      qd_m = J_pinv*Xd_m + nullSpace*qdd_posture;
+      // Add nullspace velocity
+      qd_m = nullSpace*qdd_posture ;*/
+
+      JointVec q_null ;
+
+      for (size_t j = 0; j < 7; ++j)
+      {
+        if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
+          q_null[j] = 0;
+        else
+          q_null(j) = - (q_(j) - qnom(j) )/( q_.rows() * ( q_upper(j) - q_lower(j)));
+      }
+
+      qd_m = nullSpace*q_null ;
 
     }else
     {
-      qd_m  = J_pinv*Xd_m;
+      // No nullspace velocity
+      qd_m  = Eigen::VectorXd::Zero( num_Joints ) ;
     }
 
+    qd_m = qd_m + J_pinv*( Xd_m + (X_m - X) ) ;
+
     q_m   = q_m + qd_m*0.001;
-//    qdd_m = (qd_m - prev_qd_m)/0.001;
+    qdd_m = (qd_m - prev_qd_m)/0.001;
+
 
     // dynamically consistent generalized inverse is defined to
     // J^T# = (J M^−1 J^T)^-1 JM^−1
@@ -606,6 +623,10 @@ void PR2CartresnnControllerClass::update()
 
   // NN END
   /////////////////////////
+
+  //
+  //tau = JacobianTrans*500*(X_m - X);
+  //
 
   tau_c_(0) = tau(0);
   tau_c_(1) = tau(1);
