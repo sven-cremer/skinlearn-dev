@@ -117,7 +117,7 @@ private:
   KDL::Twist        xerr_;         // Cart error
   KDL::Twist        xdot_;         // Cart velocity
   KDL::Wrench       F_;            // Cart effort
-  KDL::Twist        ferr_;		   // Cart effort error
+  KDL::Twist        ferr_;	   // Cart effort error
 
   KDL::Jacobian     J_;            // Robot Jacobian
   KDL::Jacobian     J_m_;          // Model Jacobian

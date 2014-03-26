@@ -1,6 +1,5 @@
 #include "uta_pr2_forceControl/cartneuroController.h"
 #include <pluginlib/class_list_macros.h>
-#include "oel/least_squares.hpp"
 
 using namespace pr2_controller_ns;
 
@@ -320,6 +319,30 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   Kp_(3) = cartRot_Kp_x;  Kd_(3) = cartRot_Kd_x; // Rotation    x
   Kp_(4) = cartRot_Kp_y;  Kd_(4) = cartRot_Kd_y; // Rotation    y
   Kp_(5) = cartRot_Kp_z;  Kd_(5) = cartRot_Kd_z; // Rotation    z
+
+  //  outerLoopMSDmodel.updateDelT( delT );
+  //  outerLoopFIRmodelJoint1.updateDelT( delT );
+  //  outerLoopFIRmodelJoint2.updateDelT( delT );
+
+  //  outerLoopMSDmodelJoint1.updateDelT( delT );
+  //  outerLoopMSDmodelJoint2.updateDelT( delT );
+
+  //  outerLoopMSDmodelJoint1.updateMsd( m_M,
+  //                                     m_S,
+  //                                     m_D );
+  //  outerLoopMSDmodelJoint2.updateMsd( m_M,
+  //                                     m_S,
+  //                                     m_D );
+
+  //  outerLoopMSDmodelX.updateDelT( delT );
+  //  outerLoopMSDmodelY.updateDelT( delT );
+
+  //  outerLoopMSDmodelX.updateMsd( m_M,
+  //                                m_S,
+  //                                m_D );
+  //  outerLoopMSDmodelY.updateMsd( m_M,
+  //                                m_S,
+  //                                m_D );
 
   // System Model END
   /////////////////////////

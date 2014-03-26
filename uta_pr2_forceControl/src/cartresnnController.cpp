@@ -1,6 +1,5 @@
 #include "uta_pr2_forceControl/cartresnnController.h"
 #include <pluginlib/class_list_macros.h>
-#include "oel/least_squares.hpp"
 
 using namespace pr2_controller_ns;
 
@@ -128,6 +127,13 @@ bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
   q_upper(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->upper;
   q_upper(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->upper;
 
+/*  // debug
+  q_upper(3) = q_lower(3);
+  q_upper(5) = q_lower(5);
+
+  q_lower(3) = 0;
+  q_lower(5) = 0;*/
+
   qnom(0) = ( q_upper(0) - q_lower(0) ) / 2 ;
   qnom(1) = ( q_upper(1) - q_lower(1) ) / 2 ;
   qnom(2) = ( q_upper(2) - q_lower(2) ) / 2 ;
@@ -249,6 +255,8 @@ bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useCurrentCartPose     = "/useCurrentCartPose";
   if (!n.getParam( para_useCurrentCartPose, useCurrentCartPose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCurrentCartPose.c_str()) ; return false; }
 
+  delT = 0.001;
+
   /////////////////////////
   // System Model
 
@@ -326,6 +334,30 @@ bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
   Kp_(4) = cartRot_Kp_y;  Kd_(4) = cartRot_Kd_y; // Rotation    y
   Kp_(5) = cartRot_Kp_z;  Kd_(5) = cartRot_Kd_z; // Rotation    z
 
+  //  outerLoopMSDmodel.updateDelT( delT );
+  //  outerLoopFIRmodelJoint1.updateDelT( delT );
+  //  outerLoopFIRmodelJoint2.updateDelT( delT );
+
+  //  outerLoopMSDmodelJoint1.updateDelT( delT );
+  //  outerLoopMSDmodelJoint2.updateDelT( delT );
+
+  //  outerLoopMSDmodelJoint1.updateMsd( m_M,
+  //                                     m_S,
+  //                                     m_D );
+  //  outerLoopMSDmodelJoint2.updateMsd( m_M,
+  //                                     m_S,
+  //                                     m_D );
+
+    outerLoopMSDmodelX.updateDelT( delT );
+    outerLoopMSDmodelY.updateDelT( delT );
+
+  //  outerLoopMSDmodelX.updateMsd( m_M,
+  //                                m_S,
+  //                                m_D );
+  //  outerLoopMSDmodelY.updateMsd( m_M,
+  //                                m_S,
+  //                                m_D );
+
   // System Model END
   /////////////////////////
 
@@ -389,10 +421,42 @@ void PR2CartresnnControllerClass::starting()
 
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
+
+  // Model initial conditions
+  // q_m = JointKdl2Eigen(q0_m_);
+
   jnt_to_pose_solver_->JntToCart(q0_, x0_);
+  x0_m_ = x0_;
 
   /////////////////////////
   // System Model
+
+  //  outerLoopMSDmodelJoint2.init( m_M     ,
+  //                                m_S     ,
+  //                                m_D     ,
+  //                                q0_m_(0),
+  //                                0       ,
+  //                                0        );
+  //
+  //  outerLoopMSDmodelJoint2.init( m_M     ,
+  //                                m_S     ,
+  //                                m_D     ,
+  //                                q0_m_(3),
+  //                                0       ,
+  //                                0        );
+
+    outerLoopMSDmodelX.init( m_M     ,
+                             m_S     ,
+                             m_D     ,
+                             x0_m_.p.x(),
+                             0       ,
+                             0        );
+    outerLoopMSDmodelY.init( m_M     ,
+                             m_S     ,
+                             m_D     ,
+                             x0_m_.p.y(),
+                             0       ,
+                             0        );
 
   // System Model END
   /////////////////////////
@@ -403,7 +467,7 @@ void PR2CartresnnControllerClass::starting()
 
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
-//  start_time_ = robot_state_->getTime();
+  start_time_ = robot_state_->getTime();
 }
 
 
@@ -507,6 +571,103 @@ void PR2CartresnnControllerClass::update()
 
 
 
+  /////////////////////////
+  // System Model
+
+//  if( (robot_state_->getTime() - start_time_).toSec() > 5 )
+//  {
+//    task_ref   (0) = -0.821127 ;
+//    task_ref   (3) = -1.70016  ;
+//  }else
+//  {
+//    start_time_ = robot_state_->getTime();
+//    task_ref   (0) = -0.190788 ;
+//    task_ref   (3) = -1.42669  ;
+//  }
+
+//  q_m(0) = -0.48577   ;
+  q_m(1) =  0 ;
+  q_m(2) = -1.50   ;
+//  q_m(3) = -1.70928   ;
+  q_m(4) =  1.50   ;
+  q_m(5) =  0 ;
+  q_m(6) =  0 ;
+
+//  qd_m(0) = 0;  qdd_m(0) = 0;
+  qd_m(1) = 0;  qdd_m(1) = 0;
+  qd_m(2) = 0;  qdd_m(2) = 0;
+//  qd_m(3) = 0;  qdd_m(3) = 0;
+  qd_m(4) = 0;  qdd_m(4) = 0;
+  qd_m(5) = 0;  qdd_m(5) = 0;
+  qd_m(6) = 0;  qdd_m(6) = 0;
+
+  ROS_ERROR_STREAM("TIME: " << (robot_state_->getTime() - start_time_).toSec());
+
+  if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 5 == 0 )
+  {
+    q_m(0) = -1.5 ;
+    q_m(3) = -2; //-1.70016  ;
+
+    ROS_ERROR_STREAM("THREE!!!!!!");
+
+  }
+
+  if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 10 == 0 )
+  {
+    q_m(0) =  0;
+    q_m(3) = -1; // -1.42669  ;
+
+    ROS_ERROR_STREAM("FIVE!!!!!!");
+  }
+
+//  // FIR
+//  outerLoopFIRmodelJoint1.Update( qd_m    (0) ,
+//                                  qd      (0) ,
+//                                  q_m     (0) ,
+//                                  q       (0) ,
+//                                  qdd_m   (0) ,
+//                                  t_r     (0) ,
+//                                  task_ref(0) );
+//
+//  outerLoopFIRmodelJoint2.Update( qd_m    (3) ,
+//                                  qd      (3) ,
+//                                  q_m     (3) ,
+//                                  q       (3) ,
+//                                  qdd_m   (3) ,
+//                                  t_r     (3) ,
+//                                  task_ref(3) );
+
+
+  qd_m(0)  = (q_m(0) - prev_q_m(0))/delT;
+  qd_m(3)  = (q_m(3) - prev_q_m(3))/delT;
+
+  qdd_m(0) = (qd_m(0) - prev_qd_m(0))/delT;
+  qdd_m(3) = (qd_m(3) - prev_qd_m(3))/delT;
+
+
+  // Cartesian space MSD model
+  outerLoopMSDmodelX.update( Xd_m  (0),
+                             xdot_ (0),
+                             X_m   (0),
+                             x_.p.data[0],
+                             Xdd_m (0),
+                             xd_.p(0) ); // this should be force
+
+  outerLoopMSDmodelY.update( Xd_m  (1),
+                             xdot_ (1),
+                             X_m   (1),
+                             x_.p.data[1],
+                             Xdd_m (1),
+                             xd_.p(1) ); // this should be force
+
+  // System Model END
+  /////////////////////////
+
+
+/*
+  /////////////////////////
+  // Cart to Joint
+
 //    for (unsigned int i = 0 ; i < 6 ; i++)
 //      cartControlForce(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
 
@@ -545,42 +706,76 @@ void PR2CartresnnControllerClass::update()
     nullspaceTorque.setZero();
     if (use_posture_)
     {
-/*      JointVec posture_err ;
-
-      posture_err(0) = qnom(0) - q_(0) ;
-      posture_err(1) = qnom(1) - q_(1) ;
-      posture_err(2) = qnom(2) - q_(2) ;
-      posture_err(3) = qnom(3) - q_(3) ;
-      posture_err(4) = qnom(4) - q_(4) ;
-      posture_err(5) = qnom(5) - q_(5) ;
-      posture_err(6) = qnom(6) - q_(6) ;
-
-      for (size_t j = 0; j < 7; ++j)
-      {
-        if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
-          posture_err[j] = angles::normalize_angle(posture_err[j]);
-      }
-
-      for (size_t j = 0; j < 7; ++j)
-      {
-        if (fabs(qnom(j) - 9999) < 1e-5)
-          posture_err[j] = 0.0;
-      }
-
-      JointVec qdd_posture = k_posture * posture_err;
-
-      // Add nullspace velocity
-      qd_m = nullSpace*qdd_posture ;*/
+//      JointVec posture_err ;
+//
+//      posture_err(0) = qnom(0) - q_(0) ;
+//      posture_err(1) = qnom(1) - q_(1) ;
+//      posture_err(2) = qnom(2) - q_(2) ;
+//      posture_err(3) = qnom(3) - q_(3) ;
+//      posture_err(4) = qnom(4) - q_(4) ;
+//      posture_err(5) = qnom(5) - q_(5) ;
+//      posture_err(6) = qnom(6) - q_(6) ;
+//
+//      for (size_t j = 0; j < 7; ++j)
+//      {
+//        if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
+//          posture_err[j] = angles::normalize_angle(posture_err[j]);
+//      }
+//
+//      for (size_t j = 0; j < 7; ++j)
+//      {
+//        if (fabs(qnom(j) - 9999) < 1e-5)
+//          posture_err[j] = 0.0;
+//      }
+//
+//      JointVec qdd_posture = k_posture * posture_err;
+//
+//      // Add nullspace velocity
+//      qd_m = nullSpace*qdd_posture ;
 
       JointVec q_null ;
 
+      double delQ;
+      double rho = 0.1;
+      double qTildeMax = 0;
+      double qTildeMin = 0;
+
       for (size_t j = 0; j < 7; ++j)
       {
-        if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
-          q_null[j] = 0;
-        else
-          q_null(j) = - (q_(j) - qnom(j) )/( q_.rows() * ( q_upper(j) - q_lower(j)));
+//        if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
+//          q_null[j] = 0;
+//        else
+
+        // This is the Liegeois cost function from 1977
+        //q_null(j) = - (q_(j) - qnom(j) )/( q_.rows() * ( q_upper(j) - q_lower(j)));
+
+        // This is the Chaumette cost function from 1996??
+        // http://www.irisa.fr/lagadic/pdf/2001_itra_chaumette.pdf
+        // Marchand, E.; Chaumette, F.; Rizzo, A.,
+        // "Using the task function approach to avoid robot joint limits and kinematic singularities in visual servoing,"
+        // Intelligent Robots and Systems '96, IROS 96, Proceedings of the 1996 IEEE/RSJ International Conference on ,
+        // vol.3, no., pp.1083,1090 vol.3, 4-8 Nov 1996
+
+        delQ = ( q_upper(j) - q_lower(j));
+        qTildeMin = qTildeMin + rho*delQ;
+        qTildeMax = qTildeMax - rho*delQ;
+
+        if( q_(j) > qTildeMax )
+        {
+          q_null(j) = ( q_(j) - qTildeMax )/delQ ;
+        }else
+        if( q_(j) < qTildeMin )
+        {
+          q_null(j) = ( q_(j) - qTildeMin )/delQ ;
+        }else
+        {
+          q_null(j) = 0 ;
+        }
+
       }
+
+      q_null(4) = 0;
+      q_null(6) = 0;
 
       qd_m = nullSpace*q_null ;
 
@@ -592,7 +787,9 @@ void PR2CartresnnControllerClass::update()
 
     qd_m = qd_m + J_pinv*( Xd_m + (X_m - X) ) ;
 
+//    q_m   = q_m + qd_m*0.001;
     q_m   = q_m + qd_m*0.001;
+
     qdd_m = (qd_m - prev_qd_m)/0.001;
 
 
@@ -604,8 +801,12 @@ void PR2CartresnnControllerClass::update()
   // Convert from Eigen to KDL
 //      tau_c_ = JointEigen2Kdl( tau );
 
-  /////////////////////////
 
+  // Cart to Joint END
+  /////////////////////////
+*/
+
+  /////////////////////////
   // NN
   nnController.UpdateJoint( q     ,
                             qd    ,
@@ -684,18 +885,18 @@ void PR2CartresnnControllerClass::bufferData( double & dt )
                 msgControllerFullData[index].m_cartPos_Qy      = modelCartPos_.orientation.y ;
                 msgControllerFullData[index].m_cartPos_Qz      = modelCartPos_.orientation.z ;
                 msgControllerFullData[index].m_cartPos_QW      = modelCartPos_.orientation.w ;
-/*
-                msgControllerFullData[index].m_pos_x           = x_m(0)                      ;
-                msgControllerFullData[index].m_pos_y           = x_m(1)                      ;
-                msgControllerFullData[index].m_pos_z           = x_m(2)                      ;
 
-                msgControllerFullData[index].m_vel_x           = xd_m(0)                     ;
-                msgControllerFullData[index].m_vel_y           = xd_m(1)                     ;
-                msgControllerFullData[index].m_vel_z           = xd_m(2)                     ;
+                msgControllerFullData[index].m_pos_x           = X_m(0)                      ;
+                msgControllerFullData[index].m_pos_y           = X_m(1)                      ;
+                msgControllerFullData[index].m_pos_z           = X_m(2)                      ;
 
-                msgControllerFullData[index].m_acc_x           = xdd_m(0)                    ;
-                msgControllerFullData[index].m_acc_y           = xdd_m(1)                    ;
-                msgControllerFullData[index].m_acc_z           = xdd_m(2)                    ;
+                msgControllerFullData[index].m_vel_x           = Xd_m(0)                     ;
+                msgControllerFullData[index].m_vel_y           = Xd_m(1)                     ;
+                msgControllerFullData[index].m_vel_z           = Xd_m(2)                     ;
+
+                msgControllerFullData[index].m_acc_x           = Xdd_m(0)                    ;
+                msgControllerFullData[index].m_acc_y           = Xdd_m(1)                    ;
+                msgControllerFullData[index].m_acc_z           = Xdd_m(2)                    ;
 
                 msgControllerFullData[index].m_pos_j0          = q_m(0)                      ;
                 msgControllerFullData[index].m_pos_j1          = q_m(1)                      ;
@@ -737,7 +938,7 @@ void PR2CartresnnControllerClass::bufferData( double & dt )
                 msgControllerFullData[index].control_eff_j4    = tau(4)                      ;
                 msgControllerFullData[index].control_eff_j5    = tau(5)                      ;
                 msgControllerFullData[index].control_eff_j6    = tau(6)                      ;
-*/
+
                 // Robot States
                 msgControllerFullData[index].r_cartPos_x       = robotCartPos_.position.x    ;
                 msgControllerFullData[index].r_cartPos_y       = robotCartPos_.position.y    ;
@@ -746,7 +947,7 @@ void PR2CartresnnControllerClass::bufferData( double & dt )
                 msgControllerFullData[index].r_cartPos_Qy      = robotCartPos_.orientation.y ;
                 msgControllerFullData[index].r_cartPos_Qz      = robotCartPos_.orientation.z ;
                 msgControllerFullData[index].r_cartPos_QW      = robotCartPos_.orientation.w ;
-/*
+
                 msgControllerFullData[index].r_pos_j0          = q(0)                        ;
                 msgControllerFullData[index].r_pos_j1          = q(1)                        ;
                 msgControllerFullData[index].r_pos_j2          = q(2)                        ;
@@ -770,7 +971,7 @@ void PR2CartresnnControllerClass::bufferData( double & dt )
                 msgControllerFullData[index].r_acc_j4          = 0                           ;
                 msgControllerFullData[index].r_acc_j5          = 0                           ;
                 msgControllerFullData[index].r_acc_j6          = 0                           ;
-
+/*
                 msgControllerFullData[index].r_eff_x           = ferr_(0)                    ;
                 msgControllerFullData[index].r_eff_y           = ferr_(1)                    ;
                 msgControllerFullData[index].r_eff_z           = ferr_(2)                    ;
@@ -786,6 +987,23 @@ void PR2CartresnnControllerClass::bufferData( double & dt )
                 msgControllerFullData[index].r_eff_j5          = tau_f_(5)                   ;
                 msgControllerFullData[index].r_eff_j6          = tau_f_(6)                   ;
 
+*/
+                msgControllerFullData[index].l_limit_0         = q_lower(0)                  ;
+                msgControllerFullData[index].l_limit_1         = q_lower(1)                  ;
+                msgControllerFullData[index].l_limit_2         = q_lower(2)                  ;
+                msgControllerFullData[index].l_limit_3         = q_lower(3)                  ;
+                msgControllerFullData[index].l_limit_4         = q_lower(4)                  ;
+                msgControllerFullData[index].l_limit_5         = q_lower(5)                  ;
+                msgControllerFullData[index].l_limit_6         = q_lower(6)                  ;
+
+                msgControllerFullData[index].u_limit_0         = q_upper(0)                  ;
+                msgControllerFullData[index].u_limit_1         = q_upper(1)                  ;
+                msgControllerFullData[index].u_limit_2         = q_upper(2)                  ;
+                msgControllerFullData[index].u_limit_3         = q_upper(3)                  ;
+                msgControllerFullData[index].u_limit_4         = q_upper(4)                  ;
+                msgControllerFullData[index].u_limit_5         = q_upper(5)                  ;
+                msgControllerFullData[index].u_limit_6         = q_upper(6)                  ;
+
                 // NN Params
                 msgControllerFullData[index].kappa             = kappa                       ;
                 msgControllerFullData[index].Kv                = Kv                          ;
@@ -800,7 +1018,7 @@ void PR2CartresnnControllerClass::bufferData( double & dt )
                 msgControllerFullData[index].errorParams       = num_Error                   ;
                 msgControllerFullData[index].feedForwardForce  = num_Joints                  ;
                 msgControllerFullData[index].nn_ON             = nn_ON                       ;
-*/
+
                 // TODO fix this
                 // Model Params
                 msgControllerFullData[index].m                 =   0 ; // outerLoopMSDmodel.getMass(  )(0,0) ;

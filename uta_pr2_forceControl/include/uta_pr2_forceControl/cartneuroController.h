@@ -12,6 +12,7 @@
 
 #include "objTest.h"
 #include "csl/neural_network.hpp"
+#include "csl/outer_loop.h"
 
 namespace pr2_controller_ns{
 
@@ -21,7 +22,15 @@ private:
 
   /////////////////////////
   // System Model
-//  oel::ls::RLSFilter rlsFilter;
+
+  csl::outer_loop::MsdModel outerLoopMSDmodelJoint1;
+  csl::outer_loop::MsdModel outerLoopMSDmodelJoint2;
+
+  csl::outer_loop::FirModel outerLoopFIRmodelJoint1;
+  csl::outer_loop::FirModel outerLoopFIRmodelJoint2;
+
+  csl::outer_loop::MsdModel outerLoopMSDmodelX     ;
+  csl::outer_loop::MsdModel outerLoopMSDmodelY     ;
 
   Eigen::VectorXd q;
   Eigen::VectorXd qd;

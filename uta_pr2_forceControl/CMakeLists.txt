@@ -35,8 +35,8 @@ rosbuild_add_library( pr2_controller_lib src/cartesianController.cpp
                                          src/explforceController.cpp
                                          src/impedanceController.cpp
                                          src/explforceController.cpp
-                                         src/neuroadptController.cpp
-                                         src/cartneuroController.cpp
+                                         # src/neuroadptController.cpp
+                                         # src/cartneuroController.cpp
                                          src/cartresnnController.cpp )
  
 target_link_libraries( pr2_controller_lib cslLIB )

@@ -56,6 +56,10 @@ public:
   KDL::Frame     xd_;           // Tip desired pose
   KDL::Frame     x0_;           // Tip initial pose
 
+  KDL::Frame     x_m_;          // Model Tip pose
+  KDL::Frame     xd_m_;         // Model Tip desired pose
+  KDL::Frame     x0_m_;         // Model Tip initial pose
+
   KDL::JntArray  qnom;
   KDL::JntArray  q_lower;       // Joint position lower limits
   KDL::JntArray  q_upper;       // Joint position upper limits
@@ -105,6 +109,7 @@ public:
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle
   ros::Time last_time_;         // Time of the last servo cycle
+  ros::Time start_time_;        // Time of the first servo cycle
 
   double circleUlim ;
   double circleLlim ;

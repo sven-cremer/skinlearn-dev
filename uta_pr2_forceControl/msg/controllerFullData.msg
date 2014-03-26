@@ -129,6 +129,24 @@ float64 r_eff_j4
 float64 r_eff_j5
 float64 r_eff_j6
 
+# Joint lower limit 
+float64 l_limit_0
+float64 l_limit_1
+float64 l_limit_2
+float64 l_limit_3
+float64 l_limit_4
+float64 l_limit_5
+float64 l_limit_6
+         
+# Joint upper limit
+float64 u_limit_0
+float64 u_limit_1
+float64 u_limit_2
+float64 u_limit_3
+float64 u_limit_4
+float64 u_limit_5
+float64 u_limit_6
+
 # NN Params
 float64 kappa
 float64 Kv
