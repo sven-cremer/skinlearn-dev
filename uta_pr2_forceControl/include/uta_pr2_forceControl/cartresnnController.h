@@ -51,6 +51,8 @@ private:
   Eigen::VectorXd force;
 
   Eigen::MatrixXd Jacobian;
+  Eigen::MatrixXd JacobianPrev;
+  Eigen::MatrixXd JacobianDot;
 
   double delT;
 
@@ -125,6 +127,8 @@ public:
   Eigen::MatrixXd JointKdl2Eigen( KDL::JntArray & joint_ );
   Eigen::MatrixXd JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
   KDL::JntArray JointEigen2Kdl( Eigen::VectorXd & joint );
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 };
 }

@@ -106,6 +106,10 @@ public:
   // Use current cart pose or use specifiec cart pose
   bool useCurrentCartPose ;
 
+  // Use nullspace stuff
+  bool useNullspacePose ;
+
+
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle
   ros::Time last_time_;         // Time of the last servo cycle

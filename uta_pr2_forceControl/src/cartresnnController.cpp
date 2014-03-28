@@ -1,5 +1,6 @@
 #include "uta_pr2_forceControl/cartresnnController.h"
 #include <pluginlib/class_list_macros.h>
+#include "pinv.hpp"
 
 using namespace pr2_controller_ns;
 
@@ -134,6 +135,13 @@ bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
   q_lower(3) = 0;
   q_lower(5) = 0;*/
 
+  // Since two joints are continuous
+  q_upper(4) =   6.28 ;
+  q_upper(6) =   6.28 ;
+
+  q_lower(4) = - 6.28 ;
+  q_lower(6) = - 6.28 ;
+
   qnom(0) = ( q_upper(0) - q_lower(0) ) / 2 ;
   qnom(1) = ( q_upper(1) - q_lower(1) ) / 2 ;
   qnom(2) = ( q_upper(2) - q_lower(2) ) / 2 ;
@@ -151,6 +159,8 @@ bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
 //  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation    z
 
   Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  JacobianPrev     = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  JacobianDot      = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
   JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
   JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
   JacobianTransPinv= Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
@@ -255,6 +265,10 @@ bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useCurrentCartPose     = "/useCurrentCartPose";
   if (!n.getParam( para_useCurrentCartPose, useCurrentCartPose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCurrentCartPose.c_str()) ; return false; }
 
+  useNullspacePose = true ;
+  std::string para_useNullspacePose     = "/useNullspacePose";
+  if (!n.getParam( para_useNullspacePose, useNullspacePose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useNullspacePose.c_str()) ; return false; }
+
   delT = 0.001;
 
   /////////////////////////
@@ -315,6 +329,8 @@ bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
   force    = Eigen::VectorXd::Zero( num_Outputs ) ;
 
   Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  JacobianPrev     = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  JacobianDot      = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
   JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
   JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
   JacobianTransPinv= Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
@@ -381,7 +397,7 @@ bool PR2CartresnnControllerClass::init(pr2_mechanism_model::RobotState *robot,
                      nnG    ,
                      nn_ON   );
 
-  nnController.updateDelT( 0.001 );
+  nnController.updateDelT( delT );
 
   // NN END
   /////////////////////////
@@ -480,6 +496,8 @@ void PR2CartresnnControllerClass::update()
   dt = (robot_state_->getTime() - last_time_).toSec();
   last_time_ = robot_state_->getTime();
 
+  delT = dt;
+
   // Get the current joint positions and velocities.
   chain_.getPositions(q_);
   chain_.getVelocities(qdot_);
@@ -513,7 +531,7 @@ void PR2CartresnnControllerClass::update()
   }else
   {
     // Start from specified
-    xd_.p = KDL::Vector(cartIniX,cartIniY,cartIniZ);
+    xd_.p = KDL::Vector( cartIniX, cartIniY, cartIniZ );
   }
 
   xd_.p += circle;
@@ -557,8 +575,8 @@ void PR2CartresnnControllerClass::update()
     X_m(4) = P       ;
     X_m(5) = Y       ;
 
-    Xd_m  = (X_m - prevX_m)/0.001;
-    //Xdd_m = (Xd_m - prevXd_m)/0.001;
+    Xd_m  = (X_m - prevX_m)/delT;
+    //Xdd_m = (Xd_m - prevXd_m)/delT;
 
     x_.M.GetRPY(R, P, Y);
     X(0)   = x_.p(0);   Xd(0)   = xdot_(0);
@@ -570,7 +588,7 @@ void PR2CartresnnControllerClass::update()
   }
 
 
-
+/*
   /////////////////////////
   // System Model
 
@@ -662,9 +680,9 @@ void PR2CartresnnControllerClass::update()
 
   // System Model END
   /////////////////////////
+*/
 
 
-/*
   /////////////////////////
   // Cart to Joint
 
@@ -694,51 +712,62 @@ void PR2CartresnnControllerClass::update()
     Eigen::Matrix<double,6,6> JJt_inv_damped = JJt_damped.inverse();
     Eigen::Matrix<double,7,6> J_pinv = JacobianTrans * JJt_inv_damped;
 
+//    J_pinv = pseudoInverse( Jacobian, 0.01 );
+
     // Computes the nullspace of J
     Eigen::Matrix<double,7,7> I; I.setIdentity();
     nullSpace = I - J_pinv * Jacobian;
 
+/*    ROS_ERROR_STREAM( "\n JJt_damped: \n" << JJt_damped );
+    ROS_ERROR_STREAM( "\n I6: \n" << I6 );
+    ROS_ERROR_STREAM( "\n I7: \n" << I );*/
+
+    JacobianDot = ( Jacobian - JacobianPrev ) / delT;
+
     // ======== Posture control
 
     // Computes the desired joint torques for achieving the posture
-    bool use_posture_ = true;
-
     nullspaceTorque.setZero();
-    if (use_posture_)
+    if ( useNullspacePose )
     {
-//      JointVec posture_err ;
-//
-//      posture_err(0) = qnom(0) - q_(0) ;
-//      posture_err(1) = qnom(1) - q_(1) ;
-//      posture_err(2) = qnom(2) - q_(2) ;
-//      posture_err(3) = qnom(3) - q_(3) ;
-//      posture_err(4) = qnom(4) - q_(4) ;
-//      posture_err(5) = qnom(5) - q_(5) ;
-//      posture_err(6) = qnom(6) - q_(6) ;
-//
-//      for (size_t j = 0; j < 7; ++j)
-//      {
-//        if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
-//          posture_err[j] = angles::normalize_angle(posture_err[j]);
-//      }
-//
-//      for (size_t j = 0; j < 7; ++j)
-//      {
-//        if (fabs(qnom(j) - 9999) < 1e-5)
-//          posture_err[j] = 0.0;
-//      }
-//
-//      JointVec qdd_posture = k_posture * posture_err;
-//
-//      // Add nullspace velocity
-//      qd_m = nullSpace*qdd_posture ;
+      /*
+      JointVec posture_err ;
 
-      JointVec q_null ;
+      posture_err(0) = qnom(0) - q_(0) ;
+      posture_err(1) = qnom(1) - q_(1) ;
+      posture_err(2) = qnom(2) - q_(2) ;
+      posture_err(3) = qnom(3) - q_(3) ;
+      posture_err(4) = qnom(4) - q_(4) ;
+      posture_err(5) = qnom(5) - q_(5) ;
+      posture_err(6) = qnom(6) - q_(6) ;
+
+      for (size_t j = 0; j < 7; ++j)
+      {
+        if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
+          posture_err[j] = angles::normalize_angle(posture_err[j]);
+      }
+
+      for (size_t j = 0; j < 7; ++j)
+      {
+        if (fabs(qnom(j) - 9999) < 1e-5)
+          posture_err[j] = 0.0;
+      }
+
+      JointVec qdd_posture = k_posture * posture_err;
+
+      // Add nullspace velocity
+      qd_m = nullSpace*qdd_posture ;
+      */
+
+      JointVec q_jointLimit ;
+      JointVec q_manipAbility ;
+
 
       double delQ;
       double rho = 0.1;
       double qTildeMax = 0;
       double qTildeMin = 0;
+
 
       for (size_t j = 0; j < 7; ++j)
       {
@@ -746,9 +775,16 @@ void PR2CartresnnControllerClass::update()
 //          q_null[j] = 0;
 //        else
 
+        ///////////////////
+        // Liegeois
         // This is the Liegeois cost function from 1977
-        //q_null(j) = - (q_(j) - qnom(j) )/( q_.rows() * ( q_upper(j) - q_lower(j)));
+        //q_jointLimit(j) = - (q_(j) - qnom(j) )/( q_.rows() * ( q_upper(j) - q_lower(j)));
+        // END Liegeois
+        ///////////////////
 
+
+        ///////////////////
+        // Chaumette
         // This is the Chaumette cost function from 1996??
         // http://www.irisa.fr/lagadic/pdf/2001_itra_chaumette.pdf
         // Marchand, E.; Chaumette, F.; Rizzo, A.,
@@ -762,35 +798,41 @@ void PR2CartresnnControllerClass::update()
 
         if( q_(j) > qTildeMax )
         {
-          q_null(j) = ( q_(j) - qTildeMax )/delQ ;
+          q_jointLimit(j) = ( q_(j) - qTildeMax )/delQ ;
         }else
         if( q_(j) < qTildeMin )
         {
-          q_null(j) = ( q_(j) - qTildeMin )/delQ ;
+          q_jointLimit(j) = ( q_(j) - qTildeMin )/delQ ;
         }else
         {
-          q_null(j) = 0 ;
+          q_jointLimit(j) = 0 ;
         }
+        // END Chaumette
+        ///////////////////
+
+
+        ///////////////////
+        // Manip modified Siciliano
+        // Pg. 145
+//        q_manipAbility = 0;
+        // END Manip
+        ///////////////////
 
       }
 
-      q_null(4) = 0;
-      q_null(6) = 0;
-
-      qd_m = nullSpace*q_null ;
+      qd_m = J_pinv*( Xd_m  + (X_m - X) ) + nullSpace*( q_jointLimit );
+      // qdd_m = qdd_m + J_pinv*( Xdd_m + (Xd_m - Xd) + (X_m - X) - JacobianDot*qd ) + nullSpace*q_null ;
 
     }else
     {
       // No nullspace velocity
-      qd_m  = Eigen::VectorXd::Zero( num_Joints ) ;
+      qd_m = J_pinv*( Xd_m  + (X_m - X) ) ;
+      // qdd_m = qdd_m + J_pinv*( Xdd_m + (Xd_m - Xd) + (X_m - X) - JacobianDot*qd ) ;
     }
 
-    qd_m = qd_m + J_pinv*( Xd_m + (X_m - X) ) ;
-
-//    q_m   = q_m + qd_m*0.001;
-    q_m   = q_m + qd_m*0.001;
-
-    qdd_m = (qd_m - prev_qd_m)/0.001;
+    q_m   = q_m + qd_m*delT;
+//    qd_m   = qd_m + qdd_m*delT;
+    qdd_m = (qd_m - prev_qd_m)/delT;
 
 
     // dynamically consistent generalized inverse is defined to
@@ -804,7 +846,7 @@ void PR2CartresnnControllerClass::update()
 
   // Cart to Joint END
   /////////////////////////
-*/
+
 
   /////////////////////////
   // NN
@@ -822,11 +864,13 @@ void PR2CartresnnControllerClass::update()
   prev_q_m  = q_m;
   prev_qd_m = qd_m;
 
+  JacobianPrev = Jacobian;
+
   // NN END
   /////////////////////////
 
   //
-  //tau = JacobianTrans*500*(X_m - X);
+  tau = JacobianTrans*500*(X_m - X);
   //
 
   tau_c_(0) = tau(0);
