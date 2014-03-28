@@ -355,11 +355,37 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                   num_Outputs ,   // num_Outputs
                                   num_Hidden  ,   // num_Hidden
                                   num_Error   ,   // num_Error
-                                  num_Joints   ); // num_Joints
+                                  6   ); // num_Joints
+
+  Eigen::MatrixXd p_Kv     ;
+  Eigen::MatrixXd p_lambda ;
+
+  p_Kv                  .resize( 6, 1 ) ;
+  p_lambda              .resize( 6, 1 ) ;
+
+// Filtered error
+// r = (qd_m - qd) + lambda*(q_m - q);
+// Kv*r
+// Kd*(qd_m - qd) + Kp*(q_m - q) = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
+// Kv = Kd | Kv*lambda = Kp ... lambda = Kp/Kv = Kp/Kd
+
+  p_Kv << Kd_(0) ,
+          Kd_(1) ,
+          Kd_(2) ,
+          Kd_(3) ,
+          Kd_(4) ,
+          Kd_(5) ;
+
+  p_lambda << Kp_(0) / Kd_(0) ,
+              Kp_(1) / Kd_(1) ,
+              Kp_(2) / Kd_(2) ,
+              Kp_(3) / Kd_(3) ,
+              Kp_(4) / Kd_(4) ,
+              Kp_(5) / Kd_(5) ;
 
   nnController.init( kappa  ,
-                     Kv     ,
-                     lambda ,
+                     p_Kv     ,
+                     p_lambda ,
                      Kz     ,
                      Zb     ,
                      fFForce,
@@ -602,7 +628,7 @@ void PR2CartneuroControllerClass::update()
     // dynamically consistent generalized inverse is defined to
     // J^T# = (J M^−1 J^T)^-1 JM^−1
 
-  tau = JacobianTrans*force + nullspaceTorque;
+  tau = JacobianTrans*force; // + nullspaceTorque;
 
   // Convert from Eigen to KDL
 //      tau_c_ = JointEigen2Kdl( tau );

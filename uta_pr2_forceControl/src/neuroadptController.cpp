@@ -304,10 +304,31 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
                                   num_Error   ,   // num_Error
                                   num_Joints   ); // num_Joints
 
+  Eigen::MatrixXd p_Kv     ;
+  Eigen::MatrixXd p_lambda ;
+
+  p_Kv                  .resize( num_Joints, 1 ) ;
+  p_lambda              .resize( num_Joints, 1 ) ;
+
+  p_Kv << Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ;
+
+  p_lambda << lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ;
 
   nnController.init( kappa  ,
-                     Kv     ,
-                     lambda ,
+                     p_Kv     ,
+                     p_lambda ,
                      Kz     ,
                      Zb     ,
                      fFForce,
@@ -1185,9 +1206,31 @@ bool PR2NeuroadptControllerClass::paramUpdate( uta_pr2_forceControl::controllerP
                                   num_Error   ,   // num_Error
                                   num_Joints   ); // num_Joints
 
+  Eigen::MatrixXd p_Kv     ;
+  Eigen::MatrixXd p_lambda ;
+
+  p_Kv                  .resize( num_Joints, 1 ) ;
+  p_lambda              .resize( num_Joints, 1 ) ;
+
+  p_Kv << Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ;
+
+  p_lambda << lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ;
+
   nnController.init( kappa  ,
-                     Kv     ,
-                     lambda ,
+                     p_Kv     ,
+                     p_lambda ,
                      Kz     ,
                      Zb     ,
                      fFForce,

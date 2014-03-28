@@ -21,7 +21,7 @@ namespace csl {
 namespace neural_network {
 
 /*
- * This class will implement a Neural Network Based controler using a two layer NN with sigmoid activation functions
+ * This class will implement a Neural Network Based controller using a two layer NN with sigmoid activation functions
  * TODO add more description
  */
 class TwoLayerNeuralNetworkController {
@@ -53,8 +53,8 @@ class TwoLayerNeuralNetworkController {
         Eigen::MatrixXd sigmaPrimeTrans_W_r;
 
 	double kappa;
-	double Kv;
-	double lambda;
+	Eigen::MatrixXd Kv;
+	Eigen::MatrixXd lambda;
 	double Kz;
 	double Zb;
 	double nnF;
@@ -77,15 +77,37 @@ public:
 
           delT = 0.001; /// 1000 Hz by default
 
-          init( 0.07 ,
-                10   ,
-                0.5  ,
-                0    ,
-                100  ,
-                1    ,
-                100  ,
-                20   ,
-                1     );
+          Eigen::MatrixXd p_Kv     ;
+          Eigen::MatrixXd p_lambda ;
+
+          p_Kv                  .resize( 7, 1 ) ;
+          p_lambda              .resize( 7, 1 ) ;
+
+          p_Kv << 10 ,
+                  10 ,
+                  10 ,
+                  10 ,
+                  10 ,
+                  10 ,
+                  10 ;
+
+          p_lambda << 0.5 ,
+                      0.5 ,
+                      0.5 ,
+                      0.5 ,
+                      0.5 ,
+                      0.5 ,
+                      0.5 ;
+
+          init( 0.07     ,
+                p_Kv     ,
+                p_lambda ,
+                0        ,
+                100      ,
+                1        ,
+                100      ,
+                20       ,
+                1         );
 	}
 
 	void changeNNstructure( double para_num_Inputs  ,
@@ -101,15 +123,15 @@ public:
 	  num_Joints  = para_num_Joints  ;
 	}
 
-	void init( double p_kappa  ,
-		   double p_Kv     ,
-		   double p_lambda ,
-		   double p_Kz     ,
-		   double p_Zb     ,
-		   double p_ffForce,
-		   double p_nnF    ,
-		   double p_nnG    ,
-		   double p_nn_ON   )
+	void init( double p_kappa             ,
+	           Eigen::MatrixXd & p_Kv     ,
+	           Eigen::MatrixXd & p_lambda ,
+		   double p_Kz                ,
+		   double p_Zb                ,
+		   double p_ffForce           ,
+		   double p_nnF               ,
+		   double p_nnG               ,
+		   double p_nn_ON              )
 		{
 			kappa            = p_kappa   ;
 			Kv               = p_Kv      ;
@@ -140,6 +162,9 @@ public:
 			r                   .resize( num_Error     , 1              ) ;
 			vRobust             .resize( num_Outputs   , 1              ) ;
 			sigmaPrimeTrans_W_r .resize( num_Hidden    , 1              ) ;
+
+			Kv                  .resize( num_Joints, 1 ) ;
+			lambda              .resize( num_Joints, 1 ) ;
 
 
 			hiddenLayerIdentity.setIdentity();

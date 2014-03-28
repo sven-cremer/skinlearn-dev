@@ -107,7 +107,7 @@ void TwoLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
 	V_trans = V_trans_next;
 
 	// Filtered error
-	r = (qd_m - qd) + lambda*(q_m - q);
+	r = (qd_m - qd) + lambda.asDiagonal()*(q_m - q);
 
 	// Robust term
 	Z.block(0,0,num_Hidden,num_Outputs) = W_trans.transpose();
@@ -121,7 +121,7 @@ void TwoLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv*r + nn_ON*( y - vRobust ) - feedForwardForce*t_r ;
+	tau = Kv.asDiagonal()*r + nn_ON*( y - vRobust ) - feedForwardForce*t_r ;
 //	tau = (qd_m - qd) + 100*(q_m - q);
 
 	//
