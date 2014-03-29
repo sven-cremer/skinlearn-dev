@@ -306,6 +306,10 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   X        = Eigen::VectorXd::Zero( 6 ) ;
   Xd       = Eigen::VectorXd::Zero( 6 ) ;
 
+  X_m(0) = cartIniX ;
+  X_m(1) = cartIniY ;
+  X_m(2) = cartIniZ ;
+
   t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
   task_ref = Eigen::VectorXd::Zero( num_Outputs ) ;
   tau      = Eigen::VectorXd::Zero( num_Outputs ) ;
@@ -541,9 +545,10 @@ void PR2CartneuroControllerClass::update()
   {
     double R, P, Y;
     xd_.M.GetRPY(R, P, Y);
-    X_m(0) = xd_.p(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;
-    X_m(1) = xd_.p(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
-    X_m(2) = xd_.p(2);  Xd_m(2) = 0;  Xdd_m(2) = 0;
+//    X_m(0) = xd_.p(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;
+//    X_m(1) = xd_.p(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
+//    X_m(2) = xd_.p(2);  Xd_m(2) = 0;  Xdd_m(2) = 0;
+
     X_m(3) = R       ;  Xd_m(3) = 0;  Xdd_m(3) = 0;
     X_m(4) = P       ;  Xd_m(4) = 0;  Xdd_m(4) = 0;
     X_m(5) = Y       ;  Xd_m(5) = 0;  Xdd_m(5) = 0;
@@ -596,17 +601,19 @@ void PR2CartneuroControllerClass::update()
 //  q_upper(5) = 0;
 //  q_upper(6) = 0;
 
-//    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 5 == 0 )
-//    {
-//      X_m(0) =  0.7 ;
-//      X_m(1) = -0.7 ;
-//    }
-//
-//    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 10 == 0 )
-//    {
-//      X_m(0) =  0.7 ;
-//      X_m(1) =  0.0 ;
-//    }
+    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 5 == 0 )
+    {
+      X_m(0) = cartDesX ;
+      X_m(1) = cartDesY ;
+      X_m(2) = cartDesZ ;
+    }
+
+    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 10 == 0 )
+    {
+      X_m(0) = cartIniX ;
+      X_m(1) = cartIniY ;
+      X_m(2) = cartIniZ ;
+    }
 
   //  // FIR
   //  outerLoopFIRmodelJoint1.Update( qd_m    (0) ,
