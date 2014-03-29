@@ -1030,7 +1030,6 @@ void PR2CartresnnControllerClass::bufferData( double & dt )
                 msgControllerFullData[index].r_eff_j4          = tau_f_(4)                   ;
                 msgControllerFullData[index].r_eff_j5          = tau_f_(5)                   ;
                 msgControllerFullData[index].r_eff_j6          = tau_f_(6)                   ;
-
 */
                 msgControllerFullData[index].l_limit_0         = q_lower(0)                  ;
                 msgControllerFullData[index].l_limit_1         = q_lower(1)                  ;

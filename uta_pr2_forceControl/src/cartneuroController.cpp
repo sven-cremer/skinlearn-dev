@@ -127,6 +127,13 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   q_upper(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->upper;
   q_upper(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->upper;
 
+  // Since two joints are continuous
+  q_upper(4) =   6.28 ;
+  q_upper(6) =   6.28 ;
+
+  q_lower(4) = - 6.28 ;
+  q_lower(6) = - 6.28 ;
+
   qnom(0) = ( q_upper(0) - q_lower(0) ) / 2 ;
   qnom(1) = ( q_upper(1) - q_lower(1) ) / 2 ;
   qnom(2) = ( q_upper(2) - q_lower(2) ) / 2 ;
@@ -248,6 +255,10 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useCurrentCartPose     = "/useCurrentCartPose";
   if (!n.getParam( para_useCurrentCartPose, useCurrentCartPose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCurrentCartPose.c_str()) ; return false; }
 
+  useNullspacePose = true ;
+  std::string para_useNullspacePose     = "/useNullspacePose";
+  if (!n.getParam( para_useNullspacePose, useNullspacePose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useNullspacePose.c_str()) ; return false; }
+
   /////////////////////////
   // System Model
 
@@ -270,24 +281,24 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   qdd_m   .resize( 6, 1 ) ;
 
   // desired Cartesian states
-  X_m     .resize( 6         , 1 ) ;
-  Xd_m    .resize( 6         , 1 ) ;
-  Xdd_m   .resize( 6         , 1 ) ;
+  X_m     .resize( 6, 1 ) ;
+  Xd_m    .resize( 6, 1 ) ;
+  Xdd_m   .resize( 6, 1 ) ;
 
   // Cartesian states
-  X       .resize( 6         , 1 ) ;
-  Xd      .resize( 6         , 1 ) ;
+  X       .resize( 6, 1 ) ;
+  Xd      .resize( 6, 1 ) ;
 
-  t_r     .resize( num_Joints, 1 ) ;
-  task_ref.resize( num_Joints, 1 ) ;
-  tau     .resize( num_Joints, 1 ) ;
+  t_r     .resize( num_Joints, num_Joints ) ;
+  task_ref.resize( num_Joints, num_Joints ) ;
+  tau     .resize( num_Joints, num_Joints ) ;
 
   q        = Eigen::VectorXd::Zero( num_Joints ) ;
   qd       = Eigen::VectorXd::Zero( num_Joints ) ;
   qdd      = Eigen::VectorXd::Zero( num_Joints ) ;
-  q_m      = Eigen::VectorXd::Zero( 6 ) ;
-  qd_m     = Eigen::VectorXd::Zero( 6 ) ;
-  qdd_m    = Eigen::VectorXd::Zero( 6 ) ;
+  q_m      = Eigen::VectorXd::Zero( num_Joints ) ;
+  qd_m     = Eigen::VectorXd::Zero( num_Joints ) ;
+  qdd_m    = Eigen::VectorXd::Zero( num_Joints ) ;
 
   X_m      = Eigen::VectorXd::Zero( 6 ) ;
   Xd_m     = Eigen::VectorXd::Zero( 6 ) ;
@@ -447,7 +458,7 @@ void PR2CartneuroControllerClass::starting()
 
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
-//  start_time_ = robot_state_->getTime();
+  start_time_ = robot_state_->getTime();
 }
 
 
@@ -546,6 +557,95 @@ void PR2CartneuroControllerClass::update()
     X(5)   = Y      ;   Xd(5)   = xdot_(5);
   }
 
+
+    /////////////////////////
+    // System Model
+
+  //  if( (robot_state_->getTime() - start_time_).toSec() > 5 )
+  //  {
+  //    task_ref   (0) = -0.821127 ;
+  //    task_ref   (3) = -1.70016  ;
+  //  }else
+  //  {
+  //    start_time_ = robot_state_->getTime();
+  //    task_ref   (0) = -0.190788 ;
+  //    task_ref   (3) = -1.42669  ;
+  //  }
+
+  qnom(0) = -0.5   ;
+  qnom(1) =  0 ;
+  qnom(2) = -1.50   ;
+  qnom(3) = -1.7   ;
+  qnom(4) =  1.50   ;
+  qnom(5) =  0 ;
+  qnom(6) =  0 ;
+
+//  q_lower(0) = 0;
+//  q_lower(1) = -0.01;
+//  q_lower(2) = 0;
+//  q_lower(3) = 0;
+//  q_lower(4) = 0;
+//  q_lower(5) = 0;
+//  q_lower(6) = 0;
+//
+//  q_upper(0) = 0;
+//  q_upper(1) = 0.01;
+//  q_upper(2) = 0;
+//  q_upper(3) = 0;
+//  q_upper(4) = 0;
+//  q_upper(5) = 0;
+//  q_upper(6) = 0;
+
+//    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 5 == 0 )
+//    {
+//      X_m(0) =  0.7 ;
+//      X_m(1) = -0.7 ;
+//    }
+//
+//    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 10 == 0 )
+//    {
+//      X_m(0) =  0.7 ;
+//      X_m(1) =  0.0 ;
+//    }
+
+  //  // FIR
+  //  outerLoopFIRmodelJoint1.Update( qd_m    (0) ,
+  //                                  qd      (0) ,
+  //                                  q_m     (0) ,
+  //                                  q       (0) ,
+  //                                  qdd_m   (0) ,
+  //                                  t_r     (0) ,
+  //                                  task_ref(0) );
+  //
+  //  outerLoopFIRmodelJoint2.Update( qd_m    (3) ,
+  //                                  qd      (3) ,
+  //                                  q_m     (3) ,
+  //                                  q       (3) ,
+  //                                  qdd_m   (3) ,
+  //                                  t_r     (3) ,
+  //                                  task_ref(3) );
+
+
+//    // Cartesian space MSD model
+//    outerLoopMSDmodelX.update( Xd_m  (0),
+//                               xdot_ (0),
+//                               X_m   (0),
+//                               x_.p.data[0],
+//                               Xdd_m (0),
+//                               xd_.p(0) ); // this should be force
+//
+//    outerLoopMSDmodelY.update( Xd_m  (1),
+//                               xdot_ (1),
+//                               X_m   (1),
+//                               x_.p.data[1],
+//                               Xdd_m (1),
+//                               xd_.p(1) ); // this should be force
+
+    // System Model END
+    /////////////////////////
+
+//ROS_ERROR_STREAM("Joints: " << q.transpose());
+
   /////////////////////////
   // NN
     nnController.UpdateCart( X     ,
@@ -567,7 +667,7 @@ void PR2CartneuroControllerClass::update()
 
     // ======== J psuedo-inverse and Nullspace computation
 
-    double k_posture = 25.0;
+    double k_posture = 50.0;
     double jacobian_inverse_damping = 0.01;
 
     JointVec joint_dd_ff_;
@@ -593,11 +693,10 @@ void PR2CartneuroControllerClass::update()
     // ======== Posture control
 
     // Computes the desired joint torques for achieving the posture
-    bool use_posture_ = true;
-
     nullspaceTorque.setZero();
-    if (use_posture_)
+
     {
+      /*
       JointVec posture_err ;
 
       posture_err(0) = qnom(0) - q_(0) ;
@@ -621,14 +720,79 @@ void PR2CartneuroControllerClass::update()
       }
 
       JointVec qdd_posture = k_posture * posture_err;
-      nullspaceTorque = joint_dd_ff_.array() * (nullSpace * qdd_posture).array();
-    }
 
+      // Add nullspace velocity
+      qd_m = nullSpace*qdd_posture ;
+      */
+
+      JointVec q_jointLimit ;
+      JointVec q_manipAbility ;
+
+      double delQ;
+      double rho = 0.1;
+      double qTildeMax = 0;
+      double qTildeMin = 0;
+
+      for (size_t j = 0; j < 7; ++j)
+      {
+        ///////////////////
+        // Liegeois
+        // This is the Liegeois cost function from 1977
+        q_jointLimit(j) = - (q_(j) - qnom(j) )/( q_.rows() * ( q_upper(j) - q_lower(j)));
+        // END Liegeois
+        ///////////////////
+/*
+        ///////////////////
+        // Chaumette
+        // This is the Chaumette cost function from 1996??
+        // http://www.irisa.fr/lagadic/pdf/2001_itra_chaumette.pdf
+        // Marchand, E.; Chaumette, F.; Rizzo, A.,
+        // "Using the task function approach to avoid robot joint limits and kinematic singularities in visual servoing,"
+        // Intelligent Robots and Systems '96, IROS 96, Proceedings of the 1996 IEEE/RSJ International Conference on ,
+        // vol.3, no., pp.1083,1090 vol.3, 4-8 Nov 1996
+
+        delQ = ( q_upper(j) - q_lower(j));
+        qTildeMin = qTildeMin + rho*delQ;
+        qTildeMax = qTildeMax - rho*delQ;
+
+        if( q_(j) > qTildeMax )
+        {
+          q_jointLimit(j) = ( q_(j) - qTildeMax )/delQ ;
+        }else
+        if( q_(j) < qTildeMin )
+        {
+          q_jointLimit(j) = ( q_(j) - qTildeMin )/delQ ;
+        }else
+        {
+          q_jointLimit(j) = 0 ;
+        }
+        // END Chaumette
+        ///////////////////
+*/
+
+        ///////////////////
+        // Manip modified Siciliano
+        // Pg. 145
+//        q_manipAbility = 0;
+        // END Manip
+        ///////////////////
+
+      }
+
+      nullspaceTorque = nullSpace*50*( q_jointLimit );
+
+    }
 
     // dynamically consistent generalized inverse is defined to
     // J^T# = (J M^−1 J^T)^-1 JM^−1
+    if ( useNullspacePose )
+    {
+      tau = JacobianTrans*force + nullspaceTorque;
+    }else
+    {
+      tau = JacobianTrans*force;
+    }
 
-  tau = JacobianTrans*force; // + nullspaceTorque;
 
   // Convert from Eigen to KDL
 //      tau_c_ = JointEigen2Kdl( tau );
@@ -662,150 +826,166 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
 //                tf::PoseKDLToMsg(x_m_, modelCartPos_);
 //                tf::PoseKDLToMsg(x_  , robotCartPos_);
 
-                msgControllerFullData[index].dt                = dt                          ;
+          msgControllerFullData[index].dt                = dt                          ;
 
-                // Force Data
-                msgControllerFullData[index].force_x           = 0 ;// r_ftData.wrench.force.x     ;
-                msgControllerFullData[index].force_y           = 0 ;// r_ftData.wrench.force.y     ;
-                msgControllerFullData[index].force_z           = 0 ;// r_ftData.wrench.force.z     ;
-                msgControllerFullData[index].torque_x          = 0 ;// r_ftData.wrench.torque.x    ;
-                msgControllerFullData[index].torque_y          = 0 ;// r_ftData.wrench.torque.y    ;
-                msgControllerFullData[index].torque_z          = 0 ;// r_ftData.wrench.torque.z    ;
+          // Force Data
+          msgControllerFullData[index].force_x           = 0 ;// r_ftData.wrench.force.x     ;
+          msgControllerFullData[index].force_y           = 0 ;// r_ftData.wrench.force.y     ;
+          msgControllerFullData[index].force_z           = 0 ;// r_ftData.wrench.force.z     ;
+          msgControllerFullData[index].torque_x          = 0 ;// r_ftData.wrench.torque.x    ;
+          msgControllerFullData[index].torque_y          = 0 ;// r_ftData.wrench.torque.y    ;
+          msgControllerFullData[index].torque_z          = 0 ;// r_ftData.wrench.torque.z    ;
 
-                // Input reference efforts(torques)
-                msgControllerFullData[index].reference_eff_j0  = 0; //t_r(0)                      ;
-                msgControllerFullData[index].reference_eff_j1  = 0; //t_r(1)                      ;
-                msgControllerFullData[index].reference_eff_j2  = 0; //t_r(2)                      ;
-                msgControllerFullData[index].reference_eff_j3  = 0; //t_r(3)                      ;
-                msgControllerFullData[index].reference_eff_j4  = 0; //t_r(4)                      ;
-                msgControllerFullData[index].reference_eff_j5  = 0; //t_r(5)                      ;
-                msgControllerFullData[index].reference_eff_j6  = 0; //t_r(6)                      ;
+          // Input reference efforts(torques)
+          msgControllerFullData[index].reference_eff_j0  = 0; //t_r(0)                      ;
+          msgControllerFullData[index].reference_eff_j1  = 0; //t_r(1)                      ;
+          msgControllerFullData[index].reference_eff_j2  = 0; //t_r(2)                      ;
+          msgControllerFullData[index].reference_eff_j3  = 0; //t_r(3)                      ;
+          msgControllerFullData[index].reference_eff_j4  = 0; //t_r(4)                      ;
+          msgControllerFullData[index].reference_eff_j5  = 0; //t_r(5)                      ;
+          msgControllerFullData[index].reference_eff_j6  = 0; //t_r(6)                      ;
 
-                // Model States
-                msgControllerFullData[index].m_cartPos_x       = modelCartPos_.position.x    ;
-                msgControllerFullData[index].m_cartPos_y       = modelCartPos_.position.y    ;
-                msgControllerFullData[index].m_cartPos_z       = modelCartPos_.position.z    ;
-                msgControllerFullData[index].m_cartPos_Qx      = modelCartPos_.orientation.x ;
-                msgControllerFullData[index].m_cartPos_Qy      = modelCartPos_.orientation.y ;
-                msgControllerFullData[index].m_cartPos_Qz      = modelCartPos_.orientation.z ;
-                msgControllerFullData[index].m_cartPos_QW      = modelCartPos_.orientation.w ;
+          // Model States
+          msgControllerFullData[index].m_cartPos_x       = modelCartPos_.position.x    ;
+          msgControllerFullData[index].m_cartPos_y       = modelCartPos_.position.y    ;
+          msgControllerFullData[index].m_cartPos_z       = modelCartPos_.position.z    ;
+          msgControllerFullData[index].m_cartPos_Qx      = modelCartPos_.orientation.x ;
+          msgControllerFullData[index].m_cartPos_Qy      = modelCartPos_.orientation.y ;
+          msgControllerFullData[index].m_cartPos_Qz      = modelCartPos_.orientation.z ;
+          msgControllerFullData[index].m_cartPos_QW      = modelCartPos_.orientation.w ;
+
+          msgControllerFullData[index].m_pos_x           = X_m(0)                      ;
+          msgControllerFullData[index].m_pos_y           = X_m(1)                      ;
+          msgControllerFullData[index].m_pos_z           = X_m(2)                      ;
+
+          msgControllerFullData[index].m_vel_x           = Xd_m(0)                     ;
+          msgControllerFullData[index].m_vel_y           = Xd_m(1)                     ;
+          msgControllerFullData[index].m_vel_z           = Xd_m(2)                     ;
+
+          msgControllerFullData[index].m_acc_x           = Xdd_m(0)                    ;
+          msgControllerFullData[index].m_acc_y           = Xdd_m(1)                    ;
+          msgControllerFullData[index].m_acc_z           = Xdd_m(2)                    ;
+
+          msgControllerFullData[index].m_pos_j0          = q_m(0)                      ;
+          msgControllerFullData[index].m_pos_j1          = q_m(1)                      ;
+          msgControllerFullData[index].m_pos_j2          = q_m(2)                      ;
+          msgControllerFullData[index].m_pos_j3          = q_m(3)                      ;
+          msgControllerFullData[index].m_pos_j4          = q_m(4)                      ;
+          msgControllerFullData[index].m_pos_j5          = q_m(5)                      ;
+          msgControllerFullData[index].m_pos_j6          = q_m(6)                      ;
+
+          msgControllerFullData[index].m_vel_j0          = qd_m(0)                     ;
+          msgControllerFullData[index].m_vel_j1          = qd_m(1)                     ;
+          msgControllerFullData[index].m_vel_j2          = qd_m(2)                     ;
+          msgControllerFullData[index].m_vel_j3          = qd_m(3)                     ;
+          msgControllerFullData[index].m_vel_j4          = qd_m(4)                     ;
+          msgControllerFullData[index].m_vel_j5          = qd_m(5)                     ;
+          msgControllerFullData[index].m_vel_j6          = qd_m(6)                     ;
+
+          msgControllerFullData[index].m_acc_j0          = qdd_m(0)                    ;
+          msgControllerFullData[index].m_acc_j1          = qdd_m(1)                    ;
+          msgControllerFullData[index].m_acc_j2          = qdd_m(2)                    ;
+          msgControllerFullData[index].m_acc_j3          = qdd_m(3)                    ;
+          msgControllerFullData[index].m_acc_j4          = qdd_m(4)                    ;
+          msgControllerFullData[index].m_acc_j5          = qdd_m(5)                    ;
+          msgControllerFullData[index].m_acc_j6          = qdd_m(6)                    ;
+
+          msgControllerFullData[index].m_eff_j0          = 0                           ;
+          msgControllerFullData[index].m_eff_j1          = 0                           ;
+          msgControllerFullData[index].m_eff_j2          = 0                           ;
+          msgControllerFullData[index].m_eff_j3          = 0                           ;
+          msgControllerFullData[index].m_eff_j4          = 0                           ;
+          msgControllerFullData[index].m_eff_j5          = 0                           ;
+          msgControllerFullData[index].m_eff_j6          = 0                           ;
+
+          // Control Output
+          msgControllerFullData[index].control_eff_j0    = tau(0)                      ;
+          msgControllerFullData[index].control_eff_j1    = tau(1)                      ;
+          msgControllerFullData[index].control_eff_j2    = tau(2)                      ;
+          msgControllerFullData[index].control_eff_j3    = tau(3)                      ;
+          msgControllerFullData[index].control_eff_j4    = tau(4)                      ;
+          msgControllerFullData[index].control_eff_j5    = tau(5)                      ;
+          msgControllerFullData[index].control_eff_j6    = tau(6)                      ;
+
+          // Robot States
+          msgControllerFullData[index].r_cartPos_x       = robotCartPos_.position.x    ;
+          msgControllerFullData[index].r_cartPos_y       = robotCartPos_.position.y    ;
+          msgControllerFullData[index].r_cartPos_z       = robotCartPos_.position.z    ;
+          msgControllerFullData[index].r_cartPos_Qx      = robotCartPos_.orientation.x ;
+          msgControllerFullData[index].r_cartPos_Qy      = robotCartPos_.orientation.y ;
+          msgControllerFullData[index].r_cartPos_Qz      = robotCartPos_.orientation.z ;
+          msgControllerFullData[index].r_cartPos_QW      = robotCartPos_.orientation.w ;
+
+          msgControllerFullData[index].r_pos_j0          = q(0)                        ;
+          msgControllerFullData[index].r_pos_j1          = q(1)                        ;
+          msgControllerFullData[index].r_pos_j2          = q(2)                        ;
+          msgControllerFullData[index].r_pos_j3          = q(3)                        ;
+          msgControllerFullData[index].r_pos_j4          = q(4)                        ;
+          msgControllerFullData[index].r_pos_j5          = q(5)                        ;
+          msgControllerFullData[index].r_pos_j6          = q(6)                        ;
+
+          msgControllerFullData[index].r_vel_j0          = qd(0)                       ;
+          msgControllerFullData[index].r_vel_j1          = qd(1)                       ;
+          msgControllerFullData[index].r_vel_j2          = qd(2)                       ;
+          msgControllerFullData[index].r_vel_j3          = qd(3)                       ;
+          msgControllerFullData[index].r_vel_j4          = qd(4)                       ;
+          msgControllerFullData[index].r_vel_j5          = qd(5)                       ;
+          msgControllerFullData[index].r_vel_j6          = qd(6)                       ;
+
+          msgControllerFullData[index].r_acc_j0          = 0                           ;
+          msgControllerFullData[index].r_acc_j1          = 0                           ;
+          msgControllerFullData[index].r_acc_j2          = 0                           ;
+          msgControllerFullData[index].r_acc_j3          = 0                           ;
+          msgControllerFullData[index].r_acc_j4          = 0                           ;
+          msgControllerFullData[index].r_acc_j5          = 0                           ;
+          msgControllerFullData[index].r_acc_j6          = 0                           ;
 /*
-                msgControllerFullData[index].m_pos_x           = x_m(0)                      ;
-                msgControllerFullData[index].m_pos_y           = x_m(1)                      ;
-                msgControllerFullData[index].m_pos_z           = x_m(2)                      ;
+          msgControllerFullData[index].r_eff_x           = ferr_(0)                    ;
+          msgControllerFullData[index].r_eff_y           = ferr_(1)                    ;
+          msgControllerFullData[index].r_eff_z           = ferr_(2)                    ;
+          msgControllerFullData[index].r_trq_x           = ferr_(3)                    ;
+          msgControllerFullData[index].r_trq_y           = ferr_(4)                    ;
+          msgControllerFullData[index].r_trq_z           = ferr_(5)                    ;
 
-                msgControllerFullData[index].m_vel_x           = xd_m(0)                     ;
-                msgControllerFullData[index].m_vel_y           = xd_m(1)                     ;
-                msgControllerFullData[index].m_vel_z           = xd_m(2)                     ;
-
-                msgControllerFullData[index].m_acc_x           = xdd_m(0)                    ;
-                msgControllerFullData[index].m_acc_y           = xdd_m(1)                    ;
-                msgControllerFullData[index].m_acc_z           = xdd_m(2)                    ;
-
-                msgControllerFullData[index].m_pos_j0          = q_m(0)                      ;
-                msgControllerFullData[index].m_pos_j1          = q_m(1)                      ;
-                msgControllerFullData[index].m_pos_j2          = q_m(2)                      ;
-                msgControllerFullData[index].m_pos_j3          = q_m(3)                      ;
-                msgControllerFullData[index].m_pos_j4          = q_m(4)                      ;
-                msgControllerFullData[index].m_pos_j5          = q_m(5)                      ;
-                msgControllerFullData[index].m_pos_j6          = q_m(6)                      ;
-
-                msgControllerFullData[index].m_vel_j0          = qd_m(0)                     ;
-                msgControllerFullData[index].m_vel_j1          = qd_m(1)                     ;
-                msgControllerFullData[index].m_vel_j2          = qd_m(2)                     ;
-                msgControllerFullData[index].m_vel_j3          = qd_m(3)                     ;
-                msgControllerFullData[index].m_vel_j4          = qd_m(4)                     ;
-                msgControllerFullData[index].m_vel_j5          = qd_m(5)                     ;
-                msgControllerFullData[index].m_vel_j6          = qd_m(6)                     ;
-
-                msgControllerFullData[index].m_acc_j0          = qdd_m(0)                    ;
-                msgControllerFullData[index].m_acc_j1          = qdd_m(1)                    ;
-                msgControllerFullData[index].m_acc_j2          = qdd_m(2)                    ;
-                msgControllerFullData[index].m_acc_j3          = qdd_m(3)                    ;
-                msgControllerFullData[index].m_acc_j4          = qdd_m(4)                    ;
-                msgControllerFullData[index].m_acc_j5          = qdd_m(5)                    ;
-                msgControllerFullData[index].m_acc_j6          = qdd_m(6)                    ;
-
-                msgControllerFullData[index].m_eff_j0          = 0                           ;
-                msgControllerFullData[index].m_eff_j1          = 0                           ;
-                msgControllerFullData[index].m_eff_j2          = 0                           ;
-                msgControllerFullData[index].m_eff_j3          = 0                           ;
-                msgControllerFullData[index].m_eff_j4          = 0                           ;
-                msgControllerFullData[index].m_eff_j5          = 0                           ;
-                msgControllerFullData[index].m_eff_j6          = 0                           ;
-
-                // Control Output
-                msgControllerFullData[index].control_eff_j0    = tau(0)                      ;
-                msgControllerFullData[index].control_eff_j1    = tau(1)                      ;
-                msgControllerFullData[index].control_eff_j2    = tau(2)                      ;
-                msgControllerFullData[index].control_eff_j3    = tau(3)                      ;
-                msgControllerFullData[index].control_eff_j4    = tau(4)                      ;
-                msgControllerFullData[index].control_eff_j5    = tau(5)                      ;
-                msgControllerFullData[index].control_eff_j6    = tau(6)                      ;
+          msgControllerFullData[index].r_eff_j0          = tau_f_(0)                   ;
+          msgControllerFullData[index].r_eff_j1          = tau_f_(1)                   ;
+          msgControllerFullData[index].r_eff_j2          = tau_f_(2)                   ;
+          msgControllerFullData[index].r_eff_j3          = tau_f_(3)                   ;
+          msgControllerFullData[index].r_eff_j4          = tau_f_(4)                   ;
+          msgControllerFullData[index].r_eff_j5          = tau_f_(5)                   ;
+          msgControllerFullData[index].r_eff_j6          = tau_f_(6)                   ;
 */
-                // Robot States
-                msgControllerFullData[index].r_cartPos_x       = robotCartPos_.position.x    ;
-                msgControllerFullData[index].r_cartPos_y       = robotCartPos_.position.y    ;
-                msgControllerFullData[index].r_cartPos_z       = robotCartPos_.position.z    ;
-                msgControllerFullData[index].r_cartPos_Qx      = robotCartPos_.orientation.x ;
-                msgControllerFullData[index].r_cartPos_Qy      = robotCartPos_.orientation.y ;
-                msgControllerFullData[index].r_cartPos_Qz      = robotCartPos_.orientation.z ;
-                msgControllerFullData[index].r_cartPos_QW      = robotCartPos_.orientation.w ;
-/*
-                msgControllerFullData[index].r_pos_j0          = q(0)                        ;
-                msgControllerFullData[index].r_pos_j1          = q(1)                        ;
-                msgControllerFullData[index].r_pos_j2          = q(2)                        ;
-                msgControllerFullData[index].r_pos_j3          = q(3)                        ;
-                msgControllerFullData[index].r_pos_j4          = q(4)                        ;
-                msgControllerFullData[index].r_pos_j5          = q(5)                        ;
-                msgControllerFullData[index].r_pos_j6          = q(6)                        ;
+          msgControllerFullData[index].l_limit_0         = q_lower(0)                  ;
+          msgControllerFullData[index].l_limit_1         = q_lower(1)                  ;
+          msgControllerFullData[index].l_limit_2         = q_lower(2)                  ;
+          msgControllerFullData[index].l_limit_3         = q_lower(3)                  ;
+          msgControllerFullData[index].l_limit_4         = q_lower(4)                  ;
+          msgControllerFullData[index].l_limit_5         = q_lower(5)                  ;
+          msgControllerFullData[index].l_limit_6         = q_lower(6)                  ;
 
-                msgControllerFullData[index].r_vel_j0          = qd(0)                       ;
-                msgControllerFullData[index].r_vel_j1          = qd(1)                       ;
-                msgControllerFullData[index].r_vel_j2          = qd(2)                       ;
-                msgControllerFullData[index].r_vel_j3          = qd(3)                       ;
-                msgControllerFullData[index].r_vel_j4          = qd(4)                       ;
-                msgControllerFullData[index].r_vel_j5          = qd(5)                       ;
-                msgControllerFullData[index].r_vel_j6          = qd(6)                       ;
+          msgControllerFullData[index].u_limit_0         = q_upper(0)                  ;
+          msgControllerFullData[index].u_limit_1         = q_upper(1)                  ;
+          msgControllerFullData[index].u_limit_2         = q_upper(2)                  ;
+          msgControllerFullData[index].u_limit_3         = q_upper(3)                  ;
+          msgControllerFullData[index].u_limit_4         = q_upper(4)                  ;
+          msgControllerFullData[index].u_limit_5         = q_upper(5)                  ;
+          msgControllerFullData[index].u_limit_6         = q_upper(6)                  ;
 
-                msgControllerFullData[index].r_acc_j0          = 0                           ;
-                msgControllerFullData[index].r_acc_j1          = 0                           ;
-                msgControllerFullData[index].r_acc_j2          = 0                           ;
-                msgControllerFullData[index].r_acc_j3          = 0                           ;
-                msgControllerFullData[index].r_acc_j4          = 0                           ;
-                msgControllerFullData[index].r_acc_j5          = 0                           ;
-                msgControllerFullData[index].r_acc_j6          = 0                           ;
+          // NN Params
+          msgControllerFullData[index].kappa             = kappa                       ;
+          msgControllerFullData[index].Kv                = Kv                          ;
+          msgControllerFullData[index].lambda            = lambda                      ;
+          msgControllerFullData[index].Kz                = Kz                          ;
+          msgControllerFullData[index].Zb                = Zb                          ;
+          msgControllerFullData[index].F                 = nnF                         ;
+          msgControllerFullData[index].G                 = nnG                         ;
+          msgControllerFullData[index].inParams          = num_Inputs                  ;
+          msgControllerFullData[index].outParams         = num_Outputs                 ;
+          msgControllerFullData[index].hiddenNodes       = num_Hidden                  ;
+          msgControllerFullData[index].errorParams       = num_Error                   ;
+          msgControllerFullData[index].feedForwardForce  = num_Joints                  ;
+          msgControllerFullData[index].nn_ON             = nn_ON                       ;
 
-                msgControllerFullData[index].r_eff_x           = ferr_(0)                    ;
-                msgControllerFullData[index].r_eff_y           = ferr_(1)                    ;
-                msgControllerFullData[index].r_eff_z           = ferr_(2)                    ;
-                msgControllerFullData[index].r_trq_x           = ferr_(3)                    ;
-                msgControllerFullData[index].r_trq_y           = ferr_(4)                    ;
-                msgControllerFullData[index].r_trq_z           = ferr_(5)                    ;
-
-                msgControllerFullData[index].r_eff_j0          = tau_f_(0)                   ;
-                msgControllerFullData[index].r_eff_j1          = tau_f_(1)                   ;
-                msgControllerFullData[index].r_eff_j2          = tau_f_(2)                   ;
-                msgControllerFullData[index].r_eff_j3          = tau_f_(3)                   ;
-                msgControllerFullData[index].r_eff_j4          = tau_f_(4)                   ;
-                msgControllerFullData[index].r_eff_j5          = tau_f_(5)                   ;
-                msgControllerFullData[index].r_eff_j6          = tau_f_(6)                   ;
-
-                // NN Params
-                msgControllerFullData[index].kappa             = kappa                       ;
-                msgControllerFullData[index].Kv                = Kv                          ;
-                msgControllerFullData[index].lambda            = lambda                      ;
-                msgControllerFullData[index].Kz                = Kz                          ;
-                msgControllerFullData[index].Zb                = Zb                          ;
-                msgControllerFullData[index].F                 = nnF                         ;
-                msgControllerFullData[index].G                 = nnG                         ;
-                msgControllerFullData[index].inParams          = num_Inputs                  ;
-                msgControllerFullData[index].outParams         = num_Outputs                 ;
-                msgControllerFullData[index].hiddenNodes       = num_Hidden                  ;
-                msgControllerFullData[index].errorParams       = num_Error                   ;
-                msgControllerFullData[index].feedForwardForce  = num_Joints                  ;
-                msgControllerFullData[index].nn_ON             = nn_ON                       ;
-*/
                 // TODO fix this
                 // Model Params
                 msgControllerFullData[index].m                 =   0 ; // outerLoopMSDmodel.getMass(  )(0,0) ;

@@ -33,7 +33,7 @@ circleLlim          : 0.5
 circleUlim          : 1.5
 
 nnNum_Inputs        : 35 
-nnNum_Outputs       : 7  
+nnNum_Outputs       : 7
 nnNum_Hidden        : 10
 nnNum_Error         : 7  
 nnNum_Joints        : 7  
@@ -45,7 +45,7 @@ nnNum_Joints        : 7
 nn_Kv               : 5
 nn_lambda           : 20
 nn_kappa            : 0.07
-nn_Kz               : 0.001  
+nn_Kz               : 0 
 nn_Zb               : 1000 
 nn_feedForwardForce : 0   
 nn_nnF              : 100 
@@ -59,28 +59,28 @@ m_D                 : 1
 cartPos_Kp_x : 800.0
 cartPos_Kp_y : 800.0
 cartPos_Kp_z : 800.0
-cartPos_Kd_x : 15.0
-cartPos_Kd_y : 15.0
-cartPos_Kd_z : 15.0
+cartPos_Kd_x : 100.0
+cartPos_Kd_y : 100.0
+cartPos_Kd_z : 100.0
 
 cartRot_Kp_x : 80.0
 cartRot_Kp_y : 80.0
 cartRot_Kp_z : 80.0
-cartRot_Kd_x : 1.2
-cartRot_Kd_y : 1.2
-cartRot_Kd_z : 1.2
+cartRot_Kd_x : 40.0
+cartRot_Kd_y : 40.0
+cartRot_Kd_z : 40.0
 
 useCurrentCartPose : false
 
 useNullspacePose   : true
 
-cartIniX     :  0.8
-cartIniY     : -0.2
+cartIniX     :  0.7
+cartIniY     :  0.0
 cartIniZ     :  0.1
 
 cartDesX     : 0.0
-cartDesY     : 0.1
-cartDesZ     : 0.1
+cartDesY     : 0.2
+cartDesZ     : 0.0
 cartDesRoll  : 0.0
 cartDesPitch : 0.0
 cartDesYaw   : 0.0
