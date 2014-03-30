@@ -482,10 +482,13 @@ void PR2CartneuroControllerClass::starting()
   last_time_ = robot_state_->getTime() ;
   start_time_ = robot_state_->getTime();
 
-//  // set FT sensor bias due to gravity
-//  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-//  l_ft_samples    = l_ftData_vector.size() - 1;
-////  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
+  // set FT sensor bias due to gravity
+  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+  l_ft_samples    = l_ftData_vector.size() - 1;
+
+  ROS_ERROR_STREAM( "Samples: " << l_ft_samples );
+
+  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
 //  l_ftBias.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  ;
 //  l_ftBias.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  ;
 //  l_ftBias.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  ;
