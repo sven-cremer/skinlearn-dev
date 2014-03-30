@@ -46,29 +46,29 @@ nn_Kv               : 5
 nn_lambda           : 20
 nn_kappa            : 0.07
 nn_Kz               : 0 
-nn_Zb               : 1000 
+nn_Zb               : 100 
 nn_feedForwardForce : 0   
 nn_nnF              : 100 
 nn_nnG              : 100
-nn_ON               : 0
+nn_ON               : 1
 
 m_M                 : 1
 m_S                 : 5
 m_D                 : 1
 
-cartPos_Kp_x : 800000.0
-cartPos_Kp_y : 800.0
-cartPos_Kp_z : 800000.0
-cartPos_Kd_x : 1000.0
-cartPos_Kd_y : 100.0
-cartPos_Kd_z : 1000.0
+cartPos_Kp_x : 5.0
+cartPos_Kp_y : 5.0
+cartPos_Kp_z : 5.0
+cartPos_Kd_x : 5
+cartPos_Kd_y : 5
+cartPos_Kd_z : 5
 
-cartRot_Kp_x : 80.0
-cartRot_Kp_y : 80.0
-cartRot_Kp_z : 80.0
-cartRot_Kd_x : 40.0
-cartRot_Kd_y : 40.0
-cartRot_Kd_z : 40.0
+cartRot_Kp_x : 3.0
+cartRot_Kp_y : 3.0
+cartRot_Kp_z : 3.0
+cartRot_Kd_x : 3
+cartRot_Kd_y : 3
+cartRot_Kd_z : 3
 
 useCurrentCartPose : false
 
