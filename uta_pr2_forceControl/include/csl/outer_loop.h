@@ -21,7 +21,7 @@ typedef boost::array<double, 6> oneDmsd_state_type;
 
 void mass_spring_damper_model( const state_type &x , state_type &dxdt , double t )
 {
-      double a = 10  ;
+//      double a = 10  ;
       double m = 1  ; // double m = a*a ;
       double d = 10 ; // double d = 2*a ;
       double k = 1  ; // double k = a*a ;
