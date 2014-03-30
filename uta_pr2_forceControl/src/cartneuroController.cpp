@@ -482,27 +482,26 @@ void PR2CartneuroControllerClass::starting()
   last_time_ = robot_state_->getTime() ;
   start_time_ = robot_state_->getTime();
 
-  // set FT sensor bias due to gravity
-  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-  l_ft_samples    = l_ftData_vector.size() - 1;
-//  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
-  l_ftBias.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  ;
-  l_ftBias.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  ;
-  l_ftBias.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  ;
-  l_ftBias.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x ;
-  l_ftBias.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y ;
-  l_ftBias.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z ;
-
-  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-  r_ft_samples    = r_ftData_vector.size() - 1;
-//  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
-  r_ftBias.wrench.force.x  = r_ftData_vector[r_ft_samples].force.x  ;
-  r_ftBias.wrench.force.y  = r_ftData_vector[r_ft_samples].force.y  ;
-  r_ftBias.wrench.force.z  = r_ftData_vector[r_ft_samples].force.z  ;
-  r_ftBias.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x ;
-  r_ftBias.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y ;
-  r_ftBias.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z ;
-
+//  // set FT sensor bias due to gravity
+//  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+//  l_ft_samples    = l_ftData_vector.size() - 1;
+////  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
+//  l_ftBias.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  ;
+//  l_ftBias.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  ;
+//  l_ftBias.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  ;
+//  l_ftBias.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x ;
+//  l_ftBias.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y ;
+//  l_ftBias.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z ;
+//
+//  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+//  r_ft_samples    = r_ftData_vector.size() - 1;
+////  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+//  r_ftBias.wrench.force.x  = r_ftData_vector[r_ft_samples].force.x  ;
+//  r_ftBias.wrench.force.y  = r_ftData_vector[r_ft_samples].force.y  ;
+//  r_ftBias.wrench.force.z  = r_ftData_vector[r_ft_samples].force.z  ;
+//  r_ftBias.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x ;
+//  r_ftBias.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y ;
+//  r_ftBias.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z ;
 }
 
 
@@ -515,7 +514,6 @@ void PR2CartneuroControllerClass::update()
   //      threeAccs[threeAccs.size()-1].x
   //      threeAccs[threeAccs.size()-1].y
   //      threeAccs[threeAccs.size()-1].z
-
 
 //  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 //  l_ft_samples    = l_ftData_vector.size() - 1;
