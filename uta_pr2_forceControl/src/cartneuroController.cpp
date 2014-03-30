@@ -508,23 +508,23 @@ void PR2CartneuroControllerClass::update()
 
   std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
   l_ft_samples    = l_ftData_vector.size() - 1;
-//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
-  l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
-  l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
-  l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
-  l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
-  l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
-  l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
+  l_ftData.wrench = l_ftData_vector[l_ft_samples];
+//  l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
+//  l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
+//  l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
+//  l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
+//  l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
+//  l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
 
   std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
   r_ft_samples    = r_ftData_vector.size() - 1;
-//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-  r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
-  r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
-  r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
-  r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
-  r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
-  r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
+  r_ftData.wrench = r_ftData_vector[r_ft_samples];
+//  r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
+//  r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
+//  r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
+//  r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
+//  r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
+//  r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
 
   //      if( (r_ftData.wrench.force.x > -18) && (r_ftData.wrench.force.x < 18) ){ r_ftData.wrench.force.x = 0; }
   //      if( (r_ftData.wrench.force.y > -18) && (r_ftData.wrench.force.y < 18) ){ r_ftData.wrench.force.y = 0; }
@@ -559,14 +559,14 @@ void PR2CartneuroControllerClass::update()
   // Human force input
   // Force error
 
-  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
-
-  //                               w       x       y      z
-  Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
-  Eigen::Vector3d transformed_force = ft_to_acc._transformVector( forceFT );
-
-  if( abs( double (transformed_force(0)) ) < 1 ){ transformed_force(0) = 0; }
-  if( abs( double (transformed_force(1)) ) < 1 ){ transformed_force(1) = 0; }
+//  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
+//
+//  //                               w       x       y      z
+//  Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
+//  Eigen::Vector3d transformed_force = ft_to_acc._transformVector( forceFT );
+//
+//  if( abs( double (transformed_force(0)) ) < 1 ){ transformed_force(0) = 0; }
+//  if( abs( double (transformed_force(1)) ) < 1 ){ transformed_force(1) = 0; }
 
 /*
   ferr_(0) =   transformed_force(0) ; // 30*sin(circle_phase_);
@@ -726,12 +726,12 @@ void PR2CartneuroControllerClass::update()
 //                               Xdd_m (0),
 //                               transformed_force(0) );
 
-    outerLoopMSDmodelY.update( Xd_m  (1),
-                               xdot_ (1),
-                               X_m   (1),
-                               x_.p.data[1],
-                               Xdd_m (1),
-                               transformed_force(1) );
+//    outerLoopMSDmodelY.update( Xd_m  (1),
+//                               xdot_ (1),
+//                               X_m   (1),
+//                               x_.p.data[1],
+//                               Xdd_m (1),
+//                               transformed_force(1) );
 
     // System Model END
     /////////////////////////
