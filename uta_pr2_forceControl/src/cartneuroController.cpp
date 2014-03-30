@@ -259,6 +259,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useNullspacePose     = "/useNullspacePose";
   if (!n.getParam( para_useNullspacePose, useNullspacePose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useNullspacePose.c_str()) ; return false; }
 
+  delT = 0.001;
+
   /////////////////////////
   // System Model
 
@@ -350,7 +352,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   //                                     m_D );
 
   //  outerLoopMSDmodelX.updateDelT( delT );
-  //  outerLoopMSDmodelY.updateDelT( delT );
+    outerLoopMSDmodelY.updateDelT( delT );
 
   //  outerLoopMSDmodelX.updateMsd( m_M,
   //                                m_S,
@@ -413,13 +415,29 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   // NN END
   /////////////////////////
 
-  /////////////////////////
-  // RLS
+  /* get a handle to the hardware interface */
+   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
+   if(!hardwareInterface)
+       ROS_ERROR("Something wrong with the hardware interface pointer!");
 
+   l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+   r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
 
+   if( !l_ft_handle_ )
+       ROS_ERROR("Something wrong with getting l_ft handle");
+   if( !r_ft_handle_ )
+       ROS_ERROR("Something wrong with getting r_ft handle");
 
-  // RLS END
-  /////////////////////////
+   //  /* get a handle to the left gripper accelerometer */
+   //    accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
+   //    if(!accelerometer_handle_)
+   //        ROS_ERROR("Something wrong with getting accelerometer handle");
+   //
+   //    // set to 1.5 kHz bandwidth (should be the default)
+   //    accelerometer_handle_->command_.bandwidth_ = 6;
+   //
+   //    // set to +/- 8g range (0=2g,1=4g)
+   //    accelerometer_handle_->command_.range_ = 2;
 
   /////////////////////////
   // DATA COLLECTION
@@ -463,12 +481,55 @@ void PR2CartneuroControllerClass::starting()
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
   start_time_ = robot_state_->getTime();
+
+
+  // set FT sensor bias due to gravity
+  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+  l_ft_samples    = l_ftData_vector.size() - 1;
+  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
+
+  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+  r_ft_samples    = r_ftData_vector.size() - 1;
+  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+
 }
 
 
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
 {
+  //    // retrieve our accelerometer data
+  //      std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
+  //
+  //      threeAccs[threeAccs.size()-1].x
+  //      threeAccs[threeAccs.size()-1].y
+  //      threeAccs[threeAccs.size()-1].z
+
+
+  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+  l_ft_samples    = l_ftData_vector.size() - 1;
+//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
+  l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
+  l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
+  l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
+  l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
+  l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
+  l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
+
+  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+  r_ft_samples    = r_ftData_vector.size() - 1;
+//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
+  r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
+  r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
+  r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
+  r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
+  r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
+  r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
+
+  //      if( (r_ftData.wrench.force.x > -18) && (r_ftData.wrench.force.x < 18) ){ r_ftData.wrench.force.x = 0; }
+  //      if( (r_ftData.wrench.force.y > -18) && (r_ftData.wrench.force.y < 18) ){ r_ftData.wrench.force.y = 0; }
+  //      if( (r_ftData.wrench.force.z > -18) && (r_ftData.wrench.force.z < 18) ){ r_ftData.wrench.force.z = 0; }
+
   double dt;                    // Servo loop time step
 
   // Calculate the dt between servo cycles.
@@ -493,6 +554,30 @@ void PR2CartneuroControllerClass::update()
       Jacobian(i,j) = J_(i,j);
     }
   }
+
+  ///////////////////////////////
+  // Human force input
+  // Force error
+
+  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
+
+  //                               w       x       y      z
+  Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
+  Eigen::Vector3d transformed_force = ft_to_acc._transformVector( forceFT );
+
+  if( abs( double (transformed_force(0)) ) < 1 ){ transformed_force(0) = 0; }
+  if( abs( double (transformed_force(1)) ) < 1 ){ transformed_force(1) = 0; }
+
+/*
+  ferr_(0) =   transformed_force(0) ; // 30*sin(circle_phase_);
+  ferr_(1) =  -transformed_force(1) ; // 0                                     ;
+  ferr_(2) =  // transformed_force(2) ; // 0                                   ;
+  ferr_(3) =  0 ; // r_ftData.wrench.torque.x; // 0                    ;
+  ferr_(4) =  0 ; // r_ftData.wrench.torque.y; // 0                    ;
+  ferr_(5) =  0 ; // r_ftData.wrench.torque.z; // 0         s           ;
+*/
+  // Human force input END
+  ///////////////////////////////
 
   // Follow a circle of 10cm at 3 rad/sec.
   circle_phase_ += 3.0 * dt;
@@ -639,14 +724,14 @@ void PR2CartneuroControllerClass::update()
 //                               X_m   (0),
 //                               x_.p.data[0],
 //                               Xdd_m (0),
-//                               xd_.p(0) ); // this should be force
-//
-//    outerLoopMSDmodelY.update( Xd_m  (1),
-//                               xdot_ (1),
-//                               X_m   (1),
-//                               x_.p.data[1],
-//                               Xdd_m (1),
-//                               xd_.p(1) ); // this should be force
+//                               transformed_force(0) );
+
+    outerLoopMSDmodelY.update( Xd_m  (1),
+                               xdot_ (1),
+                               X_m   (1),
+                               x_.p.data[1],
+                               Xdd_m (1),
+                               transformed_force(1) );
 
     // System Model END
     /////////////////////////
@@ -745,7 +830,7 @@ void PR2CartneuroControllerClass::update()
         ///////////////////
         // Liegeois
         // This is the Liegeois cost function from 1977
-        q_jointLimit(j) = - (q_(j) - qnom(j) )/( q_.rows() * ( q_upper(j) - q_lower(j)));
+        q_jointLimit(j) = - (q(j) - qnom(j) )/( q.rows() * ( q_upper(j) - q_lower(j))) ;
         // END Liegeois
         ///////////////////
 /*
@@ -786,7 +871,7 @@ void PR2CartneuroControllerClass::update()
 
       }
 
-      nullspaceTorque = nullSpace*50*( q_jointLimit );
+      nullspaceTorque = nullSpace*50*( q_jointLimit - 0.0*qd );
 
     }
 

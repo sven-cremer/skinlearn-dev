@@ -18,6 +18,8 @@
 #include <uta_pr2_forceControl/controllerParam.h>
 #include <uta_pr2_forceControl/controllerFullData.h>
 
+#include <Eigen/Geometry>
+
 #include <std_srvs/Empty.h>
 
 #include <angles/angles.h>
@@ -41,6 +43,20 @@ public:
   // The chain of links and joints
   pr2_mechanism_model::Chain chain_;
   KDL::Chain kdl_chain_;
+
+  pr2_hardware_interface::Accelerometer* accelerometer_handle_;
+
+  pr2_hardware_interface::ForceTorque* l_ft_handle_;
+  pr2_hardware_interface::ForceTorque* r_ft_handle_;
+
+  int l_ft_samples;
+  int r_ft_samples;
+
+  geometry_msgs::WrenchStamped l_ftBias;
+  geometry_msgs::WrenchStamped r_ftBias;
+
+  geometry_msgs::WrenchStamped l_ftData;
+  geometry_msgs::WrenchStamped r_ftData;
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
@@ -79,6 +95,8 @@ public:
 
   geometry_msgs::Pose modelCartPos_;
   geometry_msgs::Pose robotCartPos_;
+
+  double delT;
 
   // Desired cartesian pose
   double cartDesX     ;

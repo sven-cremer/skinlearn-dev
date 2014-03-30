@@ -54,8 +54,6 @@ private:
   Eigen::MatrixXd JacobianPrev;
   Eigen::MatrixXd JacobianDot;
 
-  double delT;
-
   csl::outer_loop::JSpaceMsdModel outerLoopMSDmodel;
 
   csl::outer_loop::MsdModel outerLoopMSDmodelJoint1;
