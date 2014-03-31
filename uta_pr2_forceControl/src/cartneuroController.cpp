@@ -345,15 +345,16 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
     outerLoopFIRmodelY.updateDelT( delT );
 
     outerLoopFIRmodelY.updateMsd( m_M,
-                                       m_S,
-                                       m_D );
+                                  m_S,
+                                  m_D );
 
   //  outerLoopMSDmodelX.updateDelT( delT );
     outerLoopMSDmodelY.updateDelT( delT );
 
-  //  outerLoopMSDmodelX.updateMsd( m_M,
-  //                                m_S,
-  //                                m_D );
+    outerLoopMSDmodelX.updateMsd( m_M,
+                                  m_S,
+                                  m_D );
+
     outerLoopMSDmodelY.updateMsd( m_M,
                                   m_S,
                                   m_D );
@@ -720,31 +721,31 @@ void PR2CartneuroControllerClass::update()
   //                                  t_r     (0) ,
   //                                  task_ref(0) );
 
-    // Y axis
-    outerLoopFIRmodelY.update(  Xd_m              (1) ,
-                                Xd                (1) ,
-                                X_m               (1) ,
-                                X                 (1) ,
-                                Xdd_m             (1) ,
-                                transformed_force (1) ,
-                                task_ref          (1) ,
-                                task_refModel     (1)  );
+//    // Y axis
+//    outerLoopFIRmodelY.update(  Xd_m              (1) ,
+//                                Xd                (1) ,
+//                                X_m               (1) ,
+//                                X                 (1) ,
+//                                Xdd_m             (1) ,
+//                                transformed_force (1) ,
+//                                task_ref          (1) ,
+//                                task_refModel     (1)  );
 
 
 //    // Cartesian space MSD model
-//    outerLoopMSDmodelX.update( Xd_m  (0),
-//                               xdot_ (0),
-//                               X_m   (0),
-//                               x_.p.data[0],
-//                               Xdd_m (0),
-//                               transformed_force(0) );
+    outerLoopMSDmodelX.update( Xd_m  (0),
+                               xdot_ (0),
+                               X_m   (0),
+                               x_.p.data[0],
+                               Xdd_m (0),
+                               transformed_force(0) );
 
-//    outerLoopMSDmodelY.update( Xd_m  (1)           ,
-//                               Xd    (1)           ,
-//                               X_m   (1)           ,
-//                               X     (1)           ,
-//                               Xdd_m (1)           ,
-//                               transformed_force(1) );
+    outerLoopMSDmodelY.update( Xd_m  (1)           ,
+                               Xd    (1)           ,
+                               X_m   (1)           ,
+                               X     (1)           ,
+                               Xdd_m (1)           ,
+                               transformed_force(1) );
 
     // System Model END
     /////////////////////////
