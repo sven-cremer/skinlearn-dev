@@ -738,12 +738,12 @@ void PR2CartneuroControllerClass::update()
 //                               Xdd_m (0),
 //                               transformed_force(0) );
 
-//    outerLoopMSDmodelY.update( Xd_m  (1),
-//                               xdot_ (1),
-//                               X_m   (1),
-//                               x_.p.data[1],
-//                               Xdd_m (1),
-//                               transformed_force(1) );
+    outerLoopMSDmodelY.update( Xd_m  (1),
+                               xdot_ (1),
+                               X_m   (1),
+                               x_.p.data[1],
+                               Xdd_m (1),
+                               transformed_force(1) );
 
     // System Model END
     /////////////////////////
