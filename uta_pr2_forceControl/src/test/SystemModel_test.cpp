@@ -80,24 +80,24 @@ int main()
   csl::outer_loop::FirModel outerLoopFIRmodel;
   outerLoopFIRmodel.updateDelT( 0.001 );
 
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  t_r = t_r*7;
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  t_r = t_r*7;
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
-  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  t_r = t_r*7;
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  t_r = t_r*7;
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
+//  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );
 
 	return 0;
 }

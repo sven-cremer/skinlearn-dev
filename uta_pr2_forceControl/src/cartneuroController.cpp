@@ -274,26 +274,27 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   kdl_temp_joint_.resize( num_Joints );
   eigen_temp_joint.resize( num_Joints,1 );
 
-  q       .resize( num_Joints, 1 ) ;
-  qd      .resize( num_Joints, 1 ) ;
-  qdd     .resize( num_Joints, 1 ) ;
+  q       .resize( num_Joints ) ;
+  qd      .resize( num_Joints ) ;
+  qdd     .resize( num_Joints ) ;
 
-  q_m     .resize( 6, 1 ) ;
-  qd_m    .resize( 6, 1 ) ;
-  qdd_m   .resize( 6, 1 ) ;
+  q_m     .resize( 6 ) ;
+  qd_m    .resize( 6 ) ;
+  qdd_m   .resize( 6 ) ;
 
   // desired Cartesian states
-  X_m     .resize( 6, 1 ) ;
-  Xd_m    .resize( 6, 1 ) ;
-  Xdd_m   .resize( 6, 1 ) ;
+  X_m     .resize( 6 ) ;
+  Xd_m    .resize( 6 ) ;
+  Xdd_m   .resize( 6 ) ;
 
   // Cartesian states
-  X       .resize( 6, 1 ) ;
-  Xd      .resize( 6, 1 ) ;
+  X       .resize( 6 ) ;
+  Xd      .resize( 6 ) ;
 
-  t_r     .resize( num_Joints, num_Joints ) ;
-  task_ref.resize( num_Joints, num_Joints ) ;
-  tau     .resize( num_Joints, num_Joints ) ;
+  t_r     .resize( num_Outputs ) ;
+  task_ref.resize( 6 ) ;
+  task_refModel.resize( 6 ) ;
+  tau     .resize( num_Outputs ) ;
 
   q        = Eigen::VectorXd::Zero( num_Joints ) ;
   qd       = Eigen::VectorXd::Zero( num_Joints ) ;
@@ -313,7 +314,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   X_m(2) = cartIniZ ;
 
   t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
-  task_ref = Eigen::VectorXd::Zero( num_Outputs ) ;
+  task_ref = Eigen::VectorXd::Zero( 6           ) ;
+  task_refModel = Eigen::VectorXd::Zero( 6      ) ;
   tau      = Eigen::VectorXd::Zero( num_Outputs ) ;
   force    = Eigen::VectorXd::Zero( num_Outputs ) ;
 
@@ -340,17 +342,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   //  outerLoopMSDmodel.updateDelT( delT );
 
   //  outerLoopFIRmodelJoint1.updateDelT( delT );
-    outerLoopFIRmodelJoint2.updateDelT( delT );
+    outerLoopFIRmodelY.updateDelT( delT );
 
-  //  outerLoopMSDmodelJoint1.updateDelT( delT );
-//    outerLoopMSDmodelJoint2.updateDelT( delT );
-
-  //  outerLoopMSDmodelJoint1.updateMsd( m_M,
-  //                                     m_S,
-  //                                     m_D );
-//    outerLoopMSDmodelJoint2.updateMsd( m_M,
-//                                       m_S,
-//                                       m_D );
+    outerLoopFIRmodelY.updateMsd( m_M,
+                                       m_S,
+                                       m_D );
 
   //  outerLoopMSDmodelX.updateDelT( delT );
     outerLoopMSDmodelY.updateDelT( delT );
@@ -581,6 +577,8 @@ void PR2CartneuroControllerClass::update()
   if( abs( double (transformed_force(0)) ) < 1 ){ transformed_force(0) = 0; }
   if( abs( double (transformed_force(1)) ) < 1 ){ transformed_force(1) = 0; }
 
+  transformed_force(1) = - transformed_force(1);
+
 /*
   ferr_(0) =   transformed_force(0) ; // 30*sin(circle_phase_);
   ferr_(1) =  -transformed_force(1) ; // 0                                     ;
@@ -714,7 +712,7 @@ void PR2CartneuroControllerClass::update()
     }
 
   //  // FIR
-  //  outerLoopFIRmodelJoint1.Update( qd_m    (0) ,
+  //  outerLoopFIRmodelJoint1.update( qd_m    (0) ,
   //                                  qd      (0) ,
   //                                  q_m     (0) ,
   //                                  q       (0) ,
@@ -723,13 +721,14 @@ void PR2CartneuroControllerClass::update()
   //                                  task_ref(0) );
 
     // Y axis
-    outerLoopFIRmodelJoint2.Update(  Xd_m  (1)             ,
-                                     Xd    (1)             ,
-                                     X_m   (1)             ,
-                                     X     (1)             ,
-                                     Xdd_m (1)             ,
-                                    -transformed_force(1)  ,
-                                     task_ref(1)          );
+    outerLoopFIRmodelY.update(  Xd_m              (1) ,
+                                Xd                (1) ,
+                                X_m               (1) ,
+                                X                 (1) ,
+                                Xdd_m             (1) ,
+                                transformed_force (1) ,
+                                task_ref          (1) ,
+                                task_refModel     (1)  );
 
 
 //    // Cartesian space MSD model
@@ -740,12 +739,12 @@ void PR2CartneuroControllerClass::update()
 //                               Xdd_m (0),
 //                               transformed_force(0) );
 
-//    outerLoopMSDmodelY.update( Xd_m  (1),
-//                               Xd    (1),
-//                               X_m   (1),
-//                               X     (1),
-//                               Xdd_m (1),
-//                              -transformed_force(1) );
+//    outerLoopMSDmodelY.update( Xd_m  (1)           ,
+//                               Xd    (1)           ,
+//                               X_m   (1)           ,
+//                               X     (1)           ,
+//                               Xdd_m (1)           ,
+//                               transformed_force(1) );
 
     // System Model END
     /////////////////////////
@@ -834,10 +833,10 @@ void PR2CartneuroControllerClass::update()
       JointVec q_jointLimit ;
       JointVec q_manipAbility ;
 
-      double delQ;
+/*      double delQ;
       double rho = 0.1;
       double qTildeMax = 0;
-      double qTildeMin = 0;
+      double qTildeMin = 0;*/
 
       for (size_t j = 0; j < 7; ++j)
       {
@@ -935,21 +934,37 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].dt                = dt                          ;
 
           // Force Data
-          msgControllerFullData[index].force_x           =  transformed_force(0) ;// r_ftData.wrench.force.x     ;
-          msgControllerFullData[index].force_y           = -transformed_force(1) ;// r_ftData.wrench.force.y     ;
-          msgControllerFullData[index].force_z           =  transformed_force(2) ;// r_ftData.wrench.force.z     ;
-          msgControllerFullData[index].torque_x          = 0 ;// r_ftData.wrench.torque.x    ;
-          msgControllerFullData[index].torque_y          = 0 ;// r_ftData.wrench.torque.y    ;
-          msgControllerFullData[index].torque_z          = 0 ;// r_ftData.wrench.torque.z    ;
+          msgControllerFullData[index].force_x           = transformed_force(0)        ;// r_ftData.wrench.force.x     ;
+          msgControllerFullData[index].force_y           = transformed_force(1)        ;// r_ftData.wrench.force.y     ;
+          msgControllerFullData[index].force_z           = transformed_force(2)        ;// r_ftData.wrench.force.z     ;
+          msgControllerFullData[index].torque_x          = 0                           ;// r_ftData.wrench.torque.x    ;
+          msgControllerFullData[index].torque_y          = 0                           ;// r_ftData.wrench.torque.y    ;
+          msgControllerFullData[index].torque_z          = 0                           ;// r_ftData.wrench.torque.z    ;
 
           // Input reference efforts(torques)
-          msgControllerFullData[index].reference_eff_j0  = 0; //t_r(0)                      ;
-          msgControllerFullData[index].reference_eff_j1  = 0; //t_r(1)                      ;
-          msgControllerFullData[index].reference_eff_j2  = 0; //t_r(2)                      ;
-          msgControllerFullData[index].reference_eff_j3  = 0; //t_r(3)                      ;
-          msgControllerFullData[index].reference_eff_j4  = 0; //t_r(4)                      ;
-          msgControllerFullData[index].reference_eff_j5  = 0; //t_r(5)                      ;
-          msgControllerFullData[index].reference_eff_j6  = 0; //t_r(6)                      ;
+          msgControllerFullData[index].reference_eff_j0  = 0                           ; //t_r(0) ;
+          msgControllerFullData[index].reference_eff_j1  = 0                           ; //t_r(1) ;
+          msgControllerFullData[index].reference_eff_j2  = 0                           ; //t_r(2) ;
+          msgControllerFullData[index].reference_eff_j3  = 0                           ; //t_r(3) ;
+          msgControllerFullData[index].reference_eff_j4  = 0                           ; //t_r(4) ;
+          msgControllerFullData[index].reference_eff_j5  = 0                           ; //t_r(5) ;
+          msgControllerFullData[index].reference_eff_j6  = 0                           ; //t_r(6) ;
+
+          // Cartesian task reference
+          msgControllerFullData[index].taskRef_x         = task_ref(0)                 ;
+          msgControllerFullData[index].taskRef_y         = task_ref(1)                 ;
+          msgControllerFullData[index].taskRef_z         = task_ref(2)                 ;
+          msgControllerFullData[index].taskRef_phi       = 0                           ;
+          msgControllerFullData[index].taskRef_theta     = 0                           ;
+          msgControllerFullData[index].taskRef_psi       = 0                           ;
+
+          // Cartesian task reference
+          msgControllerFullData[index].taskRefModel_x    = task_refModel(0)            ;
+          msgControllerFullData[index].taskRefModel_y    = task_refModel(1)            ;
+          msgControllerFullData[index].taskRefModel_z    = task_refModel(2)            ;
+          msgControllerFullData[index].taskRefModel_phi  = 0                           ;
+          msgControllerFullData[index].taskRefModel_theta= 0                           ;
+          msgControllerFullData[index].taskRefModel_psi  = 0                           ;
 
           // Model States
           msgControllerFullData[index].m_cartPos_x       = modelCartPos_.position.x    ;

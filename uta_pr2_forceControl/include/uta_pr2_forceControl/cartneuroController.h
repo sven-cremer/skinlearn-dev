@@ -27,7 +27,7 @@ private:
 //  csl::outer_loop::MsdModel outerLoopMSDmodelJoint2;
 
   csl::outer_loop::FirModel outerLoopFIRmodelJoint1;
-  csl::outer_loop::FirModel outerLoopFIRmodelJoint2;
+  csl::outer_loop::FirModel outerLoopFIRmodelY;
 
   csl::outer_loop::MsdModel outerLoopMSDmodelX     ;
   csl::outer_loop::MsdModel outerLoopMSDmodelY     ;
@@ -49,6 +49,7 @@ private:
 
   Eigen::VectorXd t_r;
   Eigen::VectorXd task_ref;
+  Eigen::VectorXd task_refModel;
   Eigen::VectorXd tau;
   Eigen::VectorXd force;
 

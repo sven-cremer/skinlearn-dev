@@ -395,12 +395,13 @@ public:
     k = param_m_S ; // spring
     d = param_m_D ; // damper
   }
+
   void update( double & param_xd_m  ,
                double & param_xd    ,
                double & param_x_m   ,
                double & param_x     ,
                double & param_xdd_m ,
-               double   param_f_r    )
+               double & param_f_r    )
   {
     xd_m  (0) = param_xd_m ;
     xd    (0) = param_xd   ;
@@ -417,7 +418,6 @@ public:
     param_x     = x     (0);
     param_xdd_m = xdd_m (0);
     param_f_r   = f_r   (0);
-
   }
 
   void update( Eigen::MatrixXd & param_xd_m    ,
@@ -473,6 +473,7 @@ class FirModel
   Eigen::MatrixXd ref_qdd_m;
 
   Eigen::MatrixXd task_ref;
+  Eigen::MatrixXd task_ref_model;
 
   Eigen::MatrixXd t_r;
 
@@ -544,7 +545,7 @@ public:
     ref_qd_m  .resize( num_Joints, 1 ) ;
     ref_qdd_m .resize( num_Joints, 1 ) ;
 
-    task_ref  .resize( num_Joints, 1 ) ;
+    task_ref      .resize( num_Joints, 1 ) ;
 
     t_r   .resize( num_Joints, 1 ) ;
 
@@ -596,61 +597,60 @@ public:
     delT = p_delT;
   }
 
-  void Update( double & param_qd_m  ,
-               double & param_qd    ,
-               double & param_q_m   ,
-               double & param_q     ,
-               double & param_qdd_m ,
-               double & param_t_r    )
+  void updateMsd( double param_m_M,
+                  double param_m_S,
+                  double param_m_D )
   {
-    qd_m  (0)= param_qd_m ;
-    qd    (0)= param_qd   ;
-    q_m   (0)= param_q_m  ;
-    q     (0)= param_q    ;
-    qdd_m (0)= param_qdd_m;
-    t_r   (0)= param_t_r  ;
-
-    Update();
+    m = param_m_M ; // mass
+    k = param_m_S ; // spring
+    d = param_m_D ; // damper
   }
 
-  void Update( double & param_qd_m     ,
-               double & param_qd       ,
-               double & param_q_m      ,
-               double & param_q        ,
-               double & param_qdd_m    ,
-               double & param_t_r      ,
-               double & param_task_ref  )
+  void update( double & param_qd_m           ,
+               double & param_qd             ,
+               double & param_q_m            ,
+               double & param_q              ,
+               double & param_qdd_m          ,
+               double & param_t_r            ,
+               double & param_task_ref       ,
+               double & param_task_ref_model  )
   {
-    qd_m    (0) = param_qd_m ;
-    qd      (0) = param_qd   ;
-    q_m     (0) = param_q_m  ;
-    q       (0) = param_q    ;
-    qdd_m   (0) = param_qdd_m;
-    t_r     (0) = param_t_r  ;
-    task_ref(0) = param_task_ref;
+    qd_m    (0)       = param_qd_m ;
+    qd      (0)       = param_qd   ;
+    q_m     (0)       = param_q_m  ;
+    q       (0)       = param_q    ;
+    qdd_m   (0)       = param_qdd_m;
+    t_r     (0)       = param_t_r  ;
+    task_ref(0)       = param_task_ref;
 
-    Update();
+    update();
+
+    param_task_ref_model = ref_q_m(0) ;
   }
 
-  void Update( Eigen::MatrixXd & param_qd_m    ,
-               Eigen::MatrixXd & param_qd      ,
-               Eigen::MatrixXd & param_q_m     ,
-               Eigen::MatrixXd & param_q       ,
-               Eigen::MatrixXd & param_qdd_m   ,
-               Eigen::MatrixXd & param_t_r     ,
-               Eigen::MatrixXd & param_task_ref )
+  void update( Eigen::MatrixXd & param_qd_m          ,
+               Eigen::MatrixXd & param_qd            ,
+               Eigen::MatrixXd & param_q_m           ,
+               Eigen::MatrixXd & param_q             ,
+               Eigen::MatrixXd & param_qdd_m         ,
+               Eigen::MatrixXd & param_t_r           ,
+               Eigen::MatrixXd & param_task_ref      ,
+               Eigen::MatrixXd & param_task_ref_model )
   {
-    qd_m     = param_qd_m    ;
-    qd       = param_qd      ;
-    q_m      = param_q_m     ;
-    q        = param_q       ;
-    qdd_m    = param_qdd_m   ;
-    t_r      = param_t_r     ;
-    task_ref = param_task_ref;
-    Update();
+    qd_m           = param_qd_m          ;
+    qd             = param_qd            ;
+    q_m            = param_q_m           ;
+    q              = param_q             ;
+    qdd_m          = param_qdd_m         ;
+    t_r            = param_t_r           ;
+    task_ref       = param_task_ref      ;
+
+    update();
+
+    param_task_ref_model = ref_q_m ;
   }
 
-  void Update()
+  void update()
   {
     // Save input forces/torques
     stackFirIn( t_r );

@@ -26,6 +26,22 @@ float64 reference_eff_j4
 float64 reference_eff_j5
 float64 reference_eff_j6
 
+# Cartesian task reference                
+float64 taskRef_x
+float64 taskRef_y
+float64 taskRef_z
+float64 taskRef_phi
+float64 taskRef_theta
+float64 taskRef_psi
+
+# Cartesian task reference                
+float64 taskRefModel_x
+float64 taskRefModel_y
+float64 taskRefModel_z
+float64 taskRefModel_phi
+float64 taskRefModel_theta
+float64 taskRefModel_psi
+
 # Model States
 float64 m_cartPos_x 
 float64 m_cartPos_y 
