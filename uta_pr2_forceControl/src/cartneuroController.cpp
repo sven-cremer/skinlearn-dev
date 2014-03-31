@@ -743,7 +743,7 @@ void PR2CartneuroControllerClass::update()
                                X_m   (1),
                                x_.p.data[1],
                                Xdd_m (1),
-                               transformed_force(1) );
+                              -transformed_force(1) );
 
     // System Model END
     /////////////////////////
