@@ -23,8 +23,8 @@ private:
   /////////////////////////
   // System Model
 
-  csl::outer_loop::MsdModel outerLoopMSDmodelJoint1;
-  csl::outer_loop::MsdModel outerLoopMSDmodelJoint2;
+//  csl::outer_loop::MsdModel outerLoopMSDmodelJoint1;
+//  csl::outer_loop::MsdModel outerLoopMSDmodelJoint2;
 
   csl::outer_loop::FirModel outerLoopFIRmodelJoint1;
   csl::outer_loop::FirModel outerLoopFIRmodelJoint2;

@@ -580,7 +580,7 @@ public:
 
     t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    lm = 1; // Forgetting factor
+    lm = 0.98; // Forgetting factor
 
     // initial conditions
     ode_init_x[0 ] = 0.0;

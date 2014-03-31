@@ -338,18 +338,19 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   Kp_(5) = cartRot_Kp_z;  Kd_(5) = cartRot_Kd_z; // Rotation    z
 
   //  outerLoopMSDmodel.updateDelT( delT );
+
   //  outerLoopFIRmodelJoint1.updateDelT( delT );
-  //  outerLoopFIRmodelJoint2.updateDelT( delT );
+    outerLoopFIRmodelJoint2.updateDelT( delT );
 
   //  outerLoopMSDmodelJoint1.updateDelT( delT );
-  //  outerLoopMSDmodelJoint2.updateDelT( delT );
+//    outerLoopMSDmodelJoint2.updateDelT( delT );
 
   //  outerLoopMSDmodelJoint1.updateMsd( m_M,
   //                                     m_S,
   //                                     m_D );
-  //  outerLoopMSDmodelJoint2.updateMsd( m_M,
-  //                                     m_S,
-  //                                     m_D );
+//    outerLoopMSDmodelJoint2.updateMsd( m_M,
+//                                       m_S,
+//                                       m_D );
 
   //  outerLoopMSDmodelX.updateDelT( delT );
     outerLoopMSDmodelY.updateDelT( delT );
@@ -357,9 +358,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   //  outerLoopMSDmodelX.updateMsd( m_M,
   //                                m_S,
   //                                m_D );
-  //  outerLoopMSDmodelY.updateMsd( m_M,
-  //                                m_S,
-  //                                m_D );
+    outerLoopMSDmodelY.updateMsd( m_M,
+                                  m_S,
+                                  m_D );
 
   // System Model END
   /////////////////////////
@@ -575,7 +576,7 @@ void PR2CartneuroControllerClass::update()
 
   //                               w       x       y      z
   Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
-  Eigen::Vector3d transformed_force = ft_to_acc._transformVector( forceFT );
+  transformed_force = ft_to_acc._transformVector( forceFT );
 
   if( abs( double (transformed_force(0)) ) < 1 ){ transformed_force(0) = 0; }
   if( abs( double (transformed_force(1)) ) < 1 ){ transformed_force(1) = 0; }
@@ -700,16 +701,16 @@ void PR2CartneuroControllerClass::update()
 
     if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 5 == 0 )
     {
-      X_m(0) = cartDesX ;
-      X_m(1) = cartDesY ;
-      X_m(2) = cartDesZ ;
+      task_ref(0) = cartDesX ;
+      task_ref(1) = cartDesY ;
+      task_ref(2) = cartDesZ ;
     }
 
     if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 10 == 0 )
     {
-      X_m(0) = cartIniX ;
-      X_m(1) = cartIniY ;
-      X_m(2) = cartIniZ ;
+      task_ref(0) = cartIniX ;
+      task_ref(1) = cartIniY ;
+      task_ref(2) = cartIniZ ;
     }
 
   //  // FIR
@@ -720,14 +721,15 @@ void PR2CartneuroControllerClass::update()
   //                                  qdd_m   (0) ,
   //                                  t_r     (0) ,
   //                                  task_ref(0) );
-  //
-  //  outerLoopFIRmodelJoint2.Update( qd_m    (3) ,
-  //                                  qd      (3) ,
-  //                                  q_m     (3) ,
-  //                                  q       (3) ,
-  //                                  qdd_m   (3) ,
-  //                                  t_r     (3) ,
-  //                                  task_ref(3) );
+
+    // Y axis
+    outerLoopFIRmodelJoint2.Update(  Xd_m  (1)             ,
+                                     Xd    (1)             ,
+                                     X_m   (1)             ,
+                                     X     (1)             ,
+                                     Xdd_m (1)             ,
+                                    -transformed_force(1)  ,
+                                     task_ref(1)          );
 
 
 //    // Cartesian space MSD model
@@ -738,12 +740,12 @@ void PR2CartneuroControllerClass::update()
 //                               Xdd_m (0),
 //                               transformed_force(0) );
 
-    outerLoopMSDmodelY.update( Xd_m  (1),
-                               xdot_ (1),
-                               X_m   (1),
-                               x_.p.data[1],
-                               Xdd_m (1),
-                              -transformed_force(1) );
+//    outerLoopMSDmodelY.update( Xd_m  (1),
+//                               Xd    (1),
+//                               X_m   (1),
+//                               X     (1),
+//                               Xdd_m (1),
+//                              -transformed_force(1) );
 
     // System Model END
     /////////////////////////
@@ -933,9 +935,9 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].dt                = dt                          ;
 
           // Force Data
-          msgControllerFullData[index].force_x           = 0 ;// r_ftData.wrench.force.x     ;
-          msgControllerFullData[index].force_y           = 0 ;// r_ftData.wrench.force.y     ;
-          msgControllerFullData[index].force_z           = 0 ;// r_ftData.wrench.force.z     ;
+          msgControllerFullData[index].force_x           =  transformed_force(0) ;// r_ftData.wrench.force.x     ;
+          msgControllerFullData[index].force_y           = -transformed_force(1) ;// r_ftData.wrench.force.y     ;
+          msgControllerFullData[index].force_z           =  transformed_force(2) ;// r_ftData.wrench.force.z     ;
           msgControllerFullData[index].torque_x          = 0 ;// r_ftData.wrench.torque.x    ;
           msgControllerFullData[index].torque_y          = 0 ;// r_ftData.wrench.torque.y    ;
           msgControllerFullData[index].torque_z          = 0 ;// r_ftData.wrench.torque.z    ;
