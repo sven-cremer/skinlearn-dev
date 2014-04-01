@@ -508,8 +508,22 @@ class FirModel
     // TODO parameterize this
     // Moves top to bottom rows are time series, columns are joints
     // First in First out bottom most location nth row is dumped
-    Uk_plus.block<1,1>(0,0) = in.transpose();
     Uk_plus.block<8-1, 1>(1,0) = Uk.block<8-1, 1>(0,0);
+    Uk_plus.block<1,1>(0,0) = in.transpose();
+    Uk = Uk_plus;
+  }
+
+  void stackArmaIn( Eigen::MatrixXd & u_in, Eigen::MatrixXd & y_prev )
+  {
+    // TODO parameterize this
+    // Moves top to bottom rows are time series, columns are joints
+    // First in First out bottom most location nth row is dumped
+    Uk_plus.block<4-1, 1>(1,0) = Uk.block<4-1, 1>(0,0);
+    Uk_plus.block<1,1>(0,0) = u_in.transpose();
+
+    Uk_plus.block<4-1, 1>(4,0) = Uk.block<4-1, 1>(0,0);
+    Uk_plus.block<1,1>(7,0) = y_prev.transpose();
+
     Uk = Uk_plus;
   }
 
@@ -637,6 +651,8 @@ public:
 
     param_task_ref_model = ref_q_m(0) ;
     param_q_m            = q_m(0);
+    param_qd_m           = qd_m(0);
+    param_qdd_m          = qdd_m(0);
   }
 
   void update( Eigen::MatrixXd & param_qd_m          ,
@@ -660,19 +676,22 @@ public:
 
     param_task_ref_model = ref_q_m ;
     param_q_m            = q_m;
+    param_qd_m           = qd_m;
+    param_qdd_m          = qdd_m;
   }
 
   void update()
   {
     // Save input forces/torques
-    stackFirIn( t_r );
+//    stackFirIn( t_r );
+    stackArmaIn( t_r, q_m );
 
     ode_init_x[2] = task_ref(0);
 
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
 
-    double a = 10; //0.004988;
-    double b = 10; //0.995;
+    double a = 3; //0.004988;
+    double b = 3; //0.995;
 
     ref_q_m(0)   = ref_q_m(0) + ref_qd_m(0)*delT;
     ref_qd_m(0)  = a*task_ref(0) -  b*ref_q_m(0);
@@ -703,9 +722,10 @@ public:
       qd_m  = (q_m  - prv_q_m )/delT ;
       qdd_m = (qd_m - prv_qd_m)/delT ;
 
-      prv_q_m  = q_m ;
-      prv_qd_m = qd_m;
     }
+
+    prv_q_m  = q_m ;
+    prv_qd_m = qd_m;
 
 //      std::cout<< "Uk : " << Uk.transpose() <<"\n\n";
 //      std::cout<< "q  : " << q_m <<"\n\n";

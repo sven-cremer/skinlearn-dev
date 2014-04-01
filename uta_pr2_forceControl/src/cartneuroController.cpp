@@ -726,14 +726,14 @@ void PR2CartneuroControllerClass::update()
 //  q_upper(5) = 0;
 //  q_upper(6) = 0;
 
-    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 5 == 0 )
+    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 3 == 0 )
     {
       task_ref(0) = cartDesX ;
       task_ref(1) = cartDesY ;
       task_ref(2) = cartDesZ ;
     }
 
-    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 10 == 0 )
+    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 6 == 0 )
     {
       task_ref(0) = cartIniX ;
       task_ref(1) = cartIniY ;
@@ -749,8 +749,8 @@ void PR2CartneuroControllerClass::update()
 //    transformed_force(1) = ode_init_x[0];
 
     double T  = 0.18;
-    double Kp = 779;
-    double Kd = 288;
+    double Kp = 779 ;
+    double Kd = 288 ;
 
     // Reduced human model
 
@@ -1167,6 +1167,74 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
                 // Increment for the next cycle.
                 storage_index_ = index+1;
         }
+}
+
+/// Service call to capture and extract the data
+bool PR2CartneuroControllerClass::paramUpdate( uta_pr2_forceControl::controllerParamUpdate::Request  & req ,
+                                               uta_pr2_forceControl::controllerParamUpdate::Response & resp )
+{
+
+//  req.msg.m                ;
+//  req.msg.d                ;
+//  req.msg.k                ;
+
+  num_Inputs  = req.msg.inParams         ;
+  num_Outputs = req.msg.outParams        ;
+  num_Hidden  = req.msg.hiddenNodes      ;
+  num_Error   = req.msg.errorParams      ;
+
+  kappa       = req.msg.kappa            ;
+  Kv          = req.msg.Kv               ;
+  lambda      = req.msg.lambda           ;
+  Kz          = req.msg.Kz               ;
+  Zb          = req.msg.Zb               ;
+  fFForce     = req.msg.feedForwardForce ;
+  nn_ON       = req.msg.nn_ON            ;
+  nnF         = req.msg.F                ;
+  nnG         = req.msg.G                ;
+
+  nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
+                                  num_Outputs ,   // num_Outputs
+                                  num_Hidden  ,   // num_Hidden
+                                  num_Error   ,   // num_Error
+                                  num_Joints   ); // num_Joints
+
+  Eigen::MatrixXd p_Kv     ;
+  Eigen::MatrixXd p_lambda ;
+
+  p_Kv                  .resize( num_Joints, 1 ) ;
+  p_lambda              .resize( num_Joints, 1 ) ;
+
+  // FIXME need to change this to cart space stuff
+  p_Kv << Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ;
+
+  p_lambda << lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ;
+
+  nnController.init( kappa  ,
+                     p_Kv     ,
+                     p_lambda ,
+                     Kz     ,
+                     Zb     ,
+                     fFForce,
+                     nnF    ,
+                     nnG    ,
+                     nn_ON   );
+
+  resp.success = true;
+
+  return true;
 }
 
 /// Service call to capture and extract the data
