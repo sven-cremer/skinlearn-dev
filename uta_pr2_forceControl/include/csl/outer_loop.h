@@ -73,15 +73,16 @@ void oneDmsd_model( const oneDmsd_state_type &x , oneDmsd_state_type &dxdt , dou
 
 void task_model( const fir_state_type &x , fir_state_type &dxdt , double t )
 {
-      double a = 10;
-      double m = a*a;
-      double d = 2*a;
-      double k = a*a;
+      double a = 10; //0.004988;
+      double b = 10; //0.995;
+//      double m = a*a;
+//      double d = 2*a;
+//      double k = a*a;
 
       dxdt[0 ] = x[1 ];
 
-      //             f_r      qd_m      q_m
-      dxdt[1 ] = m*( x[2] - d*x[1 ] - k*x[0 ] );
+      //           q_r       q_d
+      dxdt[1 ] = a*x[2] -  b*x[0 ] ;
 
       dxdt[2] = 0 ;
 
@@ -467,6 +468,9 @@ class FirModel
   Eigen::MatrixXd qd_m;
   Eigen::MatrixXd qdd_m;
 
+  Eigen::MatrixXd prv_q_m;
+  Eigen::MatrixXd prv_qd_m;
+
   // Reference task model
   Eigen::MatrixXd ref_q_m;
   Eigen::MatrixXd ref_qd_m;
@@ -541,6 +545,9 @@ public:
     qd_m  .resize( num_Joints, 1 ) ;
     qdd_m .resize( num_Joints, 1 ) ;
 
+    prv_q_m   .resize( num_Joints, 1 ) ;
+    prv_qd_m  .resize( num_Joints, 1 ) ;
+
     ref_q_m   .resize( num_Joints, 1 ) ;
     ref_qd_m  .resize( num_Joints, 1 ) ;
     ref_qdd_m .resize( num_Joints, 1 ) ;
@@ -572,6 +579,9 @@ public:
     q_m       = Eigen::MatrixXd::Zero( num_Joints, 1 );
     qd_m      = Eigen::MatrixXd::Zero( num_Joints, 1 );
     qdd_m     = Eigen::MatrixXd::Zero( num_Joints, 1 );
+
+    prv_q_m   = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    prv_qd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
     ref_q_m   = Eigen::MatrixXd::Zero( num_Joints, 1 );
     ref_qd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
@@ -626,6 +636,7 @@ public:
     update();
 
     param_task_ref_model = ref_q_m(0) ;
+    param_q_m            = q_m(0);
   }
 
   void update( Eigen::MatrixXd & param_qd_m          ,
@@ -648,6 +659,7 @@ public:
     update();
 
     param_task_ref_model = ref_q_m ;
+    param_q_m            = q_m;
   }
 
   void update()
@@ -655,13 +667,21 @@ public:
     // Save input forces/torques
     stackFirIn( t_r );
 
-    ode_init_x[2] = t_r(0);
+    ode_init_x[2] = task_ref(0);
 
-    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
+//    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
 
-    ref_q_m(0)   = ode_init_x[0 ] ;
-    ref_qd_m(0)  = ode_init_x[1 ] ;
-    ref_qdd_m(0) = m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
+    double a = 10; //0.004988;
+    double b = 10; //0.995;
+
+    ref_q_m(0)   = ref_q_m(0) + ref_qd_m(0)*delT;
+    ref_qd_m(0)  = a*task_ref(0) -  b*ref_q_m(0);
+
+    ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
+
+//    ref_q_m(0)   = ode_init_x[0 ] ;
+//    ref_qd_m(0)  = ode_init_x[1 ] ;
+//    ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
 
     // Save iteration number
     iter = iter + 1;
@@ -674,14 +694,17 @@ public:
       rls_filter.Update( Wk, Uk, Dk, Pk );
 
       Wk = rls_filter.getEstimate();
-      Pk = rls_filter.getCovariance();
+      //Pk = rls_filter.getCovariance();
 
       q_m   = Uk.transpose()*Wk  ;
 
       // Backward difference
       // TODO better way to do this?
-      qd_m  = (q_m  - q_m )/delT ;
-      qdd_m = (qd_m - qd_m)/delT ;
+      qd_m  = (q_m  - prv_q_m )/delT ;
+      qdd_m = (qd_m - prv_qd_m)/delT ;
+
+      prv_q_m  = q_m ;
+      prv_qd_m = qd_m;
     }
 
 //      std::cout<< "Uk : " << Uk.transpose() <<"\n\n";

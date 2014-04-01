@@ -14,6 +14,8 @@
 #include "csl/neural_network.hpp"
 #include "csl/outer_loop.h"
 
+typedef boost::array<double, 4> human_state_type;
+
 namespace pr2_controller_ns{
 
 class PR2CartneuroControllerClass: public pr2_controller_ns::PR2CartesianControllerClass
@@ -54,6 +56,8 @@ private:
   Eigen::VectorXd force;
 
   Eigen::MatrixXd Jacobian;
+
+  human_state_type ode_init_x;
 
   // System Model END
   /////////////////////////

@@ -3,6 +3,24 @@
 
 using namespace pr2_controller_ns;
 
+void human_model( const human_state_type &x , human_state_type &dxdt , double t )
+{
+      double T  = 1 ; // 0.18;
+      double Kp = 10;
+      double Kd = 10;
+
+      // Reduced human model
+
+      dxdt[0 ] = x[1 ];
+
+      //         ( Kp q_r  + Kd qd_r - hf   ) / T
+      dxdt[1 ] = ( Kp*x[2] + Kd*x[3] - x[0] ) / T ;
+
+      dxdt[2] = 0 ; // q_r
+      dxdt[3] = 0 ; // qd_r
+
+}
+
 /// Controller initialization in non-realtime
 bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                  ros::NodeHandle &n)
@@ -261,6 +279,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   delT = 0.001;
 
+  // initial conditions
+  ode_init_x[0 ] = 0.0;
+  ode_init_x[1 ] = 0.0;
+  ode_init_x[2 ] = 0.0;
+  ode_init_x[3 ] = 0.0;
+
   /////////////////////////
   // System Model
 
@@ -486,6 +510,7 @@ void PR2CartneuroControllerClass::starting()
 
   ROS_ERROR_STREAM( "Samples: " << l_ft_samples );
 
+/*
   l_ftBias.wrench = l_ftData_vector[l_ft_samples];
 //  l_ftBias.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  ;
 //  l_ftBias.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  ;
@@ -503,12 +528,14 @@ void PR2CartneuroControllerClass::starting()
 //  r_ftBias.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x ;
 //  r_ftBias.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y ;
 //  r_ftBias.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z ;
+*/
 }
 
 
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
 {
+/*
   //    // retrieve our accelerometer data
   //      std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
   //
@@ -539,6 +566,7 @@ void PR2CartneuroControllerClass::update()
   //      if( (r_ftData.wrench.force.x > -18) && (r_ftData.wrench.force.x < 18) ){ r_ftData.wrench.force.x = 0; }
   //      if( (r_ftData.wrench.force.y > -18) && (r_ftData.wrench.force.y < 18) ){ r_ftData.wrench.force.y = 0; }
   //      if( (r_ftData.wrench.force.z > -18) && (r_ftData.wrench.force.z < 18) ){ r_ftData.wrench.force.z = 0; }
+*/
 
   double dt;                    // Servo loop time step
 
@@ -712,7 +740,29 @@ void PR2CartneuroControllerClass::update()
       task_ref(2) = cartIniZ ;
     }
 
-  //  // FIR
+    /////////////////////////
+    // Simulated human model
+    ode_init_x[2] = task_ref(1); // q_r
+    ode_init_x[3] = 0          ; // qd_r
+
+//    boost::numeric::odeint::integrate( human_model , ode_init_x , 0.0 , delT , delT );
+//    transformed_force(1) = ode_init_x[0];
+
+    double T  = 0.18;
+    double Kp = 779;
+    double Kd = 288;
+
+    // Reduced human model
+
+    transformed_force (1) = transformed_force (1) + ode_init_x[1 ]*delT;
+
+    //               ( Kp q_r           + Kd qd_r          - hf                    ) / T
+    ode_init_x[1 ] = ( Kp*ode_init_x[2] + Kd*ode_init_x[3] - transformed_force (1) ) / T ;
+
+    // END Simulated human model
+    /////////////////////////
+
+    // FIR
   //  outerLoopFIRmodelJoint1.update( qd_m    (0) ,
   //                                  qd      (0) ,
   //                                  q_m     (0) ,
@@ -721,31 +771,31 @@ void PR2CartneuroControllerClass::update()
   //                                  t_r     (0) ,
   //                                  task_ref(0) );
 
-//    // Y axis
-//    outerLoopFIRmodelY.update(  Xd_m              (1) ,
-//                                Xd                (1) ,
-//                                X_m               (1) ,
-//                                X                 (1) ,
-//                                Xdd_m             (1) ,
-//                                transformed_force (1) ,
-//                                task_ref          (1) ,
-//                                task_refModel     (1)  );
+    // Y axis
+    outerLoopFIRmodelY.update(  Xd_m              (1) ,
+                                Xd                (1) ,
+                                X_m               (1) ,
+                                X                 (1) ,
+                                Xdd_m             (1) ,
+                                transformed_force (1) ,
+                                task_ref          (1) ,
+                                task_refModel     (1)  );
 
 
 //    // Cartesian space MSD model
-    outerLoopMSDmodelX.update( Xd_m  (0),
-                               xdot_ (0),
-                               X_m   (0),
-                               x_.p.data[0],
-                               Xdd_m (0),
-                               transformed_force(0) );
+//    outerLoopMSDmodelX.update( Xd_m  (0),
+//                               xdot_ (0),
+//                               X_m   (0),
+//                               x_.p.data[0],
+//                               Xdd_m (0),
+//                               transformed_force(0) );
 
-    outerLoopMSDmodelY.update( Xd_m  (1)           ,
-                               Xd    (1)           ,
-                               X_m   (1)           ,
-                               X     (1)           ,
-                               Xdd_m (1)           ,
-                               transformed_force(1) );
+//    outerLoopMSDmodelY.update( Xd_m  (1)           ,
+//                               Xd    (1)           ,
+//                               X_m   (1)           ,
+//                               X     (1)           ,
+//                               Xdd_m (1)           ,
+//                               transformed_force(1) );
 
     // System Model END
     /////////////////////////
