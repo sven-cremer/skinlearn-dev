@@ -143,6 +143,9 @@ public:
   // Use nullspace stuff
   bool useNullspacePose ;
 
+  // Use FT info or not
+  bool useFTinput ;
+
 
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle

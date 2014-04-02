@@ -279,6 +279,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useNullspacePose     = "/useNullspacePose";
   if (!n.getParam( para_useNullspacePose, useNullspacePose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useNullspacePose.c_str()) ; return false; }
 
+  useFTinput = false ;
+  std::string para_useFTinput     = "/useFTinput";
+  if (!n.getParam( para_useFTinput, useFTinput )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFTinput.c_str()) ; return false; }
+
+
   delT = 0.001;
 
   // initial conditions
@@ -771,7 +776,10 @@ void PR2CartneuroControllerClass::update()
   //                                  t_r     (0) ,
   //                                  task_ref(0) );
 
-    transformed_force(1) = 0;
+    if( !useFTinput )
+    {
+      transformed_force(1) = 0 ;
+    }
 
     // Y axis
     outerLoopFIRmodelY.update(  Xd_m              (1) ,
