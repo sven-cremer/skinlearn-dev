@@ -40,12 +40,14 @@
 
 #include <ros/ros.h>
 #include <uta_pr2_forceControl/setCartPose.h>
+#include <std_srvs/Empty.h>
 
 using namespace std;
 
 class referenceTrajectoryClient
 {
   ros::NodeHandle  node;
+  ros::ServiceClient capture_client;
   ros::ServiceClient setRefTraj_client;
 
   ros::Time start_time;        // Time of the first servo cycle
@@ -64,14 +66,16 @@ class referenceTrajectoryClient
   double cartIniZ ;
 
   // Flags
-  bool redFlag   ;
-  bool blueFlag  ;
-  bool greenFlag ;
+  bool redFlag     ;
+  bool blueFlag    ;
+  bool greenFlag   ;
+  bool captureFlag ;
 
 public:
 
   referenceTrajectoryClient()
   {
+    capture_client     = node.serviceClient<std_srvs::Empty>("pr2_cartneuroController/capture");
     setRefTraj_client= node.serviceClient<uta_pr2_forceControl::setCartPose>("pr2_cartneuroController/setRefTraj");
     start_time = ros::Time::now();
 
@@ -99,9 +103,10 @@ public:
     if (!node.getParam( para_cartIniZ, cartIniZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; }
 
     // Flags
-    redFlag   = false ;
-    blueFlag  = false ;
-    greenFlag = false ;
+    redFlag     = false ;
+    blueFlag    = false ;
+    greenFlag   = false ;
+    captureFlag = false ;
 
   }
 
@@ -115,6 +120,13 @@ public:
     while( ros::ok() )
     {
       uta_pr2_forceControl::setCartPose setCartPoseAction;
+
+      if( (ros::Time::now() - start_time).toSec() > 2 && !captureFlag )
+      {
+        std_srvs::Empty captureSrv;
+        capture_client.call(captureSrv);
+        captureFlag = true ;
+      }
 
       if( (ros::Time::now() - start_time).toSec() > 3 && !redFlag )
       {
