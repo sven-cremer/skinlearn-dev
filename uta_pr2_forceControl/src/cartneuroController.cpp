@@ -771,6 +771,8 @@ void PR2CartneuroControllerClass::update()
   //                                  t_r     (0) ,
   //                                  task_ref(0) );
 
+    transformed_force(1) = 0;
+
     // Y axis
     outerLoopFIRmodelY.update(  Xd_m              (1) ,
                                 Xd                (1) ,
