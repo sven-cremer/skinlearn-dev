@@ -44,24 +44,24 @@ nnNum_Joints        : 7
 
 nn_Kv               : 5
 nn_lambda           : 20
-nn_kappa            : 0.07
+nn_kappa            : 0.3
 nn_Kz               : 0.001 
 nn_Zb               : 100 
 nn_feedForwardForce : 0   
 nn_nnF              : 100 
-nn_nnG              : 100
+nn_nnG              : 200
 nn_ON               : 1
 
 m_M                 : 1
 m_S                 : 5
 m_D                 : 1
 
-cartPos_Kp_x : 20.0
-cartPos_Kp_y : 20.0
-cartPos_Kp_z : 20.0
-cartPos_Kd_x : 10
-cartPos_Kd_y : 10
-cartPos_Kd_z : 10
+cartPos_Kp_x : 80.0
+cartPos_Kp_y : 80.0
+cartPos_Kp_z : 80.0
+cartPos_Kd_x : 15
+cartPos_Kd_y : 15
+cartPos_Kd_z : 15
 
 cartRot_Kp_x : 9.0
 cartRot_Kp_y : 9.0
@@ -72,10 +72,10 @@ cartRot_Kd_z : 3
 
 useCurrentCartPose : false
 
-useNullspacePose   : false
+useNullspacePose   : true
 
 cartIniX     :  0.7
-cartIniY     :  0.0
+cartIniY     :  -0.2
 cartIniZ     :  0.1
 
 cartDesX     :  0.7
