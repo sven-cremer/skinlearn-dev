@@ -123,6 +123,9 @@ public:
   double cartIniX ;
   double cartIniY ;
   double cartIniZ ;
+  double cartIniRoll  ;
+  double cartIniPitch ;
+  double cartIniYaw   ;
 
   Eigen::MatrixXd Jacobian;
   Eigen::MatrixXd JacobianPinv;

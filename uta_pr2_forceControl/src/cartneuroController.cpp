@@ -228,12 +228,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
 
   // Desired cartesian pose
-  cartDesX     = 0.0           ;
-  cartDesY     = 0.1           ;
-  cartDesZ     = 0.1           ;
-  cartDesRoll  = 0             ;
-  cartDesPitch = 1.57079632679 ;
-  cartDesYaw   = 0             ;
+  cartDesX     = 0.0 ;
+  cartDesY     = 0.1 ;
+  cartDesZ     = 0.1 ;
+  cartDesRoll  = 0.0 ;
+  cartDesPitch = 0.0 ;
+  cartDesYaw   = 0.0 ;
 
   std::string para_cartDesX     = "/cartDesX";
   std::string para_cartDesY     = "/cartDesY";
@@ -250,17 +250,26 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; return false; }
 
   // Initial cartesian pose
-  cartIniX     = 0.1           ;
-  cartIniY     = 0.1           ;
-  cartIniZ     = 0             ;
+  cartIniX     = 0.1 ;
+  cartIniY     = 0.1 ;
+  cartIniZ     = 0.0 ;
+  cartIniRoll  = 0.0 ;
+  cartIniPitch = 0.0 ;
+  cartIniYaw   = 0.0 ;
 
   std::string para_cartIniX     = "/cartIniX";
   std::string para_cartIniY     = "/cartIniY";
   std::string para_cartIniZ     = "/cartIniZ";
+  std::string para_cartIniRoll  = "/cartIniRoll";
+  std::string para_cartIniPitch = "/cartIniPitch";
+  std::string para_cartIniYaw   = "/cartIniYaw";
 
-  if (!n.getParam( para_cartIniX, cartIniX )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
-  if (!n.getParam( para_cartIniY, cartIniY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
-  if (!n.getParam( para_cartIniZ, cartIniZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
+  if (!n.getParam( para_cartIniX     , cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
+  if (!n.getParam( para_cartIniY     , cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
+  if (!n.getParam( para_cartIniZ     , cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
+  if (!n.getParam( para_cartIniRoll  , cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; return false; }
+  if (!n.getParam( para_cartIniPitch , cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; return false; }
+  if (!n.getParam( para_cartIniYaw   , cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; return false; }
 
   useCurrentCartPose = false ;
   std::string para_useCurrentCartPose     = "/useCurrentCartPose";
@@ -326,15 +335,21 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   X        = Eigen::VectorXd::Zero( 6 ) ;
   Xd       = Eigen::VectorXd::Zero( 6 ) ;
 
-  X_m(0) = cartIniX ;
-  X_m(1) = cartIniY ;
-  X_m(2) = cartIniZ ;
+  X_m(0)   = cartIniX     ;
+  X_m(1)   = cartIniY     ;
+  X_m(2)   = cartIniZ     ;
+  X_m(3)   = cartIniRoll  ;
+  X_m(4)   = cartIniPitch ;
+  X_m(5)   = cartIniYaw   ;
 
   t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
   task_ref = Eigen::VectorXd::Zero( 6           ) ;
   task_refModel = Eigen::VectorXd::Zero( 6      ) ;
   tau      = Eigen::VectorXd::Zero( num_Outputs ) ;
   force    = Eigen::VectorXd::Zero( num_Outputs ) ;
+
+  // Initial Reference
+  task_ref = X_m ;
 
   Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
   JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
@@ -1164,6 +1179,9 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].cartIniX          = cartIniX                    ;
           msgControllerFullData[index].cartIniY          = cartIniY                    ;
           msgControllerFullData[index].cartIniZ          = cartIniZ                    ;
+          msgControllerFullData[index].cartIniRoll       = cartIniRoll                 ;
+          msgControllerFullData[index].cartIniPitch      = cartIniPitch                ;
+          msgControllerFullData[index].cartIniYaw        = cartIniYaw                  ;
 
           msgControllerFullData[index].cartDesX          = cartDesX                    ;
           msgControllerFullData[index].cartDesY          = cartDesY                    ;
@@ -1241,6 +1259,9 @@ bool PR2CartneuroControllerClass::paramUpdate( uta_pr2_forceControl::controllerP
   cartIniX          = req.msg.cartIniX                    ;
   cartIniY          = req.msg.cartIniY                    ;
   cartIniZ          = req.msg.cartIniZ                    ;
+  cartIniRoll       = req.msg.cartIniRoll                 ;
+  cartIniPitch      = req.msg.cartIniPitch                ;
+  cartIniYaw        = req.msg.cartIniYaw                  ;
 
   cartDesX          = req.msg.cartDesX                    ;
   cartDesY          = req.msg.cartDesY                    ;
