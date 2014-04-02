@@ -47,7 +47,7 @@ nn_lambda           : 20
 nn_kappa            : 0.3
 nn_Kz               : 0.001 
 nn_Zb               : 100 
-nn_feedForwardForce : 0   
+nn_feedForwardForce : 1   
 nn_nnF              : 100 
 nn_nnG              : 200
 nn_ON               : 1
