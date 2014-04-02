@@ -130,20 +130,20 @@ public:
 
       if( (ros::Time::now() - start_time).toSec() > 3 && !redFlag )
       {
-        setCartPoseAction.request.msg.position.x =  cartIniX ;
-        setCartPoseAction.request.msg.position.y =  cartIniY ;
-        setCartPoseAction.request.msg.position.z =  cartIniZ ;
         ROS_ERROR_STREAM("# RED #\n");
+        setCartPoseAction.request.msg.position.x = cartDesX ;
+        setCartPoseAction.request.msg.position.y = cartDesY ;
+        setCartPoseAction.request.msg.position.z = cartDesZ ;
         redFlag = true ;
         setRefTraj_client.call(setCartPoseAction);
       }
 
       if( (ros::Time::now() - start_time).toSec() > 9 && !greenFlag )
       {
-        setCartPoseAction.request.msg.position.x = cartDesX ;
-        setCartPoseAction.request.msg.position.y = cartDesY ;
-        setCartPoseAction.request.msg.position.z = cartDesZ ;
         ROS_ERROR_STREAM("# GREEN #\n");
+        setCartPoseAction.request.msg.position.x = cartIniX ;
+        setCartPoseAction.request.msg.position.y = cartIniY ;
+        setCartPoseAction.request.msg.position.z = cartIniZ ;
         setRefTraj_client.call(setCartPoseAction);
         greenFlag = true ;
 
