@@ -15,6 +15,35 @@ int64 errorParams
 float64 feedForwardForce
 float64 nn_ON
 
+# Cart params
+float64 cartPos_Kp_x
+float64 cartPos_Kp_y
+float64 cartPos_Kp_z
+float64 cartPos_Kd_x
+float64 cartPos_Kd_y
+float64 cartPos_Kd_z
+
+float64 cartRot_Kp_x
+float64 cartRot_Kp_y
+float64 cartRot_Kp_z
+float64 cartRot_Kd_x
+float64 cartRot_Kd_y
+float64 cartRot_Kd_z
+
+bool useCurrentCartPose
+bool useNullspacePose
+
+float64 cartIniX    
+float64 cartIniY    
+float64 cartIniZ    
+
+float64 cartDesX    
+float64 cartDesY    
+float64 cartDesZ    
+float64 cartDesRoll 
+float64 cartDesPitch
+float64 cartDesYaw  
+
 # Model Params
 float64 m
 float64 d

@@ -80,19 +80,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_cartRot_Kd_y = "/cartRot_Kd_y";
   std::string para_cartRot_Kd_z = "/cartRot_Kd_z";
 
-  double cartPos_Kp_x = 0;
-  double cartPos_Kp_y = 0;
-  double cartPos_Kp_z = 0;
-  double cartPos_Kd_x = 0;
-  double cartPos_Kd_y = 0;
-  double cartPos_Kd_z = 0;
-
-  double cartRot_Kp_x = 0;
-  double cartRot_Kp_y = 0;
-  double cartRot_Kp_z = 0;
-  double cartRot_Kd_x = 0;
-  double cartRot_Kd_y = 0;
-  double cartRot_Kd_z = 0;
+  cartPos_Kp_x = 0 ; cartRot_Kp_x = 0 ;
+  cartPos_Kp_y = 0 ; cartRot_Kp_y = 0 ;
+  cartPos_Kp_z = 0 ; cartRot_Kp_z = 0 ;
+  cartPos_Kd_x = 0 ; cartRot_Kd_x = 0 ;
+  cartPos_Kd_y = 0 ; cartRot_Kd_y = 0 ;
+  cartPos_Kd_z = 0 ; cartRot_Kd_z = 0 ;
 
   if (!n.getParam( para_cartPos_Kp_x , cartPos_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_x.c_str()) ; return false; }
   if (!n.getParam( para_cartPos_Kp_y , cartPos_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_y.c_str()) ; return false; }
@@ -353,16 +346,6 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
   controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
 
-  Kp_.resize( num_Joints ) ;
-  Kd_.resize( num_Joints ) ;
-
-  Kp_(0) = cartPos_Kp_x;  Kd_(0) = cartPos_Kd_x; // Translation x
-  Kp_(1) = cartPos_Kp_y;  Kd_(1) = cartPos_Kd_y; // Translation y
-  Kp_(2) = cartPos_Kp_z;  Kd_(2) = cartPos_Kd_z; // Translation z
-  Kp_(3) = cartRot_Kp_x;  Kd_(3) = cartRot_Kd_x; // Rotation    x
-  Kp_(4) = cartRot_Kp_y;  Kd_(4) = cartRot_Kd_y; // Rotation    y
-  Kp_(5) = cartRot_Kp_z;  Kd_(5) = cartRot_Kd_z; // Rotation    z
-
   //  outerLoopMSDmodel.updateDelT( delT );
 
   //  outerLoopFIRmodelJoint1.updateDelT( delT );
@@ -408,19 +391,19 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 // Kd*(qd_m - qd) + Kp*(q_m - q) = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
 // Kv = Kd | Kv*lambda = Kp ... lambda = Kp/Kv = Kp/Kd
 
-  p_Kv << Kd_(0) ,
-          Kd_(1) ,
-          Kd_(2) ,
-          Kd_(3) ,
-          Kd_(4) ,
-          Kd_(5) ;
+  p_Kv << cartPos_Kd_x ,
+          cartPos_Kd_y ,
+          cartPos_Kd_z ,
+          cartRot_Kd_x ,
+          cartRot_Kd_y ,
+          cartRot_Kd_z ;
 
-  p_lambda << Kp_(0) / Kd_(0) ,
-              Kp_(1) / Kd_(1) ,
-              Kp_(2) / Kd_(2) ,
-              Kp_(3) / Kd_(3) ,
-              Kp_(4) / Kd_(4) ,
-              Kp_(5) / Kd_(5) ;
+  p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
+              cartPos_Kp_y / cartPos_Kd_y ,
+              cartPos_Kp_z / cartPos_Kd_z ,
+              cartRot_Kp_x / cartRot_Kd_x ,
+              cartRot_Kp_y / cartRot_Kd_y ,
+              cartRot_Kp_z / cartRot_Kd_z ;
 
   nnController.init( kappa  ,
                      p_Kv     ,
@@ -465,6 +448,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   // DATA COLLECTION
 
   capture_srv_   = n.advertiseService("capture", &PR2CartneuroControllerClass::capture, this);
+  setRefTraj_srv_= n.advertiseService("setRefTraj", &PR2CartneuroControllerClass::setRefTraj, this);
 
   pubFTData_             = n.advertise< geometry_msgs::WrenchStamped             >( "FT_data"              , StoreLen);
   pubModelStates_        = n.advertise< sensor_msgs::JointState                  >( "model_joint_states"   , StoreLen);
@@ -726,7 +710,8 @@ void PR2CartneuroControllerClass::update()
 //  q_upper(5) = 0;
 //  q_upper(6) = 0;
 
-    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 3 == 0 )
+  // USed to auto set cart pose
+/*    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 3 == 0 )
     {
       task_ref(0) = cartDesX ;
       task_ref(1) = cartDesY ;
@@ -738,7 +723,7 @@ void PR2CartneuroControllerClass::update()
       task_ref(0) = cartIniX ;
       task_ref(1) = cartIniY ;
       task_ref(2) = cartIniZ ;
-    }
+    }*/
 
     /////////////////////////
     // Simulated human model
@@ -985,12 +970,12 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].dt                = dt                          ;
 
           // Force Data
-          msgControllerFullData[index].force_x           = transformed_force(0)        ;// r_ftData.wrench.force.x     ;
-          msgControllerFullData[index].force_y           = transformed_force(1)        ;// r_ftData.wrench.force.y     ;
-          msgControllerFullData[index].force_z           = transformed_force(2)        ;// r_ftData.wrench.force.z     ;
-          msgControllerFullData[index].torque_x          = 0                           ;// r_ftData.wrench.torque.x    ;
-          msgControllerFullData[index].torque_y          = 0                           ;// r_ftData.wrench.torque.y    ;
-          msgControllerFullData[index].torque_z          = 0                           ;// r_ftData.wrench.torque.z    ;
+          msgControllerFullData[index].force_x           = transformed_force(0)        ; // r_ftData.wrench.force.x     ;
+          msgControllerFullData[index].force_y           = transformed_force(1)        ; // r_ftData.wrench.force.y     ;
+          msgControllerFullData[index].force_z           = transformed_force(2)        ; // r_ftData.wrench.force.z     ;
+          msgControllerFullData[index].torque_x          = 0                           ; // r_ftData.wrench.torque.x    ;
+          msgControllerFullData[index].torque_y          = 0                           ; // r_ftData.wrench.torque.y    ;
+          msgControllerFullData[index].torque_z          = 0                           ; // r_ftData.wrench.torque.z    ;
 
           // Input reference efforts(torques)
           msgControllerFullData[index].reference_eff_j0  = 0                           ; //t_r(0) ;
@@ -1158,15 +1143,57 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].feedForwardForce  = num_Joints                  ;
           msgControllerFullData[index].nn_ON             = nn_ON                       ;
 
-                // TODO fix this
-                // Model Params
-                msgControllerFullData[index].m                 =   0 ; // outerLoopMSDmodel.getMass(  )(0,0) ;
-                msgControllerFullData[index].d                 =   0 ; // outerLoopMSDmodel.getSpring()(0,0) ;
-                msgControllerFullData[index].k                 =   0 ; // outerLoopMSDmodel.getDamper()(0,0) ;
+          // Cart params
+          msgControllerFullData[index].cartPos_Kp_x      = cartPos_Kp_x                ;
+          msgControllerFullData[index].cartPos_Kp_y      = cartPos_Kp_y                ;
+          msgControllerFullData[index].cartPos_Kp_z      = cartPos_Kp_z                ;
+          msgControllerFullData[index].cartPos_Kd_x      = cartPos_Kd_x                ;
+          msgControllerFullData[index].cartPos_Kd_y      = cartPos_Kd_y                ;
+          msgControllerFullData[index].cartPos_Kd_z      = cartPos_Kd_z                ;
 
-                // Increment for the next cycle.
-                storage_index_ = index+1;
+          msgControllerFullData[index].cartRot_Kp_x      = cartRot_Kp_x                ;
+          msgControllerFullData[index].cartRot_Kp_y      = cartRot_Kp_y                ;
+          msgControllerFullData[index].cartRot_Kp_z      = cartRot_Kp_z                ;
+          msgControllerFullData[index].cartRot_Kd_x      = cartRot_Kd_x                ;
+          msgControllerFullData[index].cartRot_Kd_y      = cartRot_Kd_y                ;
+          msgControllerFullData[index].cartRot_Kd_z      = cartRot_Kd_z                ;
+
+          msgControllerFullData[index].useCurrentCartPose= useCurrentCartPose          ;
+          msgControllerFullData[index].useNullspacePose  = useNullspacePose            ;
+
+          msgControllerFullData[index].cartIniX          = cartIniX                    ;
+          msgControllerFullData[index].cartIniY          = cartIniY                    ;
+          msgControllerFullData[index].cartIniZ          = cartIniZ                    ;
+
+          msgControllerFullData[index].cartDesX          = cartDesX                    ;
+          msgControllerFullData[index].cartDesY          = cartDesY                    ;
+          msgControllerFullData[index].cartDesZ          = cartDesZ                    ;
+          msgControllerFullData[index].cartDesRoll       = cartDesRoll                 ;
+          msgControllerFullData[index].cartDesPitch      = cartDesPitch                ;
+          msgControllerFullData[index].cartDesYaw        = cartDesYaw                  ;
+
+          // TODO fix this
+          // Model Params
+          msgControllerFullData[index].m                 =   0 ; // outerLoopMSDmodel.getMass(  )(0,0) ;
+          msgControllerFullData[index].d                 =   0 ; // outerLoopMSDmodel.getSpring()(0,0) ;
+          msgControllerFullData[index].k                 =   0 ; // outerLoopMSDmodel.getDamper()(0,0) ;
+
+          // Increment for the next cycle.
+          storage_index_ = index+1;
         }
+}
+
+/// Service call to set reference trajectory
+bool PR2CartneuroControllerClass::setRefTraj( uta_pr2_forceControl::setCartPose::Request  & req ,
+                                              uta_pr2_forceControl::setCartPose::Response & resp )
+{
+  task_ref(0) = req.msg.position.x ;
+  task_ref(1) = req.msg.position.y ;
+  task_ref(2) = req.msg.position.z ;
+
+  resp.success = true;
+
+  return true;
 }
 
 /// Service call to capture and extract the data
@@ -1193,6 +1220,35 @@ bool PR2CartneuroControllerClass::paramUpdate( uta_pr2_forceControl::controllerP
   nnF         = req.msg.F                ;
   nnG         = req.msg.G                ;
 
+  // Cart params
+  cartPos_Kp_x      = req.msg.cartPos_Kp_x                ;
+  cartPos_Kp_y      = req.msg.cartPos_Kp_y                ;
+  cartPos_Kp_z      = req.msg.cartPos_Kp_z                ;
+  cartPos_Kd_x      = req.msg.cartPos_Kd_x                ;
+  cartPos_Kd_y      = req.msg.cartPos_Kd_y                ;
+  cartPos_Kd_z      = req.msg.cartPos_Kd_z                ;
+
+  cartRot_Kp_x      = req.msg.cartRot_Kp_x                ;
+  cartRot_Kp_y      = req.msg.cartRot_Kp_y                ;
+  cartRot_Kp_z      = req.msg.cartRot_Kp_z                ;
+  cartRot_Kd_x      = req.msg.cartRot_Kd_x                ;
+  cartRot_Kd_y      = req.msg.cartRot_Kd_y                ;
+  cartRot_Kd_z      = req.msg.cartRot_Kd_z                ;
+
+  useCurrentCartPose= req.msg.useCurrentCartPose          ;
+  useNullspacePose  = req.msg.useNullspacePose            ;
+
+  cartIniX          = req.msg.cartIniX                    ;
+  cartIniY          = req.msg.cartIniY                    ;
+  cartIniZ          = req.msg.cartIniZ                    ;
+
+  cartDesX          = req.msg.cartDesX                    ;
+  cartDesY          = req.msg.cartDesY                    ;
+  cartDesZ          = req.msg.cartDesZ                    ;
+  cartDesRoll       = req.msg.cartDesRoll                 ;
+  cartDesPitch      = req.msg.cartDesPitch                ;
+  cartDesYaw        = req.msg.cartDesYaw                  ;
+
   nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
                                   num_Outputs ,   // num_Outputs
                                   num_Hidden  ,   // num_Hidden
@@ -1202,25 +1258,22 @@ bool PR2CartneuroControllerClass::paramUpdate( uta_pr2_forceControl::controllerP
   Eigen::MatrixXd p_Kv     ;
   Eigen::MatrixXd p_lambda ;
 
-  p_Kv                  .resize( num_Joints, 1 ) ;
-  p_lambda              .resize( num_Joints, 1 ) ;
+  p_Kv                  .resize( 6, 1 ) ;
+  p_lambda              .resize( 6, 1 ) ;
 
-  // FIXME need to change this to cart space stuff
-  p_Kv << Kv ,
-          Kv ,
-          Kv ,
-          Kv ,
-          Kv ,
-          Kv ,
-          Kv ;
+  p_Kv << cartPos_Kd_x ,
+          cartPos_Kd_y ,
+          cartPos_Kd_z ,
+          cartRot_Kd_x ,
+          cartRot_Kd_y ,
+          cartRot_Kd_z ;
 
-  p_lambda << lambda ,
-              lambda ,
-              lambda ,
-              lambda ,
-              lambda ,
-              lambda ,
-              lambda ;
+  p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
+              cartPos_Kp_y / cartPos_Kd_y ,
+              cartPos_Kp_z / cartPos_Kd_z ,
+              cartRot_Kp_x / cartRot_Kd_x ,
+              cartRot_Kp_y / cartRot_Kd_y ,
+              cartRot_Kp_z / cartRot_Kd_z ;
 
   nnController.init( kappa  ,
                      p_Kv     ,

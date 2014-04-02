@@ -103,12 +103,17 @@ private:
   Eigen::MatrixXd eigen_temp_joint;
   KDL::JntArray kdl_temp_joint_;
 
+  bool setRefTraj( uta_pr2_forceControl::setCartPose::Request  & req ,
+                   uta_pr2_forceControl::setCartPose::Response & resp );
+
   bool paramUpdate( uta_pr2_forceControl::controllerParamUpdate::Request  & req ,
                     uta_pr2_forceControl::controllerParamUpdate::Response & resp );
 
   bool capture(std_srvs::Empty::Request& req,
                std_srvs::Empty::Response& resp);
+
   ros::ServiceServer capture_srv_;
+  ros::ServiceServer setRefTraj_srv_;
 
   void bufferData( double & dt );
 

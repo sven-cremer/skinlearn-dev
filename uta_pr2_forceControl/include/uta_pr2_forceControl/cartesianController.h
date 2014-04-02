@@ -20,6 +20,7 @@
 #include <uta_pr2_forceControl/controllerFullData.h>
 #include <uta_pr2_forceControl/controllerParamUpdate.h>
 #include <uta_pr2_forceControl/saveControllerData.h>
+#include <uta_pr2_forceControl/setCartPose.h>
 
 #include <Eigen/Geometry>
 
@@ -97,6 +98,13 @@ public:
   // as there is no appropriate type!
   Eigen::VectorXd     Kp_;           // Proportional gains
   Eigen::VectorXd     Kd_;           // Derivative gains
+
+  double cartPos_Kp_x ; double cartPos_Kd_x ; // Translation x
+  double cartPos_Kp_y ; double cartPos_Kd_y ; // Translation y
+  double cartPos_Kp_z ; double cartPos_Kd_z ; // Translation z
+  double cartRot_Kp_x ; double cartRot_Kd_x ; // Rotation    x
+  double cartRot_Kp_y ; double cartRot_Kd_y ; // Rotation    y
+  double cartRot_Kp_z ; double cartRot_Kd_z ; // Rotation    z
 
   geometry_msgs::Pose modelCartPos_;
   geometry_msgs::Pose robotCartPos_;
