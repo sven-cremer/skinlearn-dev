@@ -121,14 +121,14 @@ public:
     {
       uta_pr2_forceControl::setCartPose setCartPoseAction;
 
-      if( (ros::Time::now() - start_time).toSec() > 2 && !captureFlag )
+      if( (ros::Time::now() - start_time).toSec() > 4 && !captureFlag )
       {
         std_srvs::Empty saveSrv;
         save_client.call(saveSrv);
         captureFlag = true ;
       }
 
-      if( (ros::Time::now() - start_time).toSec() > 3 && !redFlag )
+      if( (ros::Time::now() - start_time).toSec() > 5 && !redFlag )
       {
         ROS_ERROR_STREAM("# RED #\n");
         setCartPoseAction.request.msg.position.x = cartDesX ;
@@ -138,7 +138,7 @@ public:
         setRefTraj_client.call(setCartPoseAction);
       }
 
-      if( (ros::Time::now() - start_time).toSec() > 9 && !greenFlag )
+      if( (ros::Time::now() - start_time).toSec() > 10 && !greenFlag )
       {
         ROS_ERROR_STREAM("# GREEN #\n");
         setCartPoseAction.request.msg.position.x = cartIniX ;
