@@ -76,6 +76,8 @@ useNullspacePose   : true
 
 useFTinput         : false
 
+useARMAmodel       : true
+
 cartIniX     :  0.7
 cartIniY     :  -0.2
 cartIniZ     :  0.1

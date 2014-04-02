@@ -280,9 +280,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_useNullspacePose, useNullspacePose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useNullspacePose.c_str()) ; return false; }
 
   useFTinput = false ;
-  std::string para_useFTinput     = "/useFTinput";
+  std::string para_useFTinput   = "/useFTinput";
   if (!n.getParam( para_useFTinput, useFTinput )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFTinput.c_str()) ; return false; }
 
+  useARMAmodel = true ;
+  std::string para_useARMAmodel = "/useARMAmodel";
+  if (!n.getParam( para_useARMAmodel, useARMAmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useARMAmodel.c_str()) ; return false; }
 
   delT = 0.001;
 
@@ -369,9 +372,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   //  outerLoopMSDmodel.updateDelT( delT );
 
   //  outerLoopFIRmodelJoint1.updateDelT( delT );
-    outerLoopFIRmodelY.updateDelT( delT );
+    outerLoopARMAmodelY.updateDelT( delT );
 
-    outerLoopFIRmodelY.updateMsd( m_M,
+    outerLoopARMAmodelY.updateMsd( m_M,
                                   m_S,
                                   m_D );
 
@@ -781,17 +784,19 @@ void PR2CartneuroControllerClass::update()
       transformed_force(1) = 0 ;
     }
 
-    // Y axis
-    outerLoopFIRmodelY.update(  Xd_m              (1) ,
-                                Xd                (1) ,
-                                X_m               (1) ,
-                                X                 (1) ,
-                                Xdd_m             (1) ,
-                                transformed_force (1) ,
-                                task_ref          (1) ,
-                                task_refModel     (1)  );
-
-
+    if( useARMAmodel )
+    {
+      // Y axis
+      outerLoopARMAmodelY.update( Xd_m              (1) ,
+                                  Xd                (1) ,
+                                  X_m               (1) ,
+                                  X                 (1) ,
+                                  Xdd_m             (1) ,
+                                  transformed_force (1) ,
+                                  task_ref          (1) ,
+                                  task_refModel     (1)  );
+    }else
+    {
 //    // Cartesian space MSD model
 //    outerLoopMSDmodelX.update( Xd_m  (0),
 //                               xdot_ (0),
@@ -800,12 +805,15 @@ void PR2CartneuroControllerClass::update()
 //                               Xdd_m (0),
 //                               transformed_force(0) );
 
-//    outerLoopMSDmodelY.update( Xd_m  (1)           ,
-//                               Xd    (1)           ,
-//                               X_m   (1)           ,
-//                               X     (1)           ,
-//                               Xdd_m (1)           ,
-//                               transformed_force(1) );
+    outerLoopMSDmodelY.update( Xd_m  (1)           ,
+                               Xd    (1)           ,
+                               X_m   (1)           ,
+                               X     (1)           ,
+                               Xdd_m (1)           ,
+                               transformed_force(1) );
+    }
+
+
 
     // System Model END
     /////////////////////////

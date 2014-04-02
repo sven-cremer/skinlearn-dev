@@ -146,6 +146,8 @@ public:
   // Use FT info or not
   bool useFTinput ;
 
+  // Use ARMA of DSD
+  bool useARMAmodel ;
 
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle
