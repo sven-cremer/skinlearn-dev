@@ -507,9 +507,8 @@ void PR2CartneuroControllerClass::starting()
   std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
   l_ft_samples    = l_ftData_vector.size() - 1;
 
-  ROS_ERROR_STREAM( "Samples: " << l_ft_samples );
+//  ROS_ERROR_STREAM( "Samples: " << l_ft_samples );
 
-/*
   l_ftBias.wrench = l_ftData_vector[l_ft_samples];
 //  l_ftBias.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  ;
 //  l_ftBias.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  ;
@@ -527,14 +526,12 @@ void PR2CartneuroControllerClass::starting()
 //  r_ftBias.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x ;
 //  r_ftBias.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y ;
 //  r_ftBias.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z ;
-*/
 }
 
 
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
 {
-/*
   //    // retrieve our accelerometer data
   //      std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
   //
@@ -565,7 +562,6 @@ void PR2CartneuroControllerClass::update()
   //      if( (r_ftData.wrench.force.x > -18) && (r_ftData.wrench.force.x < 18) ){ r_ftData.wrench.force.x = 0; }
   //      if( (r_ftData.wrench.force.y > -18) && (r_ftData.wrench.force.y < 18) ){ r_ftData.wrench.force.y = 0; }
   //      if( (r_ftData.wrench.force.z > -18) && (r_ftData.wrench.force.z < 18) ){ r_ftData.wrench.force.z = 0; }
-*/
 
   double dt;                    // Servo loop time step
 
@@ -740,6 +736,7 @@ void PR2CartneuroControllerClass::update()
       task_ref(2) = cartIniZ ;
     }*/
 
+/*
     /////////////////////////
     // Simulated human model
     ode_init_x[2] = task_ref(1); // q_r
@@ -761,6 +758,7 @@ void PR2CartneuroControllerClass::update()
 
     // END Simulated human model
     /////////////////////////
+*/
 
     // FIR
   //  outerLoopFIRmodelJoint1.update( qd_m    (0) ,
