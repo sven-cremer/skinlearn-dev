@@ -109,9 +109,17 @@ private:
   bool paramUpdate( uta_pr2_forceControl::controllerParamUpdate::Request  & req ,
                     uta_pr2_forceControl::controllerParamUpdate::Response & resp );
 
-  bool capture(std_srvs::Empty::Request& req,
-               std_srvs::Empty::Response& resp);
+  bool save( std_srvs::Empty::Request & req,
+             std_srvs::Empty::Response& resp );
 
+  bool publish( std_srvs::Empty::Request & req,
+                std_srvs::Empty::Response& resp );
+
+  bool capture( std_srvs::Empty::Request& req,
+                std_srvs::Empty::Response& resp );
+
+  ros::ServiceServer save_srv_;
+  ros::ServiceServer publish_srv_;
   ros::ServiceServer capture_srv_;
   ros::ServiceServer setRefTraj_srv_;
 

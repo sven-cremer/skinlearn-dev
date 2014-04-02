@@ -47,7 +47,7 @@ using namespace std;
 class referenceTrajectoryClient
 {
   ros::NodeHandle  node;
-  ros::ServiceClient capture_client;
+  ros::ServiceClient save_client;
   ros::ServiceClient setRefTraj_client;
 
   ros::Time start_time;        // Time of the first servo cycle
@@ -75,7 +75,7 @@ public:
 
   referenceTrajectoryClient()
   {
-    capture_client     = node.serviceClient<std_srvs::Empty>("pr2_cartneuroController/capture");
+    save_client     = node.serviceClient<std_srvs::Empty>("pr2_cartneuroController/save");
     setRefTraj_client= node.serviceClient<uta_pr2_forceControl::setCartPose>("pr2_cartneuroController/setRefTraj");
     start_time = ros::Time::now();
 
@@ -123,8 +123,8 @@ public:
 
       if( (ros::Time::now() - start_time).toSec() > 2 && !captureFlag )
       {
-        std_srvs::Empty captureSrv;
-        capture_client.call(captureSrv);
+        std_srvs::Empty saveSrv;
+        save_client.call(saveSrv);
         captureFlag = true ;
       }
 
