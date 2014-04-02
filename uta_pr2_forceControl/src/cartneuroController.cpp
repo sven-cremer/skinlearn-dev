@@ -462,7 +462,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   /////////////////////////
   // DATA COLLECTION
 
-  capture_srv_   = n.advertiseService("capture", &PR2CartneuroControllerClass::capture, this);
+  save_srv_      = n.advertiseService("save"      , &PR2CartneuroControllerClass::save      , this);
+  publish_srv_   = n.advertiseService("publish"   , &PR2CartneuroControllerClass::publish   , this);
+  capture_srv_   = n.advertiseService("capture"   , &PR2CartneuroControllerClass::capture   , this);
   setRefTraj_srv_= n.advertiseService("setRefTraj", &PR2CartneuroControllerClass::setRefTraj, this);
 
   pubFTData_             = n.advertise< geometry_msgs::WrenchStamped             >( "FT_data"              , StoreLen);
@@ -1314,8 +1316,45 @@ bool PR2CartneuroControllerClass::paramUpdate( uta_pr2_forceControl::controllerP
   return true;
 }
 
+/// Service call to save the data
+bool PR2CartneuroControllerClass::save( std_srvs::Empty::Request & req,
+                                        std_srvs::Empty::Response& resp )
+{
+  /* Record the starting time. */
+  ros::Time started = ros::Time::now();
+
+  // Start circle traj
+  startCircleTraj = true;
+
+  /* Mark the buffer as clear (which will start storing). */
+  storage_index_ = 0;
+
+  return true;
+}
+
+/// Service call to publish the saved data
+bool PR2CartneuroControllerClass::publish( std_srvs::Empty::Request & req,
+                                           std_srvs::Empty::Response& resp )
+{
+  /* Then we can publish the buffer contents. */
+  int  index;
+  for (index = 0 ; index < StoreLen ; index++)
+  {
+//    pubFTData_         .publish(msgFTData         [index]);
+//    pubModelStates_    .publish(msgModelStates    [index]);
+//    pubRobotStates_    .publish(msgRobotStates    [index]);
+//    pubModelCartPos_   .publish(msgModelCartPos   [index]);
+//    pubRobotCartPos_   .publish(msgRobotCartPos   [index]);
+//    pubControllerParam_.publish(msgControllerParam[index]);
+      pubControllerFullData_.publish(msgControllerFullData[index]);
+  }
+
+  return true;
+}
+
+
 /// Service call to capture and extract the data
-bool PR2CartneuroControllerClass::capture( std_srvs::Empty::Request& req,
+bool PR2CartneuroControllerClass::capture( std_srvs::Empty::Request & req,
                                            std_srvs::Empty::Response& resp )
 {
   /* Record the starting time. */
