@@ -292,7 +292,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // FIXME remove below stuff
   num_Inputs  = 44 ;
-  num_Outputs = 6  ;
+  num_Outputs = 6  ; // 6 for 6 cart dof
 //  num_Hidden  = 100;
   num_Error   = 6  ;
   num_Joints  = 7  ;
@@ -304,22 +304,22 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   qd      .resize( num_Joints ) ;
   qdd     .resize( num_Joints ) ;
 
-  q_m     .resize( 6 ) ;
-  qd_m    .resize( 6 ) ;
-  qdd_m   .resize( 6 ) ;
+  q_m     .resize( num_Outputs ) ;
+  qd_m    .resize( num_Outputs ) ;
+  qdd_m   .resize( num_Outputs ) ;
 
   // desired Cartesian states
-  X_m     .resize( 6 ) ;
-  Xd_m    .resize( 6 ) ;
-  Xdd_m   .resize( 6 ) ;
+  X_m     .resize( num_Outputs ) ;
+  Xd_m    .resize( num_Outputs ) ;
+  Xdd_m   .resize( num_Outputs ) ;
 
   // Cartesian states
-  X       .resize( 6 ) ;
-  Xd      .resize( 6 ) ;
+  X       .resize( num_Outputs ) ;
+  Xd      .resize( num_Outputs ) ;
 
   t_r     .resize( num_Outputs ) ;
-  task_ref.resize( 6 ) ;
-  task_refModel.resize( 6 ) ;
+  task_ref.resize( num_Outputs ) ;
+  task_refModel.resize( num_Outputs ) ;
   tau     .resize( num_Outputs ) ;
 
   q        = Eigen::VectorXd::Zero( num_Joints ) ;
@@ -329,11 +329,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   qd_m     = Eigen::VectorXd::Zero( num_Joints ) ;
   qdd_m    = Eigen::VectorXd::Zero( num_Joints ) ;
 
-  X_m      = Eigen::VectorXd::Zero( 6 ) ;
-  Xd_m     = Eigen::VectorXd::Zero( 6 ) ;
-  Xdd_m    = Eigen::VectorXd::Zero( 6 ) ;
-  X        = Eigen::VectorXd::Zero( 6 ) ;
-  Xd       = Eigen::VectorXd::Zero( 6 ) ;
+  X_m      = Eigen::VectorXd::Zero( num_Outputs ) ;
+  Xd_m     = Eigen::VectorXd::Zero( num_Outputs ) ;
+  Xdd_m    = Eigen::VectorXd::Zero( num_Outputs ) ;
+  X        = Eigen::VectorXd::Zero( num_Outputs ) ;
+  Xd       = Eigen::VectorXd::Zero( num_Outputs ) ;
 
   X_m(0)   = cartIniX     ;
   X_m(1)   = cartIniY     ;
@@ -343,21 +343,21 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   X_m(5)   = cartIniYaw   ;
 
   t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
-  task_ref = Eigen::VectorXd::Zero( 6           ) ;
-  task_refModel = Eigen::VectorXd::Zero( 6      ) ;
+  task_ref = Eigen::VectorXd::Zero( num_Outputs           ) ;
+  task_refModel = Eigen::VectorXd::Zero( num_Outputs      ) ;
   tau      = Eigen::VectorXd::Zero( num_Outputs ) ;
   force    = Eigen::VectorXd::Zero( num_Outputs ) ;
 
   // Initial Reference
   task_ref = X_m ;
 
-  Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  Jacobian         = Eigen::MatrixXd::Zero( num_Outputs, kdl_chain_.getNrOfJoints() ) ;
   JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
   JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
-  JacobianTransPinv= Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  JacobianTransPinv= Eigen::MatrixXd::Zero( num_Outputs, kdl_chain_.getNrOfJoints() ) ;
   nullSpace        = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints() ) ;
 
-  cartControlForce = Eigen::VectorXd::Zero( 6 ) ;
+  cartControlForce = Eigen::VectorXd::Zero( num_Outputs ) ;
   nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
   controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
 
@@ -799,6 +799,11 @@ void PR2CartneuroControllerClass::update()
     /////////////////////////
 
 //ROS_ERROR_STREAM("Joints: " << q.transpose());
+
+    // FIXME only care about Y for now, need to check the orientation of other forces
+//    t_r(0) = transformed_force(0) ;
+    t_r(1) = transformed_force(1) ;
+//    t_r(2) = transformed_force(2) ;
 
   /////////////////////////
   // NN
