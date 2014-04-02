@@ -35,7 +35,10 @@ bool useNullspacePose
 
 float64 cartIniX    
 float64 cartIniY    
-float64 cartIniZ    
+float64 cartIniZ
+float64 cartIniRoll 
+float64 cartIniPitch
+float64 cartIniYaw  
 
 float64 cartDesX    
 float64 cartDesY    
