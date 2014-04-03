@@ -291,8 +291,6 @@ public:
 };
 
 
-
-
 class MsdModel
 {
 
@@ -451,7 +449,6 @@ public:
 
   }
 };
-
 
 
 class FirModel
@@ -733,9 +730,6 @@ public:
 };
 
 
-
-
-
 class MracModel
 {
 
@@ -763,12 +757,48 @@ class MracModel
 
   Eigen::MatrixXd t_r;
 
+  double a              ;
+  double b              ;
+  double am             ;
+  double bm             ;
+  double an             ;
+  double bn             ;
 
-  Eigen::MatrixXd Wk           ; // FIR weights
-  Eigen::MatrixXd Uk           ; // Input
-  Eigen::MatrixXd Uk_plus      ; // FIR inputs time series f_r temp to use for update
-  Eigen::MatrixXd Dk           ; // Desired
-  Eigen::MatrixXd Pk           ; // Covariance matrix
+  Eigen::MatrixXd Gamma ;
+  double gamma_1        ;
+  double gamma_2        ;
+  double gamma_3        ;
+  double gamma_4        ;
+  double gamma_5        ;
+
+
+  double u_c            ;
+  double u              ;
+  double e              ;
+
+  double ym             ;
+  double yp             ;
+  double y              ;
+  double y_hat          ;
+  double y_tilde         ;
+
+  double theta_1        ;
+  double theta_2        ;
+  double theta_3        ;
+  double ahat           ;
+  double bhat           ;
+
+
+  double ym_dot         ;
+  double yp_dot         ;
+  double y_dot          ;
+  double yhat_dot       ;
+
+  double theta_1_dot    ;
+  double theta_2_dot    ;
+  double theta_3_dot    ;
+  double ahat_dot       ;
+  double bhat_dot       ;
 
   double delT; // Time step
 
@@ -780,34 +810,6 @@ class MracModel
   double m ;
   double d ;
   double k ;
-
-  fir_state_type ode_init_x;
-
-  oel::ls::RLSFilter rls_filter;
-
-  void stackFirIn( Eigen::MatrixXd & in )
-  {
-    // TODO parameterize this
-    // Moves top to bottom rows are time series, columns are joints
-    // First in First out bottom most location nth row is dumped
-    Uk_plus.block<8-1, 1>(1,0) = Uk.block<8-1, 1>(0,0);
-    Uk_plus.block<1,1>(0,0) = in.transpose();
-    Uk = Uk_plus;
-  }
-
-  void stackArmaIn( Eigen::MatrixXd & u_in, Eigen::MatrixXd & y_prev )
-  {
-    // TODO parameterize this
-    // Moves top to bottom rows are time series, columns are joints
-    // First in First out bottom most location nth row is dumped
-    Uk_plus.block<4-1, 1>(1,0) = Uk.block<4-1, 1>(0,0);
-    Uk_plus.block<1,1>(0,0) = u_in.transpose();
-
-    Uk_plus.block<4-1, 1>(4,0) = Uk.block<4-1, 1>(0,0);
-    Uk_plus.block<1,1>(7,0) = y_prev.transpose();
-
-    Uk = Uk_plus;
-  }
 
 public:
   MracModel()
@@ -826,6 +828,31 @@ public:
 
   void init( int para_num_Joints, int para_num_Fir, double p_m, double p_d, double p_k )
   {
+    // Transfer Functions
+    a  = 1;   b  = 0.5;
+    am = 12;  bm = 12;
+    an = 3;   bn = 3;
+
+    // Intial Values
+      theta_1 = 1;   theta_2 = 1;   theta_3=1;
+     yhat_dot = 1;     y_hat = 1;
+           yp = 1;        ym = 1;
+
+    u_c = 1;
+
+    // Gains
+    Gamma.resize(1,5);
+    Gamma << 1     ,
+             2000  ,
+             2.5e5 ,
+             15000 ,
+             15000  ;
+    gamma_1= Gamma(0,0);   gamma_2 = Gamma(0,1); gamma_3= Gamma(1,2);
+    gamma_4 =Gamma(0,3);   gamma_5 = Gamma(0,4);
+
+    u = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * y_hat;
+    e = yp - ym;
+
     m = p_m;
     d = p_d;
     k = p_k;
@@ -852,22 +879,6 @@ public:
 
     t_r   .resize( num_Joints, 1 ) ;
 
-    Wk    .resize( num_Fir, num_Joints ) ;
-    Wk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
-
-    Dk    .resize( num_Joints, 1 ) ;
-    Dk = Eigen::MatrixXd::Zero( num_Joints, 1 );
-
-    // FIXME need to make this a 3 dimensional matrix
-    Pk    .resize( num_Fir, num_Fir       ) ;
-    Pk = Eigen::MatrixXd::Identity( num_Fir, num_Fir )/0.0001;
-
-    Uk.resize( num_Fir, num_Joints ) ;
-    Uk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
-
-    Uk_plus.resize( num_Fir, num_Joints ) ;
-    Uk_plus = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
-
     q         = Eigen::MatrixXd::Zero( num_Joints, 1 );
     qd        = Eigen::MatrixXd::Zero( num_Joints, 1 );
     qdd       = Eigen::MatrixXd::Zero( num_Joints, 1 );
@@ -886,15 +897,6 @@ public:
     task_ref   = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
     t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
-
-    lm = 0.98; // Forgetting factor
-
-    // initial conditions
-    ode_init_x[0 ] = 0.0;
-    ode_init_x[1 ] = 0.0;
-    ode_init_x[2 ] = 0.0;
-
-    rls_filter.init( Wk, Uk, Dk, Pk, lm );
 
   }
 
@@ -964,16 +966,12 @@ public:
 
   void update()
   {
-    // Save input forces/torques
-//    stackFirIn( t_r );
-    stackArmaIn( t_r, q_m );
-
-    ode_init_x[2] = task_ref(0);
+//    ode_init_x[2] = task_ref(0);
 
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
 
-    double a = 0.5; //0.004988;
-    double b = 0.5; //0.995;
+//    double a = 0.5; //0.004988;
+//    double b = 0.5; //0.995;
 
     ref_q_m(0)   = ref_q_m(0) + ref_qd_m(0)*delT;
     ref_qd_m(0)  = a*task_ref(0) -  b*ref_q_m(0);
@@ -988,16 +986,39 @@ public:
     iter = iter + 1;
 
     // Desired is the task reference model
-    Dk = ref_q_m;
+    u_c = ref_q_m(0);
 
-    if( iter > num_Fir )
     {
-      rls_filter.Update( Wk, Uk, Dk, Pk );
 
-      Wk = rls_filter.getEstimate();
-      //Pk = rls_filter.getCovariance();
+      u           = - theta_1 * y_hat - theta_2 * yp - theta_3 * y     ;
+      e           = yp - ym                                            ;
+      y_tilde     = y - y_hat                                          ;
 
-      q_m   = Uk.transpose()*Wk  ;
+      // k + 1
+      // dot
+      ym_dot      = -am        * ym            + bm     * u_c          ;
+      yp_dot      = -an        * yp            + bn     * u            ;
+      y_dot       = -a         * y             + b      * u_c          ;
+      yhat_dot    = -ahat      * y_hat         + bhat   * u_c          ;
+      theta_1_dot =  gamma_1   * e * u_c                               ;
+      theta_2_dot =  gamma_2   * e * yp                                ;
+      theta_3_dot =  gamma_3   * e * bn * y_hat + gamma_1 * ahat * u_c ;
+      ahat_dot    = -1*gamma_4 * y_tilde * y_hat                       ;
+      bhat_dot    =  gamma_5 * y_tilde * u_c                           ;
+
+      // 1dt order integrator
+      ym      = ym      + ym_dot      * delT ;
+      yp      = yp      + yp_dot      * delT ;
+      y       = y       + y_dot       * delT ;
+      y_hat   = y_hat   + yhat_dot    * delT ;
+      theta_1 = theta_1 + theta_1_dot * delT ;
+      theta_2 = theta_2 + theta_2_dot * delT ;
+      theta_3 = theta_3 + theta_3_dot * delT ;
+      ahat    = ahat    + ahat_dot    * delT ;
+      bhat    = bhat    + bhat_dot    * delT ;
+
+      // Model output
+      q_m(0)   = yp ;
 
       // Backward difference
       // TODO better way to do this?
