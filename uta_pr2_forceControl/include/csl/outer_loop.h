@@ -696,11 +696,8 @@ public:
 
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
 
-    double a = 0.5; //0.004988;
-    double b = 0.5; //0.995;
-
     ref_q_m(0)   = ref_q_m(0) + ref_qd_m(0)*delT;
-    ref_qd_m(0)  = a*task_ref(0) -  b*ref_q_m(0);
+    ref_qd_m(0)  = a_task*task_ref(0) - b_task*ref_q_m(0);
 
     ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
 
