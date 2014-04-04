@@ -59,9 +59,9 @@ m_D                 : 1
 task_mA             : 1
 task_mB             : 1
 
-cartPos_Kp_x : 80.0
-cartPos_Kp_y : 80.0
-cartPos_Kp_z : 80.0
+cartPos_Kp_x : 60.0
+cartPos_Kp_y : 60.0
+cartPos_Kp_z : 60.0
 cartPos_Kd_x : 10
 cartPos_Kd_y : 10
 cartPos_Kd_z : 10

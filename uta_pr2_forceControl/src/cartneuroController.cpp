@@ -714,29 +714,30 @@ void PR2CartneuroControllerClass::update()
       task_ref(2) = cartIniZ ;
     }*/
 
-/*
-    /////////////////////////
-    // Simulated human model
-    ode_init_x[2] = task_ref(1); // q_r
-    ode_init_x[3] = 0          ; // qd_r
+    if( !forceTorqueOn )
+    {
+      /////////////////////////
+      // Simulated human model
+      ode_init_x[2] = task_ref(1); // q_r
+      ode_init_x[3] = 0          ; // qd_r
 
-//    boost::numeric::odeint::integrate( human_model , ode_init_x , 0.0 , delT , delT );
-//    transformed_force(1) = ode_init_x[0];
+  //    boost::numeric::odeint::integrate( human_model , ode_init_x , 0.0 , delT , delT );
+  //    transformed_force(1) = ode_init_x[0];
 
-    double T  = 0.18;
-    double Kp = 779 ;
-    double Kd = 288 ;
+      double T  = 0.18;
+      double Kp = 779 ;
+      double Kd = 288 ;
 
-    // Reduced human model
+      // Reduced human model
 
-    transformed_force (1) = transformed_force (1) + ode_init_x[1 ]*delT;
+      transformed_force (1) = transformed_force (1) + ode_init_x[1 ]*delT;
 
-    //               ( Kp q_r           + Kd qd_r          - hf                    ) / T
-    ode_init_x[1 ] = ( Kp*ode_init_x[2] + Kd*ode_init_x[3] - transformed_force (1) ) / T ;
+      //               ( Kp q_r           + Kd qd_r          - hf                    ) / T
+      ode_init_x[1 ] = ( Kp*ode_init_x[2] + Kd*ode_init_x[3] - transformed_force (1) ) / T ;
 
-    // END Simulated human model
-    /////////////////////////
-*/
+      // END Simulated human model
+      /////////////////////////
+    }
 
 
     if( !useFTinput )
