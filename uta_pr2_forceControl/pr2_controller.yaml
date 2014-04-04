@@ -77,7 +77,7 @@ useCurrentCartPose : false
 
 useNullspacePose   : true
 
-useFTinput         : false
+useFTinput         : true
 
 useARMAmodel       : true
 
