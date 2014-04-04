@@ -146,8 +146,18 @@ public:
   // Use FT info or not
   bool useFTinput ;
 
-  // Use ARMA of DSD
+  // Use ARMA
   bool useARMAmodel ;
+  // Use FIR
+  bool useFIRmodel ;
+  // Use MRAC
+  bool useMRACmodel ;
+  // Use MSD
+  bool useMSDmodel ;
+
+  double forceCutOffX ;
+  double forceCutOffY ;
+  double forceCutOffZ ;
 
   // The trajectory variables
   double    circle_phase_;      // Phase along the circle

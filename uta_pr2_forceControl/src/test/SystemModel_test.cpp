@@ -77,7 +77,7 @@ int main()
   task_ref  = Eigen::MatrixXd::Ones( num_Joints, 1 );
   tau       = Eigen::MatrixXd::Ones( num_Joints, 1 );
 
-  csl::outer_loop::FirModel outerLoopFIRmodel;
+  csl::outer_loop::RlsModel outerLoopFIRmodel;
   outerLoopFIRmodel.updateDelT( 0.001 );
 
 //  outerLoopFIRmodel.Update( qd_m  , qd    , q_m   , q     , qdd_m , t_r, task_ref );

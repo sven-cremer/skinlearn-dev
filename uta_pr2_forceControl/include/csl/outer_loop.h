@@ -451,7 +451,7 @@ public:
 };
 
 
-class FirModel
+class RlsModel
 {
 
   int num_Joints; // number of joints.
@@ -477,7 +477,6 @@ class FirModel
   Eigen::MatrixXd task_ref_model;
 
   Eigen::MatrixXd t_r;
-
 
   Eigen::MatrixXd Wk           ; // FIR weights
   Eigen::MatrixXd Uk           ; // Input
@@ -529,7 +528,7 @@ class FirModel
   }
 
 public:
-  FirModel()
+  RlsModel()
   {
     delT = 0.001; /// 1000 Hz by default
     iter = 1;
@@ -540,7 +539,7 @@ public:
     //
     init( 1, 8 );
   }
-  ~FirModel()
+  ~RlsModel()
   {
   }
 

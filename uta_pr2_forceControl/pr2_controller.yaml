@@ -74,12 +74,19 @@ cartRot_Kd_y : 3
 cartRot_Kd_z : 3
 
 useCurrentCartPose : false
-
 useNullspacePose   : true
-
 useFTinput         : true
 
+# Only one can be true
 useARMAmodel       : true
+useFIRmodel        : false
+useMRACmodel       : false
+useMSDmodel        : false
+
+# This makes zero any force less than below
+forceCutOffX       : 1.0
+forceCutOffY       : 1.0
+forceCutOffZ       : 1.0
 
 cartIniX     :  0.7
 cartIniY     :  -0.2

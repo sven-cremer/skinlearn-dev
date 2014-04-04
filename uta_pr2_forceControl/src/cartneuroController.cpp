@@ -271,9 +271,29 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useFTinput   = "/useFTinput";
   if (!n.getParam( para_useFTinput, useFTinput )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFTinput.c_str()) ; return false; }
 
-  useARMAmodel = true ;
+  useARMAmodel = false ;
   std::string para_useARMAmodel = "/useARMAmodel";
   if (!n.getParam( para_useARMAmodel, useARMAmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useARMAmodel.c_str()) ; return false; }
+
+  useFIRmodel = false ;
+  std::string para_useFIRmodel = "/useFIRmodel";
+  if (!n.getParam( para_useFIRmodel, useFIRmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFIRmodel.c_str()) ; return false; }
+
+  useMRACmodel = false ;
+  std::string para_useMRACmodel = "/useMRACmodel";
+  if (!n.getParam( para_useMRACmodel, useMRACmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMRACmodel.c_str()) ; return false; }
+
+  useMSDmodel = false ;
+  std::string para_useMSDmodel = "/useMSDmodel";
+  if (!n.getParam( para_useMSDmodel, useMSDmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMSDmodel.c_str()) ; return false; }
+
+  std::string para_forceCutOffX = "/forceCutOffX";
+  std::string para_forceCutOffY = "/forceCutOffY";
+  std::string para_forceCutOffZ = "/forceCutOffZ";
+
+  if (!n.getParam( para_forceCutOffX , forceCutOffX )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffX.c_str()) ; return false; }
+  if (!n.getParam( para_forceCutOffY , forceCutOffY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffY.c_str()) ; return false; }
+  if (!n.getParam( para_forceCutOffZ , forceCutOffZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffZ.c_str()) ; return false; }
 
   delT = 0.001;
 
@@ -357,14 +377,28 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
   controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
 
-  outerLoopARMAmodelX.updateDelT( delT );
-  outerLoopARMAmodelX.updateAB( task_mA,
-                              task_mB );
+  /////////////////////////
+  // Outer Loop Init
 
-  outerLoopARMAmodelY.updateDelT( delT );
-  outerLoopARMAmodelY.updateAB( task_mA,
+  // MRAC
+  outerLoopMRACmodelX.updateDelT( delT );
+  outerLoopMRACmodelX.updateAB( task_mA,
                                 task_mB );
 
+  outerLoopMRACmodelY.updateDelT( delT );
+  outerLoopMRACmodelY.updateAB( task_mA,
+                                task_mB );
+
+  // RLS
+  outerLoopRLSmodelX.updateDelT( delT );
+  outerLoopRLSmodelX.updateAB( task_mA,
+                               task_mB );
+
+  outerLoopRLSmodelY.updateDelT( delT );
+  outerLoopRLSmodelY.updateAB( task_mA,
+                               task_mB );
+
+  // MSD
   outerLoopMSDmodelX.updateDelT( delT );
   outerLoopMSDmodelX.updateMsd( m_M,
                                 m_S,
@@ -374,6 +408,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopMSDmodelY.updateMsd( m_M,
                                 m_S,
                                 m_D );
+
+  /////////////////////////
 
   // System Model END
   /////////////////////////
@@ -386,13 +422,13 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                   num_Outputs ,   // num_Outputs
                                   num_Hidden  ,   // num_Hidden
                                   num_Error   ,   // num_Error
-                                  6           ); // num_Joints
+                                  num_Outputs );  // num_Joints = num_Outputs for cart space
 
   Eigen::MatrixXd p_Kv     ;
   Eigen::MatrixXd p_lambda ;
 
-  p_Kv     .resize( 6, 1 ) ;
-  p_lambda .resize( 6, 1 ) ;
+  p_Kv     .resize( num_Outputs, 1 ) ;
+  p_lambda .resize( num_Outputs, 1 ) ;
 
 // Filtered error
 // r = (qd_m - qd) + lambda*(q_m - q);
@@ -564,8 +600,9 @@ void PR2CartneuroControllerClass::update()
   Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
   transformed_force = ft_to_acc._transformVector( forceFT );
 
-  if( abs( double (transformed_force(0)) ) < 1 ){ transformed_force(0) = 0; }
-  if( abs( double (transformed_force(1)) ) < 1 ){ transformed_force(1) = 0; }
+  if( abs( double (transformed_force(0)) ) < forceCutOffX ){ transformed_force(0) = 0; }
+  if( abs( double (transformed_force(1)) ) < forceCutOffY ){ transformed_force(1) = 0; }
+  if( abs( double (transformed_force(2)) ) < forceCutOffZ ){ transformed_force(2) = 0; }
 
   transformed_force(1) = - transformed_force(1);
 
@@ -697,21 +734,66 @@ void PR2CartneuroControllerClass::update()
       transformed_force(1) = 0 ;
     }
 
+    // RLS ARMA
     if( useARMAmodel )
     {
-      // ARMA
-      // X axis
-      outerLoopARMAmodelX.update( Xd_m              (0) ,
-                                  Xd                (0) ,
-                                  X_m               (0) ,
-                                  X                 (0) ,
-                                  Xdd_m             (0) ,
-                                  transformed_force (0) ,
-                                  task_ref          (0) ,
-                                  task_refModel     (0)  );
+//      outerLoopRLSmodelX.update( Xd_m              (0) ,
+//                                 Xd                (0) ,
+//                                 X_m               (0) ,
+//                                 X                 (0) ,
+//                                 Xdd_m             (0) ,
+//                                 transformed_force (0) ,
+//                                 task_ref          (0) ,
+//                                 task_refModel     (0)  );
 
       // Y axis
-      outerLoopARMAmodelY.update( Xd_m              (1) ,
+      outerLoopRLSmodelY.update( Xd_m              (1) ,
+                                 Xd                (1) ,
+                                 X_m               (1) ,
+                                 X                 (1) ,
+                                 Xdd_m             (1) ,
+                                 transformed_force (1) ,
+                                 task_ref          (1) ,
+                                 task_refModel     (1)  );
+    }
+
+    // RLS FIR
+    if( useFIRmodel )
+    {
+//      outerLoopRLSmodelX.update( Xd_m              (0) ,
+//                                 Xd                (0) ,
+//                                 X_m               (0) ,
+//                                 X                 (0) ,
+//                                 Xdd_m             (0) ,
+//                                 transformed_force (0) ,
+//                                 task_ref          (0) ,
+//                                 task_refModel     (0)  );
+
+      // Y axis
+      outerLoopRLSmodelY.update( Xd_m              (1) ,
+                                 Xd                (1) ,
+                                 X_m               (1) ,
+                                 X                 (1) ,
+                                 Xdd_m             (1) ,
+                                 transformed_force (1) ,
+                                 task_ref          (1) ,
+                                 task_refModel     (1)  );
+    }
+
+    // MRAC
+    if( useMRACmodel )
+    {
+//      outerLoopMRACmodelX.update( Xd_m              (0) ,
+//                                  Xd                (0) ,
+//                                  X_m               (0) ,
+//                                  X                 (0) ,
+//                                  Xdd_m             (0) ,
+//                                  transformed_force (0) ,
+//                                  task_ref          (0) ,
+//                                  task_refModel     (0)  );
+
+      // Y axis
+      outerLoopMRACmodelY.update( Xd_m              (1) ,
                                   Xd                (1) ,
                                   X_m               (1) ,
                                   X                 (1) ,
@@ -719,7 +801,10 @@ void PR2CartneuroControllerClass::update()
                                   transformed_force (1) ,
                                   task_ref          (1) ,
                                   task_refModel     (1)  );
-    }else
+    }
+
+    // MSD
+    if( useMSDmodel )
     {
 //    // Cartesian space MSD model
 //    outerLoopMSDmodelX.update( Xd_m  (0),
@@ -729,12 +814,12 @@ void PR2CartneuroControllerClass::update()
 //                               Xdd_m (0),
 //                               transformed_force(0) );
 
-    outerLoopMSDmodelY.update( Xd_m  (1)           ,
-                               Xd    (1)           ,
-                               X_m   (1)           ,
-                               X     (1)           ,
-                               Xdd_m (1)           ,
-                               transformed_force(1) );
+      outerLoopMSDmodelY.update( Xd_m  (1)           ,
+                                 Xd    (1)           ,
+                                 X_m   (1)           ,
+                                 X     (1)           ,
+                                 Xdd_m (1)           ,
+                                 transformed_force(1) );
     }
 
 
@@ -1261,6 +1346,26 @@ bool PR2CartneuroControllerClass::paramUpdate( uta_pr2_forceControl::controllerP
                      nnF      ,
                      nnG      ,
                      nn_ON     );
+
+  // MRAC
+  outerLoopMRACmodelX.updateAB( task_mA,
+                                task_mB );
+  outerLoopMRACmodelY.updateAB( task_mA,
+                                task_mB );
+
+  // RLS
+  outerLoopRLSmodelX.updateAB( task_mA,
+                               task_mB );
+  outerLoopRLSmodelY.updateAB( task_mA,
+                               task_mB );
+
+  // MSD
+  outerLoopMSDmodelX.updateMsd( m_M,
+                                m_S,
+                                m_D );
+  outerLoopMSDmodelY.updateMsd( m_M,
+                                m_S,
+                                m_D );
 
   resp.success = true;
 
