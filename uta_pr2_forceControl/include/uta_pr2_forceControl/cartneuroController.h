@@ -25,14 +25,14 @@ private:
   /////////////////////////
   // System Model
 
-  csl::outer_loop::RlsModel outerLoopMRACmodelX ;
-  csl::outer_loop::RlsModel outerLoopMRACmodelY ;
+  csl::outer_loop::MracModel outerLoopMRACmodelX ;
+  csl::outer_loop::MracModel outerLoopMRACmodelY ;
 
-  csl::outer_loop::RlsModel outerLoopRLSmodelX ;
-  csl::outer_loop::RlsModel outerLoopRLSmodelY ;
+  csl::outer_loop::RlsModel  outerLoopRLSmodelX  ;
+  csl::outer_loop::RlsModel  outerLoopRLSmodelY  ;
 
-  csl::outer_loop::MsdModel outerLoopMSDmodelX  ;
-  csl::outer_loop::MsdModel outerLoopMSDmodelY  ;
+  csl::outer_loop::MsdModel  outerLoopMSDmodelX  ;
+  csl::outer_loop::MsdModel  outerLoopMSDmodelY  ;
 
   Eigen::VectorXd q;
   Eigen::VectorXd qd;
