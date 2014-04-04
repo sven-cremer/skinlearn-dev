@@ -3,24 +3,6 @@
 
 using namespace pr2_controller_ns;
 
-void human_model( const human_state_type &x , human_state_type &dxdt , double t )
-{
-      double T  = 1 ; // 0.18;
-      double Kp = 10;
-      double Kd = 10;
-
-      // Reduced human model
-
-      dxdt[0 ] = x[1 ];
-
-      //         ( Kp q_r  + Kd qd_r - hf   ) / T
-      dxdt[1 ] = ( Kp*x[2] + Kd*x[3] - x[0] ) / T ;
-
-      dxdt[2] = 0 ; // q_r
-      dxdt[3] = 0 ; // qd_r
-
-}
-
 /// Controller initialization in non-realtime
 bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                  ros::NodeHandle &n)
@@ -152,14 +134,6 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   qnom(4) = ( q_upper(4) - q_lower(4) ) / 2 ;
   qnom(5) = ( q_upper(5) - q_lower(5) ) / 2 ;
   qnom(6) = ( q_upper(6) - q_lower(6) ) / 2 ;
-
-  // Pick the gains.
-//  Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
-//  Kp_.vel(1) = 000.0;  Kd_.vel(1) = 1.0;        // Translation y
-//  Kp_.vel(2) = 100.0;  Kd_.vel(2) = 1.0;        // Translation z
-//  Kp_.rot(0) = 100.0;  Kd_.rot(0) = 1.0;        // Rotation    x
-//  Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation    y
-//  Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation    z
 
   Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
   JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
@@ -383,22 +357,23 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
   controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
 
-  //  outerLoopMSDmodel.updateDelT( delT );
-  //  outerLoopFIRmodelJoint1.updateDelT( delT );
+  outerLoopARMAmodelX.updateDelT( delT );
+  outerLoopARMAmodelX.updateAB( task_mA,
+                              task_mB );
 
-    outerLoopARMAmodelY.updateDelT( delT );
-    outerLoopARMAmodelY.updateAB( task_mA,
-                                  task_mB );
+  outerLoopARMAmodelY.updateDelT( delT );
+  outerLoopARMAmodelY.updateAB( task_mA,
+                                task_mB );
 
-    outerLoopMSDmodelX.updateDelT( delT );
-    outerLoopMSDmodelX.updateMsd( m_M,
-                                  m_S,
-                                  m_D );
+  outerLoopMSDmodelX.updateDelT( delT );
+  outerLoopMSDmodelX.updateMsd( m_M,
+                                m_S,
+                                m_D );
 
-    outerLoopMSDmodelY.updateDelT( delT );
-    outerLoopMSDmodelY.updateMsd( m_M,
-                                  m_S,
-                                  m_D );
+  outerLoopMSDmodelY.updateDelT( delT );
+  outerLoopMSDmodelY.updateMsd( m_M,
+                                m_S,
+                                m_D );
 
   // System Model END
   /////////////////////////
@@ -411,13 +386,13 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                   num_Outputs ,   // num_Outputs
                                   num_Hidden  ,   // num_Hidden
                                   num_Error   ,   // num_Error
-                                  6   ); // num_Joints
+                                  6           ); // num_Joints
 
   Eigen::MatrixXd p_Kv     ;
   Eigen::MatrixXd p_lambda ;
 
-  p_Kv                  .resize( 6, 1 ) ;
-  p_lambda              .resize( 6, 1 ) ;
+  p_Kv     .resize( 6, 1 ) ;
+  p_lambda .resize( 6, 1 ) ;
 
 // Filtered error
 // r = (qd_m - qd) + lambda*(q_m - q);
@@ -527,26 +502,12 @@ void PR2CartneuroControllerClass::starting()
   // set FT sensor bias due to gravity
   std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
   l_ft_samples    = l_ftData_vector.size() - 1;
-
-//  ROS_ERROR_STREAM( "Samples: " << l_ft_samples );
-
   l_ftBias.wrench = l_ftData_vector[l_ft_samples];
-//  l_ftBias.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  ;
-//  l_ftBias.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  ;
-//  l_ftBias.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  ;
-//  l_ftBias.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x ;
-//  l_ftBias.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y ;
-//  l_ftBias.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z ;
 
   std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
   r_ft_samples    = r_ftData_vector.size() - 1;
   r_ftBias.wrench = r_ftData_vector[r_ft_samples];
-//  r_ftBias.wrench.force.x  = r_ftData_vector[r_ft_samples].force.x  ;
-//  r_ftBias.wrench.force.y  = r_ftData_vector[r_ft_samples].force.y  ;
-//  r_ftBias.wrench.force.z  = r_ftData_vector[r_ft_samples].force.z  ;
-//  r_ftBias.wrench.torque.x = r_ftData_vector[r_ft_samples].torque.x ;
-//  r_ftBias.wrench.torque.y = r_ftData_vector[r_ft_samples].torque.y ;
-//  r_ftBias.wrench.torque.z = r_ftData_vector[r_ft_samples].torque.z ;
+
 }
 
 
@@ -563,26 +524,10 @@ void PR2CartneuroControllerClass::update()
   std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
   l_ft_samples    = l_ftData_vector.size() - 1;
   l_ftData.wrench = l_ftData_vector[l_ft_samples];
-//  l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
-//  l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
-//  l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
-//  l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
-//  l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
-//  l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
 
   std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
   r_ft_samples    = r_ftData_vector.size() - 1;
   r_ftData.wrench = r_ftData_vector[r_ft_samples];
-//  r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
-//  r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
-//  r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
-//  r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
-//  r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
-//  r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
-
-  //      if( (r_ftData.wrench.force.x > -18) && (r_ftData.wrench.force.x < 18) ){ r_ftData.wrench.force.x = 0; }
-  //      if( (r_ftData.wrench.force.y > -18) && (r_ftData.wrench.force.y < 18) ){ r_ftData.wrench.force.y = 0; }
-  //      if( (r_ftData.wrench.force.z > -18) && (r_ftData.wrench.force.z < 18) ){ r_ftData.wrench.force.z = 0; }
 
   double dt;                    // Servo loop time step
 
@@ -624,14 +569,6 @@ void PR2CartneuroControllerClass::update()
 
   transformed_force(1) = - transformed_force(1);
 
-/*
-  ferr_(0) =   transformed_force(0) ; // 30*sin(circle_phase_);
-  ferr_(1) =  -transformed_force(1) ; // 0                                     ;
-  ferr_(2) =  // transformed_force(2) ; // 0                                   ;
-  ferr_(3) =  0 ; // r_ftData.wrench.torque.x; // 0                    ;
-  ferr_(4) =  0 ; // r_ftData.wrench.torque.y; // 0                    ;
-  ferr_(5) =  0 ; // r_ftData.wrench.torque.z; // 0         s           ;
-*/
   // Human force input END
   ///////////////////////////////
 
@@ -707,40 +644,13 @@ void PR2CartneuroControllerClass::update()
     /////////////////////////
     // System Model
 
-  //  if( (robot_state_->getTime() - start_time_).toSec() > 5 )
-  //  {
-  //    task_ref   (0) = -0.821127 ;
-  //    task_ref   (3) = -1.70016  ;
-  //  }else
-  //  {
-  //    start_time_ = robot_state_->getTime();
-  //    task_ref   (0) = -0.190788 ;
-  //    task_ref   (3) = -1.42669  ;
-  //  }
-
-  qnom(0) = -0.5   ;
-  qnom(1) =  0 ;
-  qnom(2) = -1.50   ;
-  qnom(3) = -1.7   ;
-  qnom(4) =  1.50   ;
-  qnom(5) =  0 ;
-  qnom(6) =  0 ;
-
-//  q_lower(0) = 0;
-//  q_lower(1) = -0.01;
-//  q_lower(2) = 0;
-//  q_lower(3) = 0;
-//  q_lower(4) = 0;
-//  q_lower(5) = 0;
-//  q_lower(6) = 0;
-//
-//  q_upper(0) = 0;
-//  q_upper(1) = 0.01;
-//  q_upper(2) = 0;
-//  q_upper(3) = 0;
-//  q_upper(4) = 0;
-//  q_upper(5) = 0;
-//  q_upper(6) = 0;
+    qnom(0) = -0.5   ;
+    qnom(1) =  0 ;
+    qnom(2) = -1.50   ;
+    qnom(3) = -1.7   ;
+    qnom(4) =  1.50   ;
+    qnom(5) =  0 ;
+    qnom(6) =  0 ;
 
   // USed to auto set cart pose
 /*    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 3 == 0 )
@@ -781,14 +691,6 @@ void PR2CartneuroControllerClass::update()
     /////////////////////////
 */
 
-    // FIR
-  //  outerLoopFIRmodelJoint1.update( qd_m    (0) ,
-  //                                  qd      (0) ,
-  //                                  q_m     (0) ,
-  //                                  q       (0) ,
-  //                                  qdd_m   (0) ,
-  //                                  t_r     (0) ,
-  //                                  task_ref(0) );
 
     if( !useFTinput )
     {
@@ -797,6 +699,17 @@ void PR2CartneuroControllerClass::update()
 
     if( useARMAmodel )
     {
+      // ARMA
+      // X axis
+      outerLoopARMAmodelX.update( Xd_m              (0) ,
+                                  Xd                (0) ,
+                                  X_m               (0) ,
+                                  X                 (0) ,
+                                  Xdd_m             (0) ,
+                                  transformed_force (0) ,
+                                  task_ref          (0) ,
+                                  task_refModel     (0)  );
+
       // Y axis
       outerLoopARMAmodelY.update( Xd_m              (1) ,
                                   Xd                (1) ,
@@ -1322,8 +1235,8 @@ bool PR2CartneuroControllerClass::paramUpdate( uta_pr2_forceControl::controllerP
   Eigen::MatrixXd p_Kv     ;
   Eigen::MatrixXd p_lambda ;
 
-  p_Kv                  .resize( 6, 1 ) ;
-  p_lambda              .resize( 6, 1 ) ;
+  p_Kv     .resize( 6, 1 ) ;
+  p_lambda .resize( 6, 1 ) ;
 
   p_Kv << cartPos_Kd_x ,
           cartPos_Kd_y ,

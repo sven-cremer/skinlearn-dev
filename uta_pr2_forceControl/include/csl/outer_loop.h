@@ -361,15 +361,15 @@ public:
 
     f_r   .resize( num_Joints, 1 ) ;
 
-    x         = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    xd        = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    xdd       = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    x     = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    xd    = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    xdd   = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    x_m       = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    xd_m      = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    xdd_m     = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    x_m   = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    xd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    xdd_m = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    f_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    f_r   = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
     // initial conditions
     ode_init_x[0 ] = x0  ;
@@ -550,13 +550,13 @@ public:
     num_Fir    = para_num_Fir;
     num_Joints = para_num_Joints;
 
-    q     .resize( num_Joints, 1 ) ;
-    qd    .resize( num_Joints, 1 ) ;
-    qdd   .resize( num_Joints, 1 ) ;
+    q         .resize( num_Joints, 1 ) ;
+    qd        .resize( num_Joints, 1 ) ;
+    qdd       .resize( num_Joints, 1 ) ;
 
-    q_m   .resize( num_Joints, 1 ) ;
-    qd_m  .resize( num_Joints, 1 ) ;
-    qdd_m .resize( num_Joints, 1 ) ;
+    q_m       .resize( num_Joints, 1 ) ;
+    qd_m      .resize( num_Joints, 1 ) ;
+    qdd_m     .resize( num_Joints, 1 ) ;
 
     prv_q_m   .resize( num_Joints, 1 ) ;
     prv_qd_m  .resize( num_Joints, 1 ) ;
@@ -600,11 +600,11 @@ public:
     ref_qd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
     ref_qdd_m = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    task_ref   = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    task_ref  = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
     t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    lm = 0.98; // Forgetting factor
+    lm        = 0.98; // Forgetting factor
 
     // initial conditions
     ode_init_x[0 ] = 0.0;
@@ -645,20 +645,20 @@ public:
                double & param_task_ref       ,
                double & param_task_ref_model  )
   {
-    qd_m    (0)       = param_qd_m ;
-    qd      (0)       = param_qd   ;
-    q_m     (0)       = param_q_m  ;
-    q       (0)       = param_q    ;
-    qdd_m   (0)       = param_qdd_m;
-    t_r     (0)       = param_t_r  ;
-    task_ref(0)       = param_task_ref;
+    qd_m    (0)          = param_qd_m     ;
+    qd      (0)          = param_qd       ;
+    q_m     (0)          = param_q_m      ;
+    q       (0)          = param_q        ;
+    qdd_m   (0)          = param_qdd_m    ;
+    t_r     (0)          = param_t_r      ;
+    task_ref(0)          = param_task_ref ;
 
     update();
 
-    param_task_ref_model = ref_q_m(0) ;
-    param_q_m            = q_m(0);
-    param_qd_m           = qd_m(0);
-    param_qdd_m          = qdd_m(0);
+    param_task_ref_model = ref_q_m(0)     ;
+    param_q_m            = q_m(0)         ;
+    param_qd_m           = qd_m(0)        ;
+    param_qdd_m          = qdd_m(0)       ;
   }
 
   void update( Eigen::MatrixXd & param_qd_m          ,
@@ -670,20 +670,20 @@ public:
                Eigen::MatrixXd & param_task_ref      ,
                Eigen::MatrixXd & param_task_ref_model )
   {
-    qd_m           = param_qd_m          ;
-    qd             = param_qd            ;
-    q_m            = param_q_m           ;
-    q              = param_q             ;
-    qdd_m          = param_qdd_m         ;
-    t_r            = param_t_r           ;
-    task_ref       = param_task_ref      ;
+    qd_m                 = param_qd_m     ;
+    qd                   = param_qd       ;
+    q_m                  = param_q_m      ;
+    q                    = param_q        ;
+    qdd_m                = param_qdd_m    ;
+    t_r                  = param_t_r      ;
+    task_ref             = param_task_ref ;
 
     update();
 
-    param_task_ref_model = ref_q_m ;
-    param_q_m            = q_m;
-    param_qd_m           = qd_m;
-    param_qdd_m          = qdd_m;
+    param_task_ref_model = ref_q_m        ;
+    param_q_m            = q_m            ;
+    param_qd_m           = qd_m           ;
+    param_qdd_m          = qdd_m          ;
   }
 
   void update()
@@ -730,8 +730,6 @@ public:
     prv_q_m  = q_m ;
     prv_qd_m = qd_m;
 
-//      std::cout<< "Uk : " << Uk.transpose() <<"\n\n";
-//      std::cout<< "q  : " << q_m <<"\n\n";
   }
 };
 
@@ -739,29 +737,29 @@ public:
 class MracModel
 {
 
-  int num_Joints; // number of joints.
-  int num_Fir   ; // number of FIR parameters.
+  int num_Joints                 ; // number of joints.
+  int num_Fir                    ; // number of FIR parameters.
 
-  Eigen::MatrixXd q;
-  Eigen::MatrixXd qd;
-  Eigen::MatrixXd qdd;
+  Eigen::MatrixXd q              ;
+  Eigen::MatrixXd qd             ;
+  Eigen::MatrixXd qdd            ;
 
-  Eigen::MatrixXd q_m;
-  Eigen::MatrixXd qd_m;
-  Eigen::MatrixXd qdd_m;
+  Eigen::MatrixXd q_m            ;
+  Eigen::MatrixXd qd_m           ;
+  Eigen::MatrixXd qdd_m          ;
 
-  Eigen::MatrixXd prv_q_m;
-  Eigen::MatrixXd prv_qd_m;
+  Eigen::MatrixXd prv_q_m        ;
+  Eigen::MatrixXd prv_qd_m       ;
 
   // Reference task model
-  Eigen::MatrixXd ref_q_m;
-  Eigen::MatrixXd ref_qd_m;
-  Eigen::MatrixXd ref_qdd_m;
+  Eigen::MatrixXd ref_q_m        ;
+  Eigen::MatrixXd ref_qd_m       ;
+  Eigen::MatrixXd ref_qdd_m      ;
 
-  Eigen::MatrixXd task_ref;
-  Eigen::MatrixXd task_ref_model;
+  Eigen::MatrixXd task_ref       ;
+  Eigen::MatrixXd task_ref_model ;
 
-  Eigen::MatrixXd t_r;
+  Eigen::MatrixXd t_r   ;
 
   double a              ;
   double b              ;
@@ -786,7 +784,7 @@ class MracModel
   double yp             ;
   double y              ;
   double y_hat          ;
-  double y_tilde         ;
+  double y_tilde        ;
 
   double theta_1        ;
   double theta_2        ;
@@ -806,18 +804,17 @@ class MracModel
   double ahat_dot       ;
   double bhat_dot       ;
 
-  double delT; // Time step
-
-  double lm;
-
-  int iter;
+  // Time step
+  double delT           ;
+  double lm             ;
+  int iter              ;
 
   // Task model
 
   // 2nd order model
-  double m ;
-  double d ;
-  double k ;
+  double m      ;
+  double d      ;
+  double k      ;
 
   // 1st order model
   double a_task ;
@@ -826,8 +823,8 @@ class MracModel
 public:
   MracModel()
   {
-    delT = 0.001; /// 1000 Hz by default
-    iter = 1;
+    delT = 0.001 ; /// 1000 Hz by default
+    iter = 1     ;
 
     a_task = 0.5 ;
     b_task = 0.5 ;
@@ -843,14 +840,14 @@ public:
   {
 
     // Transfer Functions
-    a  = 1;   b  = 0.5;
-    am = 12;  bm = 12;
-    an = 3;   bn = 3;
+    a  = 1  ; b  = 0.5 ;
+    am = 12 ; bm = 12  ;
+    an = 3  ; bn = 3   ;
 
     // Intial Values
-      theta_1 = 1;   theta_2 = 1;   theta_3=1;
-     yhat_dot = 1;     y_hat = 1;
-           yp = 1;        ym = 1;
+    theta_1  = 1 ; theta_2 = 1 ; theta_3 = 1 ;
+    yhat_dot = 1 ; y_hat   = 1 ;
+    yp       = 1 ; ym      = 1 ;
 
     u_c = 1;
 
@@ -861,6 +858,7 @@ public:
              2.5e5 ,
              15000 ,
              15000  ;
+
     gamma_1= Gamma(0,0);   gamma_2 = Gamma(0,1); gamma_3= Gamma(1,2);
     gamma_4 =Gamma(0,3);   gamma_5 = Gamma(0,4);
 
@@ -869,13 +867,13 @@ public:
 
     num_Joints = para_num_Joints;
 
-    q     .resize( num_Joints, 1 ) ;
-    qd    .resize( num_Joints, 1 ) ;
-    qdd   .resize( num_Joints, 1 ) ;
+    q         .resize( num_Joints, 1 ) ;
+    qd        .resize( num_Joints, 1 ) ;
+    qdd       .resize( num_Joints, 1 ) ;
 
-    q_m   .resize( num_Joints, 1 ) ;
-    qd_m  .resize( num_Joints, 1 ) ;
-    qdd_m .resize( num_Joints, 1 ) ;
+    q_m       .resize( num_Joints, 1 ) ;
+    qd_m      .resize( num_Joints, 1 ) ;
+    qdd_m     .resize( num_Joints, 1 ) ;
 
     prv_q_m   .resize( num_Joints, 1 ) ;
     prv_qd_m  .resize( num_Joints, 1 ) ;
@@ -884,9 +882,9 @@ public:
     ref_qd_m  .resize( num_Joints, 1 ) ;
     ref_qdd_m .resize( num_Joints, 1 ) ;
 
-    task_ref      .resize( num_Joints, 1 ) ;
+    task_ref  .resize( num_Joints, 1 ) ;
 
-    t_r   .resize( num_Joints, 1 ) ;
+    t_r       .resize( num_Joints, 1 ) ;
 
     q         = Eigen::MatrixXd::Zero( num_Joints, 1 );
     qd        = Eigen::MatrixXd::Zero( num_Joints, 1 );
@@ -903,7 +901,7 @@ public:
     ref_qd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
     ref_qdd_m = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    task_ref   = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    task_ref  = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
     t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
