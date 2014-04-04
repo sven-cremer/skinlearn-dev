@@ -600,9 +600,9 @@ void PR2CartneuroControllerClass::update()
   Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
   transformed_force = ft_to_acc._transformVector( forceFT );
 
-  if( abs( double (transformed_force(0)) ) < forceCutOffX ){ transformed_force(0) = 0; }
-  if( abs( double (transformed_force(1)) ) < forceCutOffY ){ transformed_force(1) = 0; }
-  if( abs( double (transformed_force(2)) ) < forceCutOffZ ){ transformed_force(2) = 0; }
+  if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
+  if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
+  if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
 
   transformed_force(1) = - transformed_force(1);
 
