@@ -764,14 +764,13 @@ class MracModel
 
   Eigen::MatrixXd t_r   ;
 
-  double a              ;
-  double b              ;
+//  double a              ;
+//  double b              ;
   double am             ;
   double bm             ;
   double an             ;
   double bn             ;
 
-  Eigen::MatrixXd Gamma ;
   double gamma_1        ;
   double gamma_2        ;
   double gamma_3        ;
@@ -843,7 +842,7 @@ public:
   {
 
     // Transfer Functions
-    a  = 1  ; b  = 0.5 ;
+//    a  = 1  ; b  = 0.5 ;
     am = 12 ; bm = 12  ;
     an = 3  ; bn = 3   ;
 
@@ -852,18 +851,14 @@ public:
     yhat_dot = 1 ; y_hat   = 1 ;
     yp       = 1 ; ym      = 1 ;
 
-    u_c = 1;
+//    u_c = 1;
 
     // Gains
-    Gamma.resize(1,5);
-    Gamma << 1     ,
-             2000  ,
-             2.5e5 ,
-             15000 ,
-             15000  ;
-
-    gamma_1= Gamma(0,0);   gamma_2 = Gamma(0,1); gamma_3= Gamma(1,2);
-    gamma_4 =Gamma(0,3);   gamma_5 = Gamma(0,4);
+    gamma_1 = 1     ,
+    gamma_2 = 2000  ,
+    gamma_3 = 2.5e5 ,
+    gamma_4 = 15000 ,
+    gamma_5 = 15000  ;
 
     u = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * y_hat;
     e = yp - ym;

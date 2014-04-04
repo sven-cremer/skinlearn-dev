@@ -76,6 +76,7 @@ cartRot_Kd_z : 3
 useCurrentCartPose : false
 useNullspacePose   : true
 useFTinput         : true
+forceTorqueOn      : false
 
 # Only one can be true
 useARMAmodel       : true

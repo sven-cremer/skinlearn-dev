@@ -295,6 +295,10 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_forceCutOffY , forceCutOffY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffY.c_str()) ; return false; }
   if (!n.getParam( para_forceCutOffZ , forceCutOffZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffZ.c_str()) ; return false; }
 
+  std::string para_forceTorqueOn = "/forceTorqueOn";
+  if (!n.getParam( para_forceTorqueOn , forceTorqueOn )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceTorqueOn.c_str()) ; return false; }
+
+
   delT = 0.001;
 
   // initial conditions
@@ -535,14 +539,17 @@ void PR2CartneuroControllerClass::starting()
   last_time_ = robot_state_->getTime() ;
   start_time_ = robot_state_->getTime();
 
-  // set FT sensor bias due to gravity
-  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-  l_ft_samples    = l_ftData_vector.size() - 1;
-  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
+  if( forceTorqueOn )
+  {
+    // set FT sensor bias due to gravity
+    std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+    l_ft_samples    = l_ftData_vector.size() - 1;
+    l_ftBias.wrench = l_ftData_vector[l_ft_samples];
 
-  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-  r_ft_samples    = r_ftData_vector.size() - 1;
-  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+    std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+    r_ft_samples    = r_ftData_vector.size() - 1;
+    r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+  }
 
 }
 
@@ -550,20 +557,23 @@ void PR2CartneuroControllerClass::starting()
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
 {
-  //    // retrieve our accelerometer data
-  //      std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
-  //
-  //      threeAccs[threeAccs.size()-1].x
-  //      threeAccs[threeAccs.size()-1].y
-  //      threeAccs[threeAccs.size()-1].z
+  if( forceTorqueOn )
+  {
+    //    // retrieve our accelerometer data
+    //      std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
+    //
+    //      threeAccs[threeAccs.size()-1].x
+    //      threeAccs[threeAccs.size()-1].y
+    //      threeAccs[threeAccs.size()-1].z
 
-  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-  l_ft_samples    = l_ftData_vector.size() - 1;
-  l_ftData.wrench = l_ftData_vector[l_ft_samples];
+    std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+    l_ft_samples    = l_ftData_vector.size() - 1;
+    l_ftData.wrench = l_ftData_vector[l_ft_samples];
 
-  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-  r_ft_samples    = r_ftData_vector.size() - 1;
-  r_ftData.wrench = r_ftData_vector[r_ft_samples];
+    std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+    r_ft_samples    = r_ftData_vector.size() - 1;
+    r_ftData.wrench = r_ftData_vector[r_ft_samples];
+  }
 
   double dt;                    // Servo loop time step
 

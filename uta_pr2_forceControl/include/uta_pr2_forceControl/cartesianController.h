@@ -155,6 +155,9 @@ public:
   // Use MSD
   bool useMSDmodel ;
 
+  // Use FT sensors or not
+  bool forceTorqueOn;
+
   double forceCutOffX ;
   double forceCutOffY ;
   double forceCutOffZ ;
