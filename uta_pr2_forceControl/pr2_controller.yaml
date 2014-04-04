@@ -89,7 +89,7 @@ forceCutOffY       : 1.0
 forceCutOffZ       : 1.0
 
 cartIniX     :  0.7
-cartIniY     :  -0.2
+cartIniY     :  0.0
 cartIniZ     :  0.1
 cartIniRoll  :  0.0
 cartIniPitch :  0.0
