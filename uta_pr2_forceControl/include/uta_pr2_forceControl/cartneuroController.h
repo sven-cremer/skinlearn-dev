@@ -76,20 +76,23 @@ private:
   double num_Error   ; // filtered error
   double num_Joints  ; // number of joints.
 
-  double  kappa  ;
-  double  Kv     ;
-  double  lambda ;
-  double  Kz     ;
-  double  Zb     ;
-  double  nnF    ;
-  double  nnG    ;
-  double  nn_ON  ;
+  double kappa  ;
+  double Kv     ;
+  double lambda ;
+  double Kz     ;
+  double Zb     ;
+  double nnF    ;
+  double nnG    ;
+  double nn_ON  ;
 
-  double  m_M    ;
-  double  m_S    ;
-  double  m_D    ;
+  double m_M    ;
+  double m_S    ;
+  double m_D    ;
 
-  double  fFForce;
+  double task_mA ;
+  double task_mB ;
+
+  double fFForce;
 
   csl::neural_network::TwoLayerNeuralNetworkController nnController;
 

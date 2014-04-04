@@ -210,7 +210,10 @@ float64 cartDesRoll
 float64 cartDesPitch
 float64 cartDesYaw  
 
-# Model Params
+# Ref Model Params
 float64 m
 float64 d
 float64 k
+
+float64 task_mA
+float64 task_mB

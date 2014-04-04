@@ -227,6 +227,20 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; return false; }
   if (!n.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
 
+  std::string para_m_M = "/m_M" ;
+  std::string para_m_S = "/m_S" ;
+  std::string para_m_D = "/m_D" ;
+
+  if (!n.getParam( para_m_M , m_M )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_M .c_str()) ; return false; }
+  if (!n.getParam( para_m_S , m_S )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_S .c_str()) ; return false; }
+  if (!n.getParam( para_m_D , m_D )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_D .c_str()) ; return false; }
+
+  std::string para_task_mA = "/task_mA" ;
+  std::string para_task_mB = "/task_mB" ;
+
+  if (!n.getParam( para_task_mA , task_mA )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_task_mA .c_str()) ; return false; }
+  if (!n.getParam( para_task_mB , task_mB )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_task_mB .c_str()) ; return false; }
+
   // Desired cartesian pose
   cartDesX     = 0.0 ;
   cartDesY     = 0.1 ;
@@ -370,21 +384,18 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
 
   //  outerLoopMSDmodel.updateDelT( delT );
-
   //  outerLoopFIRmodelJoint1.updateDelT( delT );
+
     outerLoopARMAmodelY.updateDelT( delT );
+    outerLoopARMAmodelY.updateAB( task_mA,
+                                  task_mB );
 
-    outerLoopARMAmodelY.updateMsd( m_M,
-                                  m_S,
-                                  m_D );
-
-  //  outerLoopMSDmodelX.updateDelT( delT );
-    outerLoopMSDmodelY.updateDelT( delT );
-
+    outerLoopMSDmodelX.updateDelT( delT );
     outerLoopMSDmodelX.updateMsd( m_M,
                                   m_S,
                                   m_D );
 
+    outerLoopMSDmodelY.updateDelT( delT );
     outerLoopMSDmodelY.updateMsd( m_M,
                                   m_S,
                                   m_D );
@@ -1215,9 +1226,13 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
 
           // TODO fix this
           // Model Params
-          msgControllerFullData[index].m                 =   0 ; // outerLoopMSDmodel.getMass(  )(0,0) ;
-          msgControllerFullData[index].d                 =   0 ; // outerLoopMSDmodel.getSpring()(0,0) ;
-          msgControllerFullData[index].k                 =   0 ; // outerLoopMSDmodel.getDamper()(0,0) ;
+          // 2nd degree ref model
+          msgControllerFullData[index].m                 = m_M                         ; // outerLoopMSDmodel.getMass(  )(0,0) ;
+          msgControllerFullData[index].d                 = m_D                         ; // outerLoopMSDmodel.getSpring()(0,0) ;
+          msgControllerFullData[index].k                 = m_S                         ; // outerLoopMSDmodel.getDamper()(0,0) ;
+          // 1st degree ref model
+          msgControllerFullData[index].task_mA           = task_mA                     ;
+          msgControllerFullData[index].task_mB           = task_mB                     ;
 
           // Increment for the next cycle.
           storage_index_ = index+1;
@@ -1242,56 +1257,61 @@ bool PR2CartneuroControllerClass::paramUpdate( uta_pr2_forceControl::controllerP
                                                uta_pr2_forceControl::controllerParamUpdate::Response & resp )
 {
 
-//  req.msg.m                ;
-//  req.msg.d                ;
-//  req.msg.k                ;
+  num_Inputs  = req.msg.inParams                 ;
+  num_Outputs = req.msg.outParams                ;
+  num_Hidden  = req.msg.hiddenNodes              ;
+  num_Error   = req.msg.errorParams              ;
 
-  num_Inputs  = req.msg.inParams         ;
-  num_Outputs = req.msg.outParams        ;
-  num_Hidden  = req.msg.hiddenNodes      ;
-  num_Error   = req.msg.errorParams      ;
+  kappa       = req.msg.kappa                    ;
+  Kv          = req.msg.Kv                       ;
+  lambda      = req.msg.lambda                   ;
+  Kz          = req.msg.Kz                       ;
+  Zb          = req.msg.Zb                       ;
+  fFForce     = req.msg.feedForwardForce         ;
+  nn_ON       = req.msg.nn_ON                    ;
+  nnF         = req.msg.F                        ;
+  nnG         = req.msg.G                        ;
 
-  kappa       = req.msg.kappa            ;
-  Kv          = req.msg.Kv               ;
-  lambda      = req.msg.lambda           ;
-  Kz          = req.msg.Kz               ;
-  Zb          = req.msg.Zb               ;
-  fFForce     = req.msg.feedForwardForce ;
-  nn_ON       = req.msg.nn_ON            ;
-  nnF         = req.msg.F                ;
-  nnG         = req.msg.G                ;
+  // FIXME actually update these in the
+  // outer-loop controllers
+  m_M         = req.msg.m                        ;
+  m_D         = req.msg.d                        ;
+  m_S         = req.msg.k                        ;
+
+  task_mA     = req.msg.task_mA                  ;
+  task_mB     = req.msg.task_mB                  ;
 
   // Cart params
-  cartPos_Kp_x      = req.msg.cartPos_Kp_x                ;
-  cartPos_Kp_y      = req.msg.cartPos_Kp_y                ;
-  cartPos_Kp_z      = req.msg.cartPos_Kp_z                ;
-  cartPos_Kd_x      = req.msg.cartPos_Kd_x                ;
-  cartPos_Kd_y      = req.msg.cartPos_Kd_y                ;
-  cartPos_Kd_z      = req.msg.cartPos_Kd_z                ;
+  cartPos_Kp_x      = req.msg.cartPos_Kp_x       ;
+  cartPos_Kp_y      = req.msg.cartPos_Kp_y       ;
+  cartPos_Kp_z      = req.msg.cartPos_Kp_z       ;
+  cartPos_Kd_x      = req.msg.cartPos_Kd_x       ;
+  cartPos_Kd_y      = req.msg.cartPos_Kd_y       ;
+  cartPos_Kd_z      = req.msg.cartPos_Kd_z       ;
 
-  cartRot_Kp_x      = req.msg.cartRot_Kp_x                ;
-  cartRot_Kp_y      = req.msg.cartRot_Kp_y                ;
-  cartRot_Kp_z      = req.msg.cartRot_Kp_z                ;
-  cartRot_Kd_x      = req.msg.cartRot_Kd_x                ;
-  cartRot_Kd_y      = req.msg.cartRot_Kd_y                ;
-  cartRot_Kd_z      = req.msg.cartRot_Kd_z                ;
+  cartRot_Kp_x      = req.msg.cartRot_Kp_x       ;
+  cartRot_Kp_y      = req.msg.cartRot_Kp_y       ;
+  cartRot_Kp_z      = req.msg.cartRot_Kp_z       ;
+  cartRot_Kd_x      = req.msg.cartRot_Kd_x       ;
+  cartRot_Kd_y      = req.msg.cartRot_Kd_y       ;
+  cartRot_Kd_z      = req.msg.cartRot_Kd_z       ;
 
-  useCurrentCartPose= req.msg.useCurrentCartPose          ;
-  useNullspacePose  = req.msg.useNullspacePose            ;
+  useCurrentCartPose= req.msg.useCurrentCartPose ;
+  useNullspacePose  = req.msg.useNullspacePose   ;
 
-  cartIniX          = req.msg.cartIniX                    ;
-  cartIniY          = req.msg.cartIniY                    ;
-  cartIniZ          = req.msg.cartIniZ                    ;
-  cartIniRoll       = req.msg.cartIniRoll                 ;
-  cartIniPitch      = req.msg.cartIniPitch                ;
-  cartIniYaw        = req.msg.cartIniYaw                  ;
+  cartIniX          = req.msg.cartIniX           ;
+  cartIniY          = req.msg.cartIniY           ;
+  cartIniZ          = req.msg.cartIniZ           ;
+  cartIniRoll       = req.msg.cartIniRoll        ;
+  cartIniPitch      = req.msg.cartIniPitch       ;
+  cartIniYaw        = req.msg.cartIniYaw         ;
 
-  cartDesX          = req.msg.cartDesX                    ;
-  cartDesY          = req.msg.cartDesY                    ;
-  cartDesZ          = req.msg.cartDesZ                    ;
-  cartDesRoll       = req.msg.cartDesRoll                 ;
-  cartDesPitch      = req.msg.cartDesPitch                ;
-  cartDesYaw        = req.msg.cartDesYaw                  ;
+  cartDesX          = req.msg.cartDesX           ;
+  cartDesY          = req.msg.cartDesY           ;
+  cartDesZ          = req.msg.cartDesZ           ;
+  cartDesRoll       = req.msg.cartDesRoll        ;
+  cartDesPitch      = req.msg.cartDesPitch       ;
+  cartDesYaw        = req.msg.cartDesYaw         ;
 
   nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
                                   num_Outputs ,   // num_Outputs
@@ -1319,15 +1339,15 @@ bool PR2CartneuroControllerClass::paramUpdate( uta_pr2_forceControl::controllerP
               cartRot_Kp_y / cartRot_Kd_y ,
               cartRot_Kp_z / cartRot_Kd_z ;
 
-  nnController.init( kappa  ,
+  nnController.init( kappa    ,
                      p_Kv     ,
                      p_lambda ,
-                     Kz     ,
-                     Zb     ,
-                     fFForce,
-                     nnF    ,
-                     nnG    ,
-                     nn_ON   );
+                     Kz       ,
+                     Zb       ,
+                     fFForce  ,
+                     nnF      ,
+                     nnG      ,
+                     nn_ON     );
 
   resp.success = true;
 

@@ -496,6 +496,10 @@ class FirModel
   double d ;
   double k ;
 
+  // 1st order model
+  double a_task ;
+  double b_task ;
+
   fir_state_type ode_init_x;
 
   oel::ls::RLSFilter rls_filter;
@@ -530,20 +534,18 @@ public:
     delT = 0.001; /// 1000 Hz by default
     iter = 1;
 
-    double a = 10;
+    a_task = 0.5 ;
+    b_task = 0.5 ;
 
-    //          m    d    k
-    init( 1, 8, a*a, 2*a, a*a );
+    //
+    init( 1, 8 );
   }
   ~FirModel()
   {
   }
 
-  void init( int para_num_Joints, int para_num_Fir, double p_m, double p_d, double p_k )
+  void init( int para_num_Joints, int para_num_Fir )
   {
-    m = p_m;
-    d = p_d;
-    k = p_k;
 
     num_Fir    = para_num_Fir;
     num_Joints = para_num_Joints;
@@ -625,6 +627,13 @@ public:
     m = param_m_M ; // mass
     k = param_m_S ; // spring
     d = param_m_D ; // damper
+  }
+
+  void updateAB( double param_a_task,
+                 double param_b_task )
+  {
+    a_task = param_a_task ;
+    b_task = param_b_task ;
   }
 
   void update( double & param_qd_m           ,
@@ -807,9 +816,15 @@ class MracModel
   int iter;
 
   // Task model
+
+  // 2nd order model
   double m ;
   double d ;
   double k ;
+
+  // 1st order model
+  double a_task ;
+  double b_task ;
 
 public:
   MracModel()
@@ -817,17 +832,19 @@ public:
     delT = 0.001; /// 1000 Hz by default
     iter = 1;
 
-    double a = 10;
+    a_task = 0.5 ;
+    b_task = 0.5 ;
 
-    //          m    d    k
-    init( 1, 8, a*a, 2*a, a*a );
+    //
+    init( 1 );
   }
   ~MracModel()
   {
   }
 
-  void init( int para_num_Joints, int para_num_Fir, double p_m, double p_d, double p_k )
+  void init( int para_num_Joints )
   {
+
     // Transfer Functions
     a  = 1;   b  = 0.5;
     am = 12;  bm = 12;
@@ -853,11 +870,6 @@ public:
     u = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * y_hat;
     e = yp - ym;
 
-    m = p_m;
-    d = p_d;
-    k = p_k;
-
-    num_Fir    = para_num_Fir;
     num_Joints = para_num_Joints;
 
     q     .resize( num_Joints, 1 ) ;
@@ -912,6 +924,13 @@ public:
     m = param_m_M ; // mass
     k = param_m_S ; // spring
     d = param_m_D ; // damper
+  }
+
+  void updateAB( double param_a_task,
+                 double param_b_task )
+  {
+    a_task = param_a_task ;
+    b_task = param_b_task ;
   }
 
   void update( double & param_qd_m           ,
@@ -970,11 +989,8 @@ public:
 
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
 
-//    double a = 0.5; //0.004988;
-//    double b = 0.5; //0.995;
-
     ref_q_m(0)   = ref_q_m(0) + ref_qd_m(0)*delT;
-    ref_qd_m(0)  = a*task_ref(0) -  b*ref_q_m(0);
+    ref_qd_m(0)  = a_task*task_ref(0) -  b_task*ref_q_m(0);
 
     ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
 
@@ -990,6 +1006,9 @@ public:
 
     {
 
+      // Human force
+      y = t_r(0) ;
+
       u           = - theta_1 * y_hat - theta_2 * yp - theta_3 * y     ;
       e           = yp - ym                                            ;
       y_tilde     = y - y_hat                                          ;
@@ -998,7 +1017,7 @@ public:
       // dot
       ym_dot      = -am        * ym            + bm     * u_c          ;
       yp_dot      = -an        * yp            + bn     * u            ;
-      y_dot       = -a         * y             + b      * u_c          ;
+//      y_dot       = -a         * y             + b      * u_c          ;
       yhat_dot    = -ahat      * y_hat         + bhat   * u_c          ;
       theta_1_dot =  gamma_1   * e * u_c                               ;
       theta_2_dot =  gamma_2   * e * yp                                ;
