@@ -62,13 +62,13 @@ target_link_libraries(controllerExperimenter yaml-cpp )
 
 rosbuild_add_executable(refTrajectoryClient src/refTrajectoryClient.cpp)
 
-rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
-target_link_libraries( SystemModel_test	oelLIB )
+#rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
+#target_link_libraries( SystemModel_test	oelLIB )
 
-rosbuild_add_executable( pr2_joint_listener src/pr2_joint_listener.cpp )
-rosbuild_add_executable( position_rarm src/position_rarm.cpp )
+#rosbuild_add_executable( pr2_joint_listener src/pr2_joint_listener.cpp )
+#rosbuild_add_executable( position_rarm src/position_rarm.cpp )
 
-rosbuild_add_executable( interaction_force_estimator src/interaction_force_estimator.cpp )
-target_link_libraries( interaction_force_estimator	oelLIB )
+#rosbuild_add_executable( interaction_force_estimator src/interaction_force_estimator.cpp )
+#target_link_libraries( interaction_force_estimator	oelLIB )
 
 #target_link_libraries(example ${PROJECT_NAME})

@@ -507,13 +507,17 @@ class RlsModel
 
   oel::ls::RLSFilter rls_filter;
 
-  void stackFirIn( Eigen::MatrixXd & in )
+  void stackFirIn( Eigen::MatrixXd & u_in )
   {
     // TODO parameterize this
     // Moves top to bottom rows are time series, columns are joints
     // First in First out bottom most location nth row is dumped
-    Uk_plus.block<8-1, 1>(1,0) = Uk.block<8-1, 1>(0,0);
-    Uk_plus.block<1,1>(0,0) = in.transpose();
+//    Uk_plus.block<8-1, 1>(1,0) = Uk.block<8-1, 1>(0,0);
+//    Uk_plus.block<1,1>(0,0) = u_in.transpose();
+
+    Uk_plus.block<8-1, 1>(0,0) = Uk.block<8-1, 1>(0,0);
+    Uk_plus.block<1,1>(7,0) = u_in.transpose();
+
     Uk = Uk_plus;
   }
 
@@ -526,7 +530,7 @@ class RlsModel
     Uk_plus.block<1,1>(0,0) = u_in.transpose();
 
     Uk_plus.block<4-1, 1>(4,0) = Uk.block<4-1, 1>(0,0);
-    Uk_plus.block<1,1>(7,0) = y_prev.transpose();
+    Uk_plus.block<1,1>(7,0) = - y_prev.transpose();
 
     Uk = Uk_plus;
   }
@@ -639,14 +643,14 @@ public:
     b_task = param_b_task ;
   }
 
-  void update( double & param_qd_m           ,
-               double & param_qd             ,
-               double & param_q_m            ,
-               double & param_q              ,
-               double & param_qdd_m          ,
-               double & param_t_r            ,
-               double & param_task_ref       ,
-               double & param_task_ref_model  )
+  void updateFIR( double & param_qd_m           ,
+                  double & param_qd             ,
+                  double & param_q_m            ,
+                  double & param_q              ,
+                  double & param_qdd_m          ,
+                  double & param_t_r            ,
+                  double & param_task_ref       ,
+                  double & param_task_ref_model  )
   {
     qd_m    (0)          = param_qd_m     ;
     qd      (0)          = param_qd       ;
@@ -656,6 +660,8 @@ public:
     t_r     (0)          = param_t_r      ;
     task_ref(0)          = param_task_ref ;
 
+    // Save input forces/torques
+    stackFirIn( t_r );
     update();
 
     param_task_ref_model = ref_q_m(0)     ;
@@ -664,14 +670,14 @@ public:
     param_qdd_m          = qdd_m(0)       ;
   }
 
-  void update( Eigen::MatrixXd & param_qd_m          ,
-               Eigen::MatrixXd & param_qd            ,
-               Eigen::MatrixXd & param_q_m           ,
-               Eigen::MatrixXd & param_q             ,
-               Eigen::MatrixXd & param_qdd_m         ,
-               Eigen::MatrixXd & param_t_r           ,
-               Eigen::MatrixXd & param_task_ref      ,
-               Eigen::MatrixXd & param_task_ref_model )
+  void updateFIR( Eigen::MatrixXd & param_qd_m          ,
+                  Eigen::MatrixXd & param_qd            ,
+                  Eigen::MatrixXd & param_q_m           ,
+                  Eigen::MatrixXd & param_q             ,
+                  Eigen::MatrixXd & param_qdd_m         ,
+                  Eigen::MatrixXd & param_t_r           ,
+                  Eigen::MatrixXd & param_task_ref      ,
+                  Eigen::MatrixXd & param_task_ref_model )
   {
     qd_m                 = param_qd_m     ;
     qd                   = param_qd       ;
@@ -681,6 +687,62 @@ public:
     t_r                  = param_t_r      ;
     task_ref             = param_task_ref ;
 
+    // Save input forces/torques
+    stackFirIn( t_r );
+    update();
+
+    param_task_ref_model = ref_q_m        ;
+    param_q_m            = q_m            ;
+    param_qd_m           = qd_m           ;
+    param_qdd_m          = qdd_m          ;
+  }
+
+  void updateARMA( double & param_qd_m           ,
+                   double & param_qd             ,
+                   double & param_q_m            ,
+                   double & param_q              ,
+                   double & param_qdd_m          ,
+                   double & param_t_r            ,
+                   double & param_task_ref       ,
+                   double & param_task_ref_model  )
+  {
+    qd_m    (0)          = param_qd_m     ;
+    qd      (0)          = param_qd       ;
+    q_m     (0)          = param_q_m      ;
+    q       (0)          = param_q        ;
+    qdd_m   (0)          = param_qdd_m    ;
+    t_r     (0)          = param_t_r      ;
+    task_ref(0)          = param_task_ref ;
+
+    // Save input forces/torques
+    stackArmaIn( t_r, q_m );
+    update();
+
+    param_task_ref_model = ref_q_m(0)     ;
+    param_q_m            = q_m(0)         ;
+    param_qd_m           = qd_m(0)        ;
+    param_qdd_m          = qdd_m(0)       ;
+  }
+
+  void updateARMA( Eigen::MatrixXd & param_qd_m          ,
+                   Eigen::MatrixXd & param_qd            ,
+                   Eigen::MatrixXd & param_q_m           ,
+                   Eigen::MatrixXd & param_q             ,
+                   Eigen::MatrixXd & param_qdd_m         ,
+                   Eigen::MatrixXd & param_t_r           ,
+                   Eigen::MatrixXd & param_task_ref      ,
+                   Eigen::MatrixXd & param_task_ref_model )
+  {
+    qd_m                 = param_qd_m     ;
+    qd                   = param_qd       ;
+    q_m                  = param_q_m      ;
+    q                    = param_q        ;
+    qdd_m                = param_qdd_m    ;
+    t_r                  = param_t_r      ;
+    task_ref             = param_task_ref ;
+
+    // Save input forces/torques
+    stackArmaIn( t_r, q_m );
     update();
 
     param_task_ref_model = ref_q_m        ;
@@ -691,10 +753,6 @@ public:
 
   void update()
   {
-    // Save input forces/torques
-//    stackFirIn( t_r );
-    stackArmaIn( t_r, q_m );
-
     ode_init_x[2] = task_ref(0);
 
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );

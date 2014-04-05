@@ -718,8 +718,14 @@ void PR2CartneuroControllerClass::update()
     {
       /////////////////////////
       // Simulated human model
-      ode_init_x[2] = task_ref(1); // q_r
-      ode_init_x[3] = 0          ; // qd_r
+
+      // OPen loop version
+//      ode_init_x[2] = task_ref(1); // q_r
+//      ode_init_x[3] = 0          ; // qd_r
+
+      // Closed loop version
+      ode_init_x[2] = ( task_ref(1) - X_m(1) ); // q_r
+      ode_init_x[3] = 0 ; // - Xd (1)                ; // qd_r
 
   //    boost::numeric::odeint::integrate( human_model , ode_init_x , 0.0 , delT , delT );
   //    transformed_force(1) = ode_init_x[0];
@@ -727,12 +733,12 @@ void PR2CartneuroControllerClass::update()
 //      double T  = 0.18;
 //      double Kp = 779 ;
 //      double Kd = 288 ;
+//       Bakur's values ?
       double T  = 1;
-      double Kp = 0.5 ;
+      double Kp = 1 ;
       double Kd = 0 ;
 
       // Reduced human model
-
       transformed_force (1) = transformed_force (1) + ode_init_x[1 ]*delT;
 
       //               ( Kp q_r           + Kd qd_r          - hf                    ) / T
@@ -751,47 +757,47 @@ void PR2CartneuroControllerClass::update()
     // RLS ARMA
     if( useARMAmodel )
     {
-//      outerLoopRLSmodelX.update( Xd_m              (0) ,
-//                                 Xd                (0) ,
-//                                 X_m               (0) ,
-//                                 X                 (0) ,
-//                                 Xdd_m             (0) ,
-//                                 transformed_force (0) ,
-//                                 task_ref          (0) ,
-//                                 task_refModel     (0)  );
+//      outerLoopRLSmodelX.updateARMA( Xd_m              (0) ,
+//                                     Xd                (0) ,
+//                                     X_m               (0) ,
+//                                     X                 (0) ,
+//                                     Xdd_m             (0) ,
+//                                     transformed_force (0) ,
+//                                     task_ref          (0) ,
+//                                     task_refModel     (0)  );
 
       // Y axis
-      outerLoopRLSmodelY.update( Xd_m              (1) ,
-                                 Xd                (1) ,
-                                 X_m               (1) ,
-                                 X                 (1) ,
-                                 Xdd_m             (1) ,
-                                 transformed_force (1) ,
-                                 task_ref          (1) ,
-                                 task_refModel     (1)  );
+      outerLoopRLSmodelY.updateARMA( Xd_m              (1) ,
+                                     Xd                (1) ,
+                                     X_m               (1) ,
+                                     X                 (1) ,
+                                     Xdd_m             (1) ,
+                                     transformed_force (1) ,
+                                     task_ref          (1) ,
+                                     task_refModel     (1)  );
     }
 
     // RLS FIR
     if( useFIRmodel )
     {
-//      outerLoopRLSmodelX.update( Xd_m              (0) ,
-//                                 Xd                (0) ,
-//                                 X_m               (0) ,
-//                                 X                 (0) ,
-//                                 Xdd_m             (0) ,
-//                                 transformed_force (0) ,
-//                                 task_ref          (0) ,
-//                                 task_refModel     (0)  );
+//      outerLoopRLSmodelX.updateFIR( Xd_m              (0) ,
+//                                    Xd                (0) ,
+//                                    X_m               (0) ,
+//                                    X                 (0) ,
+//                                    Xdd_m             (0) ,
+//                                    transformed_force (0) ,
+//                                    task_ref          (0) ,
+//                                    task_refModel     (0)  );
 
       // Y axis
-      outerLoopRLSmodelY.update( Xd_m              (1) ,
-                                 Xd                (1) ,
-                                 X_m               (1) ,
-                                 X                 (1) ,
-                                 Xdd_m             (1) ,
-                                 transformed_force (1) ,
-                                 task_ref          (1) ,
-                                 task_refModel     (1)  );
+      outerLoopRLSmodelY.updateFIR( Xd_m              (1) ,
+                                    Xd                (1) ,
+                                    X_m               (1) ,
+                                    X                 (1) ,
+                                    Xdd_m             (1) ,
+                                    transformed_force (1) ,
+                                    task_ref          (1) ,
+                                    task_refModel     (1)  );
     }
 
     // MRAC
