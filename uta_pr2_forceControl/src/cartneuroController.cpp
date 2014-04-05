@@ -568,11 +568,23 @@ void PR2CartneuroControllerClass::update()
 
     std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
     l_ft_samples    = l_ftData_vector.size() - 1;
-    l_ftData.wrench = l_ftData_vector[l_ft_samples];
+//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
+    l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
+    l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
+    l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
+    l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
+    l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
+    l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
 
     std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
     r_ft_samples    = r_ftData_vector.size() - 1;
-    r_ftData.wrench = r_ftData_vector[r_ft_samples];
+//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
+    r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
+    r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
+    r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
+    r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
+    r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
+    r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
   }
 
   double dt;                    // Servo loop time step
