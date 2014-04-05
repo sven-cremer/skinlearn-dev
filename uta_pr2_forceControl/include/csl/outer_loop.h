@@ -412,11 +412,11 @@ public:
     update();
 
     param_xd_m  = xd_m  (0);
-    param_xd    = xd    (0);
+//    param_xd    = xd    (0);
     param_x_m   = x_m   (0);
-    param_x     = x     (0);
+//    param_x     = x     (0);
     param_xdd_m = xdd_m (0);
-    param_f_r   = f_r   (0);
+//    param_f_r   = f_r   (0);
   }
 
   void update( Eigen::MatrixXd & param_xd_m    ,
@@ -439,17 +439,17 @@ public:
   void update()
   {
 
-//    ode_init_x[2] = f_r(0);
-//
-//    boost::numeric::odeint::integrate( oneDmsd_model , ode_init_x , 0.0 , delT , delT );
-//
-//    x_m  (0) = ode_init_x[0 ] ;
-//    xd_m (0) = ode_init_x[1 ] ;
-//    xdd_m(0) = m*( ode_init_x[2] - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
+    ode_init_x[2] = f_r(0);
 
-    x_m   = x_m  + xd_m *delT ;
-    xd_m  = xd_m + xdd_m*delT ;
-    xdd_m = ( f_r - d*xd_m - k*x_m )/m;
+    boost::numeric::odeint::integrate( oneDmsd_model , ode_init_x , 0.0 , delT , delT );
+
+    x_m  (0) = ode_init_x[0 ] ;
+    xd_m (0) = ode_init_x[1 ] ;
+    xdd_m(0) = m*( ode_init_x[2] - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
+
+//    x_m   = x_m  + xd_m *delT ;
+//    xd_m  = xd_m + xdd_m*delT ;
+//    xdd_m = ( f_r - d*xd_m - k*x_m )/m;
 
   }
 };
