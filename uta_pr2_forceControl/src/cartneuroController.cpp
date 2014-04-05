@@ -355,12 +355,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   X        = Eigen::VectorXd::Zero( num_Outputs ) ;
   Xd       = Eigen::VectorXd::Zero( num_Outputs ) ;
 
-//  X_m(0)   = cartIniX     ;
-//  X_m(1)   = cartIniY     ;
-//  X_m(2)   = cartIniZ     ;
-//  X_m(3)   = cartIniRoll  ;
-//  X_m(4)   = cartIniPitch ;
-//  X_m(5)   = cartIniYaw   ;
+  X_m(0)   = cartIniX     ;
+  X_m(1)   = cartIniY     ;
+  X_m(2)   = cartIniZ     ;
+  X_m(3)   = cartIniRoll  ;
+  X_m(4)   = cartIniPitch ;
+  X_m(5)   = cartIniYaw   ;
 
   t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
   task_ref = Eigen::VectorXd::Zero( num_Outputs           ) ;
@@ -369,13 +369,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   force    = Eigen::VectorXd::Zero( num_Outputs ) ;
 
   // Initial Reference
-//  task_ref = X_m ;
-    task_ref(0)   = cartIniX     ;
-    task_ref(1)   = cartIniY     ;
-    task_ref(2)   = cartIniZ     ;
-    task_ref(3)   = cartIniRoll  ;
-    task_ref(4)   = cartIniPitch ;
-    task_ref(5)   = cartIniYaw   ;
+  task_ref = X_m ;
 
   Jacobian         = Eigen::MatrixXd::Zero( num_Outputs, kdl_chain_.getNrOfJoints() ) ;
   JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
@@ -750,6 +744,8 @@ void PR2CartneuroControllerClass::update()
       //               ( Kp q_r           + Kd qd_r          - hf                    ) / T
       ode_init_x[1 ] = ( Kp*ode_init_x[2] + Kd*ode_init_x[3] - transformed_force (1) ) / T ;
 
+      ROS_ERROR_STREAM("USING Simulated human model");
+
       // END Simulated human model
       /////////////////////////
     }
@@ -781,6 +777,8 @@ void PR2CartneuroControllerClass::update()
                                      transformed_force (1) ,
                                      task_ref          (1) ,
                                      task_refModel     (1)  );
+
+      ROS_ERROR_STREAM("USING RLS ARMA");
     }
 
     // RLS FIR
@@ -804,6 +802,7 @@ void PR2CartneuroControllerClass::update()
                                     transformed_force (1) ,
                                     task_ref          (1) ,
                                     task_refModel     (1)  );
+      ROS_ERROR_STREAM("USING RLS FIR");
     }
 
     // MRAC
@@ -827,6 +826,7 @@ void PR2CartneuroControllerClass::update()
                                   transformed_force (1) ,
                                   task_ref          (1) ,
                                   task_refModel     (1)  );
+      ROS_ERROR_STREAM("USING MRAC");
     }
 
     // MSD
@@ -846,6 +846,7 @@ void PR2CartneuroControllerClass::update()
                                  X     (1)           ,
                                  Xdd_m (1)           ,
                                  transformed_force(1) );
+      ROS_ERROR_STREAM("USING MSD");
     }
 
 
