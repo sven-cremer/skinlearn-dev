@@ -764,8 +764,8 @@ class MracModel
 
   Eigen::MatrixXd t_r   ;
 
-//  double a              ;
-//  double b              ;
+  double a              ;
+  double b              ;
   double am             ;
   double bm             ;
   double an             ;
@@ -842,7 +842,7 @@ public:
   {
 
     // Transfer Functions
-//    a  = 1  ; b  = 0.5 ;
+    a  = 1  ; b  = 0.5 ;
     am = 12 ; bm = 12  ;
     an = 3  ; bn = 3   ;
 
@@ -857,8 +857,8 @@ public:
     gamma_1 = 1     ,
     gamma_2 = 2000  ,
     gamma_3 = 2.5e5 ,
-    gamma_4 = 15000 ,
-    gamma_5 = 15000  ;
+    gamma_4 = 5000 ,
+    gamma_5 = 5000  ;
 
     u = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * y_hat;
     e = yp - ym;
@@ -1010,7 +1010,7 @@ public:
       // dot
       ym_dot      = -am        * ym            + bm     * u_c          ;
       yp_dot      = -an        * yp            + bn     * u            ;
-//      y_dot       = -a         * y             + b      * u_c          ;
+      y_dot       = -a         * y             + b      * u_c          ;
       yhat_dot    = -ahat      * y_hat         + bhat   * u_c          ;
       theta_1_dot =  gamma_1   * e * u_c                               ;
       theta_2_dot =  gamma_2   * e * yp                                ;

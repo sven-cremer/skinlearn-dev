@@ -79,9 +79,9 @@ useFTinput         : true
 forceTorqueOn      : false
 
 # Only one can be true
-useARMAmodel       : true
+useARMAmodel       : false
 useFIRmodel        : false
-useMRACmodel       : false
+useMRACmodel       : true
 useMSDmodel        : false
 
 # This makes zero any force less than below

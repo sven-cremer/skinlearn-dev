@@ -724,9 +724,12 @@ void PR2CartneuroControllerClass::update()
   //    boost::numeric::odeint::integrate( human_model , ode_init_x , 0.0 , delT , delT );
   //    transformed_force(1) = ode_init_x[0];
 
-      double T  = 0.18;
-      double Kp = 779 ;
-      double Kd = 288 ;
+//      double T  = 0.18;
+//      double Kp = 779 ;
+//      double Kd = 288 ;
+      double T  = 1;
+      double Kp = 0.5 ;
+      double Kd = 0 ;
 
       // Reduced human model
 
