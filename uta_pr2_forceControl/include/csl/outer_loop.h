@@ -434,6 +434,14 @@ public:
     f_r      = param_f_r     ;
 
     update();
+
+    param_xd_m  = xd_m ;
+//    param_xd    = xd   ;
+    param_x_m   = x_m  ;
+//    param_x     = x    ;
+    param_xdd_m = xdd_m;
+//    param_f_r   = f_r  ;
+
   }
 
   void update()

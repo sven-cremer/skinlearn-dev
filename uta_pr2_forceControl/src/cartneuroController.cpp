@@ -790,7 +790,7 @@ void PR2CartneuroControllerClass::update()
                                      task_ref          (1) ,
                                      task_refModel     (1)  );
 
-      ROS_ERROR_STREAM("USING RLS ARMA");
+//      ROS_ERROR_STREAM("USING RLS ARMA");
     }
 
     // RLS FIR
@@ -814,7 +814,7 @@ void PR2CartneuroControllerClass::update()
                                     transformed_force (1) ,
                                     task_ref          (1) ,
                                     task_refModel     (1)  );
-      ROS_ERROR_STREAM("USING RLS FIR");
+//      ROS_ERROR_STREAM("USING RLS FIR");
     }
 
     // MRAC
@@ -838,7 +838,7 @@ void PR2CartneuroControllerClass::update()
                                   transformed_force (1) ,
                                   task_ref          (1) ,
                                   task_refModel     (1)  );
-      ROS_ERROR_STREAM("USING MRAC");
+//      ROS_ERROR_STREAM("USING MRAC");
     }
 
     // MSD
@@ -852,16 +852,14 @@ void PR2CartneuroControllerClass::update()
 //                               Xdd_m (0),
 //                               transformed_force(0) );
 
-      outerLoopMSDmodelY.update( Xd_m  (1)           ,
-                                 Xd    (1)           ,
-                                 X_m   (1)           ,
-                                 X     (1)           ,
-                                 Xdd_m (1)           ,
-                                 transformed_force(1) );
-      ROS_ERROR_STREAM("USING MSD");
+      outerLoopMSDmodelY.update( Xd_m             (1) ,
+                                 Xd               (1) ,
+                                 X_m              (1) ,
+                                 X                (1) ,
+                                 Xdd_m            (1) ,
+                                 transformed_force(1)  );
+//      ROS_ERROR_STREAM("USING MSD");
     }
-
-
 
     // System Model END
     /////////////////////////
