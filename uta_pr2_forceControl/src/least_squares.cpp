@@ -33,12 +33,13 @@ namespace ls
     PIk   = Pk*Uk;
     Uk_T  = Uk.transpose();
 
-    Kk    = PIk*( lm + Uk_T*PIk ).inverse();
+    Kk    = PIk*( Uk_T*PIk + lm ).inverse();
 
     Wk_T  = Wk.transpose();
     Wk    = Wk + Kk*( Dk - Wk_T*Uk );
 
-    Pk    = Pk*lmInv - Kk*Uk_T*Pk*lmInv;
+//    Pk    = Pk*lmInv - Kk*Uk_T*Pk*lmInv;
+    Pk    = Pk - Kk*Uk_T*Pk;
   }
 
   Eigen::MatrixXd RLSFilter::getEstimate()

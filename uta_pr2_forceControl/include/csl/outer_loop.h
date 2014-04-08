@@ -529,16 +529,16 @@ class RlsModel
     Uk = Uk_plus;
   }
 
-  void stackArmaIn( Eigen::MatrixXd & u_in, Eigen::MatrixXd & y_prev )
+  void stackArmaIn( Eigen::MatrixXd & y_prev, Eigen::MatrixXd & u_in )
   {
     // TODO parameterize this
     // Moves top to bottom rows are time series, columns are joints
     // First in First out bottom most location nth row is dumped
     Uk_plus.block<4-1, 1>(1,0) = Uk.block<4-1, 1>(0,0);
-    Uk_plus.block<1,1>(0,0) = u_in.transpose();
+    Uk_plus.block<1,1>(0,0) = - y_prev.transpose();
 
-    Uk_plus.block<4-1, 1>(4,0) = Uk.block<4-1, 1>(0,0);
-    Uk_plus.block<1,1>(7,0) = - y_prev.transpose();
+    Uk_plus.block<4-1, 1>(5,0) = Uk.block<4-1, 1>(4,0);
+    Uk_plus.block<1,1>(4,0) = u_in.transpose();
 
     Uk = Uk_plus;
   }
@@ -723,7 +723,7 @@ public:
     task_ref(0)          = param_task_ref ;
 
     // Save input forces/torques
-    stackArmaIn( t_r, q_m );
+    stackArmaIn( ref_q_m, t_r );
     update();
 
     param_task_ref_model = ref_q_m(0)     ;
@@ -785,7 +785,7 @@ public:
       rls_filter.Update( Wk, Uk, Dk, Pk );
 
       Wk = rls_filter.getEstimate();
-      //Pk = rls_filter.getCovariance();
+      Pk = rls_filter.getCovariance();
 
       q_m   = Uk.transpose()*Wk  ;
 
