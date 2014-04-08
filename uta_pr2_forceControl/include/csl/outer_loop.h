@@ -319,10 +319,10 @@ class MsdModel
 
   int iter;
 
-  // Task model
-  double m ;
-  double d ;
-  double k ;
+  // Admittance model
+  double m_M ;
+  double m_D ;
+  double m_S ;
 
   oneDmsd_state_type ode_init_x;
 
@@ -341,9 +341,9 @@ public:
 
   void init( double p_m, double p_k, double p_d, double x0, double xd0, double xdd0 )
   {
-    m = p_m; // mass
-    k = p_k; // spring
-    d = p_d; // damper
+    m_M = p_m; // mass
+    m_S = p_k; // spring
+    m_D = p_d; // damper
 
     x     .resize( num_Joints, 1 ) ;
     xd    .resize( num_Joints, 1 ) ;
@@ -375,9 +375,9 @@ public:
     ode_init_x[0 ] = x0  ;
     ode_init_x[1 ] = xd0 ;
     ode_init_x[2 ] = xdd0;
-    ode_init_x[3 ] = m   ; // mass
-    ode_init_x[4 ] = k   ; // spring
-    ode_init_x[5 ] = d   ; // damper
+    ode_init_x[3 ] = m_M   ; // mass
+    ode_init_x[4 ] = m_S   ; // spring
+    ode_init_x[5 ] = m_D   ; // damper
 
   }
 
@@ -386,13 +386,13 @@ public:
     delT = p_delT;
   }
 
-  void updateMsd( double param_m_M,
-                  double param_m_S,
-                  double param_m_D )
+  void updateMsd( double & param_m_M,
+                  double & param_m_S,
+                  double & param_m_D )
   {
-    m = param_m_M ; // mass
-    k = param_m_S ; // spring
-    d = param_m_D ; // damper
+    m_M = param_m_M ; // mass
+    m_S = param_m_S ; // spring
+    m_D = param_m_D ; // damper
   }
 
   void update( double & param_xd_m  ,
@@ -457,7 +457,7 @@ public:
 
     x_m   = x_m  + xd_m *delT ;
     xd_m  = xd_m + xdd_m*delT ;
-    xdd_m = ( f_r - d*xd_m - k*x_m )/m;
+    xdd_m = ( f_r - m_D*xd_m - m_S*x_m )/m_M;
 
   }
 };
