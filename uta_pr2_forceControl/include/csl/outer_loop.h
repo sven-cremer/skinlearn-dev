@@ -523,8 +523,8 @@ class RlsModel
 //    Uk_plus.block<8-1, 1>(1,0) = Uk.block<8-1, 1>(0,0);
 //    Uk_plus.block<1,1>(0,0) = u_in.transpose();
 
-    Uk_plus.block<8-1, 1>(0,0) = Uk.block<8-1, 1>(0,0);
-    Uk_plus.block<1,1>(7,0) = u_in.transpose();
+    Uk_plus.block<8-1, 1>(1,0) = Uk.block<8-1, 1>(0,0);
+    Uk_plus.block<1,1>(0,0) = u_in.transpose();
 
     Uk = Uk_plus;
   }
@@ -592,7 +592,7 @@ public:
 
     // FIXME need to make this a 3 dimensional matrix
     Pk    .resize( num_Fir, num_Fir       ) ;
-    Pk = Eigen::MatrixXd::Identity( num_Fir, num_Fir )/0.0001;
+    Pk = Eigen::MatrixXd::Identity( num_Fir, num_Fir )/0.001;
 
     Uk.resize( num_Fir, num_Joints ) ;
     Uk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
@@ -619,7 +619,7 @@ public:
 
     t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    lm        = 0.98; // Forgetting factor
+    lm        = 0.99; // Forgetting factor
 
     // initial conditions
     ode_init_x[0 ] = 0.0;
@@ -723,7 +723,7 @@ public:
     task_ref(0)          = param_task_ref ;
 
     // Save input forces/torques
-    stackArmaIn( ref_q_m, t_r );
+    stackArmaIn( q_m, t_r );
     update();
 
     param_task_ref_model = ref_q_m(0)     ;
@@ -780,7 +780,7 @@ public:
     // Desired is the task reference model
     Dk = ref_q_m;
 
-    if( iter > num_Fir )
+    //if( iter > num_Fir )
     {
       rls_filter.Update( Wk, Uk, Dk, Pk );
 
@@ -793,7 +793,6 @@ public:
       // TODO better way to do this?
       qd_m  = (q_m  - prv_q_m )/delT ;
       qdd_m = (qd_m - prv_qd_m)/delT ;
-
     }
 
     prv_q_m  = q_m ;
