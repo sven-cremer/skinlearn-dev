@@ -909,7 +909,7 @@ public:
 
     // Transfer Functions
     a  = 1  ; b  = 0.5 ;
-    am = 12 ; bm = 12  ;
+    am = 1  ; bm = 1   ;
     an = 3  ; bn = 3   ;
 
     // Intial Values
@@ -1015,6 +1015,7 @@ public:
     param_q_m            = q_m(0);
     param_qd_m           = qd_m(0);
     param_qdd_m          = qdd_m(0);
+    param_t_r            = t_r(0);
   }
 
   void update( Eigen::MatrixXd & param_qd_m          ,
@@ -1066,7 +1067,7 @@ public:
     {
 
       // Human force
-      y = t_r(0) ;
+      //y = t_r(0) ;
 
       u           = - theta_1 * y_hat - theta_2 * yp - theta_3 * y     ;
       e           = yp - ym                                            ;
@@ -1097,6 +1098,9 @@ public:
 
       // Model output
       q_m(0)   = yp ;
+
+      // FIXME Fake Human Force
+      t_r(0) = y;
 
       // Backward difference
       // TODO better way to do this?
