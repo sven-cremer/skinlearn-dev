@@ -362,6 +362,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   X_m(4)   = cartIniPitch ;
   X_m(5)   = cartIniYaw   ;
 
+  transformed_force = Eigen::Vector3d::Zero();
+  acc_data          = Eigen::Vector3d::Zero();
+
   t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
   task_ref = Eigen::VectorXd::Zero( num_Outputs           ) ;
   task_refModel = Eigen::VectorXd::Zero( num_Outputs      ) ;
@@ -482,16 +485,16 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
    if( !r_ft_handle_ )
        ROS_ERROR("Something wrong with getting r_ft handle");
 
-   //  /* get a handle to the left gripper accelerometer */
-   //    accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
-   //    if(!accelerometer_handle_)
-   //        ROS_ERROR("Something wrong with getting accelerometer handle");
-   //
-   //    // set to 1.5 kHz bandwidth (should be the default)
-   //    accelerometer_handle_->command_.bandwidth_ = 6;
-   //
-   //    // set to +/- 8g range (0=2g,1=4g)
-   //    accelerometer_handle_->command_.range_ = 2;
+     /* get a handle to the right gripper accelerometer */
+       accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
+       if(!accelerometer_handle_)
+           ROS_ERROR("Something wrong with getting accelerometer handle");
+
+       // set to 1.5 kHz bandwidth (should be the default)
+       accelerometer_handle_->command_.bandwidth_ = 6;
+
+       // set to +/- 8g range (0=2g,1=4g)
+       accelerometer_handle_->command_.range_ = 2;
 
   /////////////////////////
   // DATA COLLECTION
@@ -559,12 +562,12 @@ void PR2CartneuroControllerClass::update()
 {
   if( forceTorqueOn )
   {
-    //    // retrieve our accelerometer data
-    //      std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
-    //
-    //      threeAccs[threeAccs.size()-1].x
-    //      threeAccs[threeAccs.size()-1].y
-    //      threeAccs[threeAccs.size()-1].z
+    // retrieve accelerometer data
+    std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
+
+    acc_data( 0 ) = threeAccs[threeAccs.size()-1].x ;
+    acc_data( 1 ) = threeAccs[threeAccs.size()-1].y ;
+    acc_data( 2 ) = threeAccs[threeAccs.size()-1].z ;
 
     std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
     l_ft_samples    = l_ftData_vector.size() - 1;
@@ -1060,6 +1063,10 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].torque_x          = 0                           ; // r_ftData.wrench.torque.x    ;
           msgControllerFullData[index].torque_y          = 0                           ; // r_ftData.wrench.torque.y    ;
           msgControllerFullData[index].torque_z          = 0                           ; // r_ftData.wrench.torque.z    ;
+
+          msgControllerFullData[index].acc_x             = acc_data(0)                 ;
+          msgControllerFullData[index].acc_y             = acc_data(1)                 ;
+          msgControllerFullData[index].acc_z             = acc_data(2)                 ;
 
           // Input reference efforts(torques)
           msgControllerFullData[index].reference_eff_j0  = 0                           ; //t_r(0) ;

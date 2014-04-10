@@ -1,13 +1,18 @@
 # Time
 float64  dt
 
-# Raw Force Data
+# Force Data
 float64 force_x
 float64 force_y
 float64 force_z
 float64 torque_x
 float64 torque_y
 float64 torque_z
+
+# Accelerometer data
+float64 acc_x
+float64 acc_y
+float64 acc_z
 
 # Input Force Data
 float64 r_eff_x

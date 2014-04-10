@@ -63,6 +63,7 @@ public:
   geometry_msgs::WrenchStamped r_ftData;
 
   Eigen::Vector3d transformed_force    ;
+  Eigen::Vector3d acc_data             ;
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
