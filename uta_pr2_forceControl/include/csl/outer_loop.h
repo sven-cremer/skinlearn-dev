@@ -619,7 +619,7 @@ public:
 
     t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    lm        = 0.99; // Forgetting factor
+    lm        = 0.9; // Forgetting factor
 
     // initial conditions
     ode_init_x[0 ] = 0.0;
@@ -750,7 +750,7 @@ public:
     task_ref             = param_task_ref ;
 
     // Save input forces/torques
-    stackArmaIn( t_r, q_m );
+    stackArmaIn( q_m, t_r );
     update();
 
     param_task_ref_model = ref_q_m        ;
