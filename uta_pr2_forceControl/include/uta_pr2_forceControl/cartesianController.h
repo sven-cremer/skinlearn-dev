@@ -167,6 +167,7 @@ public:
   double    circle_phase_;      // Phase along the circle
   ros::Time last_time_;         // Time of the last servo cycle
   ros::Time start_time_;        // Time of the first servo cycle
+  ros::Time outer_elapsed_;     // Time elapsed since outer loop call
 
   double circleUlim ;
   double circleLlim ;

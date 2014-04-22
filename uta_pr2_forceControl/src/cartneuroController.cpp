@@ -397,7 +397,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                 task_mB );
 
   // RLS
+  double outerRate = 20; // Hz
   outerLoopRLSmodelX.updateDelT( delT );
+//  outerLoopRLSmodelX.updateRate( outerRate );
   outerLoopRLSmodelX.updateAB( task_mA,
                                task_mB );
 
@@ -539,8 +541,9 @@ void PR2CartneuroControllerClass::starting()
   startCircleTraj = true;
 
   // Also reset the time-of-last-servo-cycle.
-  last_time_ = robot_state_->getTime() ;
-  start_time_ = robot_state_->getTime();
+  last_time_     = robot_state_->getTime() ;
+  start_time_    = robot_state_->getTime() ;
+  outer_elapsed_ = robot_state_->getTime() ;
 
   if( forceTorqueOn )
   {
@@ -771,97 +774,107 @@ void PR2CartneuroControllerClass::update()
       transformed_force(1) = 0 ;
     }
 
-    // RLS ARMA
-    if( useARMAmodel )
+    // OUTER Loop Update
+
+    double outerLoopTime = 0.05;
+    if( outer_elapsed_.sec >= outerLoopTime )
     {
-//      outerLoopRLSmodelX.updateARMA( Xd_m              (0) ,
-//                                     Xd                (0) ,
-//                                     X_m               (0) ,
-//                                     X                 (0) ,
-//                                     Xdd_m             (0) ,
-//                                     transformed_force (0) ,
-//                                     task_ref          (0) ,
-//                                     task_refModel     (0)  );
 
-      // Y axis
-      outerLoopRLSmodelY.updateARMA( Xd_m              (1) ,
-                                     Xd                (1) ,
-                                     X_m               (1) ,
-                                     X                 (1) ,
-                                     Xdd_m             (1) ,
-                                     transformed_force (1) ,
-                                     task_ref          (1) ,
-                                     task_refModel     (1)  );
+		// RLS ARMA
+		if( useARMAmodel )
+		{
+	//      outerLoopRLSmodelX.updateARMA( Xd_m              (0) ,
+	//                                     Xd                (0) ,
+	//                                     X_m               (0) ,
+	//                                     X                 (0) ,
+	//                                     Xdd_m             (0) ,
+	//                                     transformed_force (0) ,
+	//                                     task_ref          (0) ,
+	//                                     task_refModel     (0)  );
 
-//      ROS_ERROR_STREAM("USING RLS ARMA");
-    }
+		  // Y axis
+		  outerLoopRLSmodelY.updateARMA( Xd_m              (1) ,
+										 Xd                (1) ,
+										 X_m               (1) ,
+										 X                 (1) ,
+										 Xdd_m             (1) ,
+										 transformed_force (1) ,
+										 task_ref          (1) ,
+										 task_refModel     (1)  );
 
-    // RLS FIR
-    if( useFIRmodel )
-    {
-//      outerLoopRLSmodelX.updateFIR( Xd_m              (0) ,
-//                                    Xd                (0) ,
-//                                    X_m               (0) ,
-//                                    X                 (0) ,
-//                                    Xdd_m             (0) ,
-//                                    transformed_force (0) ,
-//                                    task_ref          (0) ,
-//                                    task_refModel     (0)  );
+	//      ROS_ERROR_STREAM("USING RLS ARMA");
+		}
 
-      // Y axis
-      outerLoopRLSmodelY.updateFIR( Xd_m              (1) ,
-                                    Xd                (1) ,
-                                    X_m               (1) ,
-                                    X                 (1) ,
-                                    Xdd_m             (1) ,
-                                    transformed_force (1) ,
-                                    task_ref          (1) ,
-                                    task_refModel     (1)  );
-//      ROS_ERROR_STREAM("USING RLS FIR");
-    }
+		// RLS FIR
+		if( useFIRmodel )
+		{
+	//      outerLoopRLSmodelX.updateFIR( Xd_m              (0) ,
+	//                                    Xd                (0) ,
+	//                                    X_m               (0) ,
+	//                                    X                 (0) ,
+	//                                    Xdd_m             (0) ,
+	//                                    transformed_force (0) ,
+	//                                    task_ref          (0) ,
+	//                                    task_refModel     (0)  );
 
-    // MRAC
-    if( useMRACmodel )
-    {
-//      outerLoopMRACmodelX.update( Xd_m              (0) ,
-//                                  Xd                (0) ,
-//                                  X_m               (0) ,
-//                                  X                 (0) ,
-//                                  Xdd_m             (0) ,
-//                                  transformed_force (0) ,
-//                                  task_ref          (0) ,
-//                                  task_refModel     (0)  );
+		  // Y axis
+		  outerLoopRLSmodelY.updateFIR( Xd_m              (1) ,
+										Xd                (1) ,
+										X_m               (1) ,
+										X                 (1) ,
+										Xdd_m             (1) ,
+										transformed_force (1) ,
+										task_ref          (1) ,
+										task_refModel     (1)  );
+	//      ROS_ERROR_STREAM("USING RLS FIR");
+		}
 
-      // Y axis
-      outerLoopMRACmodelY.update( Xd_m              (1) ,
-                                  Xd                (1) ,
-                                  X_m               (1) ,
-                                  X                 (1) ,
-                                  Xdd_m             (1) ,
-                                  transformed_force (1) ,
-                                  task_ref          (1) ,
-                                  task_refModel     (1)  );
-//      ROS_ERROR_STREAM("USING MRAC");
-    }
+		// MRAC
+		if( useMRACmodel )
+		{
+	//      outerLoopMRACmodelX.update( Xd_m              (0) ,
+	//                                  Xd                (0) ,
+	//                                  X_m               (0) ,
+	//                                  X                 (0) ,
+	//                                  Xdd_m             (0) ,
+	//                                  transformed_force (0) ,
+	//                                  task_ref          (0) ,
+	//                                  task_refModel     (0)  );
 
-    // MSD
-    if( useMSDmodel )
-    {
-//    // Cartesian space MSD model
-//    outerLoopMSDmodelX.update( Xd_m  (0),
-//                               xdot_ (0),
-//                               X_m   (0),
-//                               x_.p.data[0],
-//                               Xdd_m (0),
-//                               transformed_force(0) );
+		  // Y axis
+		  outerLoopMRACmodelY.update( Xd_m              (1) ,
+									  Xd                (1) ,
+									  X_m               (1) ,
+									  X                 (1) ,
+									  Xdd_m             (1) ,
+									  transformed_force (1) ,
+									  task_ref          (1) ,
+									  task_refModel     (1)  );
+	//      ROS_ERROR_STREAM("USING MRAC");
+		}
 
-      outerLoopMSDmodelY.update( Xd_m             (1) ,
-                                 Xd               (1) ,
-                                 X_m              (1) ,
-                                 X                (1) ,
-                                 Xdd_m            (1) ,
-                                 transformed_force(1)  );
-//      ROS_ERROR_STREAM("USING MSD");
+		// MSD
+		if( useMSDmodel )
+		{
+	//    // Cartesian space MSD model
+	//    outerLoopMSDmodelX.update( Xd_m  (0),
+	//                               xdot_ (0),
+	//                               X_m   (0),
+	//                               x_.p.data[0],
+	//                               Xdd_m (0),
+	//                               transformed_force(0) );
+
+		  outerLoopMSDmodelY.update( Xd_m             (1) ,
+									 Xd               (1) ,
+									 X_m              (1) ,
+									 X                (1) ,
+									 Xdd_m            (1) ,
+									 transformed_force(1)  );
+	//      ROS_ERROR_STREAM("USING MSD");
+		}
+
+		outer_elapsed_ = robot_state_->getTime() ;
+
     }
 
     // System Model END
