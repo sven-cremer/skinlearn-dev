@@ -777,7 +777,7 @@ void PR2CartneuroControllerClass::update()
 
     // OUTER Loop Update
 
-    if( outer_elapsed_.sec >= outerLoopTime )
+    if( ( outer_elapsed_ - robot_state_->getTime()).toSec() >= outerLoopTime )
     {
 		// RLS ARMA
 		if( useARMAmodel )
