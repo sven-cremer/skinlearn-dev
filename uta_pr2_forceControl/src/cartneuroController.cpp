@@ -300,6 +300,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
 
   delT = 0.001;
+  outerLoopTime = 0.05;
 
   // initial conditions
   ode_init_x[0 ] = 0.0;
@@ -398,12 +399,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // RLS
   double outerRate = 20; // Hz
-  outerLoopRLSmodelX.updateDelT( delT );
+  outerLoopRLSmodelX.updateDelT( outerLoopTime );
 //  outerLoopRLSmodelX.updateRate( outerRate );
   outerLoopRLSmodelX.updateAB( task_mA,
                                task_mB );
 
-  outerLoopRLSmodelY.updateDelT( delT );
+  outerLoopRLSmodelY.updateDelT( outerLoopTime );
   outerLoopRLSmodelY.updateAB( task_mA,
                                task_mB );
 
@@ -776,10 +777,8 @@ void PR2CartneuroControllerClass::update()
 
     // OUTER Loop Update
 
-    double outerLoopTime = 0.05;
     if( outer_elapsed_.sec >= outerLoopTime )
     {
-
 		// RLS ARMA
 		if( useARMAmodel )
 		{
@@ -872,6 +871,9 @@ void PR2CartneuroControllerClass::update()
 									 transformed_force(1)  );
 	//      ROS_ERROR_STREAM("USING MSD");
 		}
+
+//		outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
+//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
 
 		outer_elapsed_ = robot_state_->getTime() ;
 

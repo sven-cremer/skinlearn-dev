@@ -619,7 +619,7 @@ public:
 
     t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    lm        = 0.9; // Forgetting factor
+    lm        = 0.98; // Forgetting factor
 
     // initial conditions
     ode_init_x[0 ] = 0.0;
@@ -649,6 +649,16 @@ public:
   {
     a_task = param_a_task ;
     b_task = param_b_task ;
+  }
+
+  void getWeights( Eigen::MatrixXd & param_Wk )
+  {
+	  param_Wk = Wk ;
+  }
+
+  void setWeights( Eigen::MatrixXd & param_Wk )
+  {
+    Wk = param_Wk;
   }
 
   void updateFIR( double & param_qd_m           ,

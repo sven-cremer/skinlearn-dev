@@ -34,6 +34,8 @@ private:
   csl::outer_loop::MsdModel  outerLoopMSDmodelX  ;
   csl::outer_loop::MsdModel  outerLoopMSDmodelY  ;
 
+  Eigen::MatrixXd outerLoopWk ;
+
   Eigen::VectorXd q;
   Eigen::VectorXd qd;
   Eigen::VectorXd qdd;

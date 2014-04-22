@@ -111,6 +111,7 @@ public:
   geometry_msgs::Pose robotCartPos_;
 
   double delT;
+  double outerLoopTime;
 
   // Desired cartesian pose
   double cartDesX     ;
