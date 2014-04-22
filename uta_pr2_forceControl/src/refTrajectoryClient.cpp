@@ -130,7 +130,7 @@ public:
 
       if( (ros::Time::now() - start_time).toSec() > 5 && !redFlag )
       {
-        ROS_ERROR_STREAM("# RED #\n");
+        ROS_ERROR_STREAM("# BLUE #\n");
         setCartPoseAction.request.msg.position.x = cartDesX ;
         setCartPoseAction.request.msg.position.y = cartDesY ;
         setCartPoseAction.request.msg.position.z = cartDesZ ;
@@ -140,7 +140,7 @@ public:
 
       if( (ros::Time::now() - start_time).toSec() > 10 && !greenFlag )
       {
-        ROS_ERROR_STREAM("# GREEN #\n");
+        ROS_ERROR_STREAM("# RED #\n");
         setCartPoseAction.request.msg.position.x = cartIniX ;
         setCartPoseAction.request.msg.position.y = cartIniY ;
         setCartPoseAction.request.msg.position.z = cartIniZ ;
