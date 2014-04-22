@@ -515,6 +515,9 @@ class RlsModel
 
   oel::ls::RLSFilter rls_filter;
 
+  // Switch RLS on/off
+  bool useFixedWeights ;
+
   void stackFirIn( Eigen::MatrixXd & u_in )
   {
     // TODO parameterize this
@@ -621,6 +624,9 @@ public:
 
     lm        = 0.98; // Forgetting factor
 
+    // Don't use fixed weights by default
+    useFixedWeights = false;
+
     // initial conditions
     ode_init_x[0 ] = 0.0;
     ode_init_x[1 ] = 0.0;
@@ -659,6 +665,12 @@ public:
   void setWeights( Eigen::MatrixXd & param_Wk )
   {
     Wk = param_Wk;
+  }
+
+  void setFixedWeights( Eigen::MatrixXd & param_Wk )
+  {
+	Wk = param_Wk;
+	useFixedWeights = true;
   }
 
   void updateFIR( double & param_qd_m           ,
@@ -792,10 +804,13 @@ public:
 
     //if( iter > num_Fir )
     {
-      rls_filter.Update( Wk, Uk, Dk, Pk );
+      if( !useFixedWeights )
+      {
+		  rls_filter.Update( Wk, Uk, Dk, Pk );
 
-      Wk = rls_filter.getEstimate();
-      Pk = rls_filter.getCovariance();
+		  Wk = rls_filter.getEstimate();
+		  Pk = rls_filter.getCovariance();
+      }
 
       q_m   = Uk.transpose()*Wk  ;
 

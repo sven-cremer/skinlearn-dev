@@ -298,6 +298,29 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_forceTorqueOn = "/forceTorqueOn";
   if (!n.getParam( para_forceTorqueOn , forceTorqueOn )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceTorqueOn.c_str()) ; return false; }
 
+  std::string para_filtW0 = "filtW0" ;
+  std::string para_filtW1 = "filtW1" ;
+  std::string para_filtW2 = "filtW2" ;
+  std::string para_filtW3 = "filtW3" ;
+  std::string para_filtW4 = "filtW4" ;
+  std::string para_filtW5 = "filtW5" ;
+  std::string para_filtW6 = "filtW6" ;
+  std::string para_filtW7 = "filtW7" ;
+
+  outerLoopWk.resize(1,8);
+
+  if (!n.getParam( para_filtW0 , outerLoopWk(0,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW0.c_str()) ; return false; }
+  if (!n.getParam( para_filtW1 , outerLoopWk(1,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW1.c_str()) ; return false; }
+  if (!n.getParam( para_filtW2 , outerLoopWk(2,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW2.c_str()) ; return false; }
+  if (!n.getParam( para_filtW3 , outerLoopWk(3,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW3.c_str()) ; return false; }
+  if (!n.getParam( para_filtW4 , outerLoopWk(4,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW4.c_str()) ; return false; }
+  if (!n.getParam( para_filtW5 , outerLoopWk(5,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW5.c_str()) ; return false; }
+  if (!n.getParam( para_filtW6 , outerLoopWk(6,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW6.c_str()) ; return false; }
+  if (!n.getParam( para_filtW7 , outerLoopWk(7,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW7.c_str()) ; return false; }
+
+  std::string para_fixedFilterWeights = "/fixedFilterWeights";
+  if (!n.getParam( para_fixedFilterWeights , para_fixedFilterWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
+
 
   delT = 0.001;
   outerLoopTime = 0.05;
@@ -777,8 +800,14 @@ void PR2CartneuroControllerClass::update()
 
     // OUTER Loop Update
 
-    if( ( outer_elapsed_ - robot_state_->getTime()).toSec() >= outerLoopTime )
+    if( ( robot_state_->getTime() - outer_elapsed_ ).toSec() >= outerLoopTime )
     {
+
+    	if( fixedFilterWeights )
+    	{
+    		outerLoopRLSmodelY.setFixedWeights( outerLoopWk );
+    	}
+
 		// RLS ARMA
 		if( useARMAmodel )
 		{
@@ -872,7 +901,7 @@ void PR2CartneuroControllerClass::update()
 	//      ROS_ERROR_STREAM("USING MSD");
 		}
 
-//		outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
+		outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
 //		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
 
 		outer_elapsed_ = robot_state_->getTime() ;
@@ -1290,6 +1319,15 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           // 1st degree ref model
           msgControllerFullData[index].task_mA           = task_mA                     ;
           msgControllerFullData[index].task_mB           = task_mB                     ;
+
+          msgControllerFullData[index].w0                = outerLoopWk(0,0)            ;
+          msgControllerFullData[index].w1                = outerLoopWk(1,0)            ;
+          msgControllerFullData[index].w2                = outerLoopWk(2,0)            ;
+          msgControllerFullData[index].w3                = outerLoopWk(3,0)            ;
+          msgControllerFullData[index].w4                = outerLoopWk(4,0)            ;
+          msgControllerFullData[index].w5                = outerLoopWk(5,0)            ;
+          msgControllerFullData[index].w6                = outerLoopWk(6,0)            ;
+          msgControllerFullData[index].w7                = outerLoopWk(7,0)            ;
 
           // Increment for the next cycle.
           storage_index_ = index+1;
