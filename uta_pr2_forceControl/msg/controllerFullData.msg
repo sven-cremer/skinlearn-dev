@@ -220,5 +220,16 @@ float64 m
 float64 d
 float64 k
 
+# Task Ref Params
 float64 task_mA
 float64 task_mB
+
+# Filter Weights
+float64 w0
+float64 w1
+float64 w2
+float64 w3
+float64 w4
+float64 w5
+float64 w6
+float64 w7
