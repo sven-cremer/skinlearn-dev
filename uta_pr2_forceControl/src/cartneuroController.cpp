@@ -307,16 +307,33 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_filtW6 = "filtW6" ;
   std::string para_filtW7 = "filtW7" ;
 
-  outerLoopWk.resize(1,8);
+  double filtW0 = 0.0 ;
+  double filtW1 = 0.0 ;
+  double filtW2 = 0.0 ;
+  double filtW3 = 0.0 ;
+  double filtW4 = 0.0 ;
+  double filtW5 = 0.0 ;
+  double filtW6 = 0.0 ;
+  double filtW7 = 0.0 ;
 
-  if (!n.getParam( para_filtW0 , outerLoopWk(0,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW0.c_str()) ; return false; }
-  if (!n.getParam( para_filtW1 , outerLoopWk(1,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW1.c_str()) ; return false; }
-  if (!n.getParam( para_filtW2 , outerLoopWk(2,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW2.c_str()) ; return false; }
-  if (!n.getParam( para_filtW3 , outerLoopWk(3,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW3.c_str()) ; return false; }
-  if (!n.getParam( para_filtW4 , outerLoopWk(4,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW4.c_str()) ; return false; }
-  if (!n.getParam( para_filtW5 , outerLoopWk(5,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW5.c_str()) ; return false; }
-  if (!n.getParam( para_filtW6 , outerLoopWk(6,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW6.c_str()) ; return false; }
-  if (!n.getParam( para_filtW7 , outerLoopWk(7,0) )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW7.c_str()) ; return false; }
+  if (!n.getParam( para_filtW0 , filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW0.c_str()) ; return false; }
+  if (!n.getParam( para_filtW1 , filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW1.c_str()) ; return false; }
+  if (!n.getParam( para_filtW2 , filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW2.c_str()) ; return false; }
+  if (!n.getParam( para_filtW3 , filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW3.c_str()) ; return false; }
+  if (!n.getParam( para_filtW4 , filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW4.c_str()) ; return false; }
+  if (!n.getParam( para_filtW5 , filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW5.c_str()) ; return false; }
+  if (!n.getParam( para_filtW6 , filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW6.c_str()) ; return false; }
+  if (!n.getParam( para_filtW7 , filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW7.c_str()) ; return false; }
+
+  outerLoopWk.resize(8,1);
+  outerLoopWk(0,0) = filtW0 ;
+  outerLoopWk(1,0) = filtW1 ;
+  outerLoopWk(2,0) = filtW2 ;
+  outerLoopWk(3,0) = filtW3 ;
+  outerLoopWk(4,0) = filtW4 ;
+  outerLoopWk(5,0) = filtW5 ;
+  outerLoopWk(6,0) = filtW6 ;
+  outerLoopWk(7,0) = filtW7 ;
 
   std::string para_fixedFilterWeights = "/fixedFilterWeights";
   if (!n.getParam( para_fixedFilterWeights , fixedFilterWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
