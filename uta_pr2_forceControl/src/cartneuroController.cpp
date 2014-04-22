@@ -298,14 +298,14 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_forceTorqueOn = "/forceTorqueOn";
   if (!n.getParam( para_forceTorqueOn , forceTorqueOn )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceTorqueOn.c_str()) ; return false; }
 
-  std::string para_filtW0 = "filtW0" ;
-  std::string para_filtW1 = "filtW1" ;
-  std::string para_filtW2 = "filtW2" ;
-  std::string para_filtW3 = "filtW3" ;
-  std::string para_filtW4 = "filtW4" ;
-  std::string para_filtW5 = "filtW5" ;
-  std::string para_filtW6 = "filtW6" ;
-  std::string para_filtW7 = "filtW7" ;
+  std::string para_filtW0 = "/filtW0" ;
+  std::string para_filtW1 = "/filtW1" ;
+  std::string para_filtW2 = "/filtW2" ;
+  std::string para_filtW3 = "/filtW3" ;
+  std::string para_filtW4 = "/filtW4" ;
+  std::string para_filtW5 = "/filtW5" ;
+  std::string para_filtW6 = "/filtW6" ;
+  std::string para_filtW7 = "/filtW7" ;
 
   double filtW0 = 0.0 ;
   double filtW1 = 0.0 ;
