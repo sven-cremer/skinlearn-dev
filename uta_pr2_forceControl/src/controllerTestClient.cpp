@@ -113,9 +113,9 @@ public:
 	 pose.pose.position.x =  r_cartIniX ;
 	 pose.pose.position.y =  r_cartIniY ;
 	 pose.pose.position.z =  r_cartIniZ ;
-	 pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw( l_cartIniRoll ,
-                                                                      l_cartIniPitch,
-                                                                      l_cartIniYaw    );
+	 pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw( r_cartIniRoll ,
+                                                                      r_cartIniPitch,
+                                                                      r_cartIniYaw    );
 	 m_rCartPub.publish( pose );
  }
 
