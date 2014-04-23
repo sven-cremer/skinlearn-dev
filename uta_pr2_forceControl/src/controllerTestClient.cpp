@@ -26,6 +26,20 @@ class controllerTestClient
 
   int choice;
 
+  double r_cartIniX     ;
+  double r_cartIniY     ;
+  double r_cartIniZ     ;
+  double r_cartIniRoll  ;
+  double r_cartIniPitch ;
+  double r_cartIniYaw   ;
+
+  double l_cartIniX     ;
+  double l_cartIniY     ;
+  double l_cartIniZ     ;
+  double l_cartIniRoll  ;
+  double l_cartIniPitch ;
+  double l_cartIniYaw   ;
+
 /*
  * pr2_controller_manager/load_controller (pr2_mechanism_msgs/LoadController)
   pr2_controller_manager/unload_controller (pr2_mechanism_msgs/UnloadController)
@@ -44,6 +58,51 @@ public:
 
 	  m_rCartPub = node.advertise<geometry_msgs::PoseStamped>( "/r_cart/command_pose", 10 );
 	  m_lCartPub = node.advertise<geometry_msgs::PoseStamped>( "/l_cart/command_pose", 10 );
+
+	  // Initial cartesian pose
+	  r_cartIniX     = 0.7 ;
+	  r_cartIniY     =-0.3 ;
+	  r_cartIniZ     = 0.1 ;
+	  r_cartIniRoll  = 0.0 ;
+	  r_cartIniPitch = 0.0 ;
+	  r_cartIniYaw   = 0.0 ;
+
+	  l_cartIniX     = 0.7 ;
+	  l_cartIniY     = 0.3 ;
+	  l_cartIniZ     = 0.0 ;
+	  l_cartIniRoll  = 0.0 ;
+	  l_cartIniPitch = 0.0 ;
+	  l_cartIniYaw   = 0.0 ;
+
+	  std::string para_cartIniX     = "/cartIniX";
+	  std::string para_cartIniY     = "/cartIniY";
+	  std::string para_cartIniZ     = "/cartIniZ";
+	  std::string para_cartIniRoll  = "/cartIniRoll";
+	  std::string para_cartIniPitch = "/cartIniPitch";
+	  std::string para_cartIniYaw   = "/cartIniYaw";
+
+	  if (!node.getParam( para_cartIniX     , r_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniY     , r_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniZ     , r_cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniRoll  , r_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniPitch , r_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniYaw   , r_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; return false; }
+
+	  std::string para_cartIniX     = "/leftcartIniX";
+	  std::string para_cartIniY     = "/leftcartIniY";
+	  std::string para_cartIniZ     = "/leftcartIniZ";
+	  std::string para_cartIniRoll  = "/leftcartIniRoll";
+	  std::string para_cartIniPitch = "/leftcartIniPitch";
+	  std::string para_cartIniYaw   = "/leftcartIniYaw";
+
+	  if (!node.getParam( para_cartIniX     , l_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniY     , l_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniZ     , l_cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniRoll  , l_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniPitch , l_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniYaw   , l_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; return false; }
+
+
   }
 
   ~controllerTestClient() { }
@@ -52,11 +111,12 @@ public:
  {
 	 geometry_msgs::PoseStamped pose;
 	 pose.header.frame_id = "torso_lift_link";
-	 pose.pose.position.x =  0.7 ;
-	 pose.pose.position.y =  0.0 ;
-	 pose.pose.position.z =  0.1 ;
-	 pose.pose.orientation = tf::createQuaternionMsgFromYaw( 1.57079633 );
-
+	 pose.pose.position.x =  r_cartIniX ;
+	 pose.pose.position.y =  r_cartIniY ;
+	 pose.pose.position.z =  r_cartIniZ ;
+	 pose.pose.orientation = tf::createQuaternionFromRPY( r_cartIniRoll ,
+			                                              r_cartIniPitch,
+			                                              r_cartIniYaw    );
 	 m_rCartPub.publish( pose );
  }
 
@@ -64,11 +124,12 @@ public:
  {
 	 geometry_msgs::PoseStamped pose;
 	 pose.header.frame_id = "torso_lift_link";
-	 pose.pose.position.x =  0.7 ;
-	 pose.pose.position.y =  0.5 ;
-	 pose.pose.position.z = -0.1 ;
-	 pose.pose.orientation = tf::createQuaternionMsgFromYaw( 1.57079633 );
-
+	 pose.pose.position.x =  l_cartIniX ;
+ 	 pose.pose.position.y =  l_cartIniY ;
+ 	 pose.pose.position.z =  l_cartIniZ ;
+ 	 pose.pose.orientation = tf::createQuaternionFromRPY( l_cartIniRoll ,
+ 			                                              l_cartIniPitch,
+	 		                                              l_cartIniYaw    );
 	 m_lCartPub.publish( pose );
  }
 
