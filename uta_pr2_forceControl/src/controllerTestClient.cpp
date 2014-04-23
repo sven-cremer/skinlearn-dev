@@ -61,7 +61,7 @@ public:
 	  choice = 0;
 
 	  m_switchControllerClient = node.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
-	  m_loadControllerClient   = node.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/load_controller");
+	  m_loadControllerClient   = node.serviceClient<pr2_mechanism_msgs::LoadController  >("pr2_controller_manager/load_controller");
 
 	  m_rCartPub = node.advertise<geometry_msgs::PoseStamped>( "/r_cart/command_pose", 10 );
 	  m_lCartPub = node.advertise<geometry_msgs::PoseStamped>( "/l_cart/command_pose", 10 );
