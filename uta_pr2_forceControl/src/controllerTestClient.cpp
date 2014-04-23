@@ -106,9 +106,10 @@ void switchLArmCartesianPoseController()
     // Load the cart neuro controller
     pr2_mechanism_msgs::LoadController loadControllerCall;
     loadControllerCall.request.name = "PR2CartneuroControllerClass";
-    m_loadControllerClient.call(loadControllerCall);
+    // m_loadControllerClient.call(loadControllerCall);
 
-    while( ros::ok() )
+    bool loopOn = true;
+    while( ros::ok() && loopOn )
     {
 
     	ROS_INFO_STREAM("Select your preference: ");
@@ -116,6 +117,7 @@ void switchLArmCartesianPoseController()
     	ROS_INFO_STREAM("2 - Align left arm");
     	ROS_INFO_STREAM("3 - Switch to cartneuroController");
     	ROS_INFO_STREAM("4 - Switch to r_arm_controller");
+    	ROS_INFO_STREAM("5 - Quit");
 
     	std::cin >> choice ;
 
@@ -133,7 +135,9 @@ void switchLArmCartesianPoseController()
     	    case 4 :
     	    		   switchToArmController();
 					   break;
-
+    	    case 5 :
+					   loopOn = false;
+					   break;
     	    default :
     	    		   continue;
     	}
