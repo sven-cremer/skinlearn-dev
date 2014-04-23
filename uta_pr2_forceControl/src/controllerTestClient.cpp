@@ -24,7 +24,7 @@ class controllerTestClient
   ros::Publisher m_rCartPub;
   ros::Publisher m_lCartPub;
 
-  int choice;
+  char choice;
 
   double r_cartIniX     ;
   double r_cartIniY     ;
@@ -32,6 +32,13 @@ class controllerTestClient
   double r_cartIniRoll  ;
   double r_cartIniPitch ;
   double r_cartIniYaw   ;
+
+  double r_cartDesX     ;
+  double r_cartDesY     ;
+  double r_cartDesZ     ;
+  double r_cartDesRoll  ;
+  double r_cartDesPitch ;
+  double r_cartDesYaw   ;
 
   double l_cartIniX     ;
   double l_cartIniY     ;
@@ -67,6 +74,13 @@ public:
 	  r_cartIniPitch = 0.0 ;
 	  r_cartIniYaw   = 0.0 ;
 
+	  r_cartDesX     = 0.7 ;
+	  r_cartDesY     =-0.3 ;
+	  r_cartDesZ     = 0.1 ;
+	  r_cartDesRoll  = 0.0 ;
+	  r_cartDesPitch = 0.0 ;
+	  r_cartDesYaw   = 0.0 ;
+
 	  l_cartIniX     = 0.7 ;
 	  l_cartIniY     = 0.3 ;
 	  l_cartIniZ     = 0.0 ;
@@ -87,6 +101,20 @@ public:
 	  if (!node.getParam( para_cartIniRoll  , r_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; }
 	  if (!node.getParam( para_cartIniPitch , r_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; }
 	  if (!node.getParam( para_cartIniYaw   , r_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; }
+
+	  std::string para_cartDesX     = "/cartDesX";
+	  std::string para_cartDesY     = "/cartDesY";
+	  std::string para_cartDesZ     = "/cartDesZ";
+	  std::string para_cartDesRoll  = "/cartDesRoll";
+	  std::string para_cartDesPitch = "/cartDesPitch";
+	  std::string para_cartDesYaw   = "/cartDesYaw";
+
+	  if (!node.getParam( para_cartDesX     , r_cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX.c_str())     ; }
+	  if (!node.getParam( para_cartDesY     , r_cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY.c_str())     ; }
+	  if (!node.getParam( para_cartDesZ     , r_cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ.c_str())     ; }
+	  if (!node.getParam( para_cartDesRoll  , r_cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; }
+	  if (!node.getParam( para_cartDesPitch , r_cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; }
+	  if (!node.getParam( para_cartDesYaw   , r_cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; }
 
 	  std::string para_leftcartIniX     = "/lCartIniX";
 	  std::string para_leftcartIniY     = "/lCartIniY";
@@ -130,6 +158,32 @@ public:
  			                                                          l_cartIniPitch,
 	 		                                                          l_cartIniYaw    );
 	 m_lCartPub.publish( pose );
+ }
+
+ void p1()
+ {
+	 geometry_msgs::PoseStamped pose;
+	 pose.header.frame_id = "torso_lift_link";
+	 pose.pose.position.x =  r_cartIniX ;
+	 pose.pose.position.y =  r_cartIniY ;
+	 pose.pose.position.z =  r_cartIniZ ;
+	 pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw( r_cartIniRoll ,
+                                                                      r_cartIniPitch,
+                                                                      r_cartIniYaw    );
+	 m_rCartPub.publish( pose );
+ }
+
+ void p2()
+ {
+	 geometry_msgs::PoseStamped pose;
+	 pose.header.frame_id = "torso_lift_link";
+	 pose.pose.position.x =  r_cartDesX ;
+ 	 pose.pose.position.y =  r_cartDesY ;
+ 	 pose.pose.position.z =  r_cartDesZ ;
+ 	 pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw( r_cartDesRoll ,
+ 			                                                          r_cartDesPitch,
+	 		                                                          r_cartDesYaw    );
+	 m_rCartPub.publish( pose );
  }
 
 void switchToCartneuroController()
@@ -177,7 +231,9 @@ void switchLArmCartesianPoseController()
     	ROS_INFO_STREAM("2 - Align left arm");
     	ROS_INFO_STREAM("3 - Switch to cartneuroController");
     	ROS_INFO_STREAM("4 - Switch to r_arm_controller");
-    	ROS_INFO_STREAM("5 - Quit");
+    	ROS_INFO_STREAM("5 - P1 (red)");
+    	ROS_INFO_STREAM("6 - P2 (blue)");
+    	ROS_INFO_STREAM("q - Quit");
 
     	std::cin >> choice ;
 
@@ -196,6 +252,12 @@ void switchLArmCartesianPoseController()
     	    		   switchToArmController();
 					   break;
     	    case 5 :
+    	    		   p1();
+					   break;
+    	    case 6 :
+    	    		   p2();
+					   break;
+    	    case 'q' :
 					   loopOn = false;
 					   break;
     	    default :
