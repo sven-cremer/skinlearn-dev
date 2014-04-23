@@ -48,12 +48,12 @@ cartDesPitch :  0.0
 cartDesYaw   :  0.0
 
 # only yaw uses in orientation
-leftcartIniX     :  0.7
-leftcartIniY     :  0.3
-leftcartIniZ     :  0.1
-leftcartIniRoll  :  0.0
-leftcartIniPitch :  0.0
-leftcartIniYaw   : -1.57079633
+lCartIniX     :  0.7
+lCartIniY     :  0.3
+lCartIniZ     :  0.1
+lCartIniRoll  :  0.0
+lCartIniPitch :  0.0
+lCartIniYaw   : -1.57079633
 
 circleRate          : 3
 circleLlim          : 0.5

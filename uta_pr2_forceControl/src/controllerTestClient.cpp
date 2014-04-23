@@ -88,12 +88,12 @@ public:
 	  if (!node.getParam( para_cartIniPitch , r_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; }
 	  if (!node.getParam( para_cartIniYaw   , r_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; }
 
-	  std::string para_leftcartIniX     = "/leftcartIniX";
-	  std::string para_leftcartIniY     = "/leftcartIniY";
-	  std::string para_leftcartIniZ     = "/leftcartIniZ";
-	  std::string para_leftcartIniRoll  = "/leftcartIniRoll";
-	  std::string para_leftcartIniPitch = "/leftcartIniPitch";
-	  std::string para_leftcartIniYaw   = "/leftcartIniYaw";
+	  std::string para_leftcartIniX     = "/lCartIniX";
+	  std::string para_leftcartIniY     = "/lCartIniY";
+	  std::string para_leftcartIniZ     = "/lCartIniZ";
+	  std::string para_leftcartIniRoll  = "/lCartIniRoll";
+	  std::string para_leftcartIniPitch = "/lCartIniPitch";
+	  std::string para_leftcartIniYaw   = "/lCartIniYaw";
 
 	  if (!node.getParam( para_leftcartIniX     , l_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniX.c_str())     ; }
 	  if (!node.getParam( para_leftcartIniY     , l_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniY.c_str())     ; }
@@ -113,10 +113,9 @@ public:
 	 pose.pose.position.x =  r_cartIniX ;
 	 pose.pose.position.y =  r_cartIniY ;
 	 pose.pose.position.z =  r_cartIniZ ;
-	 pose.pose.orientation = tf::createQuaternionMsgFromYaw(r_cartIniYaw);
-//	 tf::createQuaternionFromRPY( r_cartIniRoll ,
-//			                      r_cartIniPitch,
-//			                      r_cartIniYaw    );
+	 pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw( l_cartIniRoll ,
+                                                                      l_cartIniPitch,
+                                                                      l_cartIniYaw    );
 	 m_rCartPub.publish( pose );
  }
 
@@ -127,10 +126,9 @@ public:
 	 pose.pose.position.x =  l_cartIniX ;
  	 pose.pose.position.y =  l_cartIniY ;
  	 pose.pose.position.z =  l_cartIniZ ;
- 	 pose.pose.orientation = tf::createQuaternionMsgFromYaw(l_cartIniYaw);
-// 	 pose.pose.orientation = tf::createQuaternionFromRPY( l_cartIniRoll ,
-// 			                                              l_cartIniPitch,
-//	 		                                              l_cartIniYaw    );
+ 	 pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw( l_cartIniRoll ,
+ 			                                                          l_cartIniPitch,
+	 		                                                          l_cartIniYaw    );
 	 m_lCartPub.publish( pose );
  }
 
