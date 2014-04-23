@@ -191,7 +191,7 @@ void switchToCartneuroController()
 	pr2_mechanism_msgs::SwitchController m_cartneuroControllerStart;
 	m_cartneuroControllerStart.request.strictness  = m_cartneuroControllerStart.request.BEST_EFFORT;
 	m_cartneuroControllerStart.request.start_controllers.push_back("pr2_cartneuroController");
-	m_cartneuroControllerStart.request.stop_controllers.push_back("r_arm_controller");
+	m_cartneuroControllerStart.request.stop_controllers.push_back("r_cart");
 	m_switchControllerClient.call(m_cartneuroControllerStart);
 }
 
@@ -199,7 +199,7 @@ void switchToArmController()
 {
 	pr2_mechanism_msgs::SwitchController m_armControllerStart;
 	m_armControllerStart.request.strictness  = m_armControllerStart.request.BEST_EFFORT;
-	m_armControllerStart.request.start_controllers.push_back("r_arm_controller");
+	m_armControllerStart.request.start_controllers.push_back("r_cart");
 	m_armControllerStart.request.stop_controllers.push_back("pr2_cartneuroController");
 	m_switchControllerClient.call(m_armControllerStart);
 }
