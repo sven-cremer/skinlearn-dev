@@ -47,7 +47,6 @@ cartDesRoll  :  0.0
 cartDesPitch :  0.0
 cartDesYaw   :  0.0
 
-# only yaw uses in orientation
 lCartIniX     :  0.8
 lCartIniY     :  0.01
 lCartIniZ     :  0.0
