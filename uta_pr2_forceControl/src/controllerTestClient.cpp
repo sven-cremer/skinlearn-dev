@@ -72,7 +72,7 @@ public:
 	  l_cartIniZ     = 0.0 ;
 	  l_cartIniRoll  = 0.0 ;
 	  l_cartIniPitch = 0.0 ;
-	  l_cartIniYaw   = 0.0 ;
+	  l_cartIniYaw   = -1.57079633 ;
 
 	  std::string para_cartIniX     = "/cartIniX";
 	  std::string para_cartIniY     = "/cartIniY";
