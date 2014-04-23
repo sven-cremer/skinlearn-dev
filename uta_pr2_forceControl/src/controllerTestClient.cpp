@@ -81,27 +81,26 @@ public:
 	  std::string para_cartIniPitch = "/cartIniPitch";
 	  std::string para_cartIniYaw   = "/cartIniYaw";
 
-	  if (!node.getParam( para_cartIniX     , r_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
-	  if (!node.getParam( para_cartIniY     , r_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
-	  if (!node.getParam( para_cartIniZ     , r_cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
-	  if (!node.getParam( para_cartIniRoll  , r_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; return false; }
-	  if (!node.getParam( para_cartIniPitch , r_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; return false; }
-	  if (!node.getParam( para_cartIniYaw   , r_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; return false; }
+	  if (!node.getParam( para_cartIniX     , r_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str())     ; }
+	  if (!node.getParam( para_cartIniY     , r_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str())     ; }
+	  if (!node.getParam( para_cartIniZ     , r_cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str())     ; }
+	  if (!node.getParam( para_cartIniRoll  , r_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; }
+	  if (!node.getParam( para_cartIniPitch , r_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; }
+	  if (!node.getParam( para_cartIniYaw   , r_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; }
 
-	  std::string para_cartIniX     = "/leftcartIniX";
-	  std::string para_cartIniY     = "/leftcartIniY";
-	  std::string para_cartIniZ     = "/leftcartIniZ";
-	  std::string para_cartIniRoll  = "/leftcartIniRoll";
-	  std::string para_cartIniPitch = "/leftcartIniPitch";
-	  std::string para_cartIniYaw   = "/leftcartIniYaw";
+	  std::string para_leftcartIniX     = "/leftcartIniX";
+	  std::string para_leftcartIniY     = "/leftcartIniY";
+	  std::string para_leftcartIniZ     = "/leftcartIniZ";
+	  std::string para_leftcartIniRoll  = "/leftcartIniRoll";
+	  std::string para_leftcartIniPitch = "/leftcartIniPitch";
+	  std::string para_leftcartIniYaw   = "/leftcartIniYaw";
 
-	  if (!node.getParam( para_cartIniX     , l_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
-	  if (!node.getParam( para_cartIniY     , l_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
-	  if (!node.getParam( para_cartIniZ     , l_cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
-	  if (!node.getParam( para_cartIniRoll  , l_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; return false; }
-	  if (!node.getParam( para_cartIniPitch , l_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; return false; }
-	  if (!node.getParam( para_cartIniYaw   , l_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; return false; }
-
+	  if (!node.getParam( para_leftcartIniX     , l_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniX.c_str())     ; }
+	  if (!node.getParam( para_leftcartIniY     , l_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniY.c_str())     ; }
+	  if (!node.getParam( para_leftcartIniZ     , l_cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniZ.c_str())     ; }
+	  if (!node.getParam( para_leftcartIniRoll  , l_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniRoll .c_str()) ; }
+	  if (!node.getParam( para_leftcartIniPitch , l_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniPitch.c_str()) ; }
+	  if (!node.getParam( para_leftcartIniYaw   , l_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniYaw  .c_str()) ; }
 
   }
 
@@ -114,9 +113,10 @@ public:
 	 pose.pose.position.x =  r_cartIniX ;
 	 pose.pose.position.y =  r_cartIniY ;
 	 pose.pose.position.z =  r_cartIniZ ;
-	 pose.pose.orientation = tf::createQuaternionFromRPY( r_cartIniRoll ,
-			                                              r_cartIniPitch,
-			                                              r_cartIniYaw    );
+	 pose.pose.orientation = tf::createQuaternionMsgFromYaw(r_cartIniYaw);
+//	 tf::createQuaternionFromRPY( r_cartIniRoll ,
+//			                      r_cartIniPitch,
+//			                      r_cartIniYaw    );
 	 m_rCartPub.publish( pose );
  }
 
@@ -127,9 +127,10 @@ public:
 	 pose.pose.position.x =  l_cartIniX ;
  	 pose.pose.position.y =  l_cartIniY ;
  	 pose.pose.position.z =  l_cartIniZ ;
- 	 pose.pose.orientation = tf::createQuaternionFromRPY( l_cartIniRoll ,
- 			                                              l_cartIniPitch,
-	 		                                              l_cartIniYaw    );
+ 	 pose.pose.orientation = tf::createQuaternionMsgFromYaw(l_cartIniYaw);
+// 	 pose.pose.orientation = tf::createQuaternionFromRPY( l_cartIniRoll ,
+// 			                                              l_cartIniPitch,
+//	 		                                              l_cartIniYaw    );
 	 m_lCartPub.publish( pose );
  }
 
