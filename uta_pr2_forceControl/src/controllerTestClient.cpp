@@ -219,8 +219,8 @@ void switchLArmCartesianPoseController()
 
     // Load the cart neuro controller
     pr2_mechanism_msgs::LoadController loadControllerCall;
-    loadControllerCall.request.name = "PR2CartneuroControllerClass";
-    // m_loadControllerClient.call(loadControllerCall);
+    loadControllerCall.request.name = "pr2_cartneuroController";
+    m_loadControllerClient.call(loadControllerCall);
 
     bool loopOn = true;
     while( ros::ok() && loopOn )
