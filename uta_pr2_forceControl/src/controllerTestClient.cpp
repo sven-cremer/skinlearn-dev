@@ -239,22 +239,22 @@ void switchLArmCartesianPoseController()
 
     	switch( choice )
     	{
-    	    case 1 :
+    	    case '1' :
     	    		   alignRightArm();
 					   break;
-    	    case 2 :
+    	    case '2' :
     	    		   alignLeftArm();
 					   break;
-    	    case 3 :
+    	    case '3' :
     	    		   switchToCartneuroController();
 					   break;
-    	    case 4 :
+    	    case '4' :
     	    		   switchToArmController();
 					   break;
-    	    case 5 :
+    	    case '5' :
     	    		   p1();
 					   break;
-    	    case 6 :
+    	    case '6' :
     	    		   p2();
 					   break;
     	    case 'q' :
