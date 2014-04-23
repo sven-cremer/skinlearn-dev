@@ -1,0 +1,8 @@
+<launch>
+
+   <rosparam file="$(find uta_pr2_forceControl)/pr2_controller.yaml"
+             command="load" />
+
+   <node pkg="uta_pr2_forceControl" type="controllerTestClient" name="controllerTestClient" />
+
+</launch>

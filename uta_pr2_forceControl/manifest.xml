@@ -16,8 +16,11 @@
   <depend package="kdl" />
   <depend package="std_srvs"/>
   <depend package="pr2_msgs"/>
-  <!--depend package="rbdl"/-->
+  <depend package="pr2_mechanism_msgs"/>
+  <depend package="tf"/>
   
+  <!--depend package="rbdl"/-->
+
   <rosdep name="eigen" />
 
   <export>
