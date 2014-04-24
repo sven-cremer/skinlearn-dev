@@ -553,8 +553,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   pubRobotStates_        = n.advertise< sensor_msgs::JointState                  >( "robot_joint_states"   , StoreLen);
   pubModelCartPos_       = n.advertise< geometry_msgs::PoseStamped               >( "model_cart_pos"       , StoreLen);
   pubRobotCartPos_       = n.advertise< geometry_msgs::PoseStamped               >( "robot_cart_pos"       , StoreLen);
-  pubControllerParam_    = n.advertise< uta_pr2_forceControl::controllerParam    >( "controller_params"    , StoreLen);
-  pubControllerFullData_ = n.advertise< uta_pr2_forceControl::controllerFullData >( "controllerFullData"   , StoreLen);
+  pubControllerParam_    = n.advertise< neuroadaptive_msgs::controllerParam    >( "controller_params"    , StoreLen);
+  pubControllerFullData_ = n.advertise< neuroadaptive_msgs::controllerFullData >( "controllerFullData"   , StoreLen);
 
   storage_index_ = StoreLen;
 
@@ -1355,8 +1355,8 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
 }
 
 /// Service call to set reference trajectory
-bool PR2CartneuroControllerClass::setRefTraj( uta_pr2_forceControl::setCartPose::Request  & req ,
-                                              uta_pr2_forceControl::setCartPose::Response & resp )
+bool PR2CartneuroControllerClass::setRefTraj( neuroadaptive_msgs::setCartPose::Request  & req ,
+                                              neuroadaptive_msgs::setCartPose::Response & resp )
 {
   task_ref(0) = req.msg.position.x ;
   task_ref(1) = req.msg.position.y ;
@@ -1368,8 +1368,8 @@ bool PR2CartneuroControllerClass::setRefTraj( uta_pr2_forceControl::setCartPose:
 }
 
 /// Service call to capture and extract the data
-bool PR2CartneuroControllerClass::paramUpdate( uta_pr2_forceControl::controllerParamUpdate::Request  & req ,
-                                               uta_pr2_forceControl::controllerParamUpdate::Response & resp )
+bool PR2CartneuroControllerClass::paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
+                                               neuroadaptive_msgs::controllerParamUpdate::Response & resp )
 {
 
   num_Inputs  = req.msg.inParams                 ;
@@ -1573,8 +1573,8 @@ bool PR2CartneuroControllerClass::capture( std_srvs::Empty::Request & req,
 }
 
 /// Service call to set reference trajectory
-bool PR2CartneuroControllerClass::toggleFixedWeights( uta_pr2_forceControl::fixedWeightToggle::Request & req,
-		                                              uta_pr2_forceControl::fixedWeightToggle::Response& resp )
+bool PR2CartneuroControllerClass::toggleFixedWeights( neuroadaptive_msgs::fixedWeightToggle::Request & req,
+		                                              neuroadaptive_msgs::fixedWeightToggle::Response& resp )
 {
   // XOR to toggle
   fixedFilterWeights =  ( fixedFilterWeights || true ) && !( fixedFilterWeights && true );

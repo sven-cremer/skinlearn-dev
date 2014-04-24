@@ -216,8 +216,8 @@ bool PR2CartesianControllerClass::init(pr2_mechanism_model::RobotState *robot,
   pubRobotStates_        = n.advertise< sensor_msgs::JointState                  >( "robot_joint_states"   , StoreLen);
   pubModelCartPos_       = n.advertise< geometry_msgs::PoseStamped               >( "model_cart_pos"       , StoreLen);
   pubRobotCartPos_       = n.advertise< geometry_msgs::PoseStamped               >( "robot_cart_pos"       , StoreLen);
-  pubControllerParam_    = n.advertise< uta_pr2_forceControl::controllerParam    >( "controller_params"    , StoreLen);
-  pubControllerFullData_ = n.advertise< uta_pr2_forceControl::controllerFullData >( "controllerFullData"   , StoreLen);
+  pubControllerParam_    = n.advertise< neuroadaptive_msgs::controllerParam    >( "controller_params"    , StoreLen);
+  pubControllerFullData_ = n.advertise< neuroadaptive_msgs::controllerFullData >( "controllerFullData"   , StoreLen);
 
   storage_index_ = StoreLen;
 

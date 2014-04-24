@@ -13,7 +13,7 @@
 #include "objTest.h"
 #include "csl/neural_network.hpp"
 #include "csl/outer_loop.h"
-#include <uta_pr2_forceControl/fixedWeightToggle.h>
+#include <neuroadaptive_msgs/fixedWeightToggle.h>
 
 typedef boost::array<double, 4> human_state_type;
 
@@ -112,11 +112,11 @@ private:
   Eigen::MatrixXd eigen_temp_joint;
   KDL::JntArray kdl_temp_joint_;
 
-  bool setRefTraj( uta_pr2_forceControl::setCartPose::Request  & req ,
-                   uta_pr2_forceControl::setCartPose::Response & resp );
+  bool setRefTraj( neuroadaptive_msgs::setCartPose::Request  & req ,
+                   neuroadaptive_msgs::setCartPose::Response & resp );
 
-  bool paramUpdate( uta_pr2_forceControl::controllerParamUpdate::Request  & req ,
-                    uta_pr2_forceControl::controllerParamUpdate::Response & resp );
+  bool paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
+                    neuroadaptive_msgs::controllerParamUpdate::Response & resp );
 
   bool save( std_srvs::Empty::Request & req,
              std_srvs::Empty::Response& resp );
@@ -127,8 +127,8 @@ private:
   bool capture( std_srvs::Empty::Request& req,
                 std_srvs::Empty::Response& resp );
 
-  bool toggleFixedWeights( uta_pr2_forceControl::fixedWeightToggle::Request & req,
-		                   uta_pr2_forceControl::fixedWeightToggle::Response& resp );
+  bool toggleFixedWeights( neuroadaptive_msgs::fixedWeightToggle::Request & req,
+		                   neuroadaptive_msgs::fixedWeightToggle::Response& resp );
 
   ros::ServiceServer save_srv_;
   ros::ServiceServer publish_srv_;

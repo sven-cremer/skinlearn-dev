@@ -12,7 +12,7 @@
 #include <tf/tf.h>
 #include <iostream>
 #include <std_srvs/Empty.h>
-#include <uta_pr2_forceControl/fixedWeightToggle.h>
+#include <neuroadaptive_msgs/fixedWeightToggle.h>
 
 using namespace std;
 
@@ -67,7 +67,7 @@ public:
 
 	  m_switchControllerClient   = node.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
 	  m_loadControllerClient     = node.serviceClient<pr2_mechanism_msgs::LoadController  >("pr2_controller_manager/load_controller");
-	  m_toggleFixedWeightsClient = node.serviceClient<uta_pr2_forceControl::fixedWeightToggle>("pr2_cartneuroController/toggleFixedWeights");
+	  m_toggleFixedWeightsClient = node.serviceClient<neuroadaptive_msgs::fixedWeightToggle>("pr2_cartneuroController/toggleFixedWeights");
 	  
 	  m_rCartPub = node.advertise<geometry_msgs::PoseStamped>( "/r_cart/command_pose", 10 );
 	  m_lCartPub = node.advertise<geometry_msgs::PoseStamped>( "/l_cart/command_pose", 10 );
@@ -221,7 +221,7 @@ void switchLArmCartesianPoseController()
 
 void toggleFixedWeights()
 {
-	uta_pr2_forceControl::fixedWeightToggle toggleSrv;
+	neuroadaptive_msgs::fixedWeightToggle toggleSrv;
     m_toggleFixedWeightsClient.call(toggleSrv);
     useFixedWeights = toggleSrv.response.useFixedWeights;
 }

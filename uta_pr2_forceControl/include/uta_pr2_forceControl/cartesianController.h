@@ -16,11 +16,11 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "sensor_msgs/JointState.h"
 
-#include <uta_pr2_forceControl/controllerParam.h>
-#include <uta_pr2_forceControl/controllerFullData.h>
-#include <uta_pr2_forceControl/controllerParamUpdate.h>
-#include <uta_pr2_forceControl/saveControllerData.h>
-#include <uta_pr2_forceControl/setCartPose.h>
+#include <neuroadaptive_msgs/controllerParam.h>
+#include <neuroadaptive_msgs/controllerFullData.h>
+#include <neuroadaptive_msgs/controllerParamUpdate.h>
+#include <neuroadaptive_msgs/saveControllerData.h>
+#include <neuroadaptive_msgs/setCartPose.h>
 
 #include <Eigen/Geometry>
 
@@ -32,7 +32,7 @@ namespace pr2_controller_ns{
 
 enum
 {
-  StoreLen = 20000
+  StoreLen = 60000
 };
 
 class PR2CartesianControllerClass: public pr2_controller_interface::Controller
@@ -176,8 +176,8 @@ public:
   Eigen::MatrixXd eigen_temp_joint;
   KDL::JntArray kdl_temp_joint_;
 
-  bool paramUpdate( uta_pr2_forceControl::controllerParamUpdate::Request  & req ,
-                    uta_pr2_forceControl::controllerParamUpdate::Response & resp );
+  bool paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
+                    neuroadaptive_msgs::controllerParamUpdate::Response & resp );
 
   bool capture(std_srvs::Empty::Request& req,
                std_srvs::Empty::Response& resp);
@@ -199,8 +199,8 @@ public:
   sensor_msgs::JointState                  msgRobotStates        [StoreLen];
   geometry_msgs::PoseStamped               msgModelCartPos       [StoreLen];
   geometry_msgs::PoseStamped               msgRobotCartPos       [StoreLen];
-  uta_pr2_forceControl::controllerParam    msgControllerParam    [StoreLen];
-  uta_pr2_forceControl::controllerFullData msgControllerFullData [StoreLen];
+  neuroadaptive_msgs::controllerParam    msgControllerParam    [StoreLen];
+  neuroadaptive_msgs::controllerFullData msgControllerFullData [StoreLen];
 
   volatile int storage_index_;
 

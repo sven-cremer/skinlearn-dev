@@ -40,7 +40,7 @@
 
 #include <unistd.h>
 #include <ros/ros.h>
-#include <uta_pr2_forceControl/setCartPose.h>
+#include <neuroadaptive_msgs/setCartPose.h>
 #include <std_srvs/Empty.h>
 #include <sound_play/sound_play.h>
 
@@ -80,7 +80,7 @@ public:
   referenceTrajectoryClient()
   {
     save_client     = node.serviceClient<std_srvs::Empty>("pr2_cartneuroController/save");
-    setRefTraj_client= node.serviceClient<uta_pr2_forceControl::setCartPose>("pr2_cartneuroController/setRefTraj");
+    setRefTraj_client= node.serviceClient<neuroadaptive_msgs::setCartPose>("pr2_cartneuroController/setRefTraj");
     start_time = ros::Time::now();
 
     std::string para_cartDesX     = "/cartDesX";
@@ -128,7 +128,7 @@ public:
 
     while( ros::ok() )
     {
-      uta_pr2_forceControl::setCartPose setCartPoseAction;
+      neuroadaptive_msgs::setCartPose setCartPoseAction;
 
       if( (ros::Time::now() - start_time).toSec() > 4 && !captureFlag )
       {

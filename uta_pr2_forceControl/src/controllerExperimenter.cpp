@@ -6,11 +6,10 @@
  */
 
 #include <ros/ros.h>
-#include <uta_pr2_forceControl/controllerFullData.h>
-#include <uta_pr2_forceControl/controllerParam.h>
-
-#include <uta_pr2_forceControl/controllerParamUpdate.h>
-#include <uta_pr2_forceControl/saveControllerData.h>
+#include <neuroadaptive_msgs/controllerFullData.h>
+#include <neuroadaptive_msgs/controllerParam.h>
+#include <neuroadaptive_msgs/controllerParamUpdate.h>
+#include <neuroadaptive_msgs/saveControllerData.h>
 #include <std_srvs/Empty.h>
 
 #include <yaml-cpp/yaml.h>
@@ -42,7 +41,7 @@ class controllerExperimenter
 
   string experimentParameterFile;
   std::vector<std::string> trialNames;
-  std::vector<uta_pr2_forceControl::controllerParam> trialData;
+  std::vector<neuroadaptive_msgs::controllerParam> trialData;
 
   YAML::Parser parser;
   YAML::Node doc;
@@ -52,10 +51,10 @@ public:
   controllerExperimenter()
   {
     // FIXME the pr2_neuroadptController/ part should be generalized
-    paramUpdate_client = node.serviceClient<uta_pr2_forceControl::controllerParamUpdate>("pr2_neuroadptController/paramUpdate");
+    paramUpdate_client = node.serviceClient<neuroadaptive_msgs::controllerParamUpdate>("pr2_neuroadptController/paramUpdate");
     capture_client     = node.serviceClient<std_srvs::Empty>("pr2_neuroadptController/capture");
 
-    save_client     = node.serviceClient<uta_pr2_forceControl::saveControllerData>("pr2_neuroadptController/saveData");
+    save_client     = node.serviceClient<neuroadaptive_msgs::saveControllerData>("pr2_neuroadptController/saveData");
 
     subControllerFullData = node.subscribe("pr2_neuroadptController/controllerFullData", 1, &controllerExperimenter::fullDataCallback, this );
 
@@ -118,7 +117,7 @@ public:
 
   ~controllerExperimenter() { }
 
-  void fullDataCallback(const uta_pr2_forceControl::controllerFullData::ConstPtr& msg)
+  void fullDataCallback(const neuroadaptive_msgs::controllerFullData::ConstPtr& msg)
   {
     dataCounter += 1;
 
@@ -149,7 +148,7 @@ public:
           string trialName = trialNames[trialNumber-1];
           dataFile.open(trialName.c_str());
 
-          uta_pr2_forceControl::controllerParamUpdate controllerParamServ;
+          neuroadaptive_msgs::controllerParamUpdate controllerParamServ;
           controllerParamServ.request.msg = trialData[trialNumber-1];
 
           paramUpdate_client.call(controllerParamServ);
