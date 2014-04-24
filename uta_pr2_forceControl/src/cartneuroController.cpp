@@ -1578,7 +1578,7 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( uta_pr2_forceControl::fixe
 {
   // XOR to toggle
   fixedFilterWeights =  ( fixedFilterWeights || true ) && !( fixedFilterWeights && true );
-
+  resp.useFixedWeights = fixedFilterWeights ;
   return true;
 }
 
