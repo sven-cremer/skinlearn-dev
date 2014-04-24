@@ -95,6 +95,8 @@ public:
   KDL::Wrench    F_;            // Cart effort
   KDL::Jacobian  J_;            // Jacobian
 
+  JointVec saturation_;         // Saturation torques
+
   // Note the gains are incorrectly typed as a twist,
   // as there is no appropriate type!
   Eigen::VectorXd     Kp_;           // Proportional gains

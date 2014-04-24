@@ -122,17 +122,18 @@ pr2_neuroadptController:
   root_name: torso_lift_link
   tip_name: r_gripper_tool_frame
 
-l_arm_cartesian_pose_controller:
-  type: CartesianPoseController
-  root_name: torso_lift_link
-  tip_name: l_wrist_roll_link
-  fb_trans:
-    p: 20.0
-    i: 0.5
-    d: 0.0
-    i_clamp: 1.0
-  fb_rot:
-    p: 0.5
-    i: 0.1
-    d: 0.0
-    i_clamp: 0.2
+saturation:
+  l_shoulder_pan_joint: 11.88
+  l_shoulder_lift_joint: 11.64
+  l_upper_arm_roll_joint: 6.143
+  l_elbow_flex_joint: 6.804
+  l_forearm_roll_joint: 8.376
+  l_wrist_flex_joint: 5.568
+  l_wrist_roll_joint: 5.568
+  r_shoulder_pan_joint: 11.88
+  r_shoulder_lift_joint: 11.64
+  r_upper_arm_roll_joint: 6.143
+  r_elbow_flex_joint: 6.804
+  r_forearm_roll_joint: 8.376
+  r_wrist_flex_joint: 5.568
+  r_wrist_roll_joint: 5.568

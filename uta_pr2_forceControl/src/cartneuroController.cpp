@@ -338,6 +338,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_fixedFilterWeights = "/fixedFilterWeights";
   if (!n.getParam( para_fixedFilterWeights , fixedFilterWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
 
+  for (int i = 0; i < num_Joints; ++i)
+      n.param("saturation/" + chain_.getJoint(i)->joint_->name, saturation_[i], 0.0);
 
   delT = 0.001;
   outerLoopTime = 0.05;
@@ -1083,17 +1085,24 @@ void PR2CartneuroControllerClass::update()
       tau = JacobianTrans*force;
     }
 
+    // ======== Torque Saturation
+      double sat_scaling = 1.0;
+      for (int i = 0; i < num_Joints; ++i) {
+        if (saturation_[i] > 0.0)
+          sat_scaling = std::min(sat_scaling, fabs(saturation_[i] / tau[i]));
+      }
+      JointVec tau_sat = sat_scaling * tau;
 
   // Convert from Eigen to KDL
 //      tau_c_ = JointEigen2Kdl( tau );
 
-  tau_c_(0) = tau(0);
-  tau_c_(1) = tau(1);
-  tau_c_(2) = tau(2);
-  tau_c_(3) = tau(3);
-  tau_c_(4) = tau(4);
-  tau_c_(5) = tau(5);
-  tau_c_(6) = tau(6);
+  tau_c_(0) = tau_sat(0);
+  tau_c_(1) = tau_sat(1);
+  tau_c_(2) = tau_sat(2);
+  tau_c_(3) = tau_sat(3);
+  tau_c_(4) = tau_sat(4);
+  tau_c_(5) = tau_sat(5);
+  tau_c_(6) = tau_sat(6);
 
   // And finally send these torques out.
   chain_.setEfforts(tau_c_);
