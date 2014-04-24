@@ -542,10 +542,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   /////////////////////////
   // DATA COLLECTION
 
-  save_srv_      = n.advertiseService("save"      , &PR2CartneuroControllerClass::save      , this);
-  publish_srv_   = n.advertiseService("publish"   , &PR2CartneuroControllerClass::publish   , this);
-  capture_srv_   = n.advertiseService("capture"   , &PR2CartneuroControllerClass::capture   , this);
-  setRefTraj_srv_= n.advertiseService("setRefTraj", &PR2CartneuroControllerClass::setRefTraj, this);
+  save_srv_                = n.advertiseService("save"               , &PR2CartneuroControllerClass::save                 , this);
+  publish_srv_             = n.advertiseService("publish"            , &PR2CartneuroControllerClass::publish              , this);
+  capture_srv_             = n.advertiseService("capture"            , &PR2CartneuroControllerClass::capture              , this);
+  setRefTraj_srv_          = n.advertiseService("setRefTraj"         , &PR2CartneuroControllerClass::setRefTraj           , this);
+  toggleFixedWeights_srv_  = n.advertiseService("toggleFixedWeights" , &PR2CartneuroControllerClass::toggleFixedWeights   , this);
 
   pubFTData_             = n.advertise< geometry_msgs::WrenchStamped             >( "FT_data"              , StoreLen);
   pubModelStates_        = n.advertise< sensor_msgs::JointState                  >( "model_joint_states"   , StoreLen);
@@ -1337,6 +1338,8 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].task_mA           = task_mA                     ;
           msgControllerFullData[index].task_mB           = task_mB                     ;
 
+          msgControllerFullData[index].fixedFilterWeights= fixedFilterWeights          ;
+
           msgControllerFullData[index].w0                = outerLoopWk(0,0)            ;
           msgControllerFullData[index].w1                = outerLoopWk(1,0)            ;
           msgControllerFullData[index].w2                = outerLoopWk(2,0)            ;
@@ -1565,6 +1568,16 @@ bool PR2CartneuroControllerClass::capture( std_srvs::Empty::Request & req,
 //    pubControllerParam_.publish(msgControllerParam[index]);
           pubControllerFullData_.publish(msgControllerFullData[index]);
   }
+
+  return true;
+}
+
+/// Service call to set reference trajectory
+bool PR2CartneuroControllerClass::toggleFixedWeights( uta_pr2_forceControl::fixedWeightToggle::Request & req,
+		                                              uta_pr2_forceControl::fixedWeightToggle::Response& resp )
+{
+  // XOR to toggle
+  fixedFilterWeights =  ( fixedFilterWeights || true ) && !( fixedFilterWeights && true );
 
   return true;
 }

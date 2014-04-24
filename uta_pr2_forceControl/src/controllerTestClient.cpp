@@ -11,6 +11,8 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/tf.h>
 #include <iostream>
+#include <std_srvs/Empty.h>
+#include <uta_pr2_forceControl/fixedWeightToggle.h>
 
 using namespace std;
 
@@ -20,6 +22,7 @@ class controllerTestClient
 
   ros::ServiceClient m_switchControllerClient;
   ros::ServiceClient m_loadControllerClient;
+  ros::ServiceClient m_toggleFixedWeightsClient;
 
   ros::Publisher m_rCartPub;
   ros::Publisher m_lCartPub;
@@ -47,6 +50,8 @@ class controllerTestClient
   double l_cartIniPitch ;
   double l_cartIniYaw   ;
 
+  bool useFixedWeights  ;
+
 /*
  * pr2_controller_manager/load_controller (pr2_mechanism_msgs/LoadController)
   pr2_controller_manager/unload_controller (pr2_mechanism_msgs/UnloadController)
@@ -60,9 +65,10 @@ public:
   {
 	  choice = 0;
 
-	  m_switchControllerClient = node.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
-	  m_loadControllerClient   = node.serviceClient<pr2_mechanism_msgs::LoadController  >("pr2_controller_manager/load_controller");
-
+	  m_switchControllerClient   = node.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
+	  m_loadControllerClient     = node.serviceClient<pr2_mechanism_msgs::LoadController  >("pr2_controller_manager/load_controller");
+	  m_toggleFixedWeightsClient = node.serviceClient<uta_pr2_forceControl::fixedWeightToggle>("pr2_cartneuroController/toggleFixedWeights");
+	  
 	  m_rCartPub = node.advertise<geometry_msgs::PoseStamped>( "/r_cart/command_pose", 10 );
 	  m_lCartPub = node.advertise<geometry_msgs::PoseStamped>( "/l_cart/command_pose", 10 );
 
@@ -213,6 +219,13 @@ void switchLArmCartesianPoseController()
 	m_switchControllerClient.call(m_armControllerStart);
 }
 
+void toggleFixedWeights()
+{
+	uta_pr2_forceControl::fixedWeightToggle toggleSrv;
+    m_toggleFixedWeightsClient.call(toggleSrv);
+    useFixedWeights = toggleSrv.response.useFixedWeights;
+}
+
   void go()
   {
     ROS_INFO_STREAM("# Starting Experiment #");
@@ -226,13 +239,16 @@ void switchLArmCartesianPoseController()
     while( ros::ok() && loopOn )
     {
 
+    	ROS_INFO_STREAM("## Status ##");
+    	ROS_INFO_STREAM("Toggle : " << useFixedWeights );
     	ROS_INFO_STREAM("Select your preference: ");
     	ROS_INFO_STREAM("1 - Align right arm");
     	ROS_INFO_STREAM("2 - Align left arm");
     	ROS_INFO_STREAM("3 - Switch to cartneuroController");
-    	ROS_INFO_STREAM("4 - Switch to r_arm_controller");
+    	ROS_INFO_STREAM("4 - Switch to r_cart");
     	ROS_INFO_STREAM("5 - P1 (red)");
     	ROS_INFO_STREAM("6 - P2 (blue)");
+    	ROS_INFO_STREAM("t - Toggle fixed weights");
     	ROS_INFO_STREAM("q - Quit");
 
     	std::cin >> choice ;
@@ -256,6 +272,9 @@ void switchLArmCartesianPoseController()
 					   break;
     	    case '6' :
     	    		   p2();
+					   break;
+    	    case 't' :
+					   toggleFixedWeights();
 					   break;
     	    case 'q' :
 					   loopOn = false;

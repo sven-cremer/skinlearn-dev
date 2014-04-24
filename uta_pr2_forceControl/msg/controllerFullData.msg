@@ -224,6 +224,9 @@ float64 k
 float64 task_mA
 float64 task_mB
 
+# Use fixed weights
+float64 fixedFilterWeights
+
 # Filter Weights
 float64 w0
 float64 w1

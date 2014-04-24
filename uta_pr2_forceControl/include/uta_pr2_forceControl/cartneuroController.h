@@ -13,6 +13,7 @@
 #include "objTest.h"
 #include "csl/neural_network.hpp"
 #include "csl/outer_loop.h"
+#include <uta_pr2_forceControl/fixedWeightToggle.h>
 
 typedef boost::array<double, 4> human_state_type;
 
@@ -126,10 +127,14 @@ private:
   bool capture( std_srvs::Empty::Request& req,
                 std_srvs::Empty::Response& resp );
 
+  bool toggleFixedWeights( uta_pr2_forceControl::fixedWeightToggle::Request & req,
+		                   uta_pr2_forceControl::fixedWeightToggle::Response& resp );
+
   ros::ServiceServer save_srv_;
   ros::ServiceServer publish_srv_;
   ros::ServiceServer capture_srv_;
   ros::ServiceServer setRefTraj_srv_;
+  ros::ServiceServer toggleFixedWeights_srv_;
 
   void bufferData( double & dt );
 
