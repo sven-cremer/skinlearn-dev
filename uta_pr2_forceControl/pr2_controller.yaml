@@ -12,14 +12,14 @@ useMSDmodel        : false
 
 fixedFilterWeights : false
 
-filtW0             : -2.3646
-filtW1             :  1.9237
-filtW2             : -0.3255
-filtW3             : -0.1816
-filtW4             :  0.0049
-filtW5             : -0.0018
-filtW6             : -0.0018
-filtW7             :  0.0014
+filtW0             : -1.8136 #-2.3646
+filtW1             :  1.3171 # 1.9237
+filtW2             : -0.4726 #-0.3255
+filtW3             : -0.0082 #-0.1816
+filtW4             :  0.0032 # 0.0049
+filtW5             : -0.0010 #-0.0018
+filtW6             : -0.0007 #-0.0018
+filtW7             : -0.0009 # 0.0014
 
 # This makes zero any force less than below
 forceCutOffX       : 1.0
