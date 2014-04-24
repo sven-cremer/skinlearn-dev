@@ -171,8 +171,10 @@ public:
 
 			W_trans.setZero();
 			W_trans_next.setZero();
-			V_trans.setZero();
-			V_trans_next.setZero();
+
+			// Input weights should be randomly initialized
+			V_trans.setRandom();
+			V_trans_next.setRandom();
 
 			F.setIdentity();
 			G.setIdentity();
