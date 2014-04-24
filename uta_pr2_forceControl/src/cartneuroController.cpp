@@ -1579,6 +1579,15 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( neuroadaptive_msgs::fixedW
   // XOR to toggle
   fixedFilterWeights =  ( fixedFilterWeights || true ) && !( fixedFilterWeights && true );
   resp.useFixedWeights = fixedFilterWeights ;
+  // Filter Weights
+  resp.w0 = outerLoopWk(0,0) ;
+  resp.w1 = outerLoopWk(1,0) ;
+  resp.w2 = outerLoopWk(2,0) ;
+  resp.w3 = outerLoopWk(3,0) ;
+  resp.w4 = outerLoopWk(4,0) ;
+  resp.w5 = outerLoopWk(5,0) ;
+  resp.w6 = outerLoopWk(6,0) ;
+  resp.w7 = outerLoopWk(7,0) ;
   return true;
 }
 

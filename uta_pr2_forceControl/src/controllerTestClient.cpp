@@ -52,6 +52,15 @@ class controllerTestClient
 
   bool useFixedWeights  ;
 
+  double m_w0           ;
+  double m_w1           ;
+  double m_w2           ;
+  double m_w3           ;
+  double m_w4           ;
+  double m_w5           ;
+  double m_w6           ;
+  double m_w7           ;
+
 /*
  * pr2_controller_manager/load_controller (pr2_mechanism_msgs/LoadController)
   pr2_controller_manager/unload_controller (pr2_mechanism_msgs/UnloadController)
@@ -224,6 +233,14 @@ void toggleFixedWeights()
 	neuroadaptive_msgs::fixedWeightToggle toggleSrv;
     m_toggleFixedWeightsClient.call(toggleSrv);
     useFixedWeights = toggleSrv.response.useFixedWeights;
+    m_w0 = toggleSrv.response.w0 ;
+    m_w1 = toggleSrv.response.w1 ;
+    m_w2 = toggleSrv.response.w2 ;
+    m_w3 = toggleSrv.response.w3 ;
+    m_w4 = toggleSrv.response.w4 ;
+    m_w5 = toggleSrv.response.w5 ;
+    m_w6 = toggleSrv.response.w6 ;
+    m_w7 = toggleSrv.response.w7 ;
 }
 
   void go()
@@ -241,6 +258,14 @@ void toggleFixedWeights()
 
     	ROS_INFO_STREAM("## Status ##");
     	ROS_INFO_STREAM("Toggle : " << useFixedWeights );
+    	ROS_INFO_STREAM("Weights : " << m_w0 << " "
+    	                             << m_w1 << " "
+    	                             << m_w2 << " "
+    	                             << m_w3 << " "
+    	                             << m_w4 << " "
+    	                             << m_w5 << " "
+    	                             << m_w6 << " "
+    	                             << m_w7 << " " );
     	ROS_INFO_STREAM("Select your preference: ");
     	ROS_INFO_STREAM("1 - Align right arm");
     	ROS_INFO_STREAM("2 - Align left arm");
