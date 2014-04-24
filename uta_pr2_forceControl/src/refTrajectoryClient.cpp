@@ -38,9 +38,11 @@
  *  Created on: Apr 1, 2014
  */
 
+#include <unistd.h>
 #include <ros/ros.h>
 #include <uta_pr2_forceControl/setCartPose.h>
 #include <std_srvs/Empty.h>
+#include <sound_play/sound_play.h>
 
 using namespace std;
 
@@ -49,6 +51,8 @@ class referenceTrajectoryClient
   ros::NodeHandle  node;
   ros::ServiceClient save_client;
   ros::ServiceClient setRefTraj_client;
+
+  sound_play::SoundClient sc;
 
   ros::Time start_time;        // Time of the first servo cycle
 
@@ -112,9 +116,14 @@ public:
 
   ~referenceTrajectoryClient() { }
 
+  void sleepok(int t, ros::NodeHandle &nh)
+  {
+    if (nh.ok())
+    sleep(t);
+  }
+
   void go()
   {
-
     ROS_ERROR_STREAM("# Starting Experiment #");
 
     while( ros::ok() )
@@ -131,6 +140,8 @@ public:
       if( (ros::Time::now() - start_time).toSec() > 5 && !redFlag )
       {
         ROS_ERROR_STREAM("# BLUE #\n");
+        sc.say("Blue!");
+        sleepok(1, node);
         setCartPoseAction.request.msg.position.x = cartDesX ;
         setCartPoseAction.request.msg.position.y = cartDesY ;
         setCartPoseAction.request.msg.position.z = cartDesZ ;
@@ -141,6 +152,8 @@ public:
       if( (ros::Time::now() - start_time).toSec() > 10 && !greenFlag )
       {
         ROS_ERROR_STREAM("# RED #\n");
+        sc.say("Red!");
+        sleepok(1, node);
         setCartPoseAction.request.msg.position.x = cartIniX ;
         setCartPoseAction.request.msg.position.y = cartIniY ;
         setCartPoseAction.request.msg.position.z = cartIniZ ;
