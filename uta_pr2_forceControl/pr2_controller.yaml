@@ -48,7 +48,7 @@ cartDesPitch :  0.0
 cartDesYaw   :  0.0
 
 lCartIniX     :  0.8
-lCartIniY     :  0.01
+lCartIniY     :  0.05
 lCartIniZ     :  0.0
 lCartIniRoll  :  1.57079633
 lCartIniPitch :  0.0
