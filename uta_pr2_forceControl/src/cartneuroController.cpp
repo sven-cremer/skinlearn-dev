@@ -1373,7 +1373,7 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
 	    {
 	  	  if (!controllerData.SerializeToOstream(&saveDataFile))
 	  	  {
-	  	    std::cerr << "Failed to write address book." << std::endl;
+	  		ROS_ERROR_STREAM( "Failed to write data." );
 	  	  }
 	    }
 
@@ -1724,18 +1724,8 @@ bool PR2CartneuroControllerClass::save( neuroadaptive_msgs::saveControllerData::
 
   std::string fileNameProto = req.fileName ;
 
-  {
-    // Read the existing address book.
-	saveDataFile.open(fileNameProto.c_str(), std::ios::in | std::ios::binary);
-
-    if (!saveDataFile) {
-  	std::cout << fileNameProto << ": File not found.  Creating a new file." << std::endl;
-    } else if (!controllerData.ParseFromIstream(&saveDataFile))
-    {
-  	  std::cerr << "Failed to parse address book." << std::endl;
-  	return -1;
-    }
-  }
+  // Save data to file
+  saveDataFile.open(fileNameProto.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
 
   resp.success = true;
 
