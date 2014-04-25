@@ -41,6 +41,7 @@
 #include <unistd.h>
 #include <ros/ros.h>
 #include <neuroadaptive_msgs/setCartPose.h>
+#include <neuroadaptive_msgs/saveControllerData.h>
 #include <std_srvs/Empty.h>
 #include <sound_play/sound_play.h>
 
@@ -79,7 +80,7 @@ public:
 
   referenceTrajectoryClient()
   {
-    save_client     = node.serviceClient<std_srvs::Empty>("pr2_cartneuroController/save");
+    save_client     = node.serviceClient<neuroadaptive_msgs::saveControllerData>("pr2_cartneuroController/save");
     setRefTraj_client= node.serviceClient<neuroadaptive_msgs::setCartPose>("pr2_cartneuroController/setRefTraj");
     start_time = ros::Time::now();
 
@@ -132,7 +133,8 @@ public:
 
       if( (ros::Time::now() - start_time).toSec() > 4 && !captureFlag )
       {
-        std_srvs::Empty saveSrv;
+    	neuroadaptive_msgs::saveControllerData saveSrv;
+    	saveSrv.request.fileName = "~/Dropbox/PhD/UTARI/PR2/PR2_TRO/PR2/ProtobufData/test1.txt";
         save_client.call(saveSrv);
         captureFlag = true ;
       }

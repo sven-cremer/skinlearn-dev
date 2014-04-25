@@ -24,7 +24,7 @@
   <!--depend package="rbdl"/-->
 
   <rosdep name="eigen" />
-  <rosdep name="protoc" />
+  <!--rosdep name="protoc" /-->
 
   <export>
     <pr2_controller_interface plugin="${prefix}/controller_plugins.xml" />

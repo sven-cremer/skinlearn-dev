@@ -28,6 +28,26 @@ SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
 find_package(Eigen REQUIRED)
 include_directories(${Eigen_INCLUDE_DIRS})
 
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+#include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+#SET(PROTO_SRCS src)
+#SET(PROTO_HDRS include/uta_pr2_forceControl)
+#SET(PROTOBUF_GENERATE_CPP_APPEND_PATH FALSE)
+#SET(ARGN proto/foo.proto)
+
+#MESSAGE("Protobuf autogeneration STARTED")
+#PROTOBUF_GENERATE_CPP( PROTO_SRCS PROTO_HDRS ${ARGN} )
+#MESSAGE("Protobuf autogeneration COMPLETED")
+
+#add_executable(bar bar.cc ${PROTO_SRCS} ${PROTO_HDRS})
+#target_link_libraries(bar ${PROTOBUF_LIBRARIES})
+
+rosbuild_add_library( controllerFullDataLIB src/controllerFullData.pb.cc )
+#rosbuild_add_executable( testProtobuf src/test/testProtobuf.cpp )
+#target_link_libraries(testProtobuf controllerFullDataLIB ${PROTOBUF_LIBRARIES})
+
 rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
 
 rosbuild_add_library( cslLIB src/neural_network.cpp )
@@ -44,6 +64,7 @@ rosbuild_add_library( pr2_controller_lib src/cartesianController.cpp
  
 target_link_libraries( pr2_controller_lib cslLIB )
 target_link_libraries( pr2_controller_lib oelLIB )
+target_link_libraries(pr2_controller_lib controllerFullDataLIB ${PROTOBUF_LIBRARIES})
 
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)

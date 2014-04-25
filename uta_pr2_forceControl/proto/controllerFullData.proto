@@ -1,0 +1,246 @@
+package dataPoint;
+
+message Datum {
+// Time
+optional double  dt                 = 1 ;
+
+// Force Data
+optional double force_x             = 2 ;
+optional double force_y             = 3 ;
+optional double force_z             = 4 ;
+optional double torque_x            = 5 ;
+optional double torque_y            = 6 ;
+optional double torque_z            = 7 ;
+
+// Accelerometer data
+optional double acc_x               = 8 ;
+optional double acc_y               = 9 ;
+optional double acc_z               = 10 ;
+
+// Input Force Data
+optional double r_eff_x             = 11 ;
+optional double r_eff_y             = 12 ;
+optional double r_eff_z             = 13 ;
+optional double r_trq_x             = 14 ;
+optional double r_trq_y             = 15 ;
+optional double r_trq_z             = 16 ;
+
+// Input reference efforts(torques)
+optional double reference_eff_j0    = 17 ;
+optional double reference_eff_j1    = 18 ;
+optional double reference_eff_j2    = 19 ;
+optional double reference_eff_j3    = 20 ;
+optional double reference_eff_j4    = 21 ;
+optional double reference_eff_j5    = 22 ;
+optional double reference_eff_j6    = 23 ;
+                                        
+// Cartesian task reference             
+optional double taskRef_x           = 24 ;
+optional double taskRef_y           = 25 ;
+optional double taskRef_z           = 26 ;
+optional double taskRef_phi         = 27 ;
+optional double taskRef_theta       = 28 ;
+optional double taskRef_psi         = 29 ;
+                                        
+// Cartesian task reference             
+optional double taskRefModel_x      = 30 ;
+optional double taskRefModel_y      = 31 ;
+optional double taskRefModel_z      = 32 ;
+optional double taskRefModel_phi    = 33 ;
+optional double taskRefModel_theta  = 34 ;
+optional double taskRefModel_psi    = 35 ;
+                                        
+// Model States                         
+optional double m_cartPos_x         = 36 ;
+optional double m_cartPos_y         = 37 ;
+optional double m_cartPos_z         = 38 ;
+optional double m_cartPos_Qx        = 39 ;
+optional double m_cartPos_Qy        = 40 ;
+optional double m_cartPos_Qz        = 41 ;
+optional double m_cartPos_QW        = 42 ;
+                                        
+optional double m_pos_x             = 43 ;
+optional double m_pos_y             = 44 ;
+optional double m_pos_z             = 45 ;
+                                        
+optional double m_vel_x             = 46 ;
+optional double m_vel_y             = 47 ;
+optional double m_vel_z             = 48 ;
+                                        
+optional double m_acc_x             = 49 ;
+optional double m_acc_y             = 50 ;
+optional double m_acc_z             = 51 ;
+                                        
+optional double m_pos_j0            = 52 ;
+optional double m_pos_j1            = 53 ;
+optional double m_pos_j2            = 54 ;
+optional double m_pos_j3            = 55 ;
+optional double m_pos_j4            = 56 ;
+optional double m_pos_j5            = 57 ;
+optional double m_pos_j6            = 58 ;
+                                        
+optional double m_vel_j0            = 59 ;
+optional double m_vel_j1            = 60 ;
+optional double m_vel_j2            = 61 ;
+optional double m_vel_j3            = 62 ;
+optional double m_vel_j4            = 63 ;
+optional double m_vel_j5            = 64 ;
+optional double m_vel_j6            = 65 ;
+                                        
+optional double m_acc_j0            = 66 ;
+optional double m_acc_j1            = 67 ;
+optional double m_acc_j2            = 68 ;
+optional double m_acc_j3            = 69 ;
+optional double m_acc_j4            = 70 ;
+optional double m_acc_j5            = 71 ;
+optional double m_acc_j6            = 72 ;
+                                        
+optional double m_eff_j0            = 73 ;
+optional double m_eff_j1            = 74 ;
+optional double m_eff_j2            = 75 ;
+optional double m_eff_j3            = 76 ;
+optional double m_eff_j4            = 77 ;
+optional double m_eff_j5            = 78 ;
+optional double m_eff_j6            = 79 ;
+                                        
+// Control Output                       
+optional double control_eff_j0      = 80 ;
+optional double control_eff_j1      = 81 ;
+optional double control_eff_j2      = 82 ;
+optional double control_eff_j3      = 83 ;
+optional double control_eff_j4      = 84 ;
+optional double control_eff_j5      = 85 ;
+optional double control_eff_j6      = 86 ;
+                                        
+// Robot States                         
+optional double r_cartPos_x         = 87 ;
+optional double r_cartPos_y         = 88 ;
+optional double r_cartPos_z         = 89 ;
+optional double r_cartPos_Qx        = 90 ;
+optional double r_cartPos_Qy        = 91 ;
+optional double r_cartPos_Qz        = 92 ;
+optional double r_cartPos_QW        = 93 ;
+                                        
+optional double r_pos_j0            = 94 ;
+optional double r_pos_j1            = 95 ;
+optional double r_pos_j2            = 96 ;
+optional double r_pos_j3            = 97 ;
+optional double r_pos_j4            = 98 ;
+optional double r_pos_j5            = 99 ;
+optional double r_pos_j6            = 100 ;
+                                        
+optional double r_vel_j0            = 101 ;
+optional double r_vel_j1            = 102 ;
+optional double r_vel_j2            = 103 ;
+optional double r_vel_j3            = 104 ;
+optional double r_vel_j4            = 105 ;
+optional double r_vel_j5            = 106 ;
+optional double r_vel_j6            = 107 ;
+                                        
+optional double r_acc_j0            = 108 ;
+optional double r_acc_j1            = 109 ;
+optional double r_acc_j2            = 110 ;
+optional double r_acc_j3            = 111 ;
+optional double r_acc_j4            = 112 ;
+optional double r_acc_j5            = 113 ;
+optional double r_acc_j6            = 114 ;
+                                        
+optional double r_eff_j0            = 115 ;
+optional double r_eff_j1            = 116 ;
+optional double r_eff_j2            = 117 ;
+optional double r_eff_j3            = 118 ;
+optional double r_eff_j4            = 119 ;
+optional double r_eff_j5            = 120 ;
+optional double r_eff_j6            = 121 ;
+                                        
+// Joint lower limit                    
+optional double l_limit_0           = 122 ;
+optional double l_limit_1           = 123 ;
+optional double l_limit_2           = 124 ;
+optional double l_limit_3           = 125 ;
+optional double l_limit_4           = 126 ;
+optional double l_limit_5           = 127 ;
+optional double l_limit_6           = 128 ;
+                                        
+// Joint upper limit                    
+optional double u_limit_0           = 129 ;
+optional double u_limit_1           = 130 ;
+optional double u_limit_2           = 131 ;
+optional double u_limit_3           = 132 ;
+optional double u_limit_4           = 133 ;
+optional double u_limit_5           = 134 ;
+optional double u_limit_6           = 135 ;
+                                        
+// NN Params                            
+optional double kappa               = 136 ;
+optional double Kv                  = 137 ;
+optional double lambda              = 138 ;
+optional double Kz                  = 139 ;
+optional double Zb                  = 140 ;
+optional double F                   = 141 ;
+optional double G                   = 142 ;
+optional int64 inParams              = 143 ;
+optional int64 outParams             = 144 ;
+optional int64 hiddenNodes           = 145 ;
+optional int64 errorParams           = 146 ;
+optional double feedForwardForce    = 147 ;
+optional double nn_ON               = 148 ;
+                                        
+// Cart params                          
+optional double cartPos_Kp_x        = 149 ;
+optional double cartPos_Kp_y        = 150 ;
+optional double cartPos_Kp_z        = 151 ;
+optional double cartPos_Kd_x        = 152 ;
+optional double cartPos_Kd_y        = 153 ;
+optional double cartPos_Kd_z        = 154 ;
+                                        
+optional double cartRot_Kp_x        = 155 ;
+optional double cartRot_Kp_y        = 156 ;
+optional double cartRot_Kp_z        = 157 ;
+optional double cartRot_Kd_x        = 158 ;
+optional double cartRot_Kd_y        = 159 ;
+optional double cartRot_Kd_z        = 160 ;
+                                        
+optional bool useCurrentCartPose     = 161 ;
+optional bool useNullspacePose       = 162 ;
+                                        
+optional double cartIniX            = 163 ;
+optional double cartIniY            = 164 ;
+optional double cartIniZ            = 165 ;
+optional double cartIniRoll         = 166 ;
+optional double cartIniPitch        = 167 ;
+optional double cartIniYaw          = 168 ;
+                                        
+optional double cartDesX            = 169 ;
+optional double cartDesY            = 170 ;
+optional double cartDesZ            = 171 ;
+optional double cartDesRoll         = 172 ;
+optional double cartDesPitch        = 173 ;
+optional double cartDesYaw          = 174 ;
+                                        
+// Ref Model Params                     
+optional double m                   = 175 ;
+optional double d                   = 176 ;
+optional double k                   = 177 ;
+                                        
+// Task Ref Params                      
+optional double task_mA             = 178 ;
+optional double task_mB             = 179 ;
+                                        
+// Use fixed weights                    
+optional double fixedFilterWeights  = 180 ;
+                                        
+// Filter Weights                    = 181 ;
+optional double w0                  = 182 ;
+optional double w1                  = 183 ;
+optional double w2                  = 184 ;
+optional double w3                  = 185 ;
+optional double w4                  = 186 ;
+optional double w5                  = 187 ;
+optional double w6                  = 188 ;
+optional double w7                  = 189 ;
+}
+
+message controllerFullData {
+  repeated Datum datum = 1;
+}

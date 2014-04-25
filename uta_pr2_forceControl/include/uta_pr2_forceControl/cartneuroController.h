@@ -14,6 +14,10 @@
 #include "csl/neural_network.hpp"
 #include "csl/outer_loop.h"
 #include <neuroadaptive_msgs/fixedWeightToggle.h>
+#include <neuroadaptive_msgs/saveControllerData.h>
+
+#include "controllerFullData.pb.h"
+#include <fstream>
 
 typedef boost::array<double, 4> human_state_type;
 
@@ -118,8 +122,8 @@ private:
   bool paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
                     neuroadaptive_msgs::controllerParamUpdate::Response & resp );
 
-  bool save( std_srvs::Empty::Request & req,
-             std_srvs::Empty::Response& resp );
+  bool save( neuroadaptive_msgs::saveControllerData::Request & req,
+             neuroadaptive_msgs::saveControllerData::Response& resp );
 
   bool publish( std_srvs::Empty::Request & req,
                 std_srvs::Empty::Response& resp );
@@ -137,6 +141,10 @@ private:
   ros::ServiceServer toggleFixedWeights_srv_;
 
   void bufferData( double & dt );
+  void setDataPoint(dataPoint::Datum* datum, double & dt);
+  dataPoint::controllerFullData controllerData;
+
+  std::fstream saveDataFile;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,

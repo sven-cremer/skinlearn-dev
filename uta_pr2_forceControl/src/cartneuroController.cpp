@@ -7,6 +7,10 @@ using namespace pr2_controller_ns;
 bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                  ros::NodeHandle &n)
 {
+	// Verify that the version of the library that we linked against is
+	  // compatible with the version of the headers we compiled against.
+	  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
   // Get the root and tip link names from parameter server.
   std::string root_name, tip_name;
   if (!n.getParam("root_name", root_name))
@@ -1360,7 +1364,214 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
 
           // Increment for the next cycle.
           storage_index_ = index+1;
+
+		  // Add a data point
+		  setDataPoint(controllerData.add_datum(), dt);
         }
+
+        // Save to file
+	    {
+	  	  if (!controllerData.SerializeToOstream(&saveDataFile))
+	  	  {
+	  	    std::cerr << "Failed to write address book." << std::endl;
+	  	  }
+	    }
+
+		// Optional:  Delete all global objects allocated by libprotobuf.
+		google::protobuf::ShutdownProtobufLibrary();
+}
+
+void PR2CartneuroControllerClass::setDataPoint(dataPoint::Datum* datum, double & dt)
+{
+	datum->set_dt                 (  dt                          );
+	datum->set_force_x            (  (double)transformed_force(0));
+	datum->set_force_y            (  (double)transformed_force(1));
+	datum->set_force_z            (  (double)transformed_force(2));
+	datum->set_torque_x           (  0                           );
+	datum->set_torque_y           (  0                           );
+	datum->set_torque_z           (  0                           );
+	datum->set_acc_x              (  (double)acc_data(0)         );
+	datum->set_acc_y              (  (double)acc_data(1)         );
+	datum->set_acc_z              (  (double)acc_data(2)         );
+	datum->set_reference_eff_j0   (  0                           );
+	datum->set_reference_eff_j1   (  0                           );
+	datum->set_reference_eff_j2   (  0                           );
+	datum->set_reference_eff_j3   (  0                           );
+	datum->set_reference_eff_j4   (  0                           );
+	datum->set_reference_eff_j5   (  0                           );
+	datum->set_reference_eff_j6   (  0                           );
+	datum->set_taskref_x          (  (double)task_ref(0)         );
+	datum->set_taskref_y          (  (double)task_ref(1)         );
+	datum->set_taskref_z          (  (double)task_ref(2)         );
+	datum->set_taskref_phi        (  0                           );
+	datum->set_taskref_theta      (  0                           );
+	datum->set_taskref_psi        (  0                           );
+	datum->set_taskrefmodel_x     (  (double)task_refModel(0)    );
+	datum->set_taskrefmodel_y     (  (double)task_refModel(1)    );
+	datum->set_taskrefmodel_z     (  (double)task_refModel(2)    );
+	datum->set_taskrefmodel_phi   (  0                           );
+	datum->set_taskrefmodel_theta (  0                           );
+	datum->set_taskrefmodel_psi   (  0                           );
+	datum->set_m_cartpos_x        (  modelCartPos_.position.x    );
+	datum->set_m_cartpos_y        (  modelCartPos_.position.y    );
+	datum->set_m_cartpos_z        (  modelCartPos_.position.z    );
+	datum->set_m_cartpos_qx       (  modelCartPos_.orientation.x );
+	datum->set_m_cartpos_qy       (  modelCartPos_.orientation.y );
+	datum->set_m_cartpos_qz       (  modelCartPos_.orientation.z );
+	datum->set_m_cartpos_qw       (  modelCartPos_.orientation.w );
+	datum->set_m_pos_x            (  (double)X_m(0)              );
+	datum->set_m_pos_y            (  (double)X_m(1)              );
+	datum->set_m_pos_z            (  (double)X_m(2)              );
+	datum->set_m_vel_x            (  (double)Xd_m(0)             );
+	datum->set_m_vel_y            (  (double)Xd_m(1)             );
+	datum->set_m_vel_z            (  (double)Xd_m(2)             );
+	datum->set_m_acc_x            (  (double)Xdd_m(0)            );
+	datum->set_m_acc_y            (  (double)Xdd_m(1)            );
+	datum->set_m_acc_z            (  (double)Xdd_m(2)            );
+	datum->set_m_pos_j0           (  (double)q_m(0)              );
+	datum->set_m_pos_j1           (  (double)q_m(1)              );
+	datum->set_m_pos_j2           (  (double)q_m(2)              );
+	datum->set_m_pos_j3           (  (double)q_m(3)              );
+	datum->set_m_pos_j4           (  (double)q_m(4)              );
+	datum->set_m_pos_j5           (  (double)q_m(5)              );
+	datum->set_m_pos_j6           (  (double)q_m(6)              );
+	datum->set_m_vel_j0           (  (double)qd_m(0)             );
+	datum->set_m_vel_j1           (  (double)qd_m(1)             );
+	datum->set_m_vel_j2           (  (double)qd_m(2)             );
+	datum->set_m_vel_j3           (  (double)qd_m(3)             );
+	datum->set_m_vel_j4           (  (double)qd_m(4)             );
+	datum->set_m_vel_j5           (  (double)qd_m(5)             );
+	datum->set_m_vel_j6           (  (double)qd_m(6)             );
+	datum->set_m_acc_j0           (  (double)qdd_m(0)            );
+	datum->set_m_acc_j1           (  (double)qdd_m(1)            );
+	datum->set_m_acc_j2           (  (double)qdd_m(2)            );
+	datum->set_m_acc_j3           (  (double)qdd_m(3)            );
+	datum->set_m_acc_j4           (  (double)qdd_m(4)            );
+	datum->set_m_acc_j5           (  (double)qdd_m(5)            );
+	datum->set_m_acc_j6           (  (double)qdd_m(6)            );
+	datum->set_m_eff_j0           (  0                           );
+	datum->set_m_eff_j1           (  0                           );
+	datum->set_m_eff_j2           (  0                           );
+	datum->set_m_eff_j3           (  0                           );
+	datum->set_m_eff_j4           (  0                           );
+	datum->set_m_eff_j5           (  0                           );
+	datum->set_m_eff_j6           (  0                           );
+	datum->set_control_eff_j0     (  (double)tau(0)              );
+	datum->set_control_eff_j1     (  (double)tau(1)              );
+	datum->set_control_eff_j2     (  (double)tau(2)              );
+	datum->set_control_eff_j3     (  (double)tau(3)              );
+	datum->set_control_eff_j4     (  (double)tau(4)              );
+	datum->set_control_eff_j5     (  (double)tau(5)              );
+	datum->set_control_eff_j6     (  (double)tau(6)              );
+	datum->set_r_cartpos_x        (  robotCartPos_.position.x    );
+	datum->set_r_cartpos_y        (  robotCartPos_.position.y    );
+	datum->set_r_cartpos_z        (  robotCartPos_.position.z    );
+	datum->set_r_cartpos_qx       (  robotCartPos_.orientation.x );
+	datum->set_r_cartpos_qy       (  robotCartPos_.orientation.y );
+	datum->set_r_cartpos_qz       (  robotCartPos_.orientation.z );
+	datum->set_r_cartpos_qw       (  robotCartPos_.orientation.w );
+	datum->set_r_pos_j0           (  (double)q(0)                );
+	datum->set_r_pos_j1           (  (double)q(1)                );
+	datum->set_r_pos_j2           (  (double)q(2)                );
+	datum->set_r_pos_j3           (  (double)q(3)                );
+	datum->set_r_pos_j4           (  (double)q(4)                );
+	datum->set_r_pos_j5           (  (double)q(5)                );
+	datum->set_r_pos_j6           (  (double)q(6)                );
+	datum->set_r_vel_j0           (  (double)qd(0)               );
+	datum->set_r_vel_j1           (  (double)qd(1)               );
+	datum->set_r_vel_j2           (  (double)qd(2)               );
+	datum->set_r_vel_j3           (  (double)qd(3)               );
+	datum->set_r_vel_j4           (  (double)qd(4)               );
+	datum->set_r_vel_j5           (  (double)qd(5)               );
+	datum->set_r_vel_j6           (  (double)qd(6)               );
+	datum->set_r_acc_j0           (  0                           );
+	datum->set_r_acc_j1           (  0                           );
+	datum->set_r_acc_j2           (  0                           );
+	datum->set_r_acc_j3           (  0                           );
+	datum->set_r_acc_j4           (  0                           );
+	datum->set_r_acc_j5           (  0                           );
+	datum->set_r_acc_j6           (  0                           );
+  /*datum->set_r_eff_x            (  ferr_(0)                    );
+	datum->set_r_eff_y            (  ferr_(1)                    );
+	datum->set_r_eff_z            (  ferr_(2)                    );
+	datum->set_r_trq_x            (  ferr_(3)                    );
+	datum->set_r_trq_y            (  ferr_(4)                    );
+	datum->set_r_trq_z            (  ferr_(5)                    );
+	datum->set_r_eff_j0           (  tau_f_(0)                   );
+	datum->set_r_eff_j1           (  tau_f_(1)                   );
+	datum->set_r_eff_j2           (  tau_f_(2)                   );
+	datum->set_r_eff_j3           (  tau_f_(3)                   );
+	datum->set_r_eff_j4           (  tau_f_(4)                   );
+	datum->set_r_eff_j5           (  tau_f_(5)                   );
+	datum->set_r_eff_j6           (  tau_f_(6)                   );*/
+	datum->set_l_limit_0          (  q_lower(0)                  );
+	datum->set_l_limit_1          (  q_lower(1)                  );
+	datum->set_l_limit_2          (  q_lower(2)                  );
+	datum->set_l_limit_3          (  q_lower(3)                  );
+	datum->set_l_limit_4          (  q_lower(4)                  );
+	datum->set_l_limit_5          (  q_lower(5)                  );
+	datum->set_l_limit_6          (  q_lower(6)                  );
+	datum->set_u_limit_0          (  q_upper(0)                  );
+	datum->set_u_limit_1          (  q_upper(1)                  );
+	datum->set_u_limit_2          (  q_upper(2)                  );
+	datum->set_u_limit_3          (  q_upper(3)                  );
+	datum->set_u_limit_4          (  q_upper(4)                  );
+	datum->set_u_limit_5          (  q_upper(5)                  );
+	datum->set_u_limit_6          (  q_upper(6)                  );
+	datum->set_kappa              (  kappa                       );
+	datum->set_kv                 (  Kv                          );
+	datum->set_lambda             (  lambda                      );
+	datum->set_kz                 (  Kz                          );
+	datum->set_zb                 (  Zb                          );
+	datum->set_f                  (  nnF                         );
+	datum->set_g                  (  nnG                         );
+	datum->set_inparams           (  num_Inputs                  );
+	datum->set_outparams          (  num_Outputs                 );
+	datum->set_hiddennodes        (  num_Hidden                  );
+	datum->set_errorparams        (  num_Error                   );
+	datum->set_feedforwardforce   (  num_Joints                  );
+	datum->set_nn_on              (  nn_ON                       );
+	datum->set_cartpos_kp_x       (  cartPos_Kp_x                );
+	datum->set_cartpos_kp_y       (  cartPos_Kp_y                );
+	datum->set_cartpos_kp_z       (  cartPos_Kp_z                );
+	datum->set_cartpos_kd_x       (  cartPos_Kd_x                );
+	datum->set_cartpos_kd_y       (  cartPos_Kd_y                );
+	datum->set_cartpos_kd_z       (  cartPos_Kd_z                );
+	datum->set_cartrot_kp_x       (  cartRot_Kp_x                );
+	datum->set_cartrot_kp_y       (  cartRot_Kp_y                );
+	datum->set_cartrot_kp_z       (  cartRot_Kp_z                );
+	datum->set_cartrot_kd_x       (  cartRot_Kd_x                );
+	datum->set_cartrot_kd_y       (  cartRot_Kd_y                );
+	datum->set_cartrot_kd_z       (  cartRot_Kd_z                );
+	datum->set_usecurrentcartpose (  useCurrentCartPose          );
+	datum->set_usenullspacepose   (  useNullspacePose            );
+	datum->set_cartinix           (  cartIniX                    );
+	datum->set_cartiniy           (  cartIniY                    );
+	datum->set_cartiniz           (  cartIniZ                    );
+	datum->set_cartiniroll        (  cartIniRoll                 );
+	datum->set_cartinipitch       (  cartIniPitch                );
+	datum->set_cartiniyaw         (  cartIniYaw                  );
+	datum->set_cartdesx           (  cartDesX                    );
+	datum->set_cartdesy           (  cartDesY                    );
+	datum->set_cartdesz           (  cartDesZ                    );
+	datum->set_cartdesroll        (  cartDesRoll                 );
+	datum->set_cartdespitch       (  cartDesPitch                );
+	datum->set_cartdesyaw         (  cartDesYaw                  );
+	datum->set_m                  (  m_M                         );
+	datum->set_d                  (  m_D                         );
+	datum->set_k                  (  m_S                         );
+	datum->set_task_ma            (  task_mA                     );
+	datum->set_task_mb            (  task_mB                     );
+	datum->set_fixedfilterweights (  fixedFilterWeights          );
+	datum->set_w0                 (  (double)outerLoopWk(0,0)    );
+	datum->set_w1                 (  (double)outerLoopWk(1,0)    );
+	datum->set_w2                 (  (double)outerLoopWk(2,0)    );
+	datum->set_w3                 (  (double)outerLoopWk(3,0)    );
+	datum->set_w4                 (  (double)outerLoopWk(4,0)    );
+	datum->set_w5                 (  (double)outerLoopWk(5,0)    );
+	datum->set_w6                 (  (double)outerLoopWk(6,0)    );
+	datum->set_w7                 (  (double)outerLoopWk(7,0)    );
+
 }
 
 /// Service call to set reference trajectory
@@ -1499,8 +1710,8 @@ bool PR2CartneuroControllerClass::paramUpdate( neuroadaptive_msgs::controllerPar
 }
 
 /// Service call to save the data
-bool PR2CartneuroControllerClass::save( std_srvs::Empty::Request & req,
-                                        std_srvs::Empty::Response& resp )
+bool PR2CartneuroControllerClass::save( neuroadaptive_msgs::saveControllerData::Request & req,
+		                                neuroadaptive_msgs::saveControllerData::Response& resp )
 {
   /* Record the starting time. */
   ros::Time started = ros::Time::now();
@@ -1510,6 +1721,23 @@ bool PR2CartneuroControllerClass::save( std_srvs::Empty::Request & req,
 
   /* Mark the buffer as clear (which will start storing). */
   storage_index_ = 0;
+
+  std::string fileNameProto = req.fileName ;
+
+  {
+    // Read the existing address book.
+	saveDataFile.open(fileNameProto.c_str(), std::ios::in | std::ios::binary);
+
+    if (!saveDataFile) {
+  	std::cout << fileNameProto << ": File not found.  Creating a new file." << std::endl;
+    } else if (!controllerData.ParseFromIstream(&saveDataFile))
+    {
+  	  std::cerr << "Failed to parse address book." << std::endl;
+  	return -1;
+    }
+  }
+
+  resp.success = true;
 
   return true;
 }
