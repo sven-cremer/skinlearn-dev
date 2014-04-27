@@ -18,16 +18,16 @@ using namespace std;
 
 class controllerTestClient
 {
-  ros::NodeHandle  node;
+  ros::NodeHandle  m_node;
 
-  ros::ServiceClient m_switchControllerClient;
-  ros::ServiceClient m_loadControllerClient;
-  ros::ServiceClient m_toggleFixedWeightsClient;
+  ros::ServiceClient m_switchControllerClient   ;
+  ros::ServiceClient m_loadControllerClient     ;
+  ros::ServiceClient m_toggleFixedWeightsClient ;
 
-  ros::Publisher m_rCartPub;
-  ros::Publisher m_lCartPub;
+  ros::Publisher     m_rCartPub                 ;
+  ros::Publisher     m_lCartPub                 ;
 
-  char choice;
+  char choice ;
 
   double r_cartIniX     ;
   double r_cartIniY     ;
@@ -74,12 +74,12 @@ public:
   {
 	  choice = 0;
 
-	  m_switchControllerClient   = node.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
-	  m_loadControllerClient     = node.serviceClient<pr2_mechanism_msgs::LoadController  >("pr2_controller_manager/load_controller");
-	  m_toggleFixedWeightsClient = node.serviceClient<neuroadaptive_msgs::fixedWeightToggle>("pr2_cartneuroController/toggleFixedWeights");
+	  m_switchControllerClient   = m_node.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
+	  m_loadControllerClient     = m_node.serviceClient<pr2_mechanism_msgs::LoadController  >("pr2_controller_manager/load_controller");
+	  m_toggleFixedWeightsClient = m_node.serviceClient<neuroadaptive_msgs::fixedWeightToggle>("pr2_cartneuroController/toggleFixedWeights");
 	  
-	  m_rCartPub = node.advertise<geometry_msgs::PoseStamped>( "/r_cart/command_pose", 10 );
-	  m_lCartPub = node.advertise<geometry_msgs::PoseStamped>( "/l_cart/command_pose", 10 );
+	  m_rCartPub = m_node.advertise<geometry_msgs::PoseStamped>( "/r_cart/command_pose", 10 );
+	  m_lCartPub = m_node.advertise<geometry_msgs::PoseStamped>( "/l_cart/command_pose", 10 );
 
 	  // Initial cartesian pose
 	  r_cartIniX     = 0.7 ;
@@ -110,12 +110,12 @@ public:
 	  std::string para_cartIniPitch = "/cartIniPitch";
 	  std::string para_cartIniYaw   = "/cartIniYaw";
 
-	  if (!node.getParam( para_cartIniX     , r_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str())     ; }
-	  if (!node.getParam( para_cartIniY     , r_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str())     ; }
-	  if (!node.getParam( para_cartIniZ     , r_cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str())     ; }
-	  if (!node.getParam( para_cartIniRoll  , r_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; }
-	  if (!node.getParam( para_cartIniPitch , r_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; }
-	  if (!node.getParam( para_cartIniYaw   , r_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; }
+	  if (!m_node.getParam( para_cartIniX     , r_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str())     ; }
+	  if (!m_node.getParam( para_cartIniY     , r_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str())     ; }
+	  if (!m_node.getParam( para_cartIniZ     , r_cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str())     ; }
+	  if (!m_node.getParam( para_cartIniRoll  , r_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; }
+	  if (!m_node.getParam( para_cartIniPitch , r_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; }
+	  if (!m_node.getParam( para_cartIniYaw   , r_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; }
 
 	  std::string para_cartDesX     = "/cartDesX";
 	  std::string para_cartDesY     = "/cartDesY";
@@ -124,12 +124,12 @@ public:
 	  std::string para_cartDesPitch = "/cartDesPitch";
 	  std::string para_cartDesYaw   = "/cartDesYaw";
 
-	  if (!node.getParam( para_cartDesX     , r_cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX.c_str())     ; }
-	  if (!node.getParam( para_cartDesY     , r_cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY.c_str())     ; }
-	  if (!node.getParam( para_cartDesZ     , r_cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ.c_str())     ; }
-	  if (!node.getParam( para_cartDesRoll  , r_cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; }
-	  if (!node.getParam( para_cartDesPitch , r_cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; }
-	  if (!node.getParam( para_cartDesYaw   , r_cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; }
+	  if (!m_node.getParam( para_cartDesX     , r_cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX.c_str())     ; }
+	  if (!m_node.getParam( para_cartDesY     , r_cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY.c_str())     ; }
+	  if (!m_node.getParam( para_cartDesZ     , r_cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ.c_str())     ; }
+	  if (!m_node.getParam( para_cartDesRoll  , r_cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; }
+	  if (!m_node.getParam( para_cartDesPitch , r_cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; }
+	  if (!m_node.getParam( para_cartDesYaw   , r_cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; }
 
 	  std::string para_leftcartIniX     = "/lCartIniX";
 	  std::string para_leftcartIniY     = "/lCartIniY";
@@ -138,12 +138,12 @@ public:
 	  std::string para_leftcartIniPitch = "/lCartIniPitch";
 	  std::string para_leftcartIniYaw   = "/lCartIniYaw";
 
-	  if (!node.getParam( para_leftcartIniX     , l_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniX.c_str())     ; }
-	  if (!node.getParam( para_leftcartIniY     , l_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniY.c_str())     ; }
-	  if (!node.getParam( para_leftcartIniZ     , l_cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniZ.c_str())     ; }
-	  if (!node.getParam( para_leftcartIniRoll  , l_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniRoll .c_str()) ; }
-	  if (!node.getParam( para_leftcartIniPitch , l_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniPitch.c_str()) ; }
-	  if (!node.getParam( para_leftcartIniYaw   , l_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniYaw  .c_str()) ; }
+	  if (!m_node.getParam( para_leftcartIniX     , l_cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniX.c_str())     ; }
+	  if (!m_node.getParam( para_leftcartIniY     , l_cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniY.c_str())     ; }
+	  if (!m_node.getParam( para_leftcartIniZ     , l_cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniZ.c_str())     ; }
+	  if (!m_node.getParam( para_leftcartIniRoll  , l_cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniRoll .c_str()) ; }
+	  if (!m_node.getParam( para_leftcartIniPitch , l_cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniPitch.c_str()) ; }
+	  if (!m_node.getParam( para_leftcartIniYaw   , l_cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_leftcartIniYaw  .c_str()) ; }
 
   }
 
@@ -157,8 +157,8 @@ public:
 	 pose.pose.position.y =  r_cartIniY ;
 	 pose.pose.position.z =  r_cartIniZ ;
 	 pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw( r_cartIniRoll ,
-                                                                      r_cartIniPitch,
-                                                                      r_cartIniYaw    );
+                                                                          r_cartIniPitch,
+                                                                          r_cartIniYaw    );
 	 m_rCartPub.publish( pose );
  }
 
@@ -170,8 +170,8 @@ public:
  	 pose.pose.position.y =  l_cartIniY ;
  	 pose.pose.position.z =  l_cartIniZ ;
  	 pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw( l_cartIniRoll ,
- 			                                                          l_cartIniPitch,
-	 		                                                          l_cartIniYaw    );
+ 			                                                  l_cartIniPitch,
+	 		                                                  l_cartIniYaw    );
 	 m_lCartPub.publish( pose );
  }
 
@@ -183,8 +183,8 @@ public:
 	 pose.pose.position.y =  r_cartIniY ;
 	 pose.pose.position.z =  r_cartIniZ ;
 	 pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw( r_cartIniRoll ,
-                                                                      r_cartIniPitch,
-                                                                      r_cartIniYaw    );
+                                                                          r_cartIniPitch,
+                                                                          r_cartIniYaw    );
 	 m_rCartPub.publish( pose );
  }
 
@@ -196,8 +196,8 @@ public:
  	 pose.pose.position.y =  r_cartDesY ;
  	 pose.pose.position.z =  r_cartDesZ ;
  	 pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw( r_cartDesRoll ,
- 			                                                          r_cartDesPitch,
-	 		                                                          r_cartDesYaw    );
+ 			                                                  r_cartDesPitch,
+	 		                                                  r_cartDesYaw    );
 	 m_rCartPub.publish( pose );
  }
 
