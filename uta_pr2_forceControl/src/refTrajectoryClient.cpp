@@ -75,6 +75,11 @@ class referenceTrajectoryClient
   bool blueFlag    ;
   bool greenFlag   ;
   bool captureFlag ;
+  bool runFlag     ;
+
+  // No of switch
+  // How many times switched positions
+  uint switchNo    ;
 
 public:
 
@@ -112,6 +117,9 @@ public:
     blueFlag    = false ;
     greenFlag   = false ;
     captureFlag = false ;
+    runFlag     = true  ;
+
+    switchNo    = 0     ;
 
   }
 
@@ -125,13 +133,14 @@ public:
 
   void go()
   {
-    ROS_ERROR_STREAM("# Starting Experiment #");
+    ROS_INFO_STREAM("# Starting Experiment #");
+    start_time = ros::Time::now();
 
-    while( ros::ok() )
+    while( ros::ok() && runFlag )
     {
       neuroadaptive_msgs::setCartPose setCartPoseAction;
 
-      if( (ros::Time::now() - start_time).toSec() > 4 && !captureFlag )
+      if( /*(ros::Time::now() - start_time).toSec() > 4 && */ !captureFlag )
       {
     	neuroadaptive_msgs::saveControllerData saveSrv;
     	saveSrv.request.fileName = "~/Dropbox/PhD/UTARI/PR2/PR2_TRO/PR2/ProtobufData/test1.txt";
@@ -141,7 +150,7 @@ public:
 
       if( (ros::Time::now() - start_time).toSec() > 5 && !redFlag )
       {
-        ROS_ERROR_STREAM("# BLUE #\n");
+    	ROS_INFO_STREAM("# BLUE # | Time: " << (ros::Time::now() - start_time).toSec() );
         sc.say("Blue!");
         sleepok(1, node);
         setCartPoseAction.request.msg.position.x = cartDesX ;
@@ -149,11 +158,12 @@ public:
         setCartPoseAction.request.msg.position.z = cartDesZ ;
         redFlag = true ;
         setRefTraj_client.call(setCartPoseAction);
+        switchNo++;
       }
 
       if( (ros::Time::now() - start_time).toSec() > 10 && !greenFlag )
       {
-        ROS_ERROR_STREAM("# RED #\n");
+    	ROS_INFO_STREAM("# RED  # | Time: " << (ros::Time::now() - start_time).toSec() );
         sc.say("Red!");
         sleepok(1, node);
         setCartPoseAction.request.msg.position.x = cartIniX ;
@@ -166,9 +176,41 @@ public:
         redFlag   = false ;
         blueFlag  = false ;
         greenFlag = false ;
+        switchNo++;
       }
 
       sleep(0.5);
+
+      if( switchNo > 12 )
+	  {
+    	  captureFlag = false ;
+    	  switchNo    = 0     ;
+    	  ROS_INFO_STREAM("# Experiment DONE #");
+    	  ROS_INFO_STREAM("0 - no");
+    	  ROS_INFO_STREAM("1 - yes");
+    	  ROS_INFO_STREAM("Run again? :");
+
+    	  bool runAgain;
+    	  std::cin >> runAgain;
+
+    	  if( runAgain )
+    	  {
+			  start_time = ros::Time::now();
+
+			  neuroadaptive_msgs::saveControllerData saveSrv;
+    		  saveSrv.request.fileName = "~/Dropbox/PhD/UTARI/PR2/PR2_TRO/PR2/ProtobufData/test1.txt";
+			  save_client.call(saveSrv);
+
+			  captureFlag = true  ;
+			  redFlag     = false ;
+			  blueFlag    = false ;
+			  greenFlag   = false ;
+    	  }else
+    	  {
+    		  runFlag = false ;
+    	  }
+
+	  }
 
 //      if( (int) ceil( (ros::Time::now() - start_time).toSec() ) % 6 == 0 )
 //      {
