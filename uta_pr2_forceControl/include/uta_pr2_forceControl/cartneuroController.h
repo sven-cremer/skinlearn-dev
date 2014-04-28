@@ -16,7 +16,7 @@
 #include <neuroadaptive_msgs/fixedWeightToggle.h>
 #include <neuroadaptive_msgs/saveControllerData.h>
 
-#include "controllerFullData.pb.h"
+//#include "controllerFullData.pb.h"
 #include <fstream>
 
 typedef boost::array<double, 4> human_state_type;
@@ -141,8 +141,8 @@ private:
   ros::ServiceServer toggleFixedWeights_srv_;
 
   void bufferData( double & dt );
-  void setDataPoint(dataPoint::Datum* datum, double & dt);
-  dataPoint::controllerFullData controllerData;
+//  void setDataPoint(dataPoint::Datum* datum, double & dt);
+//  dataPoint::controllerFullData controllerData;
 
   std::fstream saveDataFile;
 

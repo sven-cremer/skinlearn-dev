@@ -2,7 +2,7 @@
 useCurrentCartPose : false
 useNullspacePose   : true
 useFTinput         : true
-forceTorqueOn      : true
+forceTorqueOn      : false
 
 # Only one can be true
 useARMAmodel       : true

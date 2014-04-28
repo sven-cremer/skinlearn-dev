@@ -7,9 +7,9 @@ using namespace pr2_controller_ns;
 bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                  ros::NodeHandle &n)
 {
-	// Verify that the version of the library that we linked against is
-	  // compatible with the version of the headers we compiled against.
-	  GOOGLE_PROTOBUF_VERIFY_VERSION;
+//	// Verify that the version of the library that we linked against is
+//	  // compatible with the version of the headers we compiled against.
+//	  GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   // Get the root and tip link names from parameter server.
   std::string root_name, tip_name;
@@ -526,24 +526,27 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
    if(!hardwareInterface)
        ROS_ERROR("Something wrong with the hardware interface pointer!");
 
-   l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
-   r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+   if( forceTorqueOn )
+   {
+     l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+     r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
 
-   if( !l_ft_handle_ )
-       ROS_ERROR("Something wrong with getting l_ft handle");
-   if( !r_ft_handle_ )
-       ROS_ERROR("Something wrong with getting r_ft handle");
+     if( !l_ft_handle_ )
+         ROS_ERROR("Something wrong with getting l_ft handle");
+     if( !r_ft_handle_ )
+         ROS_ERROR("Something wrong with getting r_ft handle");
 
      /* get a handle to the right gripper accelerometer */
-       accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
-       if(!accelerometer_handle_)
-           ROS_ERROR("Something wrong with getting accelerometer handle");
+     accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
+     if(!accelerometer_handle_)
+         ROS_ERROR("Something wrong with getting accelerometer handle");
 
-       // set to 1.5 kHz bandwidth (should be the default)
-       accelerometer_handle_->command_.bandwidth_ = 6;
+     // set to 1.5 kHz bandwidth (should be the default)
+     accelerometer_handle_->command_.bandwidth_ = 6;
 
-       // set to +/- 8g range (0=2g,1=4g)
-       accelerometer_handle_->command_.range_ = 2;
+     // set to +/- 8g range (0=2g,1=4g)
+     accelerometer_handle_->command_.range_ = 2;
+   }
 
   /////////////////////////
   // DATA COLLECTION
@@ -1365,22 +1368,23 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           // Increment for the next cycle.
           storage_index_ = index+1;
 
-		  // Add a data point
-		  setDataPoint(controllerData.add_datum(), dt);
+/*          // Add a data point
+          setDataPoint(controllerData.add_datum(), dt);*/
         }
 
-        // Save to file
-	    {
-	  	  if (!controllerData.SerializeToOstream(&saveDataFile))
-	  	  {
-	  		ROS_ERROR_STREAM( "Failed to write data." );
-	  	  }
-	    }
+/*        // Save to file
+        {
+              if (!controllerData.SerializeToOstream(&saveDataFile))
+              {
+                    ROS_ERROR_STREAM( "Failed to write data." );
+              }
+        }
 
-		// Optional:  Delete all global objects allocated by libprotobuf.
-		google::protobuf::ShutdownProtobufLibrary();
+            // Optional:  Delete all global objects allocated by libprotobuf.
+            google::protobuf::ShutdownProtobufLibrary();*/
 }
 
+/*
 void PR2CartneuroControllerClass::setDataPoint(dataPoint::Datum* datum, double & dt)
 {
 	datum->set_dt                 (  dt                          );
@@ -1491,19 +1495,19 @@ void PR2CartneuroControllerClass::setDataPoint(dataPoint::Datum* datum, double &
 	datum->set_r_acc_j4           (  0                           );
 	datum->set_r_acc_j5           (  0                           );
 	datum->set_r_acc_j6           (  0                           );
-  /*datum->set_r_eff_x            (  ferr_(0)                    );
-	datum->set_r_eff_y            (  ferr_(1)                    );
-	datum->set_r_eff_z            (  ferr_(2)                    );
-	datum->set_r_trq_x            (  ferr_(3)                    );
-	datum->set_r_trq_y            (  ferr_(4)                    );
-	datum->set_r_trq_z            (  ferr_(5)                    );
-	datum->set_r_eff_j0           (  tau_f_(0)                   );
-	datum->set_r_eff_j1           (  tau_f_(1)                   );
-	datum->set_r_eff_j2           (  tau_f_(2)                   );
-	datum->set_r_eff_j3           (  tau_f_(3)                   );
-	datum->set_r_eff_j4           (  tau_f_(4)                   );
-	datum->set_r_eff_j5           (  tau_f_(5)                   );
-	datum->set_r_eff_j6           (  tau_f_(6)                   );*/
+//      datum->set_r_eff_x            (  ferr_(0)                    );
+//	datum->set_r_eff_y            (  ferr_(1)                    );
+//	datum->set_r_eff_z            (  ferr_(2)                    );
+//	datum->set_r_trq_x            (  ferr_(3)                    );
+//	datum->set_r_trq_y            (  ferr_(4)                    );
+//	datum->set_r_trq_z            (  ferr_(5)                    );
+//	datum->set_r_eff_j0           (  tau_f_(0)                   );
+//	datum->set_r_eff_j1           (  tau_f_(1)                   );
+//	datum->set_r_eff_j2           (  tau_f_(2)                   );
+//	datum->set_r_eff_j3           (  tau_f_(3)                   );
+//	datum->set_r_eff_j4           (  tau_f_(4)                   );
+//	datum->set_r_eff_j5           (  tau_f_(5)                   );
+//	datum->set_r_eff_j6           (  tau_f_(6)                   );
 	datum->set_l_limit_0          (  q_lower(0)                  );
 	datum->set_l_limit_1          (  q_lower(1)                  );
 	datum->set_l_limit_2          (  q_lower(2)                  );
@@ -1573,6 +1577,8 @@ void PR2CartneuroControllerClass::setDataPoint(dataPoint::Datum* datum, double &
 	datum->set_w7                 (  (double)outerLoopWk(7,0)    );
 
 }
+*/
+
 
 /// Service call to set reference trajectory
 bool PR2CartneuroControllerClass::setRefTraj( neuroadaptive_msgs::setCartPose::Request  & req ,
