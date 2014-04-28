@@ -8,11 +8,15 @@
 #include <ros/ros.h>
 #include <pr2_mechanism_msgs/LoadController.h>
 #include <pr2_mechanism_msgs/SwitchController.h>
+#include <pr2_mechanism_msgs/UnloadController.h>
+#include <pr2_mechanism_msgs/ReloadControllerLibraries.h>
+#include <pr2_mechanism_msgs/ListControllers.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/tf.h>
 #include <iostream>
 #include <std_srvs/Empty.h>
 #include <neuroadaptive_msgs/fixedWeightToggle.h>
+#include <string>
 
 using namespace std;
 
@@ -23,6 +27,9 @@ class controllerTestClient
   ros::ServiceClient m_switchControllerClient   ;
   ros::ServiceClient m_loadControllerClient     ;
   ros::ServiceClient m_toggleFixedWeightsClient ;
+  ros::ServiceClient m_unloadControllersClient  ;
+  ros::ServiceClient m_reloadLibrariesClient    ;
+  ros::ServiceClient m_listControllersClient    ;
 
   ros::Publisher     m_rCartPub                 ;
   ros::Publisher     m_lCartPub                 ;
@@ -61,6 +68,9 @@ class controllerTestClient
   double m_w6           ;
   double m_w7           ;
 
+  vector<string> m_unloadedControllers      ;
+  vector<string> m_unloadedControllersState ;
+
 /*
  * pr2_controller_manager/load_controller (pr2_mechanism_msgs/LoadController)
   pr2_controller_manager/unload_controller (pr2_mechanism_msgs/UnloadController)
@@ -74,9 +84,19 @@ public:
   {
 	  choice = 0;
 
+	  /*
+	  pr2_controller_manager/load_controller (pr2_mechanism_msgs/LoadController)
+	  pr2_controller_manager/unload_controller (pr2_mechanism_msgs/UnloadController)
+	  pr2_controller_manager/list_controllers (pr2_mechanism_msgs/ListControllers)
+	  pr2_controller_manager/reload_controller_libraries (pr2_mechanism_msgs/ReloadControllerLibraries)
+	  */
+
 	  m_switchControllerClient   = m_node.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
 	  m_loadControllerClient     = m_node.serviceClient<pr2_mechanism_msgs::LoadController  >("pr2_controller_manager/load_controller");
 	  m_toggleFixedWeightsClient = m_node.serviceClient<neuroadaptive_msgs::fixedWeightToggle>("pr2_cartneuroController/toggleFixedWeights");
+	  m_unloadControllersClient  = m_node.serviceClient<pr2_mechanism_msgs::UnloadController>("pr2_controller_manager/unload_controller");
+	  m_reloadLibrariesClient    = m_node.serviceClient<pr2_mechanism_msgs::ReloadControllerLibraries>("pr2_controller_manager/reload_controller_libraries");
+	  m_listControllersClient    = m_node.serviceClient<pr2_mechanism_msgs::ListControllers>("pr2_controller_manager/list_controllers");
 	  
 	  m_rCartPub = m_node.advertise<geometry_msgs::PoseStamped>( "/r_cart/command_pose", 10 );
 	  m_lCartPub = m_node.advertise<geometry_msgs::PoseStamped>( "/l_cart/command_pose", 10 );
@@ -243,6 +263,69 @@ void toggleFixedWeights()
     m_w7 = toggleSrv.response.w7 ;
 }
 
+void unloadControllers()
+{
+	pr2_mechanism_msgs::SwitchController controllerSwitchSrv ;
+	pr2_mechanism_msgs::ListControllers  listControllersSrv  ;
+	pr2_mechanism_msgs::UnloadController unloadControllerSrv ;
+	m_listControllersClient.call( listControllersSrv );
+
+	for( uint i = 0; i < listControllersSrv.response.controllers.size(); i++ )
+	{
+		ROS_INFO_STREAM("Controller: " <<  listControllersSrv.response.controllers[i] << " | State: " << listControllersSrv.response.state[i] );
+		if( listControllersSrv.response.state[i] == "running" )
+		{
+			ROS_DEBUG_STREAM("Need to stop!");
+			controllerSwitchSrv.request.stop_controllers.push_back( listControllersSrv.response.controllers[i] );
+		}
+	}
+	controllerSwitchSrv.request.strictness = controllerSwitchSrv.request.BEST_EFFORT;
+	m_switchControllerClient.call( controllerSwitchSrv );
+
+	for( uint i = 0; i < listControllersSrv.response.controllers.size(); i++ )
+	{
+		ROS_INFO_STREAM("Unloading: " << listControllersSrv.response.controllers[i] );
+		unloadControllerSrv.request.name = listControllersSrv.response.controllers[i] ;
+		m_unloadControllersClient.call(unloadControllerSrv);
+	}
+
+	// Save unloaded controllers
+	m_unloadedControllers      = listControllersSrv.response.controllers ;
+	m_unloadedControllersState = listControllersSrv.response.state       ;
+
+}
+
+void reloadLibraries()
+{
+	pr2_mechanism_msgs::ReloadControllerLibraries reloadLibSrv ;
+	reloadLibSrv.request.force_kill = true ;
+	m_reloadLibrariesClient.call(reloadLibSrv);
+}
+
+void reloadControllers()
+{
+	pr2_mechanism_msgs::LoadController loadControllerSrv ;
+	for( uint i = 0; i < m_unloadedControllers.size(); i++ )
+	{
+		ROS_DEBUG_STREAM("Reload: " << m_unloadedControllers[i] );
+		loadControllerSrv.request.name = m_unloadedControllers[i] ;
+		m_loadControllerClient.call(loadControllerSrv);
+	}
+
+	pr2_mechanism_msgs::SwitchController controllerSwitchSrv ;
+	for( uint i = 0; i < m_unloadedControllersState.size(); i++ )
+	{
+		// Only start previously running controllers
+		if( m_unloadedControllersState[i] == "running" )
+		{
+			controllerSwitchSrv.request.start_controllers.push_back( m_unloadedControllers[i] ) ;
+		}
+	}
+	controllerSwitchSrv.request.strictness = controllerSwitchSrv.request.BEST_EFFORT ;
+	m_switchControllerClient.call( controllerSwitchSrv );
+
+}
+
   void go()
   {
     ROS_INFO_STREAM("# Starting Experiment #");
@@ -274,6 +357,9 @@ void toggleFixedWeights()
     	ROS_INFO_STREAM("5 - P1 (red)");
     	ROS_INFO_STREAM("6 - P2 (blue)");
     	ROS_INFO_STREAM("t - Toggle fixed weights");
+    	ROS_INFO_STREAM("u - Unload all controllers");
+    	ROS_INFO_STREAM("l - Reload libraries");
+    	ROS_INFO_STREAM("r - Reload all controllers");
     	ROS_INFO_STREAM("q - Quit");
 
     	std::cin >> choice ;
@@ -300,6 +386,15 @@ void toggleFixedWeights()
 					   break;
     	    case 't' :
 					   toggleFixedWeights();
+					   break;
+    	    case 'u' :
+					   unloadControllers();
+					   break;
+    	    case 'l' :
+					   reloadLibraries();
+					   break;
+    	    case 'r' :
+					   reloadControllers();
 					   break;
     	    case 'q' :
 					   loopOn = false;
