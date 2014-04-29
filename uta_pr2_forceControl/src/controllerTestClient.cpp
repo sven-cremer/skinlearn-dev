@@ -253,19 +253,19 @@ void switchLArmCartesianPoseController()
 void toggleFixedWeights()
 {
 	neuroadaptive_msgs::fixedWeightToggle toggleSrv;
-    m_toggleFixedWeightsClient.call(toggleSrv);
-    useFixedWeights = toggleSrv.response.useFixedWeights;
+	m_toggleFixedWeightsClient.call(toggleSrv);
+	useFixedWeights = toggleSrv.response.useFixedWeights;
 
-    m_w0 = toggleSrv.response.w0 ;
-    m_w1 = toggleSrv.response.w1 ;
-    m_w2 = toggleSrv.response.w2 ;
-    m_w3 = toggleSrv.response.w3 ;
-    m_w4 = toggleSrv.response.w4 ;
-    m_w5 = toggleSrv.response.w5 ;
-    m_w6 = toggleSrv.response.w6 ;
-    m_w7 = toggleSrv.response.w7 ;
+	m_w0 = toggleSrv.response.w0 ;
+	m_w1 = toggleSrv.response.w1 ;
+	m_w2 = toggleSrv.response.w2 ;
+	m_w3 = toggleSrv.response.w3 ;
+	m_w4 = toggleSrv.response.w4 ;
+	m_w5 = toggleSrv.response.w5 ;
+	m_w6 = toggleSrv.response.w6 ;
+	m_w7 = toggleSrv.response.w7 ;
 
-    m_outerModel = toggleSrv.response.outerModel;
+	m_outerModel = toggleSrv.response.outerModel;
 }
 
 void unloadControllers()
@@ -341,7 +341,7 @@ void reloadCartneuro()
 	std::string controllerName = "pr2_cartneuroController" ;
 
 	controllerSwitchSrv.request.stop_controllers.push_back( controllerName );
-    controllerSwitchSrv.request.strictness = controllerSwitchSrv.request.BEST_EFFORT;
+	controllerSwitchSrv.request.strictness = controllerSwitchSrv.request.BEST_EFFORT;
 	m_switchControllerClient.call( controllerSwitchSrv );
 
 	ROS_INFO_STREAM("Unloading: " << controllerName )  ;

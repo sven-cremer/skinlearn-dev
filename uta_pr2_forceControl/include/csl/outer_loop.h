@@ -934,7 +934,7 @@ public:
     // Transfer Functions
     a  = 1  ; b  = 0.5 ;
     am = 1  ; bm = 1   ;
-    an = 3  ; bn = 3   ;
+    an = 1  ; bn = 1   ;
 
     // Intial Values
     theta_1  = 1 ; theta_2 = 1 ; theta_3 = 1 ;
@@ -1102,7 +1102,7 @@ public:
       ym_dot      = -am        * ym            + bm     * u_c          ;
       yp_dot      = -an        * yp            + bn     * u            ;
       // FIXME Fake Human Force
-      // y_dot       = -a         * y             + b      * u_c          ;
+      // y_dot       = -a         * y             + b      * u_c       ;
       yhat_dot    = -ahat      * y_hat         + bhat   * u_c          ;
       theta_1_dot =  gamma_1   * e * u_c                               ;
       theta_2_dot =  gamma_2   * e * yp                                ;
@@ -1123,7 +1123,7 @@ public:
       bhat    = bhat    + bhat_dot    * delT ;
 
       // Model output
-      q_m(0)   = yp ;
+      q_m(0)   = ym ;
 
       // FIXME Fake Human Force
       // t_r(0) = y;
