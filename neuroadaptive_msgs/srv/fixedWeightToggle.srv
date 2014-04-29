@@ -12,3 +12,6 @@ float64 w4
 float64 w5
 float64 w6
 float64 w7
+
+# type of outer-loop
+string[] outerModel

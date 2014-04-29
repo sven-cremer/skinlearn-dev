@@ -68,6 +68,8 @@ class controllerTestClient
   double m_w6           ;
   double m_w7           ;
 
+  std::vector<string> m_outerModel ;
+
   vector<string> m_unloadedControllers      ;
   vector<string> m_unloadedControllersState ;
 
@@ -253,6 +255,7 @@ void toggleFixedWeights()
 	neuroadaptive_msgs::fixedWeightToggle toggleSrv;
     m_toggleFixedWeightsClient.call(toggleSrv);
     useFixedWeights = toggleSrv.response.useFixedWeights;
+
     m_w0 = toggleSrv.response.w0 ;
     m_w1 = toggleSrv.response.w1 ;
     m_w2 = toggleSrv.response.w2 ;
@@ -261,6 +264,8 @@ void toggleFixedWeights()
     m_w5 = toggleSrv.response.w5 ;
     m_w6 = toggleSrv.response.w6 ;
     m_w7 = toggleSrv.response.w7 ;
+
+    m_outerModel = toggleSrv.response.outerModel;
 }
 
 void unloadControllers()
@@ -378,6 +383,11 @@ void reloadCartneuro()
     	                             << m_w5 << " "
     	                             << m_w6 << " "
     	                             << m_w7 << " " );
+    	vector<string>::iterator it1;
+		for(it1 = m_outerModel.begin(); it1 != m_outerModel.end(); it1++)
+		{
+			cout << "\nOuter-loop : " << *it1 << " "<< endl;
+		}
     	ROS_INFO_STREAM("Select your preference: ");
     	ROS_INFO_STREAM("1 - Align right arm");
     	ROS_INFO_STREAM("2 - Align left arm");

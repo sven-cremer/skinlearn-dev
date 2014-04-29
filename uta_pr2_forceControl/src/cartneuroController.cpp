@@ -1838,6 +1838,16 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( neuroadaptive_msgs::fixedW
   resp.w5 = outerLoopWk(5,0) ;
   resp.w6 = outerLoopWk(6,0) ;
   resp.w7 = outerLoopWk(7,0) ;
+
+  std::vector<std::string> outerModel ;
+
+  if( useARMAmodel ){ outerModel.push_back("useARMAmodel"); }
+  if( useFIRmodel  ){ outerModel.push_back("useFIRmodel "); }
+  if( useMRACmodel ){ outerModel.push_back("useMRACmodel"); }
+  if( useMSDmodel  ){ outerModel.push_back("useMSDmodel "); }
+
+  resp.outerModel = outerModel ;
+
   return true;
 }
 
