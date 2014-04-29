@@ -5,19 +5,19 @@ useFTinput         : true
 forceTorqueOn      : true
 
 # Only one can be true
-useARMAmodel       : true
+useARMAmodel       : false
 useFIRmodel        : false
-useMRACmodel       : false
+useMRACmodel       : true
 useMSDmodel        : false
 
 rls_lambda         : 0.98
-rls_sigma          : 1000
+rls_sigma          : 0.001
 
-mrac_gamma_1       : 1
-mrac_gamma_2       : 2000
-mrac_gamma_3       : 2500
-mrac_gamma_4       : 5000
-mrac_gamma_5       : 5000
+mrac_gamma_1       : 0.1
+mrac_gamma_2       : 2.0
+mrac_gamma_3       : 2.5
+mrac_gamma_4       : 5
+mrac_gamma_5       : 5
 
 fixedFilterWeights : false
 
@@ -35,9 +35,9 @@ forceCutOffX       : 1.0
 forceCutOffY       : 1.0
 forceCutOffZ       : 1.0
 
-m_M                 : 1
-m_S                 : 5
-m_D                 : 1
+m_M                 : 50
+m_S                 : 0
+m_D                 : 30
 
 task_mA             : 1.5
 task_mB             : 1.5
