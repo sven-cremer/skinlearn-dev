@@ -1091,7 +1091,7 @@ public:
     {
 
       // Human force
-      //y = t_r(0) ;
+      y = t_r(0) ;
 
       u           = - theta_1 * y_hat - theta_2 * yp - theta_3 * y     ;
       e           = yp - ym                                            ;
@@ -1112,7 +1112,8 @@ public:
       // 1dt order integrator
       ym      = ym      + ym_dot      * delT ;
       yp      = yp      + yp_dot      * delT ;
-      y       = y       + y_dot       * delT ;
+      // FIXME Fake Human Force
+//      y       = y       + y_dot       * delT ;
       y_hat   = y_hat   + yhat_dot    * delT ;
       theta_1 = theta_1 + theta_1_dot * delT ;
       theta_2 = theta_2 + theta_2_dot * delT ;
@@ -1124,7 +1125,7 @@ public:
       q_m(0)   = yp ;
 
       // FIXME Fake Human Force
-      t_r(0) = y;
+//      t_r(0) = y;
 
       // Backward difference
       // TODO better way to do this?
