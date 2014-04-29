@@ -1130,7 +1130,7 @@ public:
       bhat    = bhat    + bhat_dot    * delT ;
 
       // Model output
-      q_m(0)   = ym ;
+      q_m(0)   = yp ;
 
       // FIXME Fake Human Force
       // t_r(0) = y;
