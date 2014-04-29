@@ -71,9 +71,8 @@ class referenceTrajectoryClient
   double cartIniZ ;
 
   // Flags
-  bool redFlag     ;
   bool blueFlag    ;
-  bool greenFlag   ;
+  bool redFlag     ;
   bool captureFlag ;
   bool runFlag     ;
 
@@ -113,9 +112,8 @@ public:
     if (!node.getParam( para_cartIniZ, cartIniZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; }
 
     // Flags
-    redFlag     = false ;
     blueFlag    = false ;
-    greenFlag   = false ;
+    redFlag     = false ;
     captureFlag = false ;
     runFlag     = true  ;
 
@@ -148,7 +146,7 @@ public:
         captureFlag = true ;
       }
 
-      if( (ros::Time::now() - start_time).toSec() > 5 && !redFlag )
+      if( (ros::Time::now() - start_time).toSec() > 5 && !blueFlag )
       {
     	ROS_INFO_STREAM("# BLUE # | Time: " << (ros::Time::now() - start_time).toSec() );
         sc.say("Blue!");
@@ -156,12 +154,12 @@ public:
         setCartPoseAction.request.msg.position.x = cartDesX ;
         setCartPoseAction.request.msg.position.y = cartDesY ;
         setCartPoseAction.request.msg.position.z = cartDesZ ;
-        redFlag = true ;
+        blueFlag = true ;
         setRefTraj_client.call(setCartPoseAction);
         switchNo++;
       }
 
-      if( (ros::Time::now() - start_time).toSec() > 10 && !greenFlag )
+      if( (ros::Time::now() - start_time).toSec() > 10 && !redFlag )
       {
     	ROS_INFO_STREAM("# RED  # | Time: " << (ros::Time::now() - start_time).toSec() );
         sc.say("Red!");
@@ -170,45 +168,44 @@ public:
         setCartPoseAction.request.msg.position.y = cartIniY ;
         setCartPoseAction.request.msg.position.z = cartIniZ ;
         setRefTraj_client.call(setCartPoseAction);
-        greenFlag = true ;
+        redFlag = true ;
 
         start_time = ros::Time::now();
-        redFlag   = false ;
-        blueFlag  = false ;
-        greenFlag = false ;
+        blueFlag   = false ;
+        redFlag = false ;
         switchNo++;
       }
 
-      sleep(0.5);
-
-      if( switchNo > 4 )
+      if( switchNo > 3 )
 	  {
-    	  captureFlag = false ;
-    	  switchNo    = 0     ;
-    	  ROS_INFO_STREAM("# Experiment DONE #");
-    	  ROS_INFO_STREAM("0 - no");
-    	  ROS_INFO_STREAM("1 - yes");
-    	  ROS_INFO_STREAM("Run again? :");
+    	  sleep(2);
+		  captureFlag = false ;
+		  switchNo    = 0     ;
+		  ROS_INFO_STREAM("# Experiment DONE #");
+		  sc.say("Experiment complete!");
+		  ROS_INFO_STREAM("0 - no");
+		  ROS_INFO_STREAM("1 - yes");
+		  ROS_INFO_STREAM("Run again? :");
 
-    	  bool runAgain;
-    	  std::cin >> runAgain;
+		  bool runAgain;
+		  std::cin >> runAgain;
 
-    	  if( runAgain )
-    	  {
+		  if( runAgain )
+		  {
 			  start_time = ros::Time::now();
 
 			  neuroadaptive_msgs::saveControllerData saveSrv;
-    		  saveSrv.request.fileName = "~/Dropbox/PhD/UTARI/PR2/PR2_TRO/PR2/ProtobufData/test1.txt";
+			  saveSrv.request.fileName = "~/Dropbox/PhD/UTARI/PR2/PR2_TRO/PR2/ProtobufData/test1.txt";
 			  save_client.call(saveSrv);
 
 			  captureFlag = true  ;
-			  redFlag     = false ;
 			  blueFlag    = false ;
-			  greenFlag   = false ;
-    	  }else
-    	  {
-    		  runFlag = false ;
-    	  }
+			  redFlag     = false ;
+		  }else
+		  {
+			  runFlag = false ;
+			  break;
+		  }
 
 	  }
 
