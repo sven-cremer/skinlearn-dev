@@ -1098,7 +1098,7 @@ public:
     {
 
       // Human force
-      y = t_r(0) ;
+      y = 0 ; //t_r(0) ;
 
       u           = - theta_1 * y_hat - theta_2 * yp - theta_3 * y     ;
       e           = yp - ym                                            ;
