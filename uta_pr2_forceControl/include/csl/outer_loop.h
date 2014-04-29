@@ -1080,10 +1080,10 @@ public:
 
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
 
-    ref_q_m(0)   = ref_q_m(0) + ref_qd_m(0)*delT;
-    ref_qd_m(0)  = a_task*task_ref(0) -  b_task*ref_q_m(0);
+//    ref_q_m(0)   = ref_q_m(0) + ref_qd_m(0)*delT;
+//    ref_qd_m(0)  = a_task*task_ref(0) -  b_task*ref_q_m(0);
 
-    ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
+//    ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
 
 //    ref_q_m(0)   = ode_init_x[0 ] ;
 //    ref_qd_m(0)  = ode_init_x[1 ] ;
@@ -1093,7 +1093,7 @@ public:
     iter = iter + 1;
 
     // Desired is the task reference model
-    u_c = ref_q_m(0);
+    u_c = task_ref(0);
 
     {
 
