@@ -498,7 +498,8 @@ class RlsModel
 
   double delT; // Time step
 
-  double lm;
+  double m_lm;
+  double m_sigma;
 
   int iter;
 
@@ -595,13 +596,14 @@ public:
 
     // FIXME need to make this a 3 dimensional matrix
     Pk    .resize( num_Fir, num_Fir       ) ;
-    Pk = Eigen::MatrixXd::Identity( num_Fir, num_Fir )/0.001;
+    m_sigma = 0.001 ;
+    Pk = Eigen::MatrixXd::Identity( num_Fir, num_Fir )/m_sigma ;
 
     Uk.resize( num_Fir, num_Joints ) ;
-    Uk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
+    Uk = Eigen::MatrixXd::Zero( num_Fir, num_Joints ) ;
 
     Uk_plus.resize( num_Fir, num_Joints ) ;
-    Uk_plus = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
+    Uk_plus = Eigen::MatrixXd::Zero( num_Fir, num_Joints ) ;
 
     q         = Eigen::MatrixXd::Zero( num_Joints, 1 );
     qd        = Eigen::MatrixXd::Zero( num_Joints, 1 );
@@ -622,7 +624,7 @@ public:
 
     t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    lm        = 0.98; // Forgetting factor
+    m_lm        = 0.98; // Forgetting factor
 
     // Don't use fixed weights by default
     useFixedWeights = false;
@@ -632,7 +634,7 @@ public:
     ode_init_x[1 ] = 0.0;
     ode_init_x[2 ] = 0.0;
 
-    rls_filter.init( Wk, Uk, Dk, Pk, lm );
+    rls_filter.init( Wk, Uk, Dk, Pk, m_lm );
 
   }
 
@@ -655,6 +657,19 @@ public:
   {
     a_task = param_a_task ;
     b_task = param_b_task ;
+  }
+
+  void setLambda( const double & l )
+  {
+    m_lm = l;
+    rls_filter.setLambda( m_lm ) ;
+  }
+
+  void initRls( const double & l, const double & sigma )
+  {
+    m_lm    = l     ;
+    m_sigma = sigma ;
+    rls_filter.init( Wk, Uk, Dk, Pk, m_lm );
   }
 
   void getWeights( Eigen::MatrixXd & param_Wk )
