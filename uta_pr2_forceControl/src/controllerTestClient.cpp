@@ -326,6 +326,35 @@ void reloadControllers()
 
 }
 
+void reloadCartneuro()
+{
+	pr2_mechanism_msgs::SwitchController controllerSwitchSrv ;
+	pr2_mechanism_msgs::ListControllers  listControllersSrv  ;
+	pr2_mechanism_msgs::UnloadController unloadControllerSrv ;
+	m_listControllersClient.call( listControllersSrv );
+
+	std::string controllerName = "pr2_cartneuroController" ;
+
+	controllerSwitchSrv.request.stop_controllers.push_back( controllerName );
+    controllerSwitchSrv.request.strictness = controllerSwitchSrv.request.BEST_EFFORT;
+	m_switchControllerClient.call( controllerSwitchSrv );
+
+	ROS_INFO_STREAM("Unloading: " << controllerName )  ;
+	unloadControllerSrv.request.name =  controllerName ;
+	m_unloadControllersClient.call(unloadControllerSrv);
+
+	pr2_mechanism_msgs::LoadController loadControllerSrv ;
+	ROS_DEBUG_STREAM("Reload: " << controllerName ) ;
+	loadControllerSrv.request.name = controllerName ;
+	m_loadControllerClient.call(loadControllerSrv)  ;
+
+	// Turn on neuro controller
+//	pr2_mechanism_msgs::SwitchController controllerSwitchSrv ;
+//	controllerSwitchSrv.request.start_controllers.push_back( controllerName ) ;
+//	controllerSwitchSrv.request.strictness = controllerSwitchSrv.request.BEST_EFFORT ;
+//	m_switchControllerClient.call( controllerSwitchSrv );
+}
+
   void go()
   {
     ROS_INFO_STREAM("# Starting Experiment #");
@@ -360,6 +389,7 @@ void reloadControllers()
     	ROS_INFO_STREAM("u - Unload all controllers");
     	ROS_INFO_STREAM("l - Reload libraries");
     	ROS_INFO_STREAM("r - Reload all controllers");
+    	ROS_INFO_STREAM("n - Reload cartneuro");
     	ROS_INFO_STREAM("q - Quit");
 
     	std::cin >> choice ;
@@ -395,6 +425,9 @@ void reloadControllers()
 					   break;
     	    case 'r' :
 					   reloadControllers();
+					   break;
+    	    case 'n' :
+					   reloadCartneuro();
 					   break;
     	    case 'q' :
 					   loopOn = false;
