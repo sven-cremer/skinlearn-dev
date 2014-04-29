@@ -1133,8 +1133,10 @@ void PR2CartneuroControllerClass::update()
   tau_c_(5) = tau_sat(5);
   tau_c_(6) = tau_sat(6);*/
 
+  tau_c_ = JointEigen2Kdl( tau );
+
   // And finally send these torques out.
-  chain_.setEfforts(tau);
+  chain_.setEfforts( tau_c_ );
 
   /////////////////////////
   // DATA COLLECTION
