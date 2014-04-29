@@ -673,6 +673,11 @@ public:
 	useFixedWeights = true;
   }
 
+  void setUpdatedWeights()
+  {
+	useFixedWeights = false;
+  }
+
   void updateFIR( double & param_qd_m           ,
                   double & param_qd             ,
                   double & param_q_m            ,

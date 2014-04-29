@@ -848,11 +848,6 @@ void PR2CartneuroControllerClass::update()
     if( ( robot_state_->getTime() - outer_elapsed_ ).toSec() >= outerLoopTime )
     {
 
-    	if( fixedFilterWeights )
-    	{
-    		outerLoopRLSmodelY.setFixedWeights( outerLoopWk );
-    	}
-
 		// RLS ARMA
 		if( useARMAmodel )
 		{
@@ -1845,6 +1840,14 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( neuroadaptive_msgs::fixedW
   resp.w5 = outerLoopWk(5,0) ;
   resp.w6 = outerLoopWk(6,0) ;
   resp.w7 = outerLoopWk(7,0) ;
+
+  if( fixedFilterWeights )
+  {
+	  outerLoopRLSmodelY.setFixedWeights( outerLoopWk );
+  }else
+  {
+	  outerLoopRLSmodelY.setUpdatedWeights();
+  }
 
   std::vector<std::string> outerModel ;
 
