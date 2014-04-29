@@ -10,6 +10,9 @@ useFIRmodel        : false
 useMRACmodel       : false
 useMSDmodel        : false
 
+rls_lambda         : 0.98
+rls_sigma          : 1000
+
 fixedFilterWeights : false
 
 filtW0             : -1.8136 #-2.3646

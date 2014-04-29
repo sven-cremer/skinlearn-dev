@@ -356,6 +356,15 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_fixedFilterWeights = "/fixedFilterWeights";
   if (!n.getParam( para_fixedFilterWeights , fixedFilterWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
 
+  double rls_lambda = 0.98 ;
+  double rls_sigma  = 1000 ;
+
+  std::string para_rls_lambda = "/rls_lambda";
+  std::string para_rls_sigma  = "/rls_sigma";
+
+  if (!n.getParam( para_rls_lambda , rls_lambda )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_rls_lambda.c_str()) ; return false; }
+  if (!n.getParam( para_rls_sigma  , rls_sigma  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_rls_sigma .c_str()) ; return false; }
+
   for (int i = 0; i < num_Joints; ++i)
       n.param("saturation/" + chain_.getJoint(i)->joint_->name, saturation_[i], 0.0);
 
@@ -471,6 +480,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopRLSmodelY.updateDelT( outerLoopTime );
   outerLoopRLSmodelY.updateAB( task_mA,
                                task_mB );
+  outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
 
   // MSD
   outerLoopMSDmodelX.updateDelT( outerLoopTime );

@@ -77,6 +77,13 @@ class RLSFilter
 
             }
 
+            void setLambda( const double & l )
+            {
+              lm.resize(1,1);
+			  lm    << l ;
+			  lmInv  = 1/l;
+            }
+
             void Update( const Eigen::MatrixXd & w ,
                          const Eigen::MatrixXd & u ,
                          const Eigen::MatrixXd & d ,
