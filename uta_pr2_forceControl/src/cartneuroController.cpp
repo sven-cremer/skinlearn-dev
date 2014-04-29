@@ -449,11 +449,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   // Outer Loop Init
 
   // MRAC
-  outerLoopMRACmodelX.updateDelT( delT );
+  outerLoopMRACmodelX.updateDelT( outerLoopTime );
   outerLoopMRACmodelX.updateAB( task_mA,
                                 task_mB );
 
-  outerLoopMRACmodelY.updateDelT( delT );
+  outerLoopMRACmodelY.updateDelT( outerLoopTime );
   outerLoopMRACmodelY.updateAB( task_mA,
                                 task_mB );
 
@@ -469,12 +469,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                task_mB );
 
   // MSD
-  outerLoopMSDmodelX.updateDelT( delT );
+  outerLoopMSDmodelX.updateDelT( outerLoopTime );
   outerLoopMSDmodelX.updateMsd( m_M,
                                 m_S,
                                 m_D );
 
-  outerLoopMSDmodelY.updateDelT( delT );
+  outerLoopMSDmodelY.updateDelT( outerLoopTime );
   outerLoopMSDmodelY.updateMsd( m_M,
                                 m_S,
                                 m_D );
@@ -1846,7 +1846,7 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( neuroadaptive_msgs::fixedW
   if( useMRACmodel ){ outerModel.push_back("useMRACmodel"); }
   if( useMSDmodel  ){ outerModel.push_back("useMSDmodel "); }
 
-  resp.outerModel = outerModel ;
+  resp.outerModel = outerModel;
 
   return true;
 }

@@ -1039,7 +1039,7 @@ public:
     param_q_m            = q_m(0);
     param_qd_m           = qd_m(0);
     param_qdd_m          = qdd_m(0);
-    param_t_r            = t_r(0);
+//    param_t_r            = t_r(0);
   }
 
   void update( Eigen::MatrixXd & param_qd_m          ,
@@ -1101,7 +1101,8 @@ public:
       // dot
       ym_dot      = -am        * ym            + bm     * u_c          ;
       yp_dot      = -an        * yp            + bn     * u            ;
-      y_dot       = -a         * y             + b      * u_c          ;
+      // FIXME Fake Human Force
+      // y_dot       = -a         * y             + b      * u_c          ;
       yhat_dot    = -ahat      * y_hat         + bhat   * u_c          ;
       theta_1_dot =  gamma_1   * e * u_c                               ;
       theta_2_dot =  gamma_2   * e * yp                                ;
@@ -1113,7 +1114,7 @@ public:
       ym      = ym      + ym_dot      * delT ;
       yp      = yp      + yp_dot      * delT ;
       // FIXME Fake Human Force
-//      y       = y       + y_dot       * delT ;
+      // y       = y       + y_dot       * delT ;
       y_hat   = y_hat   + yhat_dot    * delT ;
       theta_1 = theta_1 + theta_1_dot * delT ;
       theta_2 = theta_2 + theta_2_dot * delT ;
@@ -1125,7 +1126,7 @@ public:
       q_m(0)   = yp ;
 
       // FIXME Fake Human Force
-//      t_r(0) = y;
+      // t_r(0) = y;
 
       // Backward difference
       // TODO better way to do this?
