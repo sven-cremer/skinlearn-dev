@@ -330,14 +330,28 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_filtW7 , filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW7.c_str()) ; return false; }
 
   outerLoopWk.resize(8,1);
-  outerLoopWk(0,0) = filtW0 ;
-  outerLoopWk(1,0) = filtW1 ;
-  outerLoopWk(2,0) = filtW2 ;
-  outerLoopWk(3,0) = filtW3 ;
-  outerLoopWk(4,0) = filtW4 ;
-  outerLoopWk(5,0) = filtW5 ;
-  outerLoopWk(6,0) = filtW6 ;
-  outerLoopWk(7,0) = filtW7 ;
+  if( useFIRmodel || useARMAmodel )
+  {
+	  outerLoopWk(0,0) = filtW0 ;
+	  outerLoopWk(1,0) = filtW1 ;
+	  outerLoopWk(2,0) = filtW2 ;
+	  outerLoopWk(3,0) = filtW3 ;
+	  outerLoopWk(4,0) = filtW4 ;
+	  outerLoopWk(5,0) = filtW5 ;
+	  outerLoopWk(6,0) = filtW6 ;
+	  outerLoopWk(7,0) = filtW7 ;
+  }else
+  {
+	  outerLoopWk(0,0) = 0.0 ;
+	  outerLoopWk(1,0) = 0.0 ;
+	  outerLoopWk(2,0) = 0.0 ;
+	  outerLoopWk(3,0) = 0.0 ;
+	  outerLoopWk(4,0) = 0.0 ;
+	  outerLoopWk(5,0) = 0.0 ;
+	  outerLoopWk(6,0) = 0.0 ;
+	  outerLoopWk(7,0) = 0.0 ;
+  }
+
 
   std::string para_fixedFilterWeights = "/fixedFilterWeights";
   if (!n.getParam( para_fixedFilterWeights , fixedFilterWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
@@ -858,6 +872,9 @@ void PR2CartneuroControllerClass::update()
 										 task_refModel     (1)  );
 
 	//      ROS_ERROR_STREAM("USING RLS ARMA");
+
+			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
+	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
 		}
 
 		// RLS FIR
@@ -882,6 +899,9 @@ void PR2CartneuroControllerClass::update()
 										task_ref          (1) ,
 										task_refModel     (1)  );
 	//      ROS_ERROR_STREAM("USING RLS FIR");
+
+			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
+	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
 		}
 
 		// MRAC
@@ -927,9 +947,6 @@ void PR2CartneuroControllerClass::update()
 									 transformed_force(1)  );
 	//      ROS_ERROR_STREAM("USING MSD");
 		}
-
-		outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
-//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
 
 		outer_elapsed_ = robot_state_->getTime() ;
 
