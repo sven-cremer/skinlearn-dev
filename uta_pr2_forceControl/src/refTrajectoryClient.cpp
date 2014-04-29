@@ -201,6 +201,9 @@ public:
 			  captureFlag = true  ;
 			  blueFlag    = false ;
 			  redFlag     = false ;
+
+			  ROS_INFO_STREAM("# Starting Experiment #");
+
 		  }else
 		  {
 			  runFlag = false ;
