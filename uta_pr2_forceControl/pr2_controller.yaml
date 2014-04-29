@@ -13,6 +13,12 @@ useMSDmodel        : false
 rls_lambda         : 0.98
 rls_sigma          : 1000
 
+mrac_gamma_1       : 1
+mrac_gamma_2       : 2000
+mrac_gamma_3       : 2500
+mrac_gamma_4       : 5000
+mrac_gamma_5       : 5000
+
 fixedFilterWeights : false
 
 filtW0             : -1.8136 #-2.3646

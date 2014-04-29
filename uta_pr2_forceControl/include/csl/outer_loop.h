@@ -966,8 +966,8 @@ public:
     // Gains
     gamma_1 = 1     ,
     gamma_2 = 2000  ,
-    gamma_3 = 2.5e5 ,
-    gamma_4 = 5000 ,
+    gamma_3 = 2500  ,
+    gamma_4 = 5000  ,
     gamma_5 = 5000  ;
 
     u = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * y_hat;
@@ -1041,6 +1041,19 @@ public:
   {
 	yp     = param_yp ;
 	ym     = param_ym ;
+  }
+
+  void updateGamma( double param_gamma_1,
+                    double param_gamma_2,
+                    double param_gamma_3,
+                    double param_gamma_4,
+                    double param_gamma_5 )
+  {
+	gamma_1 = param_gamma_1 ;
+	gamma_2 = param_gamma_2 ;
+	gamma_3 = param_gamma_3 ;
+	gamma_4 = param_gamma_4 ;
+	gamma_5 = param_gamma_5 ;
   }
 
   void update( double & param_qd_m           ,

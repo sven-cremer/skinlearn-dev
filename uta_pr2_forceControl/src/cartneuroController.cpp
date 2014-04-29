@@ -365,6 +365,24 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_rls_lambda , rls_lambda )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_rls_lambda.c_str()) ; return false; }
   if (!n.getParam( para_rls_sigma  , rls_sigma  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_rls_sigma .c_str()) ; return false; }
 
+  double mrac_gamma_1 = 1 ;
+  double mrac_gamma_2 = 1 ;
+  double mrac_gamma_3 = 1 ;
+  double mrac_gamma_4 = 1 ;
+  double mrac_gamma_5 = 1 ;
+
+  std::string para_mrac_gamma_1 = "/mrac_gamma_1";
+  std::string para_mrac_gamma_2 = "/mrac_gamma_2";
+  std::string para_mrac_gamma_3 = "/mrac_gamma_3";
+  std::string para_mrac_gamma_4 = "/mrac_gamma_4";
+  std::string para_mrac_gamma_5 = "/mrac_gamma_5";
+
+  if (!n.getParam( para_mrac_gamma_1 , mrac_gamma_1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_1.c_str()) ; return false; }
+  if (!n.getParam( para_mrac_gamma_2 , mrac_gamma_2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_2.c_str()) ; return false; }
+  if (!n.getParam( para_mrac_gamma_3 , mrac_gamma_3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_3.c_str()) ; return false; }
+  if (!n.getParam( para_mrac_gamma_4 , mrac_gamma_4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_4.c_str()) ; return false; }
+  if (!n.getParam( para_mrac_gamma_5 , mrac_gamma_5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_5.c_str()) ; return false; }
+
   for (int i = 0; i < num_Joints; ++i)
       n.param("saturation/" + chain_.getJoint(i)->joint_->name, saturation_[i], 0.0);
 
@@ -469,6 +487,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                 task_mB );
   outerLoopMRACmodelY.updateIni( cartIniY,
 		  	  	  	  	  	  	 cartIniY );
+
+  outerLoopMRACmodelY.updateGamma( mrac_gamma_1,
+			                       mrac_gamma_2,
+			                       mrac_gamma_3,
+			                       mrac_gamma_4,
+			                       mrac_gamma_5 ) ;
 
   // RLS
   double outerRate = 20; // Hz
