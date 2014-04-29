@@ -899,7 +899,7 @@ class MracModel
   // Time step
   double delT           ;
   double lm             ;
-  int iter              ;
+  int    iter           ;
 
   // Task model
 
@@ -1014,6 +1014,13 @@ public:
   {
     a_task = param_a_task ;
     b_task = param_b_task ;
+  }
+
+  void updateIni( double param_yp,
+                  double param_ym )
+  {
+	yp     = param_yp ;
+	ym     = param_ym ;
   }
 
   void update( double & param_qd_m           ,

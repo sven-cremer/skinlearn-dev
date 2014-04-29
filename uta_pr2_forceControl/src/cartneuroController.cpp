@@ -452,10 +452,14 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopMRACmodelX.updateDelT( outerLoopTime );
   outerLoopMRACmodelX.updateAB( task_mA,
                                 task_mB );
+  outerLoopMRACmodelY.updateIni( cartIniX,
+  		  	  	  	  	  	  	 cartIniX );
 
   outerLoopMRACmodelY.updateDelT( outerLoopTime );
   outerLoopMRACmodelY.updateAB( task_mA,
                                 task_mB );
+  outerLoopMRACmodelY.updateIni( cartIniY,
+		  	  	  	  	  	  	 cartIniY );
 
   // RLS
   double outerRate = 20; // Hz
@@ -925,6 +929,7 @@ void PR2CartneuroControllerClass::update()
 									  transformed_force (1) ,
 									  task_ref          (1) ,
 									  task_refModel     (1)  );
+
 	//      ROS_ERROR_STREAM("USING MRAC");
 		}
 
