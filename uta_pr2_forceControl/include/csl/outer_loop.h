@@ -937,9 +937,9 @@ public:
     an = 1  ; bn = 1   ;
 
     // Intial Values
-    theta_1  = 1 ; theta_2 = 1 ; theta_3 = 1 ;
-    yhat_dot = 1 ; y_hat   = 1 ;
-    yp       = 1 ; ym      = 1 ;
+    theta_1  = 0 ; theta_2 = 0 ; theta_3 = 0 ;
+    yhat_dot = 0 ; y_hat   = 0 ;
+    yp       = 0 ; ym      = 0 ;
 
 //    u_c = 1;
 
