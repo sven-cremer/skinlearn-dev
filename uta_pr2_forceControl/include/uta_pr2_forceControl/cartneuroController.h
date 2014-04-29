@@ -69,6 +69,15 @@ private:
 
   human_state_type ode_init_x;
 
+  double filtW0 ;
+  double filtW1 ;
+  double filtW2 ;
+  double filtW3 ;
+  double filtW4 ;
+  double filtW5 ;
+  double filtW6 ;
+  double filtW7 ;
+
   // System Model END
   /////////////////////////
 

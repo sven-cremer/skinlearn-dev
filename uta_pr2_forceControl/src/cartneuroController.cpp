@@ -311,14 +311,14 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_filtW6 = "/filtW6" ;
   std::string para_filtW7 = "/filtW7" ;
 
-  double filtW0 = 0.0 ;
-  double filtW1 = 0.0 ;
-  double filtW2 = 0.0 ;
-  double filtW3 = 0.0 ;
-  double filtW4 = 0.0 ;
-  double filtW5 = 0.0 ;
-  double filtW6 = 0.0 ;
-  double filtW7 = 0.0 ;
+  filtW0 = 0.0 ;
+  filtW1 = 0.0 ;
+  filtW2 = 0.0 ;
+  filtW3 = 0.0 ;
+  filtW4 = 0.0 ;
+  filtW5 = 0.0 ;
+  filtW6 = 0.0 ;
+  filtW7 = 0.0 ;
 
   if (!n.getParam( para_filtW0 , filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW0.c_str()) ; return false; }
   if (!n.getParam( para_filtW1 , filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW1.c_str()) ; return false; }
@@ -1866,14 +1866,23 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( neuroadaptive_msgs::fixedW
   fixedFilterWeights =  ( fixedFilterWeights || true ) && !( fixedFilterWeights && true );
   resp.useFixedWeights = fixedFilterWeights ;
   // Filter Weights
-  resp.w0 = outerLoopWk(0,0) ;
-  resp.w1 = outerLoopWk(1,0) ;
-  resp.w2 = outerLoopWk(2,0) ;
-  resp.w3 = outerLoopWk(3,0) ;
-  resp.w4 = outerLoopWk(4,0) ;
-  resp.w5 = outerLoopWk(5,0) ;
-  resp.w6 = outerLoopWk(6,0) ;
-  resp.w7 = outerLoopWk(7,0) ;
+  resp.w0 = filtW0 ; // outerLoopWk(0,0) ;
+  resp.w1 = filtW1 ; // outerLoopWk(1,0) ;
+  resp.w2 = filtW2 ; // outerLoopWk(2,0) ;
+  resp.w3 = filtW3 ; // outerLoopWk(3,0) ;
+  resp.w4 = filtW4 ; // outerLoopWk(4,0) ;
+  resp.w5 = filtW5 ; // outerLoopWk(5,0) ;
+  resp.w6 = filtW6 ; // outerLoopWk(6,0) ;
+  resp.w7 = filtW7 ; // outerLoopWk(7,0) ;
+
+  outerLoopWk(0,0) = filtW0 ;
+  outerLoopWk(1,0) = filtW1 ;
+  outerLoopWk(2,0) = filtW2 ;
+  outerLoopWk(3,0) = filtW3 ;
+  outerLoopWk(4,0) = filtW4 ;
+  outerLoopWk(5,0) = filtW5 ;
+  outerLoopWk(6,0) = filtW6 ;
+  outerLoopWk(7,0) = filtW7 ;
 
   if( fixedFilterWeights )
   {
