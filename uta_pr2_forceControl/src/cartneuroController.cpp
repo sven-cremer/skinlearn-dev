@@ -1114,7 +1114,7 @@ void PR2CartneuroControllerClass::update()
       tau = JacobianTrans*force;
     }
 
-    // ======== Torque Saturation
+/*    // ======== Torque Saturation
       double sat_scaling = 1.0;
       for (int i = 0; i < num_Joints; ++i) {
         if (saturation_[i] > 0.0)
@@ -1131,10 +1131,10 @@ void PR2CartneuroControllerClass::update()
   tau_c_(3) = tau_sat(3);
   tau_c_(4) = tau_sat(4);
   tau_c_(5) = tau_sat(5);
-  tau_c_(6) = tau_sat(6);
+  tau_c_(6) = tau_sat(6);*/
 
   // And finally send these torques out.
-  chain_.setEfforts(tau_c_);
+  chain_.setEfforts(tau);
 
   /////////////////////////
   // DATA COLLECTION
