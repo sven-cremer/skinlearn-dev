@@ -140,7 +140,7 @@ public:
     {
       neuroadaptive_msgs::setCartPose setCartPoseAction;
 
-      if( /*(ros::Time::now() - start_time).toSec() > 4 && */ !captureFlag )
+      if( (ros::Time::now() - start_time).toSec() > 4 && !captureFlag )
       {
     	neuroadaptive_msgs::saveControllerData saveSrv;
     	saveSrv.request.fileName = "~/Dropbox/PhD/UTARI/PR2/PR2_TRO/PR2/ProtobufData/test1.txt";
@@ -181,7 +181,7 @@ public:
 
       sleep(0.5);
 
-      if( switchNo > 12 )
+      if( switchNo > 4 )
 	  {
     	  captureFlag = false ;
     	  switchNo    = 0     ;
