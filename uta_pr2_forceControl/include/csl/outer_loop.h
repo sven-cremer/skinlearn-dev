@@ -1160,6 +1160,8 @@ public:
       qd_m  = (q_m  - prv_q_m )/delT ;
       qdd_m = (qd_m - prv_qd_m)/delT ;
 
+      ref_q_m(0) = ym ;
+
     }
 
     prv_q_m  = q_m ;
