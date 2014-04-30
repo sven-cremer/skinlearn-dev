@@ -75,6 +75,7 @@ class referenceTrajectoryClient
   bool redFlag     ;
   bool captureFlag ;
   bool runFlag     ;
+  bool runAgainFlag;
 
   // No of switch
   // How many times switched positions
@@ -116,6 +117,7 @@ public:
     redFlag     = false ;
     captureFlag = false ;
     runFlag     = true  ;
+    runAgainFlag= false ;
 
     switchNo    = 0     ;
 
@@ -132,6 +134,9 @@ public:
   void go()
   {
     ROS_INFO_STREAM("# Starting Experiment #");
+    sc.say("Starting Experiment!");
+    sleepok(1, node);
+
     start_time = ros::Time::now();
 
     while( ros::ok() && runFlag )
@@ -187,10 +192,9 @@ public:
 		  ROS_INFO_STREAM("1 - yes");
 		  ROS_INFO_STREAM("Run again? :");
 
-		  bool runAgain;
-		  std::cin >> runAgain;
+//		  std::cin >> runAgainFlag;
 
-		  if( runAgain )
+		  if( runAgainFlag )
 		  {
 			  start_time = ros::Time::now();
 
@@ -203,6 +207,8 @@ public:
 			  redFlag     = false ;
 
 			  ROS_INFO_STREAM("# Starting Experiment #");
+			  sc.say("Starting Experiment!");
+			  sleepok(1, node);
 
 		  }else
 		  {
