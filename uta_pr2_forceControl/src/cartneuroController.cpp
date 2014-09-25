@@ -291,6 +291,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useMSDmodel = "/useMSDmodel";
   if (!n.getParam( para_useMSDmodel, useMSDmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMSDmodel.c_str()) ; return false; }
 
+  externalRefTraj = true ;
+  std::string para_externalRefTraj = "/externalRefTraj";
+  if (!n.getParam( para_externalRefTraj, externalRefTraj )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_externalRefTraj.c_str()) ; return false; }
+
+
   std::string para_forceCutOffX = "/forceCutOffX";
   std::string para_forceCutOffY = "/forceCutOffY";
   std::string para_forceCutOffZ = "/forceCutOffZ";
@@ -735,7 +740,7 @@ void PR2CartneuroControllerClass::update()
   if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
   if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
 
-  transformed_force(1) = - transformed_force(1);
+  //transformed_force(1) = - transformed_force(1);
 
   // Human force input END
   ///////////////////////////////
@@ -878,6 +883,13 @@ void PR2CartneuroControllerClass::update()
     }
 
     // OUTER Loop Update
+
+    // Human Intent Estimation
+    if( !externalRefTraj )
+    {
+    	calcHumanIntentPos( transformed_force, task_ref, 0.01, 1 );
+    }
+
 
     if( ( robot_state_->getTime() - outer_elapsed_ ).toSec() >= outerLoopTime )
     {
@@ -1637,9 +1649,12 @@ void PR2CartneuroControllerClass::setDataPoint(dataPoint::Datum* datum, double &
 bool PR2CartneuroControllerClass::setRefTraj( neuroadaptive_msgs::setCartPose::Request  & req ,
                                               neuroadaptive_msgs::setCartPose::Response & resp )
 {
-  task_ref(0) = req.msg.position.x ;
-  task_ref(1) = req.msg.position.y ;
-  task_ref(2) = req.msg.position.z ;
+	if( externalRefTraj )
+	{
+        task_ref(0) = req.msg.position.x ;
+        task_ref(1) = req.msg.position.y ;
+        task_ref(2) = req.msg.position.z ;
+	}
 
   resp.success = true;
 
@@ -1948,6 +1963,26 @@ PR2CartneuroControllerClass::JointEigen2Kdl( Eigen::VectorXd & joint )
         kdl_temp_joint_(6) = joint(6);
 
         return kdl_temp_joint_;
+}
+
+void
+PR2CartneuroControllerClass::calcHumanIntentPos( Eigen::Vector3d & force,
+		                                         Eigen::VectorXd & pos,
+		                                         double delT,
+		                                         double m )
+{
+  Eigen::Vector3d intentPos = Eigen::Vector3d::Zero();
+  Eigen::Vector3d intentVel = Eigen::Vector3d::Zero();
+  Eigen::Vector3d intentAcc = Eigen::Vector3d::Zero();
+
+  Eigen::Vector3d M(m, m, m);
+
+  intentAcc = force.cwiseQuotient(M);
+
+  intentVel = intentVel + intentAcc * delT ;
+  intentPos = intentPos + intentVel * delT ;
+
+  pos = intentPos;
 }
 
 // Register controller to pluginlib
