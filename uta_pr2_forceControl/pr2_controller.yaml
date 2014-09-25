@@ -10,6 +10,9 @@ useFIRmodel        : false
 useMRACmodel       : false
 useMSDmodel        : false
 
+# Is the reference trajectory x_r or q_r set externally or estimated
+externalRefTraj    : true
+
 rls_lambda         : 0.98
 rls_sigma          : 0.001
 
