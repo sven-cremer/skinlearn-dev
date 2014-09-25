@@ -9,9 +9,14 @@ useARMAmodel       : true
 useFIRmodel        : false
 useMRACmodel       : false
 useMSDmodel        : false
+useDirectmodel     : false
 
 # Is the reference trajectory x_r or q_r set externally or estimated
 externalRefTraj    : false
+
+# Human intent estimation 
+intentEst_delT     : 0.1
+intentEst_M        : 1.0
 
 rls_lambda         : 0.98
 rls_sigma          : 0.001
@@ -22,7 +27,7 @@ mrac_gamma_3       : 2.5
 mrac_gamma_4       : 5
 mrac_gamma_5       : 5
 
-fixedFilterWeights : false
+fixedFilterWeights : true
 
 filtW0             : -1.8775  #-1.8136 #-2.3646
 filtW1             :  1.2729  # 1.3171 # 1.9237

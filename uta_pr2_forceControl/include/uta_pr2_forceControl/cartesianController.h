@@ -163,6 +163,8 @@ public:
   bool useMRACmodel ;
   // Use MSD
   bool useMSDmodel ;
+  // Use Direct model x_r = x_m?
+  bool useDirectmodel;
 
   // Use FT sensors or not
   bool forceTorqueOn;

@@ -56,6 +56,10 @@ private:
   Eigen::VectorXd Xd_m;
   Eigen::VectorXd Xdd_m;
 
+  Eigen::VectorXd p_X_m;
+  Eigen::VectorXd p_Xd_m;
+  Eigen::VectorXd p_Xdd_m;
+
   Eigen::VectorXd X;
   Eigen::VectorXd Xd;
 
@@ -124,6 +128,8 @@ private:
   bool startCircleTraj;
 
   bool externalRefTraj;
+  double intentEst_delT;
+  double intentEst_M;
 
   Eigen::MatrixXd eigen_temp_joint;
   KDL::JntArray kdl_temp_joint_;

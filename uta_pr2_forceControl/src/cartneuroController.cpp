@@ -304,9 +304,22 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useMSDmodel = "/useMSDmodel";
   if (!n.getParam( para_useMSDmodel, useMSDmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMSDmodel.c_str()) ; return false; }
 
+  useDirectmodel = false ;
+  std::string para_useDirectmodel = "/useDirectmodel";
+  if (!n.getParam( para_useDirectmodel, useDirectmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useDirectmodel.c_str()) ; return false; }
+
+
   externalRefTraj = true ;
   std::string para_externalRefTraj = "/externalRefTraj";
   if (!n.getParam( para_externalRefTraj, externalRefTraj )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_externalRefTraj.c_str()) ; return false; }
+
+  intentEst_delT = 0.1 ;
+  std::string para_intentEst_delT = "/intentEst_delT";
+  if (!n.getParam( para_intentEst_delT, intentEst_delT )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentEst_delT.c_str()) ; return false; }
+
+  intentEst_M = 1.0 ;
+  std::string para_intentEst_M = "/intentEst_M";
+  if (!n.getParam( para_intentEst_M, intentEst_M )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentEst_M.c_str()) ; return false; }
 
 
   std::string para_forceCutOffX = "/forceCutOffX";
@@ -439,6 +452,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   Xd_m    .resize( num_Outputs ) ;
   Xdd_m   .resize( num_Outputs ) ;
 
+  // Prev desired Cartesian states
+  p_X_m     .resize( num_Outputs ) ;
+  p_Xd_m    .resize( num_Outputs ) ;
+  p_Xdd_m   .resize( num_Outputs ) ;
+
   // Cartesian states
   X       .resize( num_Outputs ) ;
   Xd      .resize( num_Outputs ) ;
@@ -461,12 +479,20 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   X        = Eigen::VectorXd::Zero( num_Outputs ) ;
   Xd       = Eigen::VectorXd::Zero( num_Outputs ) ;
 
+  p_X_m    = Eigen::VectorXd::Zero( num_Outputs ) ;
+  p_Xd_m   = Eigen::VectorXd::Zero( num_Outputs ) ;
+  p_Xdd_m  = Eigen::VectorXd::Zero( num_Outputs ) ;
+
   X_m(0)   = cartIniX     ;
   X_m(1)   = cartIniY     ;
   X_m(2)   = cartIniZ     ;
   X_m(3)   = cartIniRoll  ;
   X_m(4)   = cartIniPitch ;
   X_m(5)   = cartIniYaw   ;
+
+  p_X_m    = X_m   ;
+  p_Xd_m   = Xd_m  ;
+  p_Xdd_m  = Xdd_m ;
 
   transformed_force = Eigen::Vector3d::Zero();
   acc_data          = Eigen::Vector3d::Zero();
@@ -902,7 +928,7 @@ void PR2CartneuroControllerClass::update()
     // Human Intent Estimation
     if( !externalRefTraj )
     {
-    	calcHumanIntentPos( transformed_force, task_ref, 0.1, 1 );
+    	calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
 
     	// Transform human intent to torso lift link
     	task_ref.x() = x_gripper_acc_.p.x() + task_ref.x() ;
@@ -1012,6 +1038,14 @@ void PR2CartneuroControllerClass::update()
 									 Xdd_m            (1) ,
 									 transformed_force(1)  );
 	//      ROS_ERROR_STREAM("USING MSD");
+		}
+
+		// MSD
+		if( useDirectmodel )
+		{
+			X_m   = task_ref ;
+			Xd_m  = (X_m - p_X_m)/delT;
+			Xdd_m = (Xd_m - p_Xd_m)/delT;
 		}
 
 		outer_elapsed_ = robot_state_->getTime() ;
