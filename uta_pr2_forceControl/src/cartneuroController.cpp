@@ -740,7 +740,7 @@ void PR2CartneuroControllerClass::update()
   if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
   if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
 
-  //transformed_force(1) = - transformed_force(1);
+  transformed_force(1) = - transformed_force(1);
 
   // Human force input END
   ///////////////////////////////
