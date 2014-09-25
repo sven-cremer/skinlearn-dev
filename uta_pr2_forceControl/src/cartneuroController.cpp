@@ -887,7 +887,7 @@ void PR2CartneuroControllerClass::update()
     // Human Intent Estimation
     if( !externalRefTraj )
     {
-    	calcHumanIntentPos( transformed_force, task_ref, 0.01, 1 );
+    	calcHumanIntentPos( transformed_force, task_ref, 0.1, 1 );
     }
 
 

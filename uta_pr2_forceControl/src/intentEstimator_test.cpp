@@ -77,7 +77,7 @@ public:
 
 	  pos = intentPos;
 
-	  // ROS_INFO_STREAM(pos);
+	  ROS_INFO_STREAM(pos.transpose());
   }
 
   void ftSensorCb( geometry_msgs::WrenchStamped::Ptr msg )
