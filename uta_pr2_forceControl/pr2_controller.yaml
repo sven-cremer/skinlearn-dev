@@ -5,9 +5,9 @@ useFTinput         : true
 forceTorqueOn      : true
 
 # Only one can be true
-useARMAmodel       : false
+useARMAmodel       : true
 useFIRmodel        : false
-useMRACmodel       : true
+useMRACmodel       : false
 useMSDmodel        : false
 
 rls_lambda         : 0.98
@@ -21,21 +21,21 @@ mrac_gamma_5       : 5
 
 fixedFilterWeights : false
 
-filtW0             : -1.8136 #-2.3646
-filtW1             :  1.3171 # 1.9237
-filtW2             : -0.4726 #-0.3255
-filtW3             : -0.0082 #-0.1816
-filtW4             :  0.0032 # 0.0049
-filtW5             : -0.0010 #-0.0018
-filtW6             : -0.0007 #-0.0018
-filtW7             : -0.0009 # 0.0014
+filtW0             : -1.8775  #-1.8136 #-2.3646
+filtW1             :  1.2729  # 1.3171 # 1.9237
+filtW2             : -0.0578  #-0.4726 #-0.3255
+filtW3             : -0.3269  #-0.0082 #-0.1816
+filtW4             :  0.0018  # 0.0032 # 0.0049
+filtW5             :  0.0001  #-0.0010 #-0.0018
+filtW6             : -0.0013  #-0.0007 #-0.0018
+filtW7             :  0.0002  #-0.0009 # 0.0014
 
 # This makes zero any force less than below
 forceCutOffX       : 1.0
 forceCutOffY       : 1.0
 forceCutOffZ       : 1.0
 
-m_M                 : 50
+m_M                 : 20
 m_S                 : 0
 m_D                 : 30
 
