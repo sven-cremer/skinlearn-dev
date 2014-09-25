@@ -46,7 +46,9 @@ public:
 
   // The chain of links and joints
   pr2_mechanism_model::Chain chain_;
+  pr2_mechanism_model::Chain chain_acc_link;
   KDL::Chain kdl_chain_;
+  KDL::Chain kdl_chain_acc_link;
 
   pr2_hardware_interface::Accelerometer* accelerometer_handle_;
 
@@ -67,6 +69,7 @@ public:
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
+  boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_acc_;
   boost::scoped_ptr<KDL::ChainJntToJacSolver> jnt_to_jac_solver_;
 
   // The variables (which need to be pre-allocated).
@@ -78,6 +81,8 @@ public:
   KDL::Frame     x_;            // Tip pose
   KDL::Frame     xd_;           // Tip desired pose
   KDL::Frame     x0_;           // Tip initial pose
+
+  KDL::Frame     x_gripper_acc_;// Gripper accelerometer frame
 
   KDL::Frame     x_m_;          // Model Tip pose
   KDL::Frame     xd_m_;         // Model Tip desired pose

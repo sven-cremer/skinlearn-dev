@@ -35,6 +35,15 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
     return false;
   }
 
+  std::string gripper_acc_tip = "r_gripper_motor_accelerometer_link";
+
+  if (!chain_acc_link.init(robot, root_name, gripper_acc_tip))
+  {
+    ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'",
+              root_name.c_str(), gripper_acc_tip.c_str());
+    return false;
+  }
+
   std::string urdf_param_ = "/robot_description";
   std::string urdf_string;
 
@@ -93,8 +102,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // Construct the kdl solvers in non-realtime.
   chain_.toKDL(kdl_chain_);
+  chain_acc_link.toKDL(kdl_chain_acc_link);
+
   jnt_to_pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
   jnt_to_jac_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
+
+  jnt_to_pose_solver_acc_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_acc_link));
 
   // Resize (pre-allocate) the variables in non-realtime.
   q_.resize(kdl_chain_.getNrOfJoints());
@@ -715,6 +728,8 @@ void PR2CartneuroControllerClass::update()
   jnt_to_pose_solver_->JntToCart(q_, x_);
   jnt_to_jac_solver_->JntToJac(q_, J_);
 
+  jnt_to_pose_solver_acc_->JntToCart(q_, x_gripper_acc_);
+
   for (unsigned int i = 0 ; i < 6 ; i++)
   {
     xdot_(i) = 0;
@@ -888,6 +903,11 @@ void PR2CartneuroControllerClass::update()
     if( !externalRefTraj )
     {
     	calcHumanIntentPos( transformed_force, task_ref, 0.1, 1 );
+
+    	// Transform human intent to torso lift link
+    	task_ref.x() = x_gripper_acc_.p.x() + task_ref.x() ;
+    	task_ref.y() = x_gripper_acc_.p.y() + task_ref.y() ;
+    	task_ref.z() = x_gripper_acc_.p.z() + task_ref.z() ;
     }
 
 
