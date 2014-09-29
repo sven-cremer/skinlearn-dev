@@ -56,6 +56,10 @@ private:
   Eigen::VectorXd Xd_m;
   Eigen::VectorXd Xdd_m;
 
+  Eigen::VectorXd p_X_m;
+  Eigen::VectorXd p_Xd_m;
+  Eigen::VectorXd p_Xdd_m;
+
   Eigen::VectorXd X;
   Eigen::VectorXd Xd;
 
@@ -122,6 +126,11 @@ private:
   double circleUlim ;
   double circleLlim ;
   bool startCircleTraj;
+
+  bool externalRefTraj;
+  double intentEst_delT;
+  double intentEst_M;
+
   Eigen::MatrixXd eigen_temp_joint;
   KDL::JntArray kdl_temp_joint_;
 
@@ -165,6 +174,9 @@ public:
   Eigen::MatrixXd JointKdl2Eigen( KDL::JntArray & joint_ );
   Eigen::MatrixXd JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
   KDL::JntArray JointEigen2Kdl( Eigen::VectorXd & joint );
+
+  void calcHumanIntentPos( Eigen::Vector3d & force, Eigen::VectorXd & pos, double delT, double m );
+
 
 };
 }

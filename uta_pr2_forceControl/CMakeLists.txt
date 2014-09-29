@@ -87,6 +87,8 @@ rosbuild_add_executable(refTrajectoryClient src/refTrajectoryClient.cpp)
 
 rosbuild_add_executable(controllerTestClient src/controllerTestClient.cpp)
 
+rosbuild_add_executable(intentEstimator_test src/intentEstimator_test.cpp)
+
 #rosbuild_add_executable(SystemModel_test src/test/SystemModel_test.cpp)
 #target_link_libraries( SystemModel_test	oelLIB )
 
