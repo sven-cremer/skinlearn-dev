@@ -5,9 +5,9 @@ useFTinput         : true
 forceTorqueOn      : true
 
 # Only one can be true
-useARMAmodel       : false
+useARMAmodel       : true
 useFIRmodel        : false
-useMRACmodel       : true
+useMRACmodel       : false
 useMSDmodel        : false
 
 rls_lambda         : 0.98
