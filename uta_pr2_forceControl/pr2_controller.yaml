@@ -12,15 +12,19 @@ useMSDmodel        : false
 useDirectmodel     : false
 
 # Is the reference trajectory x_r or q_r set externally or estimated
-externalRefTraj    : false
+# If externalRefTraj is false the human intent x_i is used
+# i.e. an admittance model is used to generate x_i from f_h the force from the FT sensor
+externalRefTraj    : true
 
 # Human intent estimation 
-intentEst_delT     : 0.1
-intentEst_M        : 1.0
+intentEst_delT     : 0.1 # Propagation time
+intentEst_M        : 1.0 # M_i the mass of the intent admittance model
 
+# The params of the RLS estimator
 rls_lambda         : 0.98
 rls_sigma          : 0.001
 
+# Params for the MRAC outer-loop controller
 mrac_gamma_1       : 0.1
 mrac_gamma_2       : 2.0
 mrac_gamma_3       : 2.5
@@ -29,6 +33,7 @@ mrac_gamma_5       : 5
 
 fixedFilterWeights : true
 
+# ARMA parameters
 filtW0             : -1.8775  #-1.8136 #-2.3646
 filtW1             :  1.2729  # 1.3171 # 1.9237
 filtW2             : -0.0578  #-0.4726 #-0.3255
@@ -43,10 +48,12 @@ forceCutOffX       : 1.0
 forceCutOffY       : 1.0
 forceCutOffZ       : 1.0
 
-m_M                 : 20
+# Params for the MSD outer-loop controller
+m_M                 : 20.0
 m_S                 : 0
-m_D                 : 30
+m_D                 : 50.0
 
+# Params for something... FIXME!!
 task_mA             : 1.5
 task_mB             : 1.5
 
@@ -154,3 +161,4 @@ saturation:
   r_forearm_roll_joint: 8.376
   r_wrist_flex_joint: 5.568
   r_wrist_roll_joint: 5.568
+
