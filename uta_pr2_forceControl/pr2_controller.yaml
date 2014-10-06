@@ -53,7 +53,7 @@ m_M                 : 20.0
 m_S                 : 0
 m_D                 : 50.0
 
-# Params for something... FIXME!!
+# Params for M(s) of the RLS models
 task_mA             : 1.5
 task_mB             : 1.5
 
