@@ -1040,12 +1040,12 @@ void PR2CartneuroControllerClass::update()
 	//      ROS_ERROR_STREAM("USING MSD");
 		}
 
-		// MSD
+		// Direct Model
 		if( useDirectmodel )
 		{
 			X_m   = task_ref ;
-			Xd_m  = (X_m - p_X_m)/delT;
-			Xdd_m = (Xd_m - p_Xd_m)/delT;
+			Xd_m  = (X_m - p_X_m)/outerLoopTime;
+			Xdd_m = (Xd_m - p_Xd_m)/outerLoopTime;
 		}
 
 		outer_elapsed_ = robot_state_->getTime() ;
