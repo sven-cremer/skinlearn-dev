@@ -886,13 +886,13 @@ void PR2CartneuroControllerClass::update()
       /////////////////////////
       // Simulated human model
 
-      // OPen loop version
-//      ode_init_x[2] = task_ref(1); // q_r
-//      ode_init_x[3] = 0          ; // qd_r
+      // Open loop version
+      ode_init_x[2] = task_ref(1); // q_r
+      ode_init_x[3] = 0          ; // qd_r
 
       // Closed loop version
-      ode_init_x[2] = ( task_ref(1) - X_m(1) ); // q_r
-      ode_init_x[3] = 0 ; // - Xd (1)                ; // qd_r
+      // ode_init_x[2] = ( task_ref(1) - X_m(1) ); // q_r
+      // ode_init_x[3] = 0                       ; // - Xd (1)                ; // qd_r
 
   //    boost::numeric::odeint::integrate( human_model , ode_init_x , 0.0 , delT , delT );
   //    transformed_force(1) = ode_init_x[0];
@@ -905,11 +905,16 @@ void PR2CartneuroControllerClass::update()
       double Kp = 1 ;
       double Kd = 0 ;
 
-      // Reduced human model
-      transformed_force (1) = transformed_force (1) + ode_init_x[1 ]*delT;
+      double a_h = 10000;
+      double b_h = a_h;
 
+      // Reduced human model
+      transformed_force (1) = transformed_force (1) + ode_init_x[1] * delT;
+      
       //               ( Kp q_r           + Kd qd_r          - hf                    ) / T
-      ode_init_x[1 ] = ( Kp*ode_init_x[2] + Kd*ode_init_x[3] - transformed_force (1) ) / T ;
+      // ode_init_x[1] = ( Kp*ode_init_x[2] + Kd*ode_init_x[3] - transformed_force (1) ) / T ;
+      ode_init_x[1] = b_h*task_ref(1) - a_h*transformed_force (1);
+
 
       ROS_ERROR_STREAM("USING Simulated human model");
 
