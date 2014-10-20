@@ -54,3 +54,11 @@ float64 k
 
 float64 task_mA
 float64 task_mB
+
+# MRAC Params
+float64 gamma_1
+float64 gamma_2
+float64 gamma_3
+float64 gamma_4
+float64 gamma_5
+

@@ -1056,6 +1056,34 @@ public:
 	gamma_5 = param_gamma_5 ;
   }
 
+  void getGamma( double & param_gamma_1,
+                 double & param_gamma_2,
+                 double & param_gamma_3,
+                 double & param_gamma_4,
+                 double & param_gamma_5 )
+  {
+    param_gamma_1 = gamma_1 ;
+    param_gamma_2 = gamma_2 ;
+    param_gamma_3 = gamma_3 ;
+    param_gamma_4 = gamma_4 ;
+    param_gamma_5 = gamma_5 ;
+  }
+
+  void getEstimatedParams( double & param_y_hat  ,
+		                   double & param_theta_1,
+		                   double & param_theta_2,
+		                   double & param_theta_3,
+		                   double & param_ahat   ,
+		                   double & param_bhat    )
+  {
+      param_y_hat   = y_hat   ;
+      param_theta_1 = theta_1 ;
+      param_theta_2 = theta_2 ;
+      param_theta_3 = theta_3 ;
+      param_ahat    = ahat    ;
+      param_bhat    = bhat    ;
+  }
+
   void update( double & param_qd_m           ,
                double & param_qd             ,
                double & param_q_m            ,
@@ -1153,6 +1181,7 @@ public:
       // 1dt order integrator
       ym      = ym      + ym_dot      * delT ;
       yp      = yp      + yp_dot      * delT ;
+
       // FIXME Fake Human Force
       // y       = y       + y_dot       * delT ;
       y_hat   = y_hat   + yhat_dot    * delT ;

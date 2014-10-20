@@ -236,3 +236,17 @@ float64 w4
 float64 w5
 float64 w6
 float64 w7
+
+# MRAC Params
+float64 gamma_1
+float64 gamma_2
+float64 gamma_3
+float64 gamma_4
+float64 gamma_5
+
+float64 y_hat  
+float64 theta_1
+float64 theta_2
+float64 theta_3
+float64 ahat   
+float64 bhat   

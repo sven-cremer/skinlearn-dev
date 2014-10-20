@@ -1516,6 +1516,20 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].w6                = outerLoopWk(6,0)            ;
           msgControllerFullData[index].w7                = outerLoopWk(7,0)            ;
 
+          // MRAC Params
+          outerLoopMRACmodelY.getGamma( msgControllerFullData[index].gamma_1,
+                                        msgControllerFullData[index].gamma_2,
+                                        msgControllerFullData[index].gamma_3,
+                                        msgControllerFullData[index].gamma_4,
+                                        msgControllerFullData[index].gamma_5 );
+
+          outerLoopMRACmodelY.getEstimatedParams( msgControllerFullData[index].y_hat  ,
+        	                                      msgControllerFullData[index].theta_1,
+        	                                      msgControllerFullData[index].theta_2,
+        	                                      msgControllerFullData[index].theta_3,
+        	                                      msgControllerFullData[index].ahat   ,
+        	                                      msgControllerFullData[index].bhat    );
+
           // Increment for the next cycle.
           storage_index_ = index+1;
 
