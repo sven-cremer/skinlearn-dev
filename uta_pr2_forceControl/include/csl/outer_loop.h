@@ -1161,22 +1161,23 @@ public:
       // Human force
       y = t_r(0) ;
 
-      u           = - theta_1 * y_hat - theta_2 * yp - theta_3 * y     ;
-      e           = yp - ym                                            ;
-      y_tilde     = y - y_hat                                          ;
+      u           = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * yhat_dot ;
+      e           = yp - ym                                                  ;
+      y_tilde     = y - y_hat                                                ;
 
       // k + 1
       // dot
-      ym_dot      = -am        * ym            + bm     * u_c          ;
-      yp_dot      = -an        * yp            + bn     * u            ;
       // FIXME Fake Human Force
-      // y_dot       = -a         * y             + b      * u_c       ;
-      yhat_dot    = -ahat      * y_hat         + bhat   * u_c          ;
-      theta_1_dot =  gamma_1   * e * u_c                               ;
-      theta_2_dot =  gamma_2   * e * yp                                ;
-      theta_3_dot =  gamma_3   * e * bn * y_hat + gamma_1 * ahat * u_c ;
-      ahat_dot    = -1*gamma_4 * y_tilde * y_hat                       ;
-      bhat_dot    =  gamma_5 * y_tilde * u_c                           ;
+      // y_dot       = -a         * y             + b      * u_c             ;
+      yp_dot      = -an        * yp            + bn     * u                  ;
+      ym_dot      = -am        * ym            + bm     * u_c                ;
+
+      yhat_dot    = -ahat      * y_hat         + bhat   * u_c                ;
+      theta_1_dot =  gamma_1   * e * u_c                                     ;
+      theta_2_dot =  gamma_2   * e * yp                                      ;
+      theta_3_dot =  gamma_3   * e * bn * y_hat + gamma_1 * ahat * e * u_c   ;
+      ahat_dot    = -gamma_4 * y_tilde * y_hat                               ;
+      bhat_dot    =  gamma_5 * y_tilde * u_c                                 ;
 
       // 1dt order integrator
       ym      = ym      + ym_dot      * delT ;
