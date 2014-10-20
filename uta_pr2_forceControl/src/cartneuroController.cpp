@@ -520,13 +520,13 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   // Outer Loop Init
 
   // MRAC
-  outerLoopMRACmodelX.updateDelT( delT );
+  outerLoopMRACmodelX.updateDelT( outerLoopTime );
   outerLoopMRACmodelX.updateAB( task_mA,
                                 task_mB );
   outerLoopMRACmodelY.updateIni( cartIniX,
   		  	  	  	  	  	  	 cartIniX );
 
-  outerLoopMRACmodelY.updateDelT( delT );
+  outerLoopMRACmodelY.updateDelT( outerLoopTime );
   outerLoopMRACmodelY.updateAB( task_mA,
                                 task_mB );
   outerLoopMRACmodelY.updateIni( cartIniY,
@@ -999,7 +999,7 @@ void PR2CartneuroControllerClass::update()
 			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
 	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
 		}
-/*
+
 		// MRAC
 		if( useMRACmodel )
 		{
@@ -1023,7 +1023,7 @@ void PR2CartneuroControllerClass::update()
 									  task_refModel     (1)  );
 
 	//      ROS_ERROR_STREAM("USING MRAC");
-		}*/
+		}
 
 		// MSD
 		if( useMSDmodel )
@@ -1057,7 +1057,7 @@ void PR2CartneuroControllerClass::update()
 
     }
 
-                // MRAC
+/*                // MRAC
                 if( useMRACmodel )
                 {
         //      outerLoopMRACmodelX.update( Xd_m              (0) ,
@@ -1082,6 +1082,7 @@ void PR2CartneuroControllerClass::update()
         //      ROS_ERROR_STREAM("USING MRAC");
                 }
 
+*/
 
     // System Model END
     /////////////////////////
