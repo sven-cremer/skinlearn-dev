@@ -8,7 +8,7 @@
 #ifndef IRLMODEL_H_
 #define IRLMODEL_H_
 
-//#include <Eigen/KroneckerProduct>
+#include <csl/math.h>
 
 namespace csl
 {
@@ -17,7 +17,8 @@ namespace outer_loop
 class IrlModel
 {
 
-  int num_dof; // number of joints.
+  int num_dof    ; // number of joints.
+  int num_samples; // number of joints.
 
   Eigen::MatrixXd x;
   Eigen::MatrixXd xd;
@@ -41,14 +42,31 @@ class IrlModel
   Eigen::MatrixXd f_h;
 
   Eigen::MatrixXd X           ;
+  Eigen::MatrixXd X_0         ;
+  Eigen::MatrixXd X_kron      ;
+  Eigen::MatrixXd X_0_kron    ;
+  Eigen::MatrixXd XU_kron     ;
   Eigen::MatrixXd ed_bar      ;
+
+  Eigen::MatrixXd Delxx       ;
+  Eigen::MatrixXd Ixx         ;
+  Eigen::MatrixXd Ixu         ;
+
+  Eigen::MatrixXd In          ;
+
+  Eigen::MatrixXd Theta       ;
+  Eigen::MatrixXd Ksi         ;
+  Eigen::MatrixXd Psi         ;
 
   Eigen::MatrixXd Kh          ;
   Eigen::MatrixXd Kq          ;
   Eigen::MatrixXd K           ;
+  Eigen::MatrixXd Kvec        ;
   Eigen::MatrixXd P           ;
+  Eigen::MatrixXd Q           ;
   Eigen::MatrixXd R           ;
   Eigen::MatrixXd B           ;
+  Eigen::MatrixXd U           ;
 
   Eigen::MatrixXd M_bar        ; // Optimal Mass
   Eigen::MatrixXd D_bar        ; // Optimal Damping
@@ -74,22 +92,22 @@ public:
   IrlModel()
   {
     delT = 0.001; /// 1000 Hz by default
-    iter = 1;
+    iter = 0;
 
     a_task = 0.5 ;
     b_task = 0.5 ;
 
     //
-    init( 1 );
+    init( 1, 2000 );
   }
   ~IrlModel()
   {
   }
 
-  void init( int para_num_Dof )
+  void init( int para_num_Dof, int para_num_Samples )
   {
-
-    num_dof = para_num_Dof;
+    num_dof     = para_num_Dof     ;
+    num_samples = para_num_Samples ;
 
     x         .resize( num_dof, 1 ) ;
     xd        .resize( num_dof, 1 ) ;
@@ -110,40 +128,82 @@ public:
 
     f_h       .resize( num_dof, 1 ) ;
 
-    X         .resize( 3*num_dof, 1 ) ;
+    X         .resize( 3*num_dof, 1 );
     X         = Eigen::MatrixXd::Zero( 3*num_dof, 1 );
 
-    ed_bar .resize( 2*num_dof, 1 ) ;
-    ed_bar = Eigen::MatrixXd::Zero( 2*num_dof, 1 );
+    X_0       .resize( 3*num_dof, 1 );
+    X_0       = Eigen::MatrixXd::Zero( 3*num_dof, 1 );
 
-    Kh     .resize( num_dof, num_dof ) ;
-    Kh     = Eigen::MatrixXd::Zero( num_dof, num_dof );
+    X_kron    .resize(X.rows()*X.rows(), X.cols()*X.cols());
+	X_kron    = Eigen::MatrixXd::Zero(X.rows()*X.rows(), X.cols()*X.cols());
 
-    Kq     .resize( num_dof, 2*num_dof ) ;
-    Kq     = Eigen::MatrixXd::Zero( num_dof, 2*num_dof );
+	X_0_kron  .resize(X.rows()*X.rows(), X.cols()*X.cols());
+    X_0_kron  = Eigen::MatrixXd::Zero(X.rows()*X.rows(), X.cols()*X.cols());
 
-    K      .resize( num_dof, 3*num_dof ) ;
-    K      = Eigen::MatrixXd::Zero( num_dof, 3*num_dof );
+    XU_kron   .resize(3*num_dof*num_dof, 1);
+    XU_kron   = Eigen::MatrixXd::Zero(3*num_dof*num_dof, 1);
 
-    P      .resize( 3*num_dof, 3*num_dof ) ;
-    P      = Eigen::MatrixXd::Zero( 3*num_dof, 3*num_dof );
+	Delxx     .resize( num_samples, 3*num_dof*(3*num_dof+1)/2 );
+	Delxx     = Eigen::MatrixXd::Zero( num_samples, 3*num_dof*(3*num_dof+1)/2 );
 
-    R      .resize( num_dof, num_dof ) ;
-    R      = Eigen::MatrixXd::Identity( num_dof, num_dof );
+	Ixx       .resize( num_samples, 1 );
+	Ixx       = Eigen::MatrixXd::Zero( num_samples, 3*num_dof*3*num_dof );
 
-    B      .resize( 3*num_dof, num_dof ) ;
-    B      << Eigen::MatrixXd::Zero(     num_dof, num_dof ),
-    		  Eigen::MatrixXd::Identity( num_dof, num_dof ),
-    		  Eigen::MatrixXd::Zero(     num_dof, num_dof );
+	Ixu       .resize( num_samples, 1 ) ;
+	Ixu       = Eigen::MatrixXd::Zero( num_samples, 3*num_dof*num_dof );
 
-    M_bar .resize( num_dof, num_dof ) ;
-    M_bar = 20*Eigen::MatrixXd::Identity( num_dof, num_dof );
+	In        .resize( 3*num_dof, 3*num_dof ) ;
+	In        = Eigen::MatrixXd::Identity( 3*num_dof, 3*num_dof );
 
-    D_bar .resize( num_dof, num_dof ) ;
-    D_bar = 50*Eigen::MatrixXd::Identity( num_dof, num_dof );
+	Theta     .resize( num_samples, 3*num_dof*(3*num_dof+1)/2 + num_dof*3*num_dof ) ;
+	Theta     = Eigen::MatrixXd::Zero( num_samples, 3*num_dof*(3*num_dof+1)/2 + num_dof*3*num_dof );
 
-    K_bar .resize( num_dof, num_dof ) ;
-    K_bar = 0*Eigen::MatrixXd::Identity( num_dof, num_dof );
+	Ksi       .resize( num_samples, 1 ) ;
+	Ksi       = Eigen::MatrixXd::Zero( num_samples, 1 );
+
+	Psi       .resize( 3*num_dof*3*num_dof*num_dof*3*num_dof, 1 ) ;
+	Psi       = Eigen::MatrixXd::Zero( 3*num_dof*3*num_dof*num_dof*3*num_dof, 1 );
+
+    ed_bar    .resize( 2*num_dof, 1 ) ;
+    ed_bar    = Eigen::MatrixXd::Zero( 2*num_dof, 1 );
+
+    Kh        .resize( num_dof, num_dof ) ;
+    Kh        = Eigen::MatrixXd::Zero( num_dof, num_dof );
+
+    Kq        .resize( num_dof, 2*num_dof ) ;
+    Kq        = Eigen::MatrixXd::Zero( num_dof, 2*num_dof );
+
+    K         .resize( num_dof, 3*num_dof ) ;
+    K         = Eigen::MatrixXd::Zero( num_dof, 3*num_dof );
+
+    Kvec      .resize( num_dof*3*num_dof, 1 ) ;
+    Kvec      = Eigen::MatrixXd::Zero( num_dof*3*num_dof, 1 );
+
+    P         .resize( 3*num_dof, 3*num_dof ) ;
+    P         = Eigen::MatrixXd::Zero( 3*num_dof, 3*num_dof );
+
+    Q         .resize( 3*num_dof, 3*num_dof ) ;
+	Q         = Eigen::MatrixXd::Identity( 3*num_dof, 3*num_dof );
+
+    R         .resize( num_dof, num_dof ) ;
+    R         = Eigen::MatrixXd::Identity( num_dof, num_dof );
+
+    B         .resize( 3*num_dof, num_dof ) ;
+    B         << Eigen::MatrixXd::Zero(     num_dof, num_dof ),
+    		     Eigen::MatrixXd::Identity( num_dof, num_dof ),
+    		     Eigen::MatrixXd::Zero(     num_dof, num_dof );
+
+    U         .resize( num_dof, 1 ) ;
+	U         = Eigen::MatrixXd::Identity( num_dof, 1 );
+
+    M_bar     .resize( num_dof, num_dof ) ;
+    M_bar     = 20*Eigen::MatrixXd::Identity( num_dof, num_dof );
+
+    D_bar     .resize( num_dof, num_dof ) ;
+    D_bar     = 50*Eigen::MatrixXd::Identity( num_dof, num_dof );
+
+    K_bar     .resize( num_dof, num_dof ) ;
+    K_bar     = 0*Eigen::MatrixXd::Identity( num_dof, num_dof );
 
     x         = Eigen::MatrixXd::Zero( num_dof, 1 );
     xd        = Eigen::MatrixXd::Zero( num_dof, 1 );
@@ -193,7 +253,8 @@ public:
     b_task = param_b_task ;
   }
 
-  void initIrl( //TODO )
+  //TODO
+  void initIrl(  )
   {
 	  // FIXME IRL
 //    rls_filter.init( Wk, Uk, Dk, Pk, m_lm );
@@ -261,17 +322,35 @@ public:
     // Save iteration number
     iter = iter + 1;
 
-    if( iter == 2000 )
+    if( useIrl )
     {
-      if( useIrl )
+      if( iter < num_samples )
       {
+    	  X_0_kron = csl::math::kroneckerProduct(X_0,X_0);
+    	  X_kron   = csl::math::kroneckerProduct(X,X);
+    	  XU_kron   = csl::math::kroneckerProduct(X,U);
 
-//    	  A = kroneckerProduct(A,B).eval();
+    	  Delxx.row(iter) = (X_kron - X_0_kron).transpose();
+    	  Ixx.row(iter)   = X_kron*delT;
+    	  Ixu.row(iter)   = XU_kron*delT;
+      }else
+      {
+    	  // FIXME
+		  Eigen::MatrixXd KtR = K.transpose()*R;
 
+		  Theta << Delxx, -2*Ixx*csl::math::kroneckerProduct(In,KtR) - 2*Ixu*csl::math::kroneckerProduct(In,R);
+		  Ksi << -Ixx*Q.array().transpose();
+
+		  Eigen::MatrixXd ThetaThetaTrans = Theta.transpose()*Theta;
+
+		  Psi = ThetaThetaTrans.inverse()*Theta.transpose()*Ksi;
+
+		  Kvec = Psi.block( 3*num_dof*3*num_dof, 0, num_dof*3*num_dof, 1);
+		  K = Eigen::Map<Eigen::MatrixXd>(Kvec.data(),num_dof, 3*num_dof);
       }
     }
 
-    if( iter > 2000 )
+    if( iter > num_samples )
 	{
       // First order integration
       // TODO better way to do this?
@@ -283,7 +362,10 @@ public:
     prv_x_m  = x_m ;
     prv_xd_m = xd_m;
 
+    X_0 = X;
+
   }
+
 };
 }
 }
