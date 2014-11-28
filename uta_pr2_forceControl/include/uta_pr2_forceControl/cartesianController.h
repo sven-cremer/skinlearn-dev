@@ -163,6 +163,8 @@ public:
   bool useMRACmodel ;
   // Use MSD
   bool useMSDmodel ;
+  // Use IRL
+  bool useIRLmodel ;
   // Use Direct model x_r = x_m?
   bool useDirectmodel;
 

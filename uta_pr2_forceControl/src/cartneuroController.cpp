@@ -304,6 +304,10 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useMSDmodel = "/useMSDmodel";
   if (!n.getParam( para_useMSDmodel, useMSDmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMSDmodel.c_str()) ; return false; }
 
+  useIRLmodel = false ;
+  std::string para_useIRLmodel = "/useIRLmodel";
+  if (!n.getParam( para_useIRLmodel, useIRLmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useIRLmodel.c_str()) ; return false; }
+
   useDirectmodel = false ;
   std::string para_useDirectmodel = "/useDirectmodel";
   if (!n.getParam( para_useDirectmodel, useDirectmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useDirectmodel.c_str()) ; return false; }
@@ -560,6 +564,22 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopMSDmodelY.updateMsd( m_M,
                                 m_S,
                                 m_D );
+
+  // IRL
+  outerLoopIRLmodelX.updateDelT( outerLoopTime );
+  outerLoopIRLmodelX.updateMsd( m_M,
+                                m_S,
+                                m_D );
+  outerLoopIRLmodelX.updateAB( task_mA,
+                               task_mB );
+
+  outerLoopIRLmodelY.updateDelT( outerLoopTime );
+  outerLoopIRLmodelY.updateMsd( m_M,
+                                m_S,
+                                m_D );
+  outerLoopIRLmodelY.updateAB( task_mA,
+                               task_mB );
+
 
   /////////////////////////
 
@@ -1042,6 +1062,30 @@ void PR2CartneuroControllerClass::update()
 									 X                (1) ,
 									 Xdd_m            (1) ,
 									 transformed_force(1)  );
+	//      ROS_ERROR_STREAM("USING MSD");
+		}
+
+		// MSD
+		if( useIRLmodel )
+		{
+	//    // Cartesian space IRL model
+	//    outerLoopIRLmodelX.updateIRL( ( Xd_m              (0) ,
+	//   	                              Xd                (0) ,
+	//   	                              X_m               (0) ,
+	//   	                              X                 (0) ,
+	//   	                              Xdd_m             (0) ,
+	//   	                              transformed_force (0) ,
+	//   	                              task_ref          (0) ,
+	//   	                              task_refModel     (0)  );
+
+			outerLoopIRLmodelY.updateIRL( Xd_m              (1) ,
+					                      Xd                (1) ,
+					                      X_m               (1) ,
+					                      X                 (1) ,
+					                      Xdd_m             (1) ,
+					                      transformed_force (1) ,
+					                      task_ref          (1) ,
+					                      task_refModel     (1)  );
 	//      ROS_ERROR_STREAM("USING MSD");
 		}
 

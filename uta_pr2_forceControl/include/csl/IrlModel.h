@@ -277,7 +277,33 @@ public:
 	  useIrl = true;
   }
 
-  void updateIrl(  Eigen::MatrixXd & param_xd_m          ,
+  void updateIRL( double & param_xd_m           ,
+                  double & param_xd             ,
+                  double & param_x_m            ,
+                  double & param_x              ,
+                  double & param_xdd_m          ,
+                  double & param_f_h            ,
+                  double & param_x_r       ,
+                  double & param_task_ref_model  )
+    {
+      xd_m    (0)          = param_xd_m     ;
+      xd      (0)          = param_xd       ;
+      x_m     (0)          = param_x_m      ;
+      x       (0)          = param_x        ;
+      xdd_m   (0)          = param_xdd_m    ;
+      f_h     (0)          = param_f_h      ;
+      x_r     (0)          = param_x_r      ;
+
+      // Update IRL
+      update();
+
+      param_task_ref_model = x_d(0)         ;
+      param_x_m            = x_m(0)         ;
+      param_xd_m           = xd_m(0)        ;
+      param_xdd_m          = xdd_m(0)       ;
+    }
+
+  void updateIRL(  Eigen::MatrixXd & param_xd_m          ,
                    Eigen::MatrixXd & param_xd            ,
                    Eigen::MatrixXd & param_x_m           ,
                    Eigen::MatrixXd & param_x             ,
@@ -294,8 +320,7 @@ public:
     f_h    = param_f_h   ;
     x_r    = param_x_r   ;
 
-    // Save input forces/torques
-//    stackArmaIn( x_m, f_h );
+    // Update IRL
     update();
 
     param_task_ref_model = x_d   ;
