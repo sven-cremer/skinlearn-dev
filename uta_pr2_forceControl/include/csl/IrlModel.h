@@ -9,6 +9,7 @@
 #define IRLMODEL_H_
 
 #include <csl/math.h>
+#include <Eigen/LU>
 
 namespace csl
 {
@@ -146,10 +147,10 @@ public:
 	Delxx     .resize( num_samples, 3*num_dof*(3*num_dof+1)/2 );
 	Delxx     = Eigen::MatrixXd::Zero( num_samples, 3*num_dof*(3*num_dof+1)/2 );
 
-	Ixx       .resize( num_samples, 1 );
+	Ixx       .resize( num_samples, 3*num_dof*3*num_dof );
 	Ixx       = Eigen::MatrixXd::Zero( num_samples, 3*num_dof*3*num_dof );
 
-	Ixu       .resize( num_samples, 1 ) ;
+	Ixu       .resize( num_samples, 3*num_dof*num_dof ) ;
 	Ixu       = Eigen::MatrixXd::Zero( num_samples, 3*num_dof*num_dof );
 
 	In        .resize( 3*num_dof, 3*num_dof ) ;
@@ -339,7 +340,8 @@ public:
 		  Eigen::MatrixXd KtR = K.transpose()*R;
 
 		  Theta << Delxx, -2*Ixx*csl::math::kroneckerProduct(In,KtR) - 2*Ixu*csl::math::kroneckerProduct(In,R);
-		  Ksi << -Ixx*Q.array().transpose();
+		  Eigen::Map<Eigen::VectorXd> Qvec(Q.data(),Q.size());
+		  Ksi << -Ixx*Qvec;
 
 		  Eigen::MatrixXd ThetaThetaTrans = Theta.transpose()*Theta;
 

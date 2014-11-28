@@ -6,8 +6,21 @@
  */
 
 #include <csl/IrlModel.h>
+#include <iostream>
 
 int main(int argc, char **argv)
 {
 	csl::outer_loop::IrlModel irlModelObject;
+
+	irlModelObject.init( 6, 2 );
+
+	irlModelObject.update();
+	irlModelObject.update();
+	irlModelObject.update();
+	irlModelObject.update();
+	irlModelObject.update();
+	irlModelObject.update();
+
+	std::cout << "Worked!";
+
 }
