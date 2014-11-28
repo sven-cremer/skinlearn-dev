@@ -10,6 +10,7 @@
 
 #include <csl/math.h>
 #include <Eigen/LU>
+#include <iostream>
 
 namespace csl
 {
@@ -44,6 +45,8 @@ class IrlModel
 
   Eigen::MatrixXd X           ;
   Eigen::MatrixXd X_0         ;
+  Eigen::MatrixXd X_bar       ;
+  Eigen::MatrixXd X_0_bar     ;
   Eigen::MatrixXd X_kron      ;
   Eigen::MatrixXd X_0_kron    ;
   Eigen::MatrixXd XU_kron     ;
@@ -136,8 +139,17 @@ public:
     X         .resize( 3*num_dof, 1 );
     X         = Eigen::MatrixXd::Zero( 3*num_dof, 1 );
 
+    X         .resize( 3*num_dof, 1 );
+    X         = Eigen::MatrixXd::Zero( 3*num_dof, 1 );
+
     X_0       .resize( 3*num_dof, 1 );
     X_0       = Eigen::MatrixXd::Zero( 3*num_dof, 1 );
+
+    X_bar      .resize( 3*num_dof*(3*num_dof+1)/2, 1 );
+	X_bar     = Eigen::MatrixXd::Zero( 3*num_dof*(3*num_dof+1)/2, 1 );
+
+	X_0_bar   .resize( 3*num_dof*(3*num_dof+1)/2, 1 );
+	X_0_bar   = Eigen::MatrixXd::Zero( 3*num_dof*(3*num_dof+1)/2, 1 );
 
     X_kron    .resize(X.rows()*X.rows(), X.cols()*X.cols());
 	X_kron    = Eigen::MatrixXd::Zero(X.rows()*X.rows(), X.cols()*X.cols());
@@ -166,8 +178,8 @@ public:
 	Ksi       .resize( num_samples, 1 ) ;
 	Ksi       = Eigen::MatrixXd::Zero( num_samples, 1 );
 
-	Psi       .resize( 3*num_dof*3*num_dof*num_dof*3*num_dof, 1 ) ;
-	Psi       = Eigen::MatrixXd::Zero( 3*num_dof*3*num_dof*num_dof*3*num_dof, 1 );
+	Psi       .resize( 3*num_dof*(3*num_dof + 1)/2 + num_dof*3*num_dof, 1 ) ;
+	Psi       = Eigen::MatrixXd::Zero( 3*num_dof*(3*num_dof + 1)/2 + num_dof*3*num_dof, 1 );
 
     ed_bar    .resize( 2*num_dof, 1 ) ;
     ed_bar    = Eigen::MatrixXd::Zero( 2*num_dof, 1 );
@@ -372,13 +384,16 @@ public:
 
       if( iter < num_samples )
       {
-    	  X_0_kron = Eigen::kroneckerProduct(X_0,X_0).eval();
     	  X_kron   = Eigen::kroneckerProduct(X,X).eval();
     	  XU_kron  = Eigen::kroneckerProduct(X,U).eval();
 
-    	  Delxx.row(iter) = (X_kron - X_0_kron).transpose();
-    	  Ixx.row(iter)   = X_kron*delT;
-    	  Ixu.row(iter)   = XU_kron*delT;
+    	  Eigen::MatrixXd XXTrans = X*X.transpose();
+    	  X_bar    = csl::math::upperTriangularVector( XXTrans );
+
+    	  Delxx.row(iter) = (X_bar - X_0_bar).transpose();
+
+    	  Ixx.row(iter)   = X_kron.transpose()*delT;
+    	  Ixu.row(iter)   = XU_kron.transpose()*delT;
       }else
       {
     	  // FIXME
@@ -392,19 +407,22 @@ public:
 
 		  Psi = ThetaThetaTrans.inverse()*Theta.transpose()*Ksi;
 
-		  Kvec = Psi.block( 3*num_dof*3*num_dof, 0, num_dof*3*num_dof, 1);
+		  std::cout << std::endl << Psi << std::endl ;
+
+		  Kvec = Psi.block( 3*num_dof*(3*num_dof + 1)/2, 0, num_dof*3*num_dof, 1);
 		  K = Eigen::Map<Eigen::MatrixXd>(Kvec.data(),num_dof, 3*num_dof);
 
 		  K1 = K.block( 0,         0, num_dof, num_dof);
 		  K2 = K.block( 0,   num_dof, num_dof, num_dof);
 		  K3 = K.block( 0, 2*num_dof, num_dof, num_dof);
 
-		  //M_bar = K3.inverse()   ;
-		  //D_bar = K3.inverse()*K2;
-		  //K_bar = K3.inverse()*K1;
+		  M_bar = K3.inverse()   ;
+		  D_bar = K3.inverse()*K2;
+		  K_bar = K3.inverse()*K1;
 
 		  iter = 0;
       }
+
     }
 
     // First order integration
@@ -416,7 +434,9 @@ public:
     prv_x_m  = x_m ;
     prv_xd_m = xd_m;
 
-    X_0      = X   ;
+    X_0      = X     ;
+    X_0_bar  = X_bar ;
+    X_0_kron = X_kron;
 
   }
 
