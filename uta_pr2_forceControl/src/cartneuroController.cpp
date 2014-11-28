@@ -1067,7 +1067,7 @@ void PR2CartneuroControllerClass::update()
 	//      ROS_ERROR_STREAM("USING MSD");
 		}
 
-		// MSD
+		// IRL
 		if( useIRLmodel )
 		{
 	//    // Cartesian space IRL model

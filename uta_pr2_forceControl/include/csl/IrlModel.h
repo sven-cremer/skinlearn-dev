@@ -374,6 +374,7 @@ public:
 
 		  Kvec = Psi.block( 3*num_dof*3*num_dof, 0, num_dof*3*num_dof, 1);
 		  K = Eigen::Map<Eigen::MatrixXd>(Kvec.data(),num_dof, 3*num_dof);
+
       }
     }
 
