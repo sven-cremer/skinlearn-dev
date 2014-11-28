@@ -389,7 +389,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
 
   std::string para_fixedFilterWeights = "/fixedFilterWeights";
-  if (!n.getParam( para_fixedFilterWeights , fixedFilterWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
+  if (!n.getParam( para_fixedFilterWeights , useFixedWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
 
   double rls_lambda = 0.98 ;
   double rls_sigma  = 1000 ;
@@ -1551,7 +1551,7 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].task_mA           = task_mA                     ;
           msgControllerFullData[index].task_mB           = task_mB                     ;
 
-          msgControllerFullData[index].fixedFilterWeights= fixedFilterWeights          ;
+          msgControllerFullData[index].fixedFilterWeights= useFixedWeights          ;
 
           msgControllerFullData[index].w0                = outerLoopWk(0,0)            ;
           msgControllerFullData[index].w1                = outerLoopWk(1,0)            ;
@@ -2024,8 +2024,8 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( neuroadaptive_msgs::fixedW
 		                                              neuroadaptive_msgs::fixedWeightToggle::Response& resp )
 {
   // XOR to toggle
-  fixedFilterWeights =  ( fixedFilterWeights || true ) && !( fixedFilterWeights && true );
-  resp.useFixedWeights = fixedFilterWeights ;
+  useFixedWeights =  ( useFixedWeights || true ) && !( useFixedWeights && true );
+  resp.useFixedWeights = useFixedWeights ;
   // Filter Weights
   resp.w0 = filtW0 ; // outerLoopWk(0,0) ;
   resp.w1 = filtW1 ; // outerLoopWk(1,0) ;
@@ -2045,7 +2045,7 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( neuroadaptive_msgs::fixedW
   outerLoopWk(6,0) = filtW6 ;
   outerLoopWk(7,0) = filtW7 ;
 
-  if( fixedFilterWeights )
+  if( useFixedWeights )
   {
 	  outerLoopRLSmodelY.setFixedWeights( outerLoopWk );
   }else
@@ -2059,6 +2059,19 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( neuroadaptive_msgs::fixedW
   if( useFIRmodel  ){ outerModel.push_back("useFIRmodel "); }
   if( useMRACmodel ){ outerModel.push_back("useMRACmodel"); }
   if( useMSDmodel  ){ outerModel.push_back("useMSDmodel "); }
+
+  if( useIRLmodel  )
+  {
+	  if( useFixedWeights )
+	  {
+		  outerModel.push_back("useIRLmodel : Update");
+		  outerLoopIRLmodelY.setUpdateIrl();
+	  }else
+	  {
+		  outerModel.push_back("useIRLmodel : Fixed");
+		  outerLoopIRLmodelY.setFixedMsd();
+	  }
+  }
 
   resp.outerModel = outerModel;
 

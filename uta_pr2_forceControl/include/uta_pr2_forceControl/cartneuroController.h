@@ -45,7 +45,7 @@ private:
   Eigen::MatrixXd outerLoopWk ;
 
   // Fixed filter weights or adaptive weights
-  bool fixedFilterWeights;
+  bool useFixedWeights;
 
   Eigen::VectorXd q;
   Eigen::VectorXd qd;

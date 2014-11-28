@@ -365,11 +365,11 @@ public:
          xd_m,
          f_h ;
 
-    // Save iteration number
-    iter = iter + 1;
-
     if( useIrl )
     {
+	  // Save iteration number
+	  	iter = iter + 1;
+
       if( iter < num_samples )
       {
     	  X_0_kron = csl::math::kroneckerProduct(X_0,X_0);
@@ -402,6 +402,8 @@ public:
 		  M_bar = K3.inverse()   ;
 		  D_bar = K3.inverse()*K2;
 		  K_bar = K3.inverse()*K1;
+
+		  iter = 0;
       }
     }
 
