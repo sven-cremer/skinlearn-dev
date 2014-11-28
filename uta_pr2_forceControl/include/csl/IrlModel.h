@@ -245,6 +245,10 @@ public:
     m = param_m_M ; // mass
     k = param_m_S ; // spring
     d = param_m_D ; // damper
+
+    M_bar     = m*Eigen::MatrixXd::Identity( num_dof, num_dof );
+	K_bar     = k*Eigen::MatrixXd::Identity( num_dof, num_dof );
+	D_bar     = d*Eigen::MatrixXd::Identity( num_dof, num_dof );
   }
 
   void updateAB( double param_a_task,
@@ -267,9 +271,12 @@ public:
 //  }
 
   // FIXME
-  void setFixedWeights( )
+  void setFixedMsd( )
   {
 	useIrl = false;
+	M_bar     = m*Eigen::MatrixXd::Identity( num_dof, num_dof );
+	K_bar     = k*Eigen::MatrixXd::Identity( num_dof, num_dof );
+	D_bar     = d*Eigen::MatrixXd::Identity( num_dof, num_dof );
   }
 
   void setUpdateIrl()
@@ -378,14 +385,11 @@ public:
       }
     }
 
-    if( iter > num_samples )
-	{
-      // First order integration
-      // TODO better way to do this?
-      xdd_m = ( f_h - D_bar * xd_m - K_bar * x_m );
-      xd_m  =   xd_m + xdd_m  *  delT             ;
-      x_m   =   x_m  + xd_m   *  delT             ;
-	}
+    // First order integration
+    // TODO better way to do this?
+    xdd_m = ( f_h - D_bar * xd_m - K_bar * x_m );
+    xd_m  =   xd_m + xdd_m  *  delT             ;
+    x_m   =   x_m  + xd_m   *  delT             ;
 
     prv_x_m  = x_m ;
     prv_xd_m = xd_m;
