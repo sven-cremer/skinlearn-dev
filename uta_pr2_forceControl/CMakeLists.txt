@@ -101,3 +101,4 @@ rosbuild_add_executable(intentEstimator_test src/intentEstimator_test.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
 rosbuild_add_executable(irlTest_test test/irlTest.cpp)
+rosbuild_add_executable(kronTest_test test/kronTest.cc)

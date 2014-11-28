@@ -372,9 +372,9 @@ public:
 
       if( iter < num_samples )
       {
-    	  X_0_kron = csl::math::kroneckerProduct(X_0,X_0);
-    	  X_kron   = csl::math::kroneckerProduct(X,X);
-    	  XU_kron   = csl::math::kroneckerProduct(X,U);
+    	  X_0_kron = Eigen::kroneckerProduct(X_0,X_0).eval();
+    	  X_kron   = Eigen::kroneckerProduct(X,X).eval();
+    	  XU_kron  = Eigen::kroneckerProduct(X,U).eval();
 
     	  Delxx.row(iter) = (X_kron - X_0_kron).transpose();
     	  Ixx.row(iter)   = X_kron*delT;
@@ -384,7 +384,7 @@ public:
     	  // FIXME
 		  Eigen::MatrixXd KtR = K.transpose()*R;
 
-		  Theta << Delxx, -2*Ixx*csl::math::kroneckerProduct(In,KtR) - 2*Ixu*csl::math::kroneckerProduct(In,R);
+		  Theta << Delxx, -2*Ixx*Eigen::kroneckerProduct(In,KtR).eval() - 2*Ixu*Eigen::kroneckerProduct(In,R).eval();
 		  Eigen::Map<Eigen::VectorXd> Qvec(Q.data(),Q.size());
 		  Ksi << -Ixx*Qvec;
 
@@ -399,9 +399,9 @@ public:
 		  K2 = K.block( 0,   num_dof, num_dof, num_dof);
 		  K3 = K.block( 0, 2*num_dof, num_dof, num_dof);
 
-		  M_bar = K3.inverse()   ;
-		  D_bar = K3.inverse()*K2;
-		  K_bar = K3.inverse()*K1;
+		  //M_bar = K3.inverse()   ;
+		  //D_bar = K3.inverse()*K2;
+		  //K_bar = K3.inverse()*K1;
 
 		  iter = 0;
       }

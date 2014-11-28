@@ -13,6 +13,7 @@ int main(int argc, char **argv)
 	csl::outer_loop::IrlModel irlModelObject;
 
 	irlModelObject.init( 6, 2 );
+	irlModelObject.setUpdateIrl();
 
 	irlModelObject.update();
 	irlModelObject.update();
