@@ -396,21 +396,22 @@ public:
     	  Ixu.row(iter)   = XU_kron.transpose()*delT;
       }else
       {
-    	  // FIXME
-		  Eigen::MatrixXd KtR = K.transpose()*R;
+    	  // Least squares
+    	  for( int i = 0; i<= 10; i++)
+    	  {
+		      Eigen::MatrixXd KtR = K.transpose()*R;
 
-		  Theta << Delxx, -2*Ixx*Eigen::kroneckerProduct(In,KtR).eval() - 2*Ixu*Eigen::kroneckerProduct(In,R).eval();
-		  Eigen::Map<Eigen::VectorXd> Qvec(Q.data(),Q.size());
-		  Ksi << -Ixx*Qvec;
+		      Theta << Delxx, -2*Ixx*Eigen::kroneckerProduct(In,KtR).eval() - 2*Ixu*Eigen::kroneckerProduct(In,R).eval();
+		      Eigen::Map<Eigen::VectorXd> Qvec(Q.data(),Q.size());
+		      Ksi << -Ixx*Qvec;
 
-		  Eigen::MatrixXd ThetaThetaTrans = Theta.transpose()*Theta;
+		      Eigen::MatrixXd ThetaThetaTrans = Theta.transpose()*Theta;
 
-		  Psi = ThetaThetaTrans.inverse()*Theta.transpose()*Ksi;
+		      Psi = ThetaThetaTrans.inverse()*Theta.transpose()*Ksi;
 
-		  std::cout << std::endl << Psi << std::endl ;
-
-		  Kvec = Psi.block( 3*num_dof*(3*num_dof + 1)/2, 0, num_dof*3*num_dof, 1);
-		  K = Eigen::Map<Eigen::MatrixXd>(Kvec.data(),num_dof, 3*num_dof);
+		      Kvec = Psi.block( 3*num_dof*(3*num_dof + 1)/2, 0, num_dof*3*num_dof, 1);
+		      K = Eigen::Map<Eigen::MatrixXd>(Kvec.data(),num_dof, 3*num_dof);
+    	  }
 
 		  K1 = K.block( 0,         0, num_dof, num_dof);
 		  K2 = K.block( 0,   num_dof, num_dof, num_dof);
