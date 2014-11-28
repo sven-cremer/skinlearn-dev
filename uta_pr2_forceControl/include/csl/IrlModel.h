@@ -62,7 +62,11 @@ class IrlModel
   Eigen::MatrixXd Kh          ;
   Eigen::MatrixXd Kq          ;
   Eigen::MatrixXd K           ;
+  Eigen::MatrixXd K1          ;
+  Eigen::MatrixXd K2          ;
+  Eigen::MatrixXd K3          ;
   Eigen::MatrixXd Kvec        ;
+
   Eigen::MatrixXd P           ;
   Eigen::MatrixXd Q           ;
   Eigen::MatrixXd R           ;
@@ -177,6 +181,15 @@ public:
     K         .resize( num_dof, 3*num_dof ) ;
     K         = Eigen::MatrixXd::Zero( num_dof, 3*num_dof );
 
+    K1        .resize( num_dof, num_dof ) ;
+    K1        = Eigen::MatrixXd::Zero( num_dof, num_dof );
+
+    K2        .resize( num_dof, num_dof ) ;
+    K2        = Eigen::MatrixXd::Zero( num_dof, num_dof );
+
+    K3        .resize( num_dof, num_dof ) ;
+    K3        = Eigen::MatrixXd::Zero( num_dof, num_dof );
+
     Kvec      .resize( num_dof*3*num_dof, 1 ) ;
     Kvec      = Eigen::MatrixXd::Zero( num_dof*3*num_dof, 1 );
 
@@ -226,7 +239,7 @@ public:
     f_h       = Eigen::MatrixXd::Zero( num_dof, 1 );
 
     // Don't use fixed weights by default
-    useIrl = false;
+    useIrl    = false;
 
     // IRL init
     //rls_filter.init( Wk, Uk, Dk, Pk, m_lm );
@@ -382,19 +395,26 @@ public:
 		  Kvec = Psi.block( 3*num_dof*3*num_dof, 0, num_dof*3*num_dof, 1);
 		  K = Eigen::Map<Eigen::MatrixXd>(Kvec.data(),num_dof, 3*num_dof);
 
+		  K1 = K.block( 0,         0, num_dof, num_dof);
+		  K2 = K.block( 0,   num_dof, num_dof, num_dof);
+		  K3 = K.block( 0, 2*num_dof, num_dof, num_dof);
+
+		  M_bar = K3.inverse()   ;
+		  D_bar = K3.inverse()*K2;
+		  K_bar = K3.inverse()*K1;
       }
     }
 
     // First order integration
     // TODO better way to do this?
-    xdd_m = ( f_h - D_bar * xd_m - K_bar * x_m );
-    xd_m  =   xd_m + xdd_m  *  delT             ;
-    x_m   =   x_m  + xd_m   *  delT             ;
+    xdd_m = M_bar.inverse()*( f_h - D_bar * xd_m - K_bar * x_m ) ;
+    xd_m  = xd_m + xdd_m  *  delT                                ;
+    x_m   = x_m  + xd_m   *  delT                                ;
 
     prv_x_m  = x_m ;
     prv_xd_m = xd_m;
 
-    X_0 = X;
+    X_0      = X   ;
 
   }
 
