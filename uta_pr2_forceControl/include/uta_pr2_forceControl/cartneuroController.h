@@ -39,6 +39,9 @@ private:
   csl::outer_loop::MsdModel  outerLoopMSDmodelX  ;
   csl::outer_loop::MsdModel  outerLoopMSDmodelY  ;
 
+  csl::outer_loop::IrlModel  outerLoopIRLmodelX  ;
+  csl::outer_loop::IrlModel  outerLoopIRLmodelY  ;
+
   Eigen::MatrixXd outerLoopWk ;
 
   // Fixed filter weights or adaptive weights

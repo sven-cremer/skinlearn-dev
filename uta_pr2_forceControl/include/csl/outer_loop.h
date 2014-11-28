@@ -92,5 +92,6 @@ void task_model( const fir_state_type &x , fir_state_type &dxdt , double t )
 #include<csl/MsdModel.h>
 #include<csl/RlsModel.h>
 #include<csl/MracModel.h>
+#include<csl/IrlModel.h>
 
 #endif /* RLS_OUTER_LOOP_H_ */
