@@ -386,7 +386,7 @@ void reloadCartneuro()
     	vector<string>::iterator it1;
 		for(it1 = m_outerModel.begin(); it1 != m_outerModel.end(); it1++)
 		{
-			cout << "\nOuter-loop : " << *it1 << " "<< endl;
+			ROS_INFO_STREAM( "Outer-loop : " << *it1 << " " );
 		}
     	ROS_INFO_STREAM("Select your preference: ");
     	ROS_INFO_STREAM("1 - Align right arm");
