@@ -540,12 +540,14 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // RLS
   double outerRate = 20; // Hz
-  outerLoopRLSmodelX.updateDelT( outerLoopTime );
-//  outerLoopRLSmodelX.updateRate( outerRate );
+//  outerLoopRLSmodelX.updateDelT( outerLoopTime );
+  outerLoopRLSmodelX.updateDelT( delT );
   outerLoopRLSmodelX.updateAB( task_mA,
                                task_mB );
 
-  outerLoopRLSmodelY.updateDelT( outerLoopTime );
+
+//  outerLoopRLSmodelY.updateDelT( outerLoopTime );
+  outerLoopRLSmodelY.updateDelT( delT );
   outerLoopRLSmodelY.updateAB( task_mA,
                                task_mB );
   outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
@@ -999,7 +1001,7 @@ void PR2CartneuroControllerClass::update()
 			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
 	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
 		}
-
+/*
 		// MRAC
 		if( useMRACmodel )
 		{
@@ -1024,7 +1026,7 @@ void PR2CartneuroControllerClass::update()
 
 	//      ROS_ERROR_STREAM("USING MRAC");
 		}
-
+*/
 		// MSD
 		if( useMSDmodel )
 		{
@@ -1057,7 +1059,7 @@ void PR2CartneuroControllerClass::update()
 
     }
 
-/*                // MRAC
+                // MRAC
                 if( useMRACmodel )
                 {
         //      outerLoopMRACmodelX.update( Xd_m              (0) ,
@@ -1082,7 +1084,7 @@ void PR2CartneuroControllerClass::update()
         //      ROS_ERROR_STREAM("USING MRAC");
                 }
 
-*/
+
 
     // System Model END
     /////////////////////////
