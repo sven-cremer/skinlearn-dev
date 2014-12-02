@@ -387,6 +387,14 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 	  outerLoopWk(7,0) = 0.0 ;
   }
 
+  int numIrlSamples = 100;
+  std::string para_numIrlSamples = "/numIrlSamples";
+  if (!n.getParam( para_numIrlSamples , numIrlSamples )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numIrlSamples.c_str()) ; return false; }
+
+  int numCartDof = 100;
+  std::string para_numCartDof = "/numCartDof";
+  if (!n.getParam( para_numCartDof , numCartDof )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numCartDof.c_str()) ; return false; }
+
 
   std::string para_fixedFilterWeights = "/fixedFilterWeights";
   if (!n.getParam( para_fixedFilterWeights , useFixedWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
@@ -568,6 +576,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                 m_D );
 
   // IRL
+  outerLoopIRLmodelX.init( numCartDof, numIrlSamples );
   outerLoopIRLmodelX.updateDelT( outerLoopTime );
   outerLoopIRLmodelX.updateMsd( m_M,
                                 m_S,
@@ -575,6 +584,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopIRLmodelX.updateAB( task_mA,
                                task_mB );
 
+  outerLoopIRLmodelY.init( numCartDof, numIrlSamples );
   outerLoopIRLmodelY.updateDelT( outerLoopTime );
   outerLoopIRLmodelY.updateMsd( m_M,
                                 m_S,

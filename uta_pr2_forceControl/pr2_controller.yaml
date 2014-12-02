@@ -25,6 +25,11 @@ intentEst_M        : 1.0 # M_i the mass of the intent admittance model
 rls_lambda         : 0.98
 rls_sigma          : 0.001
 
+# IRL
+numIrlSamples      : 100
+numCartDof         : 1
+
+
 # Params for the MRAC outer-loop controller
 mrac_gamma_1       : 0.1
 mrac_gamma_2       : 2.0
