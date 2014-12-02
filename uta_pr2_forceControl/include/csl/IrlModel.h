@@ -263,6 +263,15 @@ public:
     delT = p_delT;
   }
 
+  void getMsd( double & param_m_M,
+               double & param_m_S,
+               double & param_m_D )
+  {
+    param_m_M = M_bar(0,0) ; // mass
+    param_m_S = K_bar(0,0) ; // spring
+    param_m_D = D_bar(0,0) ; // damper
+  }
+
   void updateMsd( double param_m_M,
                   double param_m_S,
                   double param_m_D )
@@ -271,9 +280,9 @@ public:
     k = param_m_S ; // spring
     d = param_m_D ; // damper
 
-    M_bar     = m*Eigen::MatrixXd::Identity( num_dof, num_dof );
-	K_bar     = k*Eigen::MatrixXd::Identity( num_dof, num_dof );
-	D_bar     = d*Eigen::MatrixXd::Identity( num_dof, num_dof );
+    M_bar = m*Eigen::MatrixXd::Identity( num_dof, num_dof );
+	K_bar = k*Eigen::MatrixXd::Identity( num_dof, num_dof );
+	D_bar = d*Eigen::MatrixXd::Identity( num_dof, num_dof );
   }
 
   void updateAB( double param_a_task,

@@ -1071,14 +1071,14 @@ void PR2CartneuroControllerClass::update()
 		if( useIRLmodel )
 		{
 	//    // Cartesian space IRL model
-	//    outerLoopIRLmodelX.updateIRL( ( Xd_m              (0) ,
-	//   	                              Xd                (0) ,
-	//   	                              X_m               (0) ,
-	//   	                              X                 (0) ,
-	//   	                              Xdd_m             (0) ,
-	//   	                              transformed_force (0) ,
-	//   	                              task_ref          (0) ,
-	//   	                              task_refModel     (0)  );
+	//    outerLoopIRLmodelX.updateIRL( Xd_m              (0) ,
+	//   	                            Xd                (0) ,
+	//   	                            X_m               (0) ,
+	//   	                            X                 (0) ,
+	//   	                            Xdd_m             (0) ,
+	//   	                            transformed_force (0) ,
+	//   	                            task_ref          (0) ,
+	//   	                            task_refModel     (0)  );
 
 			outerLoopIRLmodelY.updateIRL( Xd_m              (1) ,
 					                      Xd                (1) ,
@@ -1088,6 +1088,16 @@ void PR2CartneuroControllerClass::update()
 					                      transformed_force (1) ,
 					                      task_ref          (1) ,
 					                      task_refModel     (1)  );
+
+
+			// IRL
+//			outerLoopIRLmodelX.getMsd( m_M,
+//			                           m_S,
+//			                           m_D );
+			outerLoopIRLmodelY.getMsd( m_M,
+			                           m_S,
+									   m_D );
+
 	//      ROS_ERROR_STREAM("USING MSD");
 		}
 
@@ -1921,6 +1931,14 @@ bool PR2CartneuroControllerClass::paramUpdate( neuroadaptive_msgs::controllerPar
                                 m_S,
                                 m_D );
   outerLoopMSDmodelY.updateMsd( m_M,
+                                m_S,
+                                m_D );
+
+  // IRL
+  outerLoopIRLmodelX.updateMsd( m_M,
+                                m_S,
+                                m_D );
+  outerLoopIRLmodelY.updateMsd( m_M,
                                 m_S,
                                 m_D );
 
