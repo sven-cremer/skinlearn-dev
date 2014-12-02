@@ -430,16 +430,6 @@ public:
 		  D_bar = K3.inverse()*K2;
 		  K_bar = K3.inverse()*K1;
 
-		  // Debug
-		  m = 0.0 ; // mass
-		  k = 0.0 ; // spring
-		  d = 0.0 ; // damper
-
-		  M_bar = m*Eigen::MatrixXd::Identity( num_dof, num_dof );
-		  K_bar = k*Eigen::MatrixXd::Identity( num_dof, num_dof );
-		  D_bar = d*Eigen::MatrixXd::Identity( num_dof, num_dof );
-		  // Debug
-
 		  iter = 0;
       }
 
