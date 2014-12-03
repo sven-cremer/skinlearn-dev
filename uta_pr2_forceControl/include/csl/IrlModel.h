@@ -19,8 +19,11 @@ namespace outer_loop
 class IrlModel
 {
 
-  int num_dof    ; // number of joints.
-  int num_samples; // number of joints.
+  int num_dof    ; // number of cartesian DOF
+  int num_samples; // number samples to collect
+  int num_lsIter ; // number of least square iterations
+
+  bool oneShot   ; // If true run IRL only once
 
   Eigen::MatrixXd x;
   Eigen::MatrixXd xd;
@@ -106,16 +109,19 @@ public:
     b_task = 0.5 ;
 
     //
-    init( 1, 2000 );
+    init( 1, 2000, 20, true );
   }
   ~IrlModel()
   {
   }
 
-  void init( int para_num_Dof, int para_num_Samples )
+  void init( int para_num_Dof, int para_num_Samples, int para_numIrlLsIter, bool para_oneShot )
   {
-    num_dof     = para_num_Dof     ;
-    num_samples = para_num_Samples ;
+    num_dof     = para_num_Dof      ;
+    num_samples = para_num_Samples  ;
+    num_lsIter  = para_numIrlLsIter ;
+
+    oneShot     = para_oneShot      ;
 
     x         .resize( num_dof, 1 ) ;
     xd        .resize( num_dof, 1 ) ;
@@ -405,7 +411,7 @@ public:
       }else
       {
     	  // Least squares
-    	  for( int i = 0; i<= 10; i++)
+    	  for( int i = 0; i<= num_lsIter; i++)
     	  {
 		      Eigen::MatrixXd KtR = K.transpose()*R;
 
@@ -430,6 +436,11 @@ public:
 		  K_bar = K3.inverse()*K1;
 
 		  iter = 0;
+
+		  if(oneShot)
+		  {
+			  useIrl = false;
+		  }
       }
 
     }

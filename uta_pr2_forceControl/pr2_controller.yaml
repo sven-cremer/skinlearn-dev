@@ -27,8 +27,9 @@ rls_sigma          : 0.001
 
 # IRL
 numIrlSamples      : 100
+numIrlLsIter       : 20
 numCartDof         : 1
-
+irlOneshot         : true
 
 # Params for the MRAC outer-loop controller
 mrac_gamma_1       : 0.1

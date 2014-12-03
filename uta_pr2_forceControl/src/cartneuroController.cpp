@@ -391,9 +391,17 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_numIrlSamples = "/numIrlSamples";
   if (!n.getParam( para_numIrlSamples , numIrlSamples )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numIrlSamples.c_str()) ; return false; }
 
-  int numCartDof = 100;
+  int numIrlLsIter = 10;
+  std::string para_numIrlLsIter = "/numIrlLsIter";
+  if (!n.getParam( para_numIrlLsIter , numIrlLsIter )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numIrlLsIter.c_str()) ; return false; }
+
+  int numCartDof = 1;
   std::string para_numCartDof = "/numCartDof";
   if (!n.getParam( para_numCartDof , numCartDof )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numCartDof.c_str()) ; return false; }
+
+  bool irlOneshot = true;
+  std::string para_irlOneshot = "/irlOneshot";
+  if (!n.getParam( para_irlOneshot , irlOneshot )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_irlOneshot.c_str()) ; return false; }
 
 
   std::string para_fixedFilterWeights = "/fixedFilterWeights";
@@ -576,7 +584,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                 m_D );
 
   // IRL
-  outerLoopIRLmodelX.init( numCartDof, numIrlSamples );
+  outerLoopIRLmodelX.init( numCartDof, numIrlSamples, numIrlLsIter, irlOneshot );
   outerLoopIRLmodelX.updateDelT( outerLoopTime );
   outerLoopIRLmodelX.updateMsd( m_M,
                                 m_S,
@@ -584,7 +592,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopIRLmodelX.updateAB( task_mA,
                                task_mB );
 
-  outerLoopIRLmodelY.init( numCartDof, numIrlSamples );
+  outerLoopIRLmodelY.init( numCartDof, numIrlSamples, numIrlLsIter, irlOneshot );
   outerLoopIRLmodelY.updateDelT( outerLoopTime );
   outerLoopIRLmodelY.updateMsd( m_M,
                                 m_S,
