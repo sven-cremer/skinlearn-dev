@@ -432,7 +432,7 @@ public:
 		  K3 = K.block( 0, 2*num_dof, num_dof, num_dof);
 
 		  M_bar = K3.inverse()   ;
-		  D_bar = K3.inverse()*K2;
+		  D_bar = - K3.inverse()*K2;
 		  K_bar = K3.inverse()*K1;
 
 		  iter = 0;
