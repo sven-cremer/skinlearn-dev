@@ -382,8 +382,7 @@ public:
     ed_bar << x_d  - x_m ,
     		  xd_d - xd_m;
 
-    X << x_m ,
-         xd_m,
+    X << ed_bar,
          f_h ;
 
     if( useIrl )
@@ -437,7 +436,7 @@ public:
 
     // First order integration
     // TODO better way to do this?
-    xdd_m = M_bar.inverse()*( f_h - D_bar * xd_m - K_bar * x_m ) ;
+    xdd_m = M_bar.inverse()*( f_h + K_bar*x_d + D_bar*xd_d - D_bar * xd_m - K_bar * x_m ) ;
     xd_m  = xd_m + xdd_m  *  delT                                ;
     x_m   = x_m  + xd_m   *  delT                                ;
 
