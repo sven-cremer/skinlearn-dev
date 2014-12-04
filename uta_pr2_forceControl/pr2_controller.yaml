@@ -26,7 +26,7 @@ rls_lambda         : 0.98
 rls_sigma          : 0.001
 
 # IRL
-numIrlSamples      : 100
+numIrlSamples      : 200
 numIrlLsIter       : 20
 numCartDof         : 1
 irlOneshot         : true
@@ -56,9 +56,9 @@ forceCutOffY       : 0.0
 forceCutOffZ       : 0.0
 
 # Params for the MSD outer-loop controller
-m_M                 : 20.0
-m_S                 : 0
-m_D                 : 50.0
+m_M                 : 200.0
+m_S                 : 50.0
+m_D                 : 10.0
 
 # Params for M(s) of the RLS models
 task_mA             : 1.5
