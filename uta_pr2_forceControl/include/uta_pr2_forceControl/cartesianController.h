@@ -32,7 +32,7 @@ namespace pr2_controller_ns{
 
 enum
 {
-  StoreLen = 20000
+  StoreLen = 60000
 };
 
 class PR2CartesianControllerClass: public pr2_controller_interface::Controller
