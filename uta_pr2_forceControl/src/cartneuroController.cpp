@@ -1579,7 +1579,7 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].task_mA           = task_mA                     ;
           msgControllerFullData[index].task_mB           = task_mB                     ;
 
-          msgControllerFullData[index].fixedFilterWeights= useFixedWeights          ;
+          msgControllerFullData[index].fixedFilterWeights= useFixedWeights             ;
 
           msgControllerFullData[index].w0                = outerLoopWk(0,0)            ;
           msgControllerFullData[index].w1                = outerLoopWk(1,0)            ;

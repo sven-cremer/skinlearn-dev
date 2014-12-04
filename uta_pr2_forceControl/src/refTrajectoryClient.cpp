@@ -181,7 +181,7 @@ public:
         switchNo++;
       }
 
-      if( switchNo > 3 )
+      if( switchNo > 11 )
 	  {
     	  sleep(2);
 		  captureFlag = false ;
