@@ -234,29 +234,6 @@ void OneLayerNeuralNetworkController::UpdateCart( Eigen::VectorXd & X     ,
                                                   Eigen::VectorXd & t_r   ,
                                                   Eigen::VectorXd & tau    )
 {
-
-//// Debug
-//  X(3) =  0;
-//  X(4) =  0;
-//  X(5) =  0;
-//
-// Xd(3) =  0;
-// Xd(4) =  0;
-// Xd(5) =  0;
-//
-// X_m(3) =  0;
-// X_m(4) =  0;
-// X_m(5) =  0;
-//
-// Xd_m(3) =  0;
-// Xd_m(4) =  0;
-// Xd_m(5) =  0;
-//
-// Xdd_m(3) =  0;
-// Xdd_m(4) =  0;
-// Xdd_m(5) =  0;
-//// Debug
-
         // NN Input Vector
         x <<           1 ,
             (  X_m -  X) , //   q( 0 ) ;
@@ -274,7 +251,6 @@ void OneLayerNeuralNetworkController::UpdateCart( Eigen::VectorXd & X     ,
                 Xd_m ,
                 t_r  ,
                 tau   );
-
 }
 
 void OneLayerNeuralNetworkController::UpdateJoint( Eigen::VectorXd & q     ,
@@ -315,11 +291,6 @@ void OneLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
 	// Filtered error
 	r = (qd_m - qd) + lambda.asDiagonal()*(q_m - q);
 
-	// Robust term
-	Z.block(0,0,num_Hidden,num_Outputs) = W_trans.transpose();
-	Z.block(num_Hidden,num_Outputs,num_Inputs+1,num_Hidden) = V_trans.transpose();
-	vRobust = - Kz*(Z.norm() + Zb)*r;
-
 	hiddenLayer_in = V_trans*x;
 	hiddenLayer_out = sigmoid(hiddenLayer_in);
 	outputLayer_out = W_trans*hiddenLayer_out;
@@ -327,18 +298,17 @@ void OneLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
 	y = outputLayer_out;
 
 	// control torques
-	tau = Kv.asDiagonal()*r + nn_ON*( y - vRobust ) - feedForwardForce*t_r ;
-//	tau = (qd_m - qd) + 100*(q_m - q);
+	tau = Kv.asDiagonal()*r + nn_ON*y - feedForwardForce*t_r ;
 
 	//
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
 
-	// Wk+1                  = Wk                  +  Wkdot                                                                                                          * dt
+	// Wk+1                  = Wk                  +  Wkdot                                                                   * dt
 	W_trans_next.transpose() = W_trans.transpose() + (F*hiddenLayer_out*r.transpose() - kappa*F*r.norm()*W_trans.transpose()) * delT;
 
 	sigmaPrimeTrans_W_r = sigmaPrime.transpose()*W_trans.transpose()*r;
 
-	// Vk+1                  = Vk                  +  Vkdot                                                                                      			 * dt
+	// Vk+1                  = Vk                  +  Vkdot                                                                          * dt
 	// V_trans_next.transpose() = V_trans.transpose() + (G*x*sigmaPrimeTrans_W_r.transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
 
 }

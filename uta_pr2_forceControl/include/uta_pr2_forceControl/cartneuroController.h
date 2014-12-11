@@ -120,7 +120,7 @@ private:
 
   double fFForce;
 
-  csl::neural_network::TwoLayerNeuralNetworkController nnController;
+  csl::neural_network::OneLayerNeuralNetworkController nnController;
 
   // NN END
   /////////////////////////
