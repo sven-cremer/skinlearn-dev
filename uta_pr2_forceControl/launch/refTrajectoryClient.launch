@@ -1,0 +1,7 @@
+<launch>
+
+   <node pkg="sound_play" type="soundplay_node.py" name="soundplay_node" output="screen"/>
+
+   <node pkg="uta_pr2_forceControl" type="refTrajectoryClient" name="refTrajectoryClient" output="screen"/>
+
+</launch>
