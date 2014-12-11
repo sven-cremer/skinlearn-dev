@@ -224,7 +224,7 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
-void TwoLayerNeuralNetworkController::UpdateCart( Eigen::VectorXd & X     ,
+void OneLayerNeuralNetworkController::UpdateCart( Eigen::VectorXd & X     ,
                                                   Eigen::VectorXd & Xd    ,
                                                   Eigen::VectorXd & X_m   ,
                                                   Eigen::VectorXd & Xd_m  ,
