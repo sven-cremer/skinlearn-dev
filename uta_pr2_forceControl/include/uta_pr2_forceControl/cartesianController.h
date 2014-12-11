@@ -157,6 +157,8 @@ public:
 
   // Use ARMA
   bool useARMAmodel ;
+  // Use CT ARMA
+  bool useCTARMAmodel ;
   // Use FIR
   bool useFIRmodel ;
   // Use MRAC

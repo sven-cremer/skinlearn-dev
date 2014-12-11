@@ -292,6 +292,10 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useARMAmodel = "/useARMAmodel";
   if (!n.getParam( para_useARMAmodel, useARMAmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useARMAmodel.c_str()) ; return false; }
 
+  useCTARMAmodel = false ;
+  std::string para_useCTARMAmodel = "/useCTARMAmodel";
+  if (!n.getParam( para_useCTARMAmodel, useCTARMAmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCTARMAmodel.c_str()) ; return false; }
+
   useFIRmodel = false ;
   std::string para_useFIRmodel = "/useFIRmodel";
   if (!n.getParam( para_useFIRmodel, useFIRmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFIRmodel.c_str()) ; return false; }
@@ -365,7 +369,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_filtW7 , filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW7.c_str()) ; return false; }
 
   outerLoopWk.resize(8,1);
-  if( useFIRmodel || useARMAmodel )
+  if( useFIRmodel || useARMAmodel || useCTARMAmodel)
   {
 	  outerLoopWk(0,0) = filtW0 ;
 	  outerLoopWk(1,0) = filtW1 ;
@@ -571,6 +575,15 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopRLSmodelY.updateAB( task_mA,
                                task_mB );
   outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
+
+  // CT RLS
+  outerLoopCTRLSmodelX.updateDelT( delT );
+  outerLoopCTRLSmodelX.updateAB( task_mA,
+                                 task_mB );
+
+  outerLoopCTRLSmodelY.updateDelT( delT );
+  outerLoopCTRLSmodelY.updateAB( task_mA,
+                                 task_mB );
 
   // MSD
   outerLoopMSDmodelX.updateDelT( outerLoopTime );
@@ -984,7 +997,6 @@ void PR2CartneuroControllerClass::update()
 
     if( ( robot_state_->getTime() - outer_elapsed_ ).toSec() >= outerLoopTime )
     {
-
 		// RLS ARMA
 		if( useARMAmodel )
 		{
@@ -1008,6 +1020,34 @@ void PR2CartneuroControllerClass::update()
 										 task_refModel     (1)  );
 
 	//      ROS_ERROR_STREAM("USING RLS ARMA");
+
+			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
+	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
+		}
+
+		// CT RLS ARMA
+		if( useCTARMAmodel )
+		{
+	//      outerLoopCTRLSmodelX.updateARMA( Xd_m              (0) ,
+	//                                     Xd                (0) ,
+	//                                     X_m               (0) ,
+	//                                     X                 (0) ,
+	//                                     Xdd_m             (0) ,
+	//                                     transformed_force (0) ,
+	//                                     task_ref          (0) ,
+	//                                     task_refModel     (0)  );
+
+		  // Y axis
+		  outerLoopCTRLSmodelY.updateARMA( Xd_m              (1) ,
+										   Xd                (1) ,
+										   X_m               (1) ,
+										   X                 (1) ,
+										   Xdd_m             (1) ,
+										   transformed_force (1) ,
+										   task_ref          (1) ,
+										   task_refModel     (1)  );
+
+	//      ROS_ERROR_STREAM("USING CT RLS ARMA");
 
 			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
 	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
@@ -2091,10 +2131,11 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( neuroadaptive_msgs::fixedW
 
   std::vector<std::string> outerModel ;
 
-  if( useARMAmodel ){ outerModel.push_back("useARMAmodel"); }
-  if( useFIRmodel  ){ outerModel.push_back("useFIRmodel "); }
-  if( useMRACmodel ){ outerModel.push_back("useMRACmodel"); }
-  if( useMSDmodel  ){ outerModel.push_back("useMSDmodel "); }
+  if( useARMAmodel   ){ outerModel.push_back("useARMAmodel"  ); }
+  if( useCTARMAmodel ){ outerModel.push_back("useCTARMAmodel"); }
+  if( useFIRmodel    ){ outerModel.push_back("useFIRmodel "  ); }
+  if( useMRACmodel   ){ outerModel.push_back("useMRACmodel"  ); }
+  if( useMSDmodel    ){ outerModel.push_back("useMSDmodel "  ); }
 
   if( useIRLmodel  )
   {

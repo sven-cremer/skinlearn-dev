@@ -1,18 +1,18 @@
 /*
- * RlsModel.h
+ * CtRlsModel.h
  *
- *  Created on: Oct 30, 2014
+ *  Created on: Dec 10, 2014
  *      Author: Isura
  */
 
-#ifndef RLSMODEL_H_
-#define RLSMODEL_H_
+#ifndef CTRLSMODEL_H_
+#define CTRLSMODEL_H_
 
 namespace csl
 {
 namespace outer_loop
 {
-class RlsModel
+class CtRlsModel
 {
 
   int num_Joints; // number of joints.
@@ -44,6 +44,7 @@ class RlsModel
   Eigen::MatrixXd Uk_plus      ; // FIR inputs time series f_r temp to use for update
   Eigen::MatrixXd Dk           ; // Desired
   Eigen::MatrixXd Pk           ; // Covariance matrix
+  Eigen::MatrixXd Rk           ;
 
   double delT; // Time step
 
@@ -82,22 +83,22 @@ class RlsModel
     Uk = Uk_plus;
   }
 
-  void stackArmaIn( Eigen::MatrixXd & y_prev, Eigen::MatrixXd & u_in )
+  void stackIntegrate( Eigen::MatrixXd & y_prev, Eigen::MatrixXd & u_in )
   {
     // TODO parameterize this
-    // Moves top to bottom rows are time series, columns are joints
-    // First in First out bottom most location nth row is dumped
-    Uk_plus.block<4-1, 1>(1,0) = Uk.block<4-1, 1>(0,0);
-    Uk_plus.block<1,1>(0,0) = - y_prev.transpose();
+    Uk(0,0) = Uk(0,0) + y_prev(0,0)*delT;
+    Uk(1,0) = Uk(1,0) + Uk(0,0)    *delT;
+    Uk(2,0) = Uk(2,0) + Uk(1,0)    *delT;
+    Uk(3,0) = Uk(3,0) + Uk(2,0)    *delT;
 
-    Uk_plus.block<4-1, 1>(5,0) = Uk.block<4-1, 1>(4,0);
-    Uk_plus.block<1,1>(4,0) = u_in.transpose();
-
-    Uk = Uk_plus;
+    Uk(4,0) = Uk(4,0) + u_in(0,0)*delT;
+    Uk(5,0) = Uk(5,0) + Uk(4,0)  *delT;
+    Uk(6,0) = Uk(6,0) + Uk(5,0)  *delT;
+    Uk(7,0) = Uk(7,0) + Uk(6,0)  *delT;
   }
 
 public:
-  RlsModel()
+  CtRlsModel()
   {
     delT = 0.001; /// 1000 Hz by default
     iter = 1;
@@ -108,7 +109,7 @@ public:
     //
     init( 1, 8 );
   }
-  ~RlsModel()
+  ~CtRlsModel()
   {
   }
 
@@ -136,6 +137,9 @@ public:
     task_ref      .resize( num_Joints, 1 ) ;
 
     t_r   .resize( num_Joints, 1 ) ;
+
+    Rk    .resize( num_Fir, num_Joints ) ;
+	Rk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
 
     Wk    .resize( num_Fir, num_Joints ) ;
     Wk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
@@ -212,13 +216,6 @@ public:
   {
     m_lm = l;
     rls_filter.setLambda( m_lm ) ;
-  }
-
-  void initRls( const double & l, const double & sigma )
-  {
-    m_lm    = l     ;
-    m_sigma = sigma ;
-    rls_filter.init( Wk, Uk, Dk, Pk, m_lm );
   }
 
   void getWeights( Eigen::MatrixXd & param_Wk )
@@ -314,7 +311,7 @@ public:
     task_ref(0)          = param_task_ref ;
 
     // Save input forces/torques
-    stackArmaIn( q_m, t_r );
+    stackIntegrate( q_m, t_r );
     update();
 
     param_task_ref_model = ref_q_m(0)     ;
@@ -341,7 +338,7 @@ public:
     task_ref             = param_task_ref ;
 
     // Save input forces/torques
-    stackArmaIn( q_m, t_r );
+    stackIntegrate( q_m, t_r );
     update();
 
     param_task_ref_model = ref_q_m        ;
@@ -361,10 +358,6 @@ public:
 
     ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
 
-//    ref_q_m(0)   = ode_init_x[0 ] ;
-//    ref_qd_m(0)  = ode_init_x[1 ] ;
-//    ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
-
     // Save iteration number
     iter = iter + 1;
 
@@ -375,10 +368,8 @@ public:
     {
       if( !useFixedWeights )
       {
-		  rls_filter.Update( Wk, Uk, Dk, Pk );
-
-		  Wk = rls_filter.getEstimate();
-		  Pk = rls_filter.getCovariance();
+    	  Wk = Pk*Uk.transpose()*(1/1) * ( Dk - Uk.transpose()*Wk );
+    	  Pk = Pk - Pk*Uk.transpose()*(1/1)*Uk*Pk * delT;
       }
 
       q_m   = Uk.transpose()*Wk  ;
@@ -397,4 +388,4 @@ public:
 }
 }
 
-#endif /* RLSMODEL_H_ */
+#endif /* CTRLSMODEL_H_ */

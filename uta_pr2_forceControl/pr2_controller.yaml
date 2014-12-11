@@ -6,9 +6,10 @@ forceTorqueOn      : true
 
 # Only one can be true
 useARMAmodel       : false
+useCTARMAmodel     : true
 useFIRmodel        : false
 useMRACmodel       : false
-useIRLmodel        : true
+useIRLmodel        : false
 useMSDmodel        : false
 useDirectmodel     : false
 

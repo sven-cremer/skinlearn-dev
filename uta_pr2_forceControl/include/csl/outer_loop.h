@@ -2,7 +2,7 @@
  * outer_loop.h
  *
  *  Created on: Jan 22, 2014
- *      Author: isura
+ *      Author: Isura
  */
 
 #ifndef RLS_OUTER_LOOP_H_
@@ -91,6 +91,7 @@ void task_model( const fir_state_type &x , fir_state_type &dxdt , double t )
 #include<csl/JSpaceMsdModel.h>
 #include<csl/MsdModel.h>
 #include<csl/RlsModel.h>
+#include<csl/CtRlsModel.h>
 #include<csl/MracModel.h>
 #include<csl/IrlModel.h>
 
