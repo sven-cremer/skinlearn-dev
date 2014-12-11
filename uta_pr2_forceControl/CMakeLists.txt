@@ -50,7 +50,7 @@ rosbuild_add_library( controllerFullDataLIB src/controllerFullData.pb.cc )
 
 rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
 
-rosbuild_add_library( cslLIB src/neural_network.cpp )
+# rosbuild_add_library( cslLIB src/neural_network.cpp )
 rosbuild_add_library( oelLIB src/least_squares.cpp src/kalman_estimate.cpp )
 
 rosbuild_add_library( pr2_controller_lib src/cartesianController.cpp
@@ -62,7 +62,7 @@ rosbuild_add_library( pr2_controller_lib src/cartesianController.cpp
                                          #src/cartresnnController.cpp
                                          )
  
-target_link_libraries( pr2_controller_lib cslLIB )
+#target_link_libraries( pr2_controller_lib cslLIB )
 target_link_libraries( pr2_controller_lib oelLIB )
 
 # protobuf link
