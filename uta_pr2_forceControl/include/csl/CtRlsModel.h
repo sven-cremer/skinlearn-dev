@@ -69,20 +69,6 @@ class CtRlsModel
   // Switch RLS on/off
   bool useFixedWeights ;
 
-  void stackFirIn( Eigen::MatrixXd & u_in )
-  {
-    // TODO parameterize this
-    // Moves top to bottom rows are time series, columns are joints
-    // First in First out bottom most location nth row is dumped
-//    Uk_plus.block<8-1, 1>(1,0) = Uk.block<8-1, 1>(0,0);
-//    Uk_plus.block<1,1>(0,0) = u_in.transpose();
-
-    Uk_plus.block<8-1, 1>(1,0) = Uk.block<8-1, 1>(0,0);
-    Uk_plus.block<1,1>(0,0) = u_in.transpose();
-
-    Uk = Uk_plus;
-  }
-
   void stackIntegrate( Eigen::MatrixXd & y_prev, Eigen::MatrixXd & u_in )
   {
     // TODO parameterize this
@@ -116,8 +102,8 @@ public:
   void init( int para_num_Joints, int para_num_Fir )
   {
 
-    num_Fir    = para_num_Fir;
-    num_Joints = para_num_Joints;
+    num_Fir    = para_num_Fir          ;
+    num_Joints = para_num_Joints       ;
 
     q         .resize( num_Joints, 1 ) ;
     qd        .resize( num_Joints, 1 ) ;
@@ -134,21 +120,21 @@ public:
     ref_qd_m  .resize( num_Joints, 1 ) ;
     ref_qdd_m .resize( num_Joints, 1 ) ;
 
-    task_ref      .resize( num_Joints, 1 ) ;
+    task_ref  .resize( num_Joints, 1 ) ;
 
-    t_r   .resize( num_Joints, 1 ) ;
+    t_r  .resize( num_Joints, 1 ) ;
 
-    Rk    .resize( num_Fir, num_Joints ) ;
+    Rk   .resize( num_Fir, num_Joints ) ;
 	Rk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
 
-    Wk    .resize( num_Fir, num_Joints ) ;
+    Wk   .resize( num_Fir, num_Joints ) ;
     Wk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
 
-    Dk    .resize( num_Joints, 1 ) ;
+    Dk   .resize( num_Joints, 1 ) ;
     Dk = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
     // FIXME need to make this a 3 dimensional matrix
-    Pk    .resize( num_Fir, num_Fir       ) ;
+    Pk    .resize( num_Fir, num_Fir ) ;
     m_sigma = 0.001 ;
     Pk = Eigen::MatrixXd::Identity( num_Fir, num_Fir )/m_sigma ;
 
@@ -239,60 +225,6 @@ public:
 	useFixedWeights = false;
   }
 
-  void updateFIR( double & param_qd_m           ,
-                  double & param_qd             ,
-                  double & param_q_m            ,
-                  double & param_q              ,
-                  double & param_qdd_m          ,
-                  double & param_t_r            ,
-                  double & param_task_ref       ,
-                  double & param_task_ref_model  )
-  {
-    qd_m    (0)          = param_qd_m     ;
-    qd      (0)          = param_qd       ;
-    q_m     (0)          = param_q_m      ;
-    q       (0)          = param_q        ;
-    qdd_m   (0)          = param_qdd_m    ;
-    t_r     (0)          = param_t_r      ;
-    task_ref(0)          = param_task_ref ;
-
-    // Save input forces/torques
-    stackFirIn( t_r );
-    update();
-
-    param_task_ref_model = ref_q_m(0)     ;
-    param_q_m            = q_m(0)         ;
-    param_qd_m           = qd_m(0)        ;
-    param_qdd_m          = qdd_m(0)       ;
-  }
-
-  void updateFIR( Eigen::MatrixXd & param_qd_m          ,
-                  Eigen::MatrixXd & param_qd            ,
-                  Eigen::MatrixXd & param_q_m           ,
-                  Eigen::MatrixXd & param_q             ,
-                  Eigen::MatrixXd & param_qdd_m         ,
-                  Eigen::MatrixXd & param_t_r           ,
-                  Eigen::MatrixXd & param_task_ref      ,
-                  Eigen::MatrixXd & param_task_ref_model )
-  {
-    qd_m                 = param_qd_m     ;
-    qd                   = param_qd       ;
-    q_m                  = param_q_m      ;
-    q                    = param_q        ;
-    qdd_m                = param_qdd_m    ;
-    t_r                  = param_t_r      ;
-    task_ref             = param_task_ref ;
-
-    // Save input forces/torques
-    stackFirIn( t_r );
-    update();
-
-    param_task_ref_model = ref_q_m        ;
-    param_q_m            = q_m            ;
-    param_qd_m           = qd_m           ;
-    param_qdd_m          = qdd_m          ;
-  }
-
   void updateARMA( double & param_qd_m           ,
                    double & param_qd             ,
                    double & param_q_m            ,
@@ -368,8 +300,8 @@ public:
     {
       if( !useFixedWeights )
       {
-    	  Wk = Pk*Uk.transpose()*(1/1) * ( Dk - Uk.transpose()*Wk );
-    	  Pk = Pk - Pk*Uk.transpose()*(1/1)*Uk*Pk * delT;
+    	  Wk = Pk*Uk*1*( Dk - Uk.transpose()*Wk );
+    	  Pk = Pk - Pk*Uk*1*Uk.transpose()*Pk * delT;
       }
 
       q_m   = Uk.transpose()*Wk  ;
