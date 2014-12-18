@@ -442,7 +442,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
       n.param("saturation/" + chain_.getJoint(i)->joint_->name, saturation_[i], 0.0);
 
   delT = 0.001;
-  outerLoopTime = 0.05;
+  outerLoopTime = delT; //0.05;
 
   // initial conditions
   ode_init_x[0 ] = 0.0;
@@ -563,15 +563,15 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 			                       mrac_gamma_5 ) ;
 
   // RLS
-  double outerRate = 20; // Hz
-//  outerLoopRLSmodelX.updateDelT( outerLoopTime );
-  outerLoopRLSmodelX.updateDelT( delT );
+
+  outerLoopRLSmodelX.updateDelT( outerLoopTime );
+//  outerLoopRLSmodelX.updateDelT( delT );
   outerLoopRLSmodelX.updateAB( task_mA,
                                task_mB );
 
 
-//  outerLoopRLSmodelY.updateDelT( outerLoopTime );
-  outerLoopRLSmodelY.updateDelT( delT );
+  outerLoopRLSmodelY.updateDelT( outerLoopTime );
+//  outerLoopRLSmodelY.updateDelT( delT );
   outerLoopRLSmodelY.updateAB( task_mA,
                                task_mB );
   outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );

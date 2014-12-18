@@ -299,8 +299,8 @@ public:
     {
       if( !useFixedWeights )
       {
-    	  Wk = Pk*Uk*1*( Dk - Uk.transpose()*Wk );
-    	  Pk = Pk - Pk*Uk*1*Uk.transpose()*Pk * delT;
+    	  Pk = Pk - Pk*Uk*(1.00/0.01)*Uk.transpose()*Pk * delT;
+    	  Wk = Pk*Uk*(1.00/0.01)*( Dk - Uk.transpose()*Wk );
       }
 
       q_m   = Uk.transpose()*Wk  ;
