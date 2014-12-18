@@ -577,11 +577,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
 
   // CT RLS
-  outerLoopCTRLSmodelX.updateDelT( delT );
+  outerLoopCTRLSmodelX.updateDelT( outerLoopTime );
   outerLoopCTRLSmodelX.updateAB( task_mA,
                                  task_mB );
 
-  outerLoopCTRLSmodelY.updateDelT( delT );
+  outerLoopCTRLSmodelY.updateDelT( outerLoopTime );
   outerLoopCTRLSmodelY.updateAB( task_mA,
                                  task_mB );
 
@@ -1025,6 +1025,34 @@ void PR2CartneuroControllerClass::update()
 	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
 		}
 
+		// CT RLS ARMA
+		if( useCTARMAmodel )
+		{
+	//      outerLoopCTRLSmodelX.updateARMA( Xd_m              (0) ,
+	//                                     Xd                (0) ,
+	//                                     X_m               (0) ,
+	//                                     X                 (0) ,
+	//                                     Xdd_m             (0) ,
+	//                                     transformed_force (0) ,
+	//                                     task_ref          (0) ,
+	//                                     task_refModel     (0)  );
+
+		  // Y axis
+		  outerLoopCTRLSmodelY.updateARMA( Xd_m              (1) ,
+										   Xd                (1) ,
+										   X_m               (1) ,
+										   X                 (1) ,
+										   Xdd_m             (1) ,
+										   transformed_force (1) ,
+										   task_ref          (1) ,
+										   task_refModel     (1)  );
+
+	//      ROS_ERROR_STREAM("USING CT RLS ARMA");
+
+			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
+	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
+		}
+
 		// RLS FIR
 		if( useFIRmodel )
 		{
@@ -1142,35 +1170,6 @@ void PR2CartneuroControllerClass::update()
 		outer_elapsed_ = robot_state_->getTime() ;
 
     }
-
-
-    // CT RLS ARMA
-    	if( useCTARMAmodel )
-    	{
-    //      outerLoopCTRLSmodelX.updateARMA( Xd_m              (0) ,
-    //                                     Xd                (0) ,
-    //                                     X_m               (0) ,
-    //                                     X                 (0) ,
-    //                                     Xdd_m             (0) ,
-    //                                     transformed_force (0) ,
-    //                                     task_ref          (0) ,
-    //                                     task_refModel     (0)  );
-
-    	  // Y axis
-    	  outerLoopCTRLSmodelY.updateARMA( Xd_m              (1) ,
-    									   Xd                (1) ,
-    									   X_m               (1) ,
-    									   X                 (1) ,
-    									   Xdd_m             (1) ,
-    									   transformed_force (1) ,
-    									   task_ref          (1) ,
-    									   task_refModel     (1)  );
-
-    //      ROS_ERROR_STREAM("USING CT RLS ARMA");
-
-    		outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
-    //		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
-    	}
 
                 // MRAC
                 if( useMRACmodel )
