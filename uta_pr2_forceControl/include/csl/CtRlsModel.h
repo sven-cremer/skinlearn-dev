@@ -77,7 +77,7 @@ class CtRlsModel
     Uk(2,0) = -(Uk(2,0) + Uk (1,0) * delT);
     Uk(3,0) = -(Uk(3,0) + Uk (2,0) * delT);
 
-    Uk(4,0) =   f_h(0,0);//Uk(4,0) + f_h(0,0) * delT ;
+    Uk(4,0) =   Uk(4,0) + f_h(0,0) * delT ;
     Uk(5,0) =   Uk(5,0) + Uk (4,0) * delT ;
     Uk(6,0) =   Uk(6,0) + Uk (5,0) * delT ;
     Uk(7,0) =   Uk(7,0) + Uk (6,0) * delT ;
@@ -163,7 +163,7 @@ public:
 
     t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    m_lm        = 0.98; // Forgetting factor
+    m_lm      = 0.98; // Forgetting factor
 
     // Don't use fixed weights by default
     useFixedWeights = false;
@@ -242,8 +242,6 @@ public:
     t_r     (0)          = param_t_r      ;
     task_ref(0)          = param_task_ref ;
 
-    // Save input forces/torques
-    stackIntegrate( q_m, t_r );
     update();
 
     param_task_ref_model = ref_q_m(0)     ;
@@ -269,8 +267,6 @@ public:
     t_r                  = param_t_r      ;
     task_ref             = param_task_ref ;
 
-    // Save input forces/torques
-    stackIntegrate( q_m, t_r );
     update();
 
     param_task_ref_model = ref_q_m        ;
@@ -295,6 +291,9 @@ public:
 
     // Desired is the task reference model
     Dk = ref_q_m;
+
+    // Save input forces/torques
+	stackIntegrate( q_m, t_r );
 
     //if( iter > num_Fir )
     {
