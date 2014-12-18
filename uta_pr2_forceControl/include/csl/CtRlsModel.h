@@ -69,18 +69,18 @@ class CtRlsModel
   // Switch RLS on/off
   bool useFixedWeights ;
 
-  void stackIntegrate( Eigen::MatrixXd & y_prev, Eigen::MatrixXd & u_in )
+  void stackIntegrate( Eigen::MatrixXd & x_d, Eigen::MatrixXd & f_h )
   {
     // TODO parameterize this
-    Uk(0,0) = - Uk(0,0) - y_prev(0,0)*delT;
-    Uk(1,0) = - Uk(1,0) - Uk(0,0)    *delT;
-    Uk(2,0) = - Uk(2,0) - Uk(1,0)    *delT;
-    Uk(3,0) = - Uk(3,0) - Uk(2,0)    *delT;
+    Uk(0,0) = -(Uk(0,0) + x_d(0,0) * delT);
+    Uk(1,0) = -(Uk(1,0) + Uk (0,0) * delT);
+    Uk(2,0) = -(Uk(2,0) + Uk (1,0) * delT);
+    Uk(3,0) = -(Uk(3,0) + Uk (2,0) * delT);
 
-    Uk(4,0) =   Uk(4,0) + u_in(0,0)  *delT;
-    Uk(5,0) =   Uk(5,0) + Uk(4,0)    *delT;
-    Uk(6,0) =   Uk(6,0) + Uk(5,0)    *delT;
-    Uk(7,0) =   Uk(7,0) + Uk(6,0)    *delT;
+    Uk(4,0) =   f_h(0,0);//Uk(4,0) + f_h(0,0) * delT ;
+    Uk(5,0) =   Uk(5,0) + Uk (4,0) * delT ;
+    Uk(6,0) =   Uk(6,0) + Uk (5,0) * delT ;
+    Uk(7,0) =   Uk(7,0) + Uk (6,0) * delT ;
   }
 
 public:
