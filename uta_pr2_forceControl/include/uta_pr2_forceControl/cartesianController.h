@@ -50,7 +50,8 @@ public:
   KDL::Chain kdl_chain_;
   KDL::Chain kdl_chain_acc_link;
 
-  pr2_hardware_interface::Accelerometer* accelerometer_handle_;
+  pr2_hardware_interface::Accelerometer* l_accelerometer_handle_;
+  pr2_hardware_interface::Accelerometer* r_accelerometer_handle_;
 
   pr2_hardware_interface::ForceTorque* l_ft_handle_;
   pr2_hardware_interface::ForceTorque* r_ft_handle_;
@@ -65,7 +66,8 @@ public:
   geometry_msgs::WrenchStamped r_ftData;
 
   Eigen::Vector3d transformed_force    ;
-  Eigen::Vector3d acc_data             ;
+  Eigen::Vector3d l_acc_data           ;
+  Eigen::Vector3d r_acc_data           ;
 
   // KDL Solvers performing the actual computations
   boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;

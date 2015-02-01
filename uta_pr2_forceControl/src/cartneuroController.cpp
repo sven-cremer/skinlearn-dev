@@ -519,7 +519,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   p_Xdd_m  = Xdd_m ;
 
   transformed_force = Eigen::Vector3d::Zero();
-  acc_data          = Eigen::Vector3d::Zero();
+  r_acc_data          = Eigen::Vector3d::Zero();
 
   t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
   task_ref = Eigen::VectorXd::Zero( num_Outputs           ) ;
@@ -685,16 +685,31 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
      if( !r_ft_handle_ )
          ROS_ERROR("Something wrong with getting r_ft handle");
 
-     /* get a handle to the right gripper accelerometer */
-     accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
-     if(!accelerometer_handle_)
+     /* get a handle to the left gripper accelerometer */
+     l_accelerometer_handle_ = hardwareInterface->getAccelerometer("l_gripper_motor");
+     if(!l_accelerometer_handle_)
          ROS_ERROR("Something wrong with getting accelerometer handle");
 
      // set to 1.5 kHz bandwidth (should be the default)
-     accelerometer_handle_->command_.bandwidth_ = 6;
+     l_accelerometer_handle_->command_.bandwidth_ = pr2_hardware_interface::AccelerometerCommand
+     		                                                              ::BANDWIDTH_1500HZ;
 
      // set to +/- 8g range (0=2g,1=4g)
-     accelerometer_handle_->command_.range_ = 2;
+     l_accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand
+                                                                      ::RANGE_4G;
+
+     /* get a handle to the right gripper accelerometer */
+     r_accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
+     if(!r_accelerometer_handle_)
+         ROS_ERROR("Something wrong with getting accelerometer handle");
+
+     // set to 1.5 kHz bandwidth (should be the default)
+     r_accelerometer_handle_->command_.bandwidth_ = pr2_hardware_interface::AccelerometerCommand
+    		                                                              ::BANDWIDTH_1500HZ;
+
+     // set to +/- 8g range (0=2g,1=4g)
+     r_accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand
+                                                                      ::RANGE_4G;
    }
 
   /////////////////////////
@@ -765,12 +780,14 @@ void PR2CartneuroControllerClass::update()
 {
   if( forceTorqueOn )
   {
-    // retrieve accelerometer data
-    std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
+    // retrieve right accelerometer data
+    std::vector<geometry_msgs::Vector3> rightGripperAcc = r_accelerometer_handle_->state_.samples_;
 
-    acc_data( 0 ) = threeAccs[threeAccs.size()-1].x ;
-    acc_data( 1 ) = threeAccs[threeAccs.size()-1].y ;
-    acc_data( 2 ) = threeAccs[threeAccs.size()-1].z ;
+    r_acc_data( 0 ) = rightGripperAcc[0].x ; // threeAccs[threeAccs.size()-1].x ;
+    r_acc_data( 1 ) = rightGripperAcc[0].y ; // threeAccs[threeAccs.size()-1].y ;
+    r_acc_data( 2 ) = rightGripperAcc[0].z ; // threeAccs[threeAccs.size()-1].z ;
+
+//    rightGripperAcc.clear(); // Do we need this?
 
     std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
     l_ft_samples    = l_ftData_vector.size() - 1;
@@ -1407,9 +1424,9 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].torque_y          = 0                           ; // r_ftData.wrench.torque.y    ;
           msgControllerFullData[index].torque_z          = 0                           ; // r_ftData.wrench.torque.z    ;
 
-          msgControllerFullData[index].acc_x             = acc_data(0)                 ;
-          msgControllerFullData[index].acc_y             = acc_data(1)                 ;
-          msgControllerFullData[index].acc_z             = acc_data(2)                 ;
+          msgControllerFullData[index].acc_x             = r_acc_data(0)                 ;
+          msgControllerFullData[index].acc_y             = r_acc_data(1)                 ;
+          msgControllerFullData[index].acc_z             = r_acc_data(2)                 ;
 
           // Input reference efforts(torques)
           msgControllerFullData[index].reference_eff_j0  = 0                           ; //t_r(0) ;
