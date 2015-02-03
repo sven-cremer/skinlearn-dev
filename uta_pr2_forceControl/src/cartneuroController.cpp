@@ -787,9 +787,9 @@ void PR2CartneuroControllerClass::update()
     // retrieve right accelerometer data
     std::vector<geometry_msgs::Vector3> rightGripperAcc = r_accelerometer_handle_->state_.samples_;
 
-    r_acc_data( 0 ) = 0.0; // r_accelerationObserver->aX_bp ; // threeAccs[threeAccs.size()-1].x ;
-    r_acc_data( 1 ) = 0.0; // r_accelerationObserver->aY_bp ; // threeAccs[threeAccs.size()-1].y ;
-    r_acc_data( 2 ) = 0.0; // r_accelerationObserver->aZ_bp ; // threeAccs[threeAccs.size()-1].z ;
+    r_acc_data( 0 ) = r_accelerationObserver->aX_lp ; // threeAccs[threeAccs.size()-1].x ;
+    r_acc_data( 1 ) = r_accelerationObserver->aY_lp ; // threeAccs[threeAccs.size()-1].y ;
+    r_acc_data( 2 ) = r_accelerationObserver->aZ_lp ; // threeAccs[threeAccs.size()-1].z ;
 
 //    rightGripperAcc.clear(); // Do we need this?
 
