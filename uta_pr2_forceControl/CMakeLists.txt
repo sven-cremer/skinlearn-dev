@@ -53,6 +53,9 @@ rosbuild_add_library( ${PROJECT_NAME} src/SystemModel.cpp )
 # rosbuild_add_library( cslLIB src/neural_network.cpp )
 rosbuild_add_library( oelLIB src/least_squares.cpp src/kalman_estimate.cpp )
 
+rosbuild_add_library(pr2_gripper_sensor_controller_lib src/digitalFilter.cpp
+                                                       src/acceleration_observer.cpp)
+
 rosbuild_add_library( pr2_controller_lib src/cartesianController.cpp
                                          src/explforceController.cpp
                                          src/impedanceController.cpp

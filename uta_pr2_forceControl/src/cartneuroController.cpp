@@ -696,7 +696,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
      // set to +/- 8g range (0=2g,1=4g)
      l_accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand
-                                                                      ::RANGE_4G;
+                                                                      ::RANGE_8G;
 
      /* get a handle to the right gripper accelerometer */
      r_accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
@@ -710,6 +710,10 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
      // set to +/- 8g range (0=2g,1=4g)
      r_accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand
                                                                       ::RANGE_4G;
+
+     l_accelerationObserver = new accelerationObserver(l_accelerometer_handle_);
+     r_accelerationObserver = new accelerationObserver(r_accelerometer_handle_);
+
    }
 
   /////////////////////////
@@ -783,9 +787,9 @@ void PR2CartneuroControllerClass::update()
     // retrieve right accelerometer data
     std::vector<geometry_msgs::Vector3> rightGripperAcc = r_accelerometer_handle_->state_.samples_;
 
-    r_acc_data( 0 ) = rightGripperAcc[0].x ; // threeAccs[threeAccs.size()-1].x ;
-    r_acc_data( 1 ) = rightGripperAcc[0].y ; // threeAccs[threeAccs.size()-1].y ;
-    r_acc_data( 2 ) = rightGripperAcc[0].z ; // threeAccs[threeAccs.size()-1].z ;
+    r_acc_data( 0 ) = r_accelerationObserver->aX_bp ; // threeAccs[threeAccs.size()-1].x ;
+    r_acc_data( 1 ) = r_accelerationObserver->aY_bp ; // threeAccs[threeAccs.size()-1].y ;
+    r_acc_data( 2 ) = r_accelerationObserver->aZ_bp ; // threeAccs[threeAccs.size()-1].z ;
 
 //    rightGripperAcc.clear(); // Do we need this?
 
@@ -1403,6 +1407,11 @@ void PR2CartneuroControllerClass::update()
 
   // DATA COLLECTION END
   /////////////////////////
+
+
+  // Acceleration estimator
+  l_accelerationObserver->spin();
+  r_accelerationObserver->spin();
 
 }
 

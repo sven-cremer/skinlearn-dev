@@ -16,6 +16,8 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "sensor_msgs/JointState.h"
 
+#include "pr2_gripper_sensor_controller/acceleration_observer.h"
+
 #include <neuroadaptive_msgs/controllerParam.h>
 #include <neuroadaptive_msgs/controllerFullData.h>
 #include <neuroadaptive_msgs/controllerParamUpdate.h>
@@ -55,6 +57,9 @@ public:
 
   pr2_hardware_interface::ForceTorque* l_ft_handle_;
   pr2_hardware_interface::ForceTorque* r_ft_handle_;
+
+  accelerationObserver* l_accelerationObserver;
+  accelerationObserver* r_accelerationObserver;
 
   int l_ft_samples;
   int r_ft_samples;
