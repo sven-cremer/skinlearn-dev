@@ -11,14 +11,14 @@ useFIRmodel        : false
 useMRACmodel       : false
 useIRLmodel        : false
 useMSDmodel        : false
-useDirectmodel     : false
+useDirectmodel     : true
 
 outerLoop_time     : 0.05
 
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
 # i.e. an admittance model is used to generate x_i from f_h the force from the FT sensor
-externalRefTraj    : false
+externalRefTraj    : true
 
 # Human intent estimation
 intentEst_time     : 0.05

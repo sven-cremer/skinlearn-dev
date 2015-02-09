@@ -71,7 +71,7 @@ private:
 
   Eigen::VectorXd t_r;
   Eigen::VectorXd task_ref;
-  Eigen::VectorXd task_refModel;
+  Eigen::VectorXd task_refModel_output;
   Eigen::VectorXd tau;
   Eigen::VectorXd force;
 

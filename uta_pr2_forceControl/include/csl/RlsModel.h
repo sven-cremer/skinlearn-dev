@@ -30,7 +30,7 @@ class RlsModel
   Eigen::MatrixXd prv_qd_m;
 
   // Reference task model
-  Eigen::MatrixXd ref_q_m;
+  Eigen::MatrixXd ref_q_d;
   Eigen::MatrixXd ref_qd_m;
   Eigen::MatrixXd ref_qdd_m;
 
@@ -129,7 +129,7 @@ public:
     prv_q_m   .resize( num_Joints, 1 ) ;
     prv_qd_m  .resize( num_Joints, 1 ) ;
 
-    ref_q_m   .resize( num_Joints, 1 ) ;
+    ref_q_d   .resize( num_Joints, 1 ) ;
     ref_qd_m  .resize( num_Joints, 1 ) ;
     ref_qdd_m .resize( num_Joints, 1 ) ;
 
@@ -165,7 +165,7 @@ public:
     prv_q_m   = Eigen::MatrixXd::Zero( num_Joints, 1 );
     prv_qd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    ref_q_m   = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    ref_q_d   = Eigen::MatrixXd::Zero( num_Joints, 1 );
     ref_qd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
     ref_qdd_m = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
@@ -263,7 +263,7 @@ public:
     stackFirIn( t_r );
     update();
 
-    param_task_ref_model = ref_q_m(0)     ;
+    param_task_ref_model = ref_q_d(0)     ;
     param_q_m            = q_m(0)         ;
     param_qd_m           = qd_m(0)        ;
     param_qdd_m          = qdd_m(0)       ;
@@ -290,7 +290,7 @@ public:
     stackFirIn( t_r );
     update();
 
-    param_task_ref_model = ref_q_m        ;
+    param_task_ref_model = ref_q_d        ;
     param_q_m            = q_m            ;
     param_qd_m           = qd_m           ;
     param_qdd_m          = qdd_m          ;
@@ -317,7 +317,7 @@ public:
     stackArmaIn( q_m, t_r );
     update();
 
-    param_task_ref_model = ref_q_m(0)     ;
+    param_task_ref_model = ref_q_d(0)     ;
     param_q_m            = q_m(0)         ;
     param_qd_m           = qd_m(0)        ;
     param_qdd_m          = qdd_m(0)       ;
@@ -344,7 +344,7 @@ public:
     stackArmaIn( q_m, t_r );
     update();
 
-    param_task_ref_model = ref_q_m        ;
+    param_task_ref_model = ref_q_d        ;
     param_q_m            = q_m            ;
     param_qd_m           = qd_m           ;
     param_qdd_m          = qdd_m          ;
@@ -356,8 +356,8 @@ public:
 
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
 
-    ref_q_m(0)   = ref_q_m(0) + ref_qd_m(0)*delT;
-    ref_qd_m(0)  = a_task*task_ref(0) - b_task*ref_q_m(0);
+    ref_q_d(0)   = ref_q_d(0) + ref_qd_m(0)*delT;
+    ref_qd_m(0)  = a_task*task_ref(0) - b_task*ref_q_d(0);
 
     ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
 
@@ -369,7 +369,7 @@ public:
     iter = iter + 1;
 
     // Desired is the task reference model
-    Dk = ref_q_m;
+    Dk = ref_q_d;
 
     //if( iter > num_Fir )
     {

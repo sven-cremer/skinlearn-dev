@@ -493,7 +493,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   t_r     .resize( num_Outputs ) ;
   task_ref.resize( num_Outputs ) ;
-  task_refModel.resize( num_Outputs ) ;
+  task_refModel_output.resize( num_Outputs ) ;
   tau     .resize( num_Outputs ) ;
 
   q        = Eigen::VectorXd::Zero( num_Joints ) ;
@@ -529,7 +529,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
   task_ref = Eigen::VectorXd::Zero( num_Outputs           ) ;
-  task_refModel = Eigen::VectorXd::Zero( num_Outputs      ) ;
+  task_refModel_output = Eigen::VectorXd::Zero( num_Outputs      ) ;
   tau      = Eigen::VectorXd::Zero( num_Outputs ) ;
   force    = Eigen::VectorXd::Zero( num_Outputs ) ;
 
@@ -1049,7 +1049,7 @@ void PR2CartneuroControllerClass::update()
 										 Xdd_m             (1) ,
 										 transformed_force (1) ,
 										 task_ref          (1) ,
-										 task_refModel     (1)  );
+										 task_refModel_output     (1)  );
 
 	//      ROS_ERROR_STREAM("USING RLS ARMA");
 
@@ -1077,7 +1077,7 @@ void PR2CartneuroControllerClass::update()
 										   Xdd_m             (1) ,
 										   transformed_force (1) ,
 										   task_ref          (1) ,
-										   task_refModel     (1)  );
+										   task_refModel_output     (1)  );
 
 	//      ROS_ERROR_STREAM("USING CT RLS ARMA");
 
@@ -1105,7 +1105,7 @@ void PR2CartneuroControllerClass::update()
 										Xdd_m             (1) ,
 										transformed_force (1) ,
 										task_ref          (1) ,
-										task_refModel     (1)  );
+										task_refModel_output     (1)  );
 	//      ROS_ERROR_STREAM("USING RLS FIR");
 
 			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
@@ -1177,7 +1177,7 @@ void PR2CartneuroControllerClass::update()
 					                      Xdd_m             (1) ,
 					                      transformed_force (1) ,
 					                      task_ref          (1) ,
-					                      task_refModel     (1)  );
+					                      task_refModel_output     (1)  );
 
 
 			// IRL
@@ -1194,8 +1194,9 @@ void PR2CartneuroControllerClass::update()
 		// Direct Model
 		if( useDirectmodel )
 		{
-			X_m   = task_ref ;
-			Xd_m  = (X_m - p_X_m)/outerLoopTime;
+			// q_d
+			X_m   = task_refModel_output         ;
+			Xd_m  = (X_m - p_X_m)/outerLoopTime  ;
 			Xdd_m = (Xd_m - p_Xd_m)/outerLoopTime;
 		}
 
@@ -1223,7 +1224,7 @@ void PR2CartneuroControllerClass::update()
                                                                           Xdd_m             (1) ,
                                                                           transformed_force (1) ,
                                                                           task_ref          (1) ,
-                                                                          task_refModel     (1)  );
+                                                                          task_refModel_output     (1)  );
 
         //      ROS_ERROR_STREAM("USING MRAC");
                 }
@@ -1466,9 +1467,9 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].taskRef_psi       = 0                           ;
 
           // Cartesian task reference
-          msgControllerFullData[index].taskRefModel_x    = task_refModel(0)            ;
-          msgControllerFullData[index].taskRefModel_y    = task_refModel(1)            ;
-          msgControllerFullData[index].taskRefModel_z    = task_refModel(2)            ;
+          msgControllerFullData[index].taskRefModel_x    = task_refModel_output(0)            ;
+          msgControllerFullData[index].taskRefModel_y    = task_refModel_output(1)            ;
+          msgControllerFullData[index].taskRefModel_z    = task_refModel_output(2)            ;
           msgControllerFullData[index].taskRefModel_phi  = 0                           ;
           msgControllerFullData[index].taskRefModel_theta= 0                           ;
           msgControllerFullData[index].taskRefModel_psi  = 0                           ;
