@@ -175,7 +175,7 @@ public:
   bool useMSDmodel ;
   // Use IRL
   bool useIRLmodel ;
-  // Use Direct model x_r = x_m?
+  // Use Direct model x_d = x_m
   bool useDirectmodel;
 
   // Use FT sensors or not
