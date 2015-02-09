@@ -126,6 +126,7 @@ public:
 
   double delT;
   double outerLoopTime;
+  double intentLoopTime;
 
   // Desired cartesian pose
   double cartDesX     ;
@@ -189,6 +190,7 @@ public:
   ros::Time last_time_;         // Time of the last servo cycle
   ros::Time start_time_;        // Time of the first servo cycle
   ros::Time outer_elapsed_;     // Time elapsed since outer loop call
+  ros::Time intent_elapsed_;    // Time elapsed since intent loop call
 
   double circleUlim ;
   double circleLlim ;
