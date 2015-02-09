@@ -450,6 +450,10 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_intentLoopTime = "/intentEst_time";
   if (!n.getParam( para_intentLoopTime , intentLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentLoopTime.c_str()) ; return false; }
 
+  directlyUseTaskModel = false;
+  std::string para_directlyUseTaskModel = "/directlyUseTask_model";
+  if (!n.getParam( para_directlyUseTaskModel , directlyUseTaskModel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_directlyUseTaskModel.c_str()) ; return false; }
+
   // initial conditions
   ode_init_x[0 ] = 0.0;
   ode_init_x[1 ] = 0.0;
@@ -1229,6 +1233,21 @@ void PR2CartneuroControllerClass::update()
                 }
 
 
+    // Send task model directly
+    if( directlyUseTaskModel )
+    {
+    	if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
+    	{
+    		calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
+
+    		// Transform human intent to torso lift link
+    		task_ref.x() = x_gripper_acc_.p.x() + task_ref.x() ;
+    		task_ref.y() = x_gripper_acc_.p.y() + task_ref.y() ;
+    		task_ref.z() = x_gripper_acc_.p.z() + task_ref.z() ;
+
+    		intent_elapsed_ = robot_state_->getTime() ;
+    	}
+    }
 
     // System Model END
     /////////////////////////

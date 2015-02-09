@@ -5,20 +5,22 @@ useFTinput         : true
 forceTorqueOn      : true
 
 # Only one can be true
-useARMAmodel       : false
+useARMAmodel       : true
 useCTARMAmodel     : false
 useFIRmodel        : false
 useMRACmodel       : false
 useIRLmodel        : false
-useMSDmodel        : true
+useMSDmodel        : false
 useDirectmodel     : false
 
 outerLoop_time     : 0.05
 
+directlyUseTask_model : false
+
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
 # i.e. an admittance model is used to generate x_i from f_h the force from the FT sensor
-externalRefTraj    : true
+externalRefTraj    : false
 
 # Human intent estimation
 intentEst_time     : 0.05

@@ -128,14 +128,15 @@ private:
   // NN END
   /////////////////////////
 
-  double circle_rate;
-  double circleUlim ;
-  double circleLlim ;
-  bool startCircleTraj;
+  double circle_rate         ;
+  double circleUlim          ;
+  double circleLlim          ;
+  bool   startCircleTraj     ;
 
-  bool externalRefTraj;
-  double intentEst_delT;
-  double intentEst_M;
+  bool   externalRefTraj     ;
+  bool   directlyUseTaskModel;
+  double intentEst_delT      ;
+  double intentEst_M         ;
 
   Eigen::MatrixXd eigen_temp_joint;
   KDL::JntArray kdl_temp_joint_;
