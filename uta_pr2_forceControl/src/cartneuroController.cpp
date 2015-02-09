@@ -1042,14 +1042,14 @@ void PR2CartneuroControllerClass::update()
 	//                                     task_refModel     (0)  );
 
 		  // Y axis
-		  outerLoopRLSmodelY.updateARMA( Xd_m              (1) ,
-										 Xd                (1) ,
-										 X_m               (1) ,
-										 X                 (1) ,
-										 Xdd_m             (1) ,
-										 transformed_force (1) ,
-										 task_ref          (1) ,
-										 task_refModel_output     (1)  );
+		  outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
+										 Xd                     (1) ,
+										 X_m                    (1) ,
+										 X                      (1) ,
+										 Xdd_m                  (1) ,
+										 transformed_force      (1) ,
+										 task_ref               (1) ,
+										 task_refModel_output   (1)  );
 
 	//      ROS_ERROR_STREAM("USING RLS ARMA");
 
@@ -1070,14 +1070,14 @@ void PR2CartneuroControllerClass::update()
 	//                                     task_refModel     (0)  );
 
 		  // Y axis
-		  outerLoopCTRLSmodelY.updateARMA( Xd_m              (1) ,
-										   Xd                (1) ,
-										   X_m               (1) ,
-										   X                 (1) ,
-										   Xdd_m             (1) ,
-										   transformed_force (1) ,
-										   task_ref          (1) ,
-										   task_refModel_output     (1)  );
+		  outerLoopCTRLSmodelY.updateARMA( Xd_m                   (1) ,
+										   Xd                     (1) ,
+										   X_m                    (1) ,
+										   X                      (1) ,
+										   Xdd_m                  (1) ,
+										   transformed_force      (1) ,
+										   task_ref               (1) ,
+										   task_refModel_output   (1)  );
 
 	//      ROS_ERROR_STREAM("USING CT RLS ARMA");
 
@@ -1098,14 +1098,14 @@ void PR2CartneuroControllerClass::update()
 	//                                    task_refModel     (0)  );
 
 		  // Y axis
-		  outerLoopRLSmodelY.updateFIR( Xd_m              (1) ,
-										Xd                (1) ,
-										X_m               (1) ,
-										X                 (1) ,
-										Xdd_m             (1) ,
-										transformed_force (1) ,
-										task_ref          (1) ,
-										task_refModel_output     (1)  );
+		  outerLoopRLSmodelY.updateFIR( Xd_m                   (1) ,
+										Xd                     (1) ,
+										X_m                    (1) ,
+										X                      (1) ,
+										Xdd_m                  (1) ,
+										transformed_force      (1) ,
+										task_ref               (1) ,
+										task_refModel_output   (1)  );
 	//      ROS_ERROR_STREAM("USING RLS FIR");
 
 			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
@@ -1170,14 +1170,14 @@ void PR2CartneuroControllerClass::update()
 	//   	                            task_ref          (0) ,
 	//   	                            task_refModel     (0)  );
 
-			outerLoopIRLmodelY.updateIRL( Xd_m              (1) ,
-					                      Xd                (1) ,
-					                      X_m               (1) ,
-					                      X                 (1) ,
-					                      Xdd_m             (1) ,
-					                      transformed_force (1) ,
-					                      task_ref          (1) ,
-					                      task_refModel_output     (1)  );
+			outerLoopIRLmodelY.updateIRL( Xd_m                  (1) ,
+					                      Xd                    (1) ,
+					                      X_m                   (1) ,
+					                      X                     (1) ,
+					                      Xdd_m                 (1) ,
+					                      transformed_force     (1) ,
+					                      task_ref              (1) ,
+					                      task_refModel_output  (1)  );
 
 
 			// IRL
@@ -1195,7 +1195,7 @@ void PR2CartneuroControllerClass::update()
 		if( useDirectmodel )
 		{
 			// q_d
-			X_m   = task_refModel_output         ;
+			X_m   = task_refModel_output(1)      ;
 			Xd_m  = (X_m - p_X_m)/outerLoopTime  ;
 			Xdd_m = (Xd_m - p_Xd_m)/outerLoopTime;
 		}
@@ -1217,14 +1217,14 @@ void PR2CartneuroControllerClass::update()
         //                                  task_refModel     (0)  );
 
                   // Y axis
-                  outerLoopMRACmodelY.update( Xd_m              (1) ,
-                                                                          Xd                (1) ,
-                                                                          X_m               (1) ,
-                                                                          X                 (1) ,
-                                                                          Xdd_m             (1) ,
-                                                                          transformed_force (1) ,
-                                                                          task_ref          (1) ,
-                                                                          task_refModel_output     (1)  );
+                  outerLoopMRACmodelY.update( Xd_m                 (1) ,
+                                              Xd                   (1) ,
+                                              X_m                  (1) ,
+                                              X                    (1) ,
+                                              Xdd_m                (1) ,
+                                              transformed_force    (1) ,
+                                              task_ref             (1) ,
+                                              task_refModel_output (1)  );
 
         //      ROS_ERROR_STREAM("USING MRAC");
                 }
