@@ -1195,7 +1195,7 @@ void PR2CartneuroControllerClass::update()
 		if( useDirectmodel )
 		{
 			// q_d
-			X_m   = task_refModel_output         ;
+			X_m(1)= task_refModel_output(1)      ;
 			Xd_m  = (X_m - p_X_m)/outerLoopTime  ;
 			Xdd_m = (Xd_m - p_Xd_m)/outerLoopTime;
 		}
