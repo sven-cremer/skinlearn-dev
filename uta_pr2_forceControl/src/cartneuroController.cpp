@@ -1061,13 +1061,13 @@ void PR2CartneuroControllerClass::update()
 		if( useCTARMAmodel )
 		{
 	//      outerLoopCTRLSmodelX.updateARMA( Xd_m              (0) ,
-	//                                     Xd                (0) ,
-	//                                     X_m               (0) ,
-	//                                     X                 (0) ,
-	//                                     Xdd_m             (0) ,
-	//                                     transformed_force (0) ,
-	//                                     task_ref          (0) ,
-	//                                     task_refModel     (0)  );
+	//                                       Xd                (0) ,
+	//                                       X_m               (0) ,
+	//                                       X                 (0) ,
+	//                                       Xdd_m             (0) ,
+	//                                       transformed_force (0) ,
+	//                                       task_ref          (0) ,
+	//                                       task_refModel     (0)  );
 
 		  // Y axis
 		  outerLoopCTRLSmodelY.updateARMA( Xd_m                   (1) ,
@@ -1195,10 +1195,14 @@ void PR2CartneuroControllerClass::update()
 		if( useDirectmodel )
 		{
 			// q_d
-			X_m   = task_refModel_output(1)      ;
+			X_m   = task_refModel_output         ;
 			Xd_m  = (X_m - p_X_m)/outerLoopTime  ;
 			Xdd_m = (Xd_m - p_Xd_m)/outerLoopTime;
 		}
+
+		p_X_m    = X_m   ;
+		p_Xd_m   = Xd_m  ;
+		p_Xdd_m  = Xdd_m ;
 
 		outer_elapsed_ = robot_state_->getTime() ;
 
