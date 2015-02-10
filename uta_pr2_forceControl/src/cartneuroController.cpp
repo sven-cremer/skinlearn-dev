@@ -446,7 +446,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_outerLoopTime = "/outerLoop_time";
   if (!n.getParam( para_outerLoopTime , outerLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_outerLoopTime.c_str()) ; return false; }
 
-  intentLoopTime = 0.2;
+  intentLoopTime = outerLoopTime;
   std::string para_intentLoopTime = "/intentEst_time";
   if (!n.getParam( para_intentLoopTime , intentLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentLoopTime.c_str()) ; return false; }
 
