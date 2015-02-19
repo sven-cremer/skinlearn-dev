@@ -210,6 +210,9 @@ int main(int argc, char **argv)
 
   ros::NodeHandle n;
 
+  std::string r_ft_frame  = "r_force_torque_link";
+  std::string r_acc_frame = "r_gripper_motor_accelerometer_link";
+
   ros::Subscriber f_sub  = n.subscribe( "/ft/r_gripper_motor"           , 1, forceCallback );
   ros::Subscriber acc_ub = n.subscribe( "/accelerometer/r_gripper_motor", 1, accCallback   );
 
