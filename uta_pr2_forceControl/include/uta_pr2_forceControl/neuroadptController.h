@@ -247,6 +247,8 @@ private:
   bool saveControllerData( neuroadaptive_msgs::saveControllerData::Request&  req,
                            neuroadaptive_msgs::saveControllerData::Response& resp );
 
+  ros::ServiceServer save_srv_;
+  ros::ServiceServer publish_srv_;
   ros::ServiceServer capture_srv_;
   ros::ServiceServer save_srv_;
   ros::ServiceServer paramUpdate_srv_;

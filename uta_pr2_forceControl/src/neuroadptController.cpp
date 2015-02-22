@@ -385,8 +385,10 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// DATA COLLECTION
 
-	capture_srv_     = n.advertiseService("capture",     &PR2NeuroadptControllerClass::capture            , this);
-	save_srv_        = n.advertiseService("saveData",    &PR2NeuroadptControllerClass::saveControllerData , this);
+    save_srv_              = n.advertiseService("save"     , &PR2NeuroadptControllerClass::save               , this);
+    publish_srv_           = n.advertiseService("publish"  , &PR2NeuroadptControllerClass::publish            , this);
+	capture_srv_           = n.advertiseService("capture"  , &PR2NeuroadptControllerClass::capture            , this);
+	save_srv_              = n.advertiseService("saveData" , &PR2NeuroadptControllerClass::saveControllerData , this);
 
 	pubFTData_             = n.advertise< geometry_msgs::WrenchStamped             >( "FT_data"              , StoreLen);
 	pubModelStates_        = n.advertise< sensor_msgs::JointState                  >( "model_joint_states"   , StoreLen);
@@ -949,7 +951,7 @@ void PR2NeuroadptControllerClass::update()
 	/////////////////////////
 	// DATA COLLECTION
 
-        bufferData( dt );
+        // bufferData( dt );
 
 	// DATA COLLECTION END
 	/////////////////////////
