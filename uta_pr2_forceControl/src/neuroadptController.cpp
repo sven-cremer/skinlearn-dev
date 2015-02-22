@@ -280,24 +280,24 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   p_Kv                  .resize( num_Joints, 1 ) ;
   p_lambda              .resize( num_Joints, 1 ) ;
 
-//  p_Kv << Kv ,
-//          Kv ,
-//          Kv ,
-//          Kv ,
-//          Kv ,
-//          Kv ,
-//          Kv ;
-//
-//  p_lambda << lambda ,
-//              lambda ,
-//              lambda ,
-//              lambda ,
-//              lambda ,
-//              lambda ,
-//              lambda ;
+  p_Kv << Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ,
+          Kv ;
 
-  p_Kv     = joint_D;
-  p_lambda = joint_P.cwiseQuotient(joint_D);
+  p_lambda << lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ,
+              lambda ;
+
+//  p_Kv     = joint_D;
+//  p_lambda = joint_P.cwiseQuotient(joint_D);
 
   nnController.init( kappa  ,
                      p_Kv     ,
