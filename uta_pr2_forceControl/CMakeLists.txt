@@ -65,7 +65,8 @@ rosbuild_add_library( pr2_controller_lib src/cartesianController.cpp
                                          #src/neuroadptController.cpp
                                          #src/cartneuroController.cpp
                                          #src/cartresnnController.cpp
-                                         src/pidController.cpp
+                                         #src/pidController.cpp
+                                         src/computedTorqueController.cpp
                                          )
  
 #target_link_libraries( pr2_controller_lib cslLIB )

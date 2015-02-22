@@ -1,4 +1,4 @@
-#include "uta_pr2_forceControl/pidController.h"
+#include "uta_pr2_forceControl/computedTorqueController.h"
 #include <pluginlib/class_list_macros.h>
 #include <tf_conversions/tf_kdl.h>
 
@@ -8,7 +8,7 @@ using namespace std;
 using namespace boost::numeric::odeint;
 
 /// Controller initialization in non-realtime
-bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n )
+bool PR2ComputedTorqueControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n )
 {
   // Get the root and tip link names from parameter server.
   std::string root_name, tip_name;
@@ -51,6 +51,18 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
 	ROS_INFO("Successfully parsed URDF file");
   }
 
+  bool verbose = false;
+  boost::shared_ptr<urdf::ModelInterface> urdfPtr;
+  urdfPtr.reset(&urdf_model);
+
+  if (!RigidBodyDynamics::Addons::construct_model( &m_model, urdfPtr, verbose))
+  {
+	  std::cerr << "Loading of urdf m_model failed!" << std::endl;
+  }else
+  {
+	  std::cout << "Model loading successful!" << std::endl;
+  }
+
   std::string nn_kappa            = "/nn_kappa"            ;
   std::string nn_Kv               = "/nn_Kv"               ;
   std::string nn_lambda           = "/nn_lambda"           ;
@@ -72,7 +84,7 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   if (!n.getParam( nn_Zb               , Zb               ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())				 ; return false; }
   if (!n.getParam( nn_feedForwardForce , fFForce ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str())             ; return false; }
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str()) ; return false; }
   if (!n.getParam( nn_nnF              , nnF              ))
   { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())				 ; return false; }
   if (!n.getParam( nn_nnG              , nnG              ))
@@ -85,11 +97,11 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   std::string para_m_D                 = "/m_D" ;
 
   if (!n.getParam( para_m_M           , m_M            ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_M.c_str())                          ; return false; }
+  { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_M.c_str())            ; return false; }
   if (!n.getParam( para_m_S           , m_S            ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_S.c_str())                          ; return false; }
+  { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_S.c_str())            ; return false; }
   if (!n.getParam( para_m_D           , m_D            ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_D.c_str())                      ; return false; }
+  { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_D.c_str())            ; return false; }
 
   std::string para_nnNum_Inputs  = "/nnNum_Inputs" ;
   std::string para_nnNum_Outputs = "/nnNum_Outputs" ;
@@ -275,15 +287,15 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   should_publish_  = false;
 
   // Update controller paramters
-  paramUpdate_srv_ = n.advertiseService("paramUpdate", &PR2PidControllerClass::paramUpdate, this);
+  paramUpdate_srv_ = n.advertiseService("paramUpdate", &PR2ComputedTorqueControllerClass::paramUpdate, this);
 
 	/////////////////////////
 	// DATA COLLECTION
 
-    save_srv_              = n.advertiseService("save"     , &PR2PidControllerClass::save               , this);
-    publish_srv_           = n.advertiseService("publish"  , &PR2PidControllerClass::publish            , this);
-	capture_srv_           = n.advertiseService("capture"  , &PR2PidControllerClass::capture            , this);
-	save_srv_              = n.advertiseService("saveData" , &PR2PidControllerClass::saveControllerData , this);
+    save_srv_              = n.advertiseService("save"     , &PR2ComputedTorqueControllerClass::save               , this);
+    publish_srv_           = n.advertiseService("publish"  , &PR2ComputedTorqueControllerClass::publish            , this);
+	capture_srv_           = n.advertiseService("capture"  , &PR2ComputedTorqueControllerClass::capture            , this);
+	save_srv_              = n.advertiseService("saveData" , &PR2ComputedTorqueControllerClass::saveControllerData , this);
 
 	pubFTData_             = n.advertise< geometry_msgs::WrenchStamped             >( "FT_data"              , StoreLen);
 	pubModelStates_        = n.advertise< sensor_msgs::JointState                  >( "model_joint_states"   , StoreLen);
@@ -302,7 +314,7 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
 }
 
 /// Controller startup in realtime
-void PR2PidControllerClass::starting()
+void PR2ComputedTorqueControllerClass::starting()
 {
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
@@ -334,7 +346,7 @@ void PR2PidControllerClass::starting()
 
 
 /// Controller update loop in realtime
-void PR2PidControllerClass::update()
+void PR2ComputedTorqueControllerClass::update()
 {
 
   double dt;                    // Servo loop time step
@@ -474,16 +486,17 @@ void PR2PidControllerClass::update()
 	qd_m(5) =   0;
 	qd_m(6) =   0;
 
-
-
 	// Convert from Eigen to KDL
 //	tau_c_ = JointEigen2Kdl( tau );
 
+	// PID Control
+    for( uint ind_ = 0; ind_ < kdl_chain_.getNrOfJoints(); ind_++ )
+    {
+    	tau(ind_) = jointPid[ind_].updatePid(q(ind_) - q_m(ind_), qd(ind_), ros::Duration(dt));
+    }
 
-  for( uint ind_ = 0; ind_ < kdl_chain_.getNrOfJoints(); ind_++ )
-  {
-	  tau(ind_) = jointPid[ind_].updatePid(q(ind_) - q_m(ind_), qd(ind_), ros::Duration(dt));
-  }
+
+
 
 
 	tau_c_(0) = tau(0);
@@ -561,7 +574,7 @@ void PR2PidControllerClass::update()
 }
 
 
-void PR2PidControllerClass::bufferData( double & dt )
+void PR2ComputedTorqueControllerClass::bufferData( double & dt )
 {
 	int index = storage_index_;
 	if ((index >= 0) && (index < StoreLen))
@@ -722,7 +735,7 @@ void PR2PidControllerClass::bufferData( double & dt )
 }
 
 /// Service call to capture and extract the data
-bool PR2PidControllerClass::paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
+bool PR2ComputedTorqueControllerClass::paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
                                                neuroadaptive_msgs::controllerParamUpdate::Response & resp )
 {
 
@@ -789,7 +802,7 @@ bool PR2PidControllerClass::paramUpdate( neuroadaptive_msgs::controllerParamUpda
 }
 
 /// Service call to save the data
-bool PR2PidControllerClass::save( neuroadaptive_msgs::saveControllerData::Request & req,
+bool PR2ComputedTorqueControllerClass::save( neuroadaptive_msgs::saveControllerData::Request & req,
 		                                neuroadaptive_msgs::saveControllerData::Response& resp )
 {
   /* Record the starting time. */
@@ -812,7 +825,7 @@ bool PR2PidControllerClass::save( neuroadaptive_msgs::saveControllerData::Reques
 }
 
 /// Service call to publish the saved data
-bool PR2PidControllerClass::publish( std_srvs::Empty::Request & req,
+bool PR2ComputedTorqueControllerClass::publish( std_srvs::Empty::Request & req,
                                            std_srvs::Empty::Response& resp )
 {
   /* Then we can publish the buffer contents. */
@@ -826,7 +839,7 @@ bool PR2PidControllerClass::publish( std_srvs::Empty::Request & req,
 }
 
 /// Service call to capture and extract the data
-bool PR2PidControllerClass::capture( std_srvs::Empty::Request& req,
+bool PR2ComputedTorqueControllerClass::capture( std_srvs::Empty::Request& req,
                                	   	       std_srvs::Empty::Response& resp )
 {
   /* Record the starting time. */
@@ -867,7 +880,7 @@ bool PR2PidControllerClass::capture( std_srvs::Empty::Request& req,
 }
 
 /// Service call to capture and extract the data
-bool PR2PidControllerClass::saveControllerData( neuroadaptive_msgs::saveControllerData::Request&  req,
+bool PR2ComputedTorqueControllerClass::saveControllerData( neuroadaptive_msgs::saveControllerData::Request&  req,
                                                       neuroadaptive_msgs::saveControllerData::Response& resp )
 {
 
@@ -910,12 +923,12 @@ bool PR2PidControllerClass::saveControllerData( neuroadaptive_msgs::saveControll
 }
 
 /// Controller stopping in realtime
-void PR2PidControllerClass::stopping()
+void PR2ComputedTorqueControllerClass::stopping()
 {
 
 }
 
 // Register controller to pluginlib
-PLUGINLIB_REGISTER_CLASS( PR2PidControllerClass,
-		          	      pr2_controller_ns::PR2PidControllerClass,
+PLUGINLIB_REGISTER_CLASS( PR2ComputedTorqueControllerClass,
+		          	      pr2_controller_ns::PR2ComputedTorqueControllerClass,
                           pr2_controller_interface::Controller      )
