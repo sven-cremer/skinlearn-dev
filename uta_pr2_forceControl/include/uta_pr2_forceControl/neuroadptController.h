@@ -164,6 +164,12 @@ private:
   Eigen::VectorXd task_ref;
   Eigen::VectorXd tau;
 
+  Eigen::VectorXd joint_P;
+  Eigen::VectorXd joint_I;
+  Eigen::VectorXd joint_D;
+  Eigen::VectorXd joint_Imax;
+  Eigen::VectorXd joint_Imin;
+
   KDL::JntArray  kdl_qmdot_;
   KDL::Twist     kdl_xd_m_;
 
