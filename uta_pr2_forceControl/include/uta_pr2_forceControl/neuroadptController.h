@@ -20,10 +20,10 @@
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "sensor_msgs/JointState.h"
-#include <uta_pr2_forceControl/controllerParam.h>
-#include <uta_pr2_forceControl/controllerFullData.h>
-#include <uta_pr2_forceControl/controllerParamUpdate.h>
-#include <uta_pr2_forceControl/saveControllerData.h>
+#include <neuroadaptive_msgs/controllerParam.h>
+#include <neuroadaptive_msgs/controllerFullData.h>
+#include <neuroadaptive_msgs/controllerParamUpdate.h>
+#include <neuroadaptive_msgs/saveControllerData.h>
 
 #include <std_srvs/Empty.h>
 
@@ -175,7 +175,7 @@ private:
   state_type_4 vpol_init_x;
   joint_type_6 joint_vel_qd;
 
-  csl::outer_loop::JSpaceMsdModel outerLoopMSDmodel;
+  //csl::outer_loop::JSpaceMsdModel outerLoopMSDmodel;
 
   csl::outer_loop::MsdModel outerLoopMSDmodelJoint1;
   csl::outer_loop::MsdModel outerLoopMSDmodelJoint2;
@@ -232,14 +232,14 @@ private:
 
   urdf::Model urdf_model;
 
-  bool paramUpdate( uta_pr2_forceControl::controllerParamUpdate::Request  & req ,
-                    uta_pr2_forceControl::controllerParamUpdate::Response & resp );
+  bool paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
+                    neuroadaptive_msgs::controllerParamUpdate::Response & resp );
 
   bool capture(std_srvs::Empty::Request& req,
                std_srvs::Empty::Response& resp);
 
-  bool saveControllerData( uta_pr2_forceControl::saveControllerData::Request&  req,
-                           uta_pr2_forceControl::saveControllerData::Response& resp );
+  bool saveControllerData( neuroadaptive_msgs::saveControllerData::Request&  req,
+                           neuroadaptive_msgs::saveControllerData::Response& resp );
 
   ros::ServiceServer capture_srv_;
   ros::ServiceServer save_srv_;
@@ -263,8 +263,8 @@ private:
   sensor_msgs::JointState                  msgRobotStates        [StoreLen];
   geometry_msgs::PoseStamped               msgModelCartPos       [StoreLen];
   geometry_msgs::PoseStamped               msgRobotCartPos       [StoreLen];
-  uta_pr2_forceControl::controllerParam    msgControllerParam    [StoreLen];
-  uta_pr2_forceControl::controllerFullData msgControllerFullData [StoreLen];
+  neuroadaptive_msgs::controllerParam      msgControllerParam    [StoreLen];
+  neuroadaptive_msgs::controllerFullData   msgControllerFullData [StoreLen];
 
   volatile int storage_index_;
 

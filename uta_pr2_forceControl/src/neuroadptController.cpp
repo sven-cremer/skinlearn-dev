@@ -281,8 +281,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 //                                     m_S,
 //                                     m_D );
 
-  outerLoopMSDmodelX.updateDelT( delT );
-  outerLoopMSDmodelY.updateDelT( delT );
+// // outerLoopMSDmodelX.updateDelT( delT );
+// // outerLoopMSDmodelY.updateDelT( delT );
 
 //  outerLoopMSDmodelX.updateMsd( m_M,
 //                                m_S,
@@ -393,8 +393,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	pubRobotStates_        = n.advertise< sensor_msgs::JointState                  >( "robot_joint_states"   , StoreLen);
 	pubModelCartPos_       = n.advertise< geometry_msgs::PoseStamped               >( "model_cart_pos"       , StoreLen);
 	pubRobotCartPos_       = n.advertise< geometry_msgs::PoseStamped               >( "robot_cart_pos"       , StoreLen);
-	pubControllerParam_    = n.advertise< uta_pr2_forceControl::controllerParam    >( "controller_params"    , StoreLen);
-	pubControllerFullData_ = n.advertise< uta_pr2_forceControl::controllerFullData >( "controllerFullData"   , StoreLen);
+	pubControllerParam_    = n.advertise< neuroadaptive_msgs::controllerParam      >( "controller_params"    , StoreLen);
+	pubControllerFullData_ = n.advertise< neuroadaptive_msgs::controllerFullData   >( "controllerFullData"   , StoreLen);
 
 	storage_index_ = StoreLen;
 
@@ -434,18 +434,18 @@ void PR2NeuroadptControllerClass::starting()
 //                                0       ,
 //                                0        );
 
-  outerLoopMSDmodelX.init( m_M     ,
-                           m_S     ,
-                           m_D     ,
-                           x0_m_.p.x(),
-                           0       ,
-                           0        );
-  outerLoopMSDmodelY.init( m_M     ,
-                           m_S     ,
-                           m_D     ,
-                           x0_m_.p.y(),
-                           0       ,
-                           0        );
+// // outerLoopMSDmodelX.init( m_M     ,
+// //                          m_S     ,
+// //                          m_D     ,
+// //                          x0_m_.p.x(),
+// //                          0       ,
+// //                          0        );
+// // outerLoopMSDmodelY.init( m_M     ,
+// //                          m_S     ,
+// //                          m_D     ,
+// //                          x0_m_.p.y(),
+// //                          0       ,
+// //                          0        );
 
   // System Model END
   /////////////////////////
@@ -731,19 +731,19 @@ void PR2NeuroadptControllerClass::update()
 
 
 	// Cartesian space MSD model
-        outerLoopMSDmodelX.update( xd_m  (0),
-                                   xdot_ (0),
-                                   x_m   (0),
-                                   x_.p.data[0],
-                                   xdd_m (0),
-                                   ferr_ (0) );
-
-        outerLoopMSDmodelY.update( xd_m  (1),
-                                   xdot_ (1),
-                                   x_m   (1),
-                                   x_.p.data[1],
-                                   xdd_m (1),
-                                   ferr_ (1) );
+    // //  outerLoopMSDmodelX.update( xd_m  (0),
+    // //                             xdot_ (0),
+    // //                             x_m   (0),
+    // //                             x_.p.data[0],
+    // //                             xdd_m (0),
+    // //                             ferr_ (0) );
+    // //
+    // //  outerLoopMSDmodelY.update( xd_m  (1),
+    // //                             xdot_ (1),
+    // //                             x_m   (1),
+    // //                             x_.p.data[1],
+    // //                             xdd_m (1),
+    // //                             ferr_ (1) );
 
         x_m(2) = 0.03 ;
         x_m(3) = 0 ;
@@ -1054,12 +1054,12 @@ void PR2NeuroadptControllerClass::bufferData( double & dt )
 		msgControllerFullData[index].m_pos_z           = x_m(2)                      ;
 
 		msgControllerFullData[index].m_vel_x           = xd_m(0)                     ;
-                msgControllerFullData[index].m_vel_y           = xd_m(1)                     ;
-                msgControllerFullData[index].m_vel_z           = xd_m(2)                     ;
+        msgControllerFullData[index].m_vel_y           = xd_m(1)                     ;
+        msgControllerFullData[index].m_vel_z           = xd_m(2)                     ;
 
-                msgControllerFullData[index].m_acc_x           = xdd_m(0)                    ;
-                msgControllerFullData[index].m_acc_y           = xdd_m(1)                    ;
-                msgControllerFullData[index].m_acc_z           = xdd_m(2)                    ;
+        msgControllerFullData[index].m_acc_x           = xdd_m(0)                    ;
+        msgControllerFullData[index].m_acc_y           = xdd_m(1)                    ;
+        msgControllerFullData[index].m_acc_z           = xdd_m(2)                    ;
 
 		msgControllerFullData[index].m_pos_j0          = q_m(0)                      ;
 		msgControllerFullData[index].m_pos_j1          = q_m(1)                      ;
@@ -1177,8 +1177,8 @@ void PR2NeuroadptControllerClass::bufferData( double & dt )
 }
 
 /// Service call to capture and extract the data
-bool PR2NeuroadptControllerClass::paramUpdate( uta_pr2_forceControl::controllerParamUpdate::Request  & req ,
-                                               uta_pr2_forceControl::controllerParamUpdate::Response & resp )
+bool PR2NeuroadptControllerClass::paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
+                                               neuroadaptive_msgs::controllerParamUpdate::Response & resp )
 {
 
 //  req.msg.m                ;
@@ -1291,8 +1291,8 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
 }
 
 /// Service call to capture and extract the data
-bool PR2NeuroadptControllerClass::saveControllerData( uta_pr2_forceControl::saveControllerData::Request&  req,
-                                                      uta_pr2_forceControl::saveControllerData::Response& resp )
+bool PR2NeuroadptControllerClass::saveControllerData( neuroadaptive_msgs::saveControllerData::Request&  req,
+                                                      neuroadaptive_msgs::saveControllerData::Response& resp )
 {
 
   /* Record the starting time. */
