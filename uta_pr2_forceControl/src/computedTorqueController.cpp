@@ -2,6 +2,8 @@
 #include <pluginlib/class_list_macros.h>
 #include <tf_conversions/tf_kdl.h>
 
+#include <ros/package.h>
+
 using namespace pr2_controller_ns;
 
 using namespace std;
@@ -52,16 +54,17 @@ bool PR2ComputedTorqueControllerClass::init( pr2_mechanism_model::RobotState *ro
   }
 
   bool verbose = false;
-  boost::shared_ptr<urdf::ModelInterface> urdfPtr;
-  urdfPtr.reset(&urdf_model);
+  std::string model_name = "pr2.urdf";
+  std::string filename = ros::package::getPath("pr2_cartPull") + "/urdf/" + model_name;
 
-  if (!RigidBodyDynamics::Addons::construct_model( &m_model, urdfPtr, verbose))
+  //ROS_ERROR_STREAM("Path to urdf:" << filename);
+
+  if (!RigidBodyDynamics::Addons::read_urdf_model(filename.c_str(), &m_model, verbose))
   {
-	  std::cerr << "Loading of urdf m_model failed!" << std::endl;
-  }else
-  {
-	  std::cout << "Model loading successful!" << std::endl;
+  	std::cerr << "Loading of urdf m_model failed!" << std::endl;
   }
+
+  std::cout << "Model loading successful!" << std::endl;
 
   std::string nn_kappa            = "/nn_kappa"            ;
   std::string nn_Kv               = "/nn_Kv"               ;
