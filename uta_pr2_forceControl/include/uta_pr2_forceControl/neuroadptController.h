@@ -235,6 +235,12 @@ private:
   bool paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
                     neuroadaptive_msgs::controllerParamUpdate::Response & resp );
 
+  bool save( neuroadaptive_msgs::saveControllerData::Request & req,
+  	         neuroadaptive_msgs::saveControllerData::Response& resp );
+
+  bool publish( std_srvs::Empty::Request & req,
+                std_srvs::Empty::Response& resp );
+
   bool capture(std_srvs::Empty::Request& req,
                std_srvs::Empty::Response& resp);
 
@@ -256,7 +262,7 @@ private:
   ros::Publisher pubModelCartPos_        ;
   ros::Publisher pubRobotCartPos_        ;
   ros::Publisher pubControllerParam_     ;
-  ros::Publisher pubControllerFullData_ ;
+  ros::Publisher pubControllerFullData_  ;
 
   geometry_msgs::WrenchStamped             msgFTData             [StoreLen];
   sensor_msgs::JointState                  msgModelStates        [StoreLen];

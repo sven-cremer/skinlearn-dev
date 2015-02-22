@@ -1243,9 +1243,52 @@ bool PR2NeuroadptControllerClass::paramUpdate( neuroadaptive_msgs::controllerPar
   return true;
 }
 
+/// Service call to save the data
+bool PR2NeuroadptControllerClass::save( neuroadaptive_msgs::saveControllerData::Request & req,
+		                                neuroadaptive_msgs::saveControllerData::Response& resp )
+{
+  /* Record the starting time. */
+  ros::Time started = ros::Time::now();
+
+  // Start circle traj
+  startCircleTraj = true;
+
+  /* Mark the buffer as clear (which will start storing). */
+  storage_index_ = 0;
+
+  std::string fileNameProto = req.fileName ;
+
+  // Save data to file
+//  saveDataFile.open(fileNameProto.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
+
+  resp.success = true;
+
+  return true;
+}
+
+/// Service call to publish the saved data
+bool PR2NeuroadptControllerClass::publish( std_srvs::Empty::Request & req,
+                                           std_srvs::Empty::Response& resp )
+{
+  /* Then we can publish the buffer contents. */
+  int  index;
+  for (index = 0 ; index < StoreLen ; index++)
+  {
+//    pubFTData_         .publish(msgFTData         [index]);
+//    pubModelStates_    .publish(msgModelStates    [index]);
+//    pubRobotStates_    .publish(msgRobotStates    [index]);
+//    pubModelCartPos_   .publish(msgModelCartPos   [index]);
+//    pubRobotCartPos_   .publish(msgRobotCartPos   [index]);
+//    pubControllerParam_.publish(msgControllerParam[index]);
+      pubControllerFullData_.publish(msgControllerFullData[index]);
+  }
+
+  return true;
+}
+
 /// Service call to capture and extract the data
 bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
-                               	   	   std_srvs::Empty::Response& resp )
+                               	   	       std_srvs::Empty::Response& resp )
 {
   /* Record the starting time. */
   ros::Time started = ros::Time::now();
