@@ -16,6 +16,9 @@
 
 #include "realtime_tools/realtime_publisher.h"
 
+#include <control_toolbox/pid.h>
+#include "control_toolbox/pid_gains_setter.h"
+
 #include "geometry_msgs/WrenchStamped.h"
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
@@ -131,6 +134,8 @@ private:
   double    circle_phase_;      // Phase along the circle
   ros::Time last_time_ ;        // Time of the last servo cycle
   ros::Time start_time_;        // Time of the first servo cycle
+
+  std::vector<control_toolbox::Pid> jointPid;
 
   geometry_msgs::WrenchStamped r_forceData;
   geometry_msgs::Pose modelCartPos_;

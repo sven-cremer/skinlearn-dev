@@ -62,9 +62,10 @@ rosbuild_add_library( pr2_controller_lib src/cartesianController.cpp
                                          src/explforceController.cpp
                                          # FIXME only one neuroadptController or
                                          # cartresnnController compiles
-                                         src/neuroadptController.cpp
+                                         #src/neuroadptController.cpp
                                          #src/cartneuroController.cpp
                                          #src/cartresnnController.cpp
+                                         src/pidController.cpp
                                          )
  
 #target_link_libraries( pr2_controller_lib cslLIB )

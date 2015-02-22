@@ -237,6 +237,23 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   tau      = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
 
 
+  for( uint ind_ = 0; ind_ < kdl_chain_.getNrOfJoints(); ind_++ )
+  {
+	  double p,i,d,i_max,i_min;
+
+	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/p"       , p            ));
+	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/i"       , i            ));
+	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/d"       , d            ));
+	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/i_clamp" , i_max        ));
+
+	  i_min = -i_max;
+
+      control_toolbox::Pid jpid(p,i,d,i_max,i_min);
+      jointPid.push_back(jpid);
+  }
+
+
+
   // System Model END
   /////////////////////////
 
@@ -244,45 +261,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   /////////////////////////
   // NN
 
-  nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
-                                  num_Outputs ,   // num_Outputs
-                                  num_Hidden  ,   // num_Hidden
-                                  num_Error   ,   // num_Error
-                                  num_Joints   ); // num_Joints
 
-  Eigen::MatrixXd p_Kv     ;
-  Eigen::MatrixXd p_lambda ;
-
-  p_Kv                  .resize( num_Joints, 1 ) ;
-  p_lambda              .resize( num_Joints, 1 ) ;
-
-  p_Kv << Kv ,
-          Kv ,
-          Kv ,
-          Kv ,
-          Kv ,
-          Kv ,
-          Kv ;
-
-  p_lambda << lambda ,
-              lambda ,
-              lambda ,
-              lambda ,
-              lambda ,
-              lambda ,
-              lambda ;
-
-  nnController.init( kappa  ,
-                     p_Kv     ,
-                     p_lambda ,
-                     Kz     ,
-                     Zb     ,
-                     fFForce,
-                     nnF    ,
-                     nnG    ,
-                     nn_ON   );
-
-  nnController.updateDelT( delT );
 
   // NN END
   /////////////////////////
@@ -291,28 +270,6 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
   if(!hardwareInterface)
       ROS_ERROR("Something wrong with the hardware interface pointer!");
-/*
-  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
-  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
-
-
-  if( !l_ft_handle_ )
-      ROS_ERROR("Something wrong with getting l_ft handle");
-  if( !r_ft_handle_ )
-      ROS_ERROR("Something wrong with getting r_ft handle");
-   */
-
-
-//  /* get a handle to the left gripper accelerometer */
-//    accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
-//    if(!accelerometer_handle_)
-//        ROS_ERROR("Something wrong with getting accelerometer handle");
-//
-//    // set to 1.5 kHz bandwidth (should be the default)
-//    accelerometer_handle_->command_.bandwidth_ = 6;
-//
-//    // set to +/- 8g range (0=2g,1=4g)
-//    accelerometer_handle_->command_.range_ = 2;
 
   pub_cycle_count_ = 0;
   should_publish_  = false;
@@ -372,58 +329,13 @@ void PR2NeuroadptControllerClass::starting()
   // Also reset the time-of-last-servo-cycle.
   last_time_ = robot_state_->getTime();
   start_time_ = robot_state_->getTime();
-/*
-  // set FT sensor bias due to gravity
-  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-  l_ft_samples    = l_ftData_vector.size() - 1;
-  l_ftBias.wrench = l_ftData_vector[l_ft_samples];
 
-  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-  r_ft_samples    = r_ftData_vector.size() - 1;
-  r_ftBias.wrench = r_ftData_vector[r_ft_samples];
-  */
 }
 
 
 /// Controller update loop in realtime
 void PR2NeuroadptControllerClass::update()
 {
-
-//	// retrieve our accelerometer data
-//	std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
-//
-//	threeAccs[threeAccs.size()-1].x
-//	threeAccs[threeAccs.size()-1].y
-//	threeAccs[threeAccs.size()-1].z
-
-/*
-	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-	l_ft_samples    = l_ftData_vector.size() - 1;
-//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
-	l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
-	l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
-	l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
-	l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
-	l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
-	l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
-
-	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-	r_ft_samples    = r_ftData_vector.size() - 1;
-//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-	r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
-	r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
-	r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
-	r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
-	r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
-	r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
-*/
-
-
-
-//	if( (r_ftData.wrench.force.x > -18) && (r_ftData.wrench.force.x < 18) ){ r_ftData.wrench.force.x = 0; }
-//	if( (r_ftData.wrench.force.y > -18) && (r_ftData.wrench.force.y < 18) ){ r_ftData.wrench.force.y = 0; }
-//	if( (r_ftData.wrench.force.z > -18) && (r_ftData.wrench.force.z < 18) ){ r_ftData.wrench.force.z = 0; }
-
 
   double dt;                    // Servo loop time step
 
@@ -485,78 +397,6 @@ void PR2NeuroadptControllerClass::update()
                        modelCartPos_.orientation.z ,
                        modelCartPos_.orientation.w  );
 
-//  for (unsigned int i = 0 ; i < 6 ; i++)
-//  {
-//    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
-//  }
-
-  // Force control only ferr Z in ft sensor frame is x in robot frame
-//  F_(0) = ferr_(2); // - Kd_(i) * xdot_(i);
-
-
-  // Human force input
-  // Force error
-
-  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
-
-  //                               w       x       y      z
-  Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
-  Eigen::Vector3d transformed_force = ft_to_acc._transformVector( forceFT );
-
-  if( abs( double (transformed_force(0)) ) < 1 ){ transformed_force(0) = 0; }
-  if( abs( double (transformed_force(1)) ) < 1 ){ transformed_force(1) = 0; }
-
-  ferr_(0) =   transformed_force(0) ; // 30*sin(circle_phase_);
-  ferr_(1) =  -transformed_force(1) ; // 0				       ;
-  ferr_(2) =  // transformed_force(2) ; // 0				       ;
-  ferr_(3) =  0 ; // r_ftData.wrench.torque.x; // 0                    ;
-  ferr_(4) =  0 ; // r_ftData.wrench.torque.y; // 0                    ;
-  ferr_(5) =  0 ; // r_ftData.wrench.torque.z; // 0         s           ;
-
-  // Convert the force into a set of joint torques.
-  for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
-  {
-//    tau_t_(i) = 0;
-    tau_h_(i) = 0;
-    for (unsigned int j = 0 ; j < 6 ; j++)
-    {
-//      tau_t_(i) += J_(j,i) * F_(j);   // This will give the impedance to a trajectory
-      tau_h_(i)+= J_(j,i) * ferr_(j); // this will give the torque from human interaction
-    }
-  }
-
-    /////////////////////////
-	// System Model
-
-//  	// Integrator
-//	tau_h_(0) = 0 ; // tau_h(0);
-//	tau_h_(1) = vpol_init_x[0]; //sin(circle_phase_);    // tau_h(1);
-//	tau_h_(2) = 0 ; // tau_h(2);
-//	tau_h_(3) = 0 ; // tau_h(3);
-//	tau_h_(4) = 0 ; // tau_h(4);
-//	tau_h_(5) = 0 ; // tau_h(5);
-//	tau_h_(6) = 0 ; // tau_h(6);
-
-  // Reference torque from human interaction or trajectory following
-
-  // Human
-	t_r(0) = - tau_h_(0);
-	t_r(1) =   tau_h_(1);
-	t_r(2) =   tau_h_(2);
-	t_r(3) =   tau_h_(3);
-	t_r(4) =   tau_h_(4);
-	t_r(5) =   tau_h_(5);
-	t_r(6) =   tau_h_(6);
-
-//    // Trajectory/impedance
-//	t_r(0) = tau_t_(0);
-//	t_r(1) = tau_t_(1);
-//	t_r(2) = tau_t_(2);
-//	t_r(3) = tau_t_(3);
-//	t_r(4) = tau_t_(4);
-//	t_r(5) = tau_t_(5);
-//	t_r(6) = tau_t_(6);
-
 	// Current joint positions and velocities
 	q = JointKdl2Eigen( q_ );
 	qd = JointVelKdl2Eigen( qdot_ );
@@ -570,18 +410,6 @@ void PR2NeuroadptControllerClass::update()
 //	5 - 'r_wrist_flex_joint'      | "r_wrist_flex_joint"     -1.54739   : 22 : r_wrist_flex_joint
 //	6 - 'r_wrist_roll_joint'      | "r_wrist_roll_joint"     -0.0322204 : 23 : r_wrist_roll_joint
 
-
-	if( (robot_state_->getTime() - start_time_).toSec() > 5 )
-        {
-	  task_ref   (0) = -0.821127 ;
-	  task_ref   (3) = -1.70016  ;
-        }else
-        {
-          start_time_ = robot_state_->getTime();
-          task_ref   (0) = -0.190788 ;
-          task_ref   (3) = -1.42669  ;
-        }
-
 	q_m(0) = -0.48577   ;  qd_m(0) = 0;  qdd_m(0) = 0;
 	q_m(1) = -0.0190721 ;  qd_m(1) = 0;  qdd_m(1) = 0;
 	q_m(2) = -1.51115   ;  qd_m(2) = 0;  qdd_m(2) = 0;
@@ -591,43 +419,43 @@ void PR2NeuroadptControllerClass::update()
 	q_m(6) = -0.0436174 ;  qd_m(6) = 0;  qdd_m(6) = 0;
 
 
-        x_m(2) = 0.03 ;
-        x_m(3) = 0 ;
-        x_m(4) = 0 ;
-        x_m(5) = 0 ;
+    x_m(2) = 0.03 ;
+    x_m(3) = 0    ;
+    x_m(4) = 0    ;
+    x_m(5) = 0    ;
 
-        // Compute the forward kinematics and Jacobian of the model (at this location).
-        jnt_to_pose_solver_->JntToCart(q_m_, x_m_);
+    // Compute the forward kinematics and Jacobian of the model (at this location).
+    jnt_to_pose_solver_->JntToCart(q_m_, x_m_);
 
-        modelCartPos_.position.x    = x_m_.p(0);
-        modelCartPos_.position.y    = x_m_.p(1);
-        modelCartPos_.position.z    = x_m_.p(2);
-        x_m_.M.GetQuaternion( modelCartPos_.orientation.x ,
-                            modelCartPos_.orientation.y ,
-                            modelCartPos_.orientation.z ,
-                            modelCartPos_.orientation.w  );
+    modelCartPos_.position.x    = x_m_.p(0);
+    modelCartPos_.position.y    = x_m_.p(1);
+    modelCartPos_.position.z    = x_m_.p(2);
+    x_m_.M.GetQuaternion( modelCartPos_.orientation.x ,
+                        modelCartPos_.orientation.y ,
+                        modelCartPos_.orientation.z ,
+                        modelCartPos_.orientation.w  );
 
-        xd_m(2) = 0          ;
-        xd_m(3) = xdot_  (3) ;
-        xd_m(4) = xdot_  (4) ;
-        xd_m(5) = xdot_  (5) ;
+    xd_m(2) = 0          ;
+    xd_m(3) = xdot_  (3) ;
+    xd_m(4) = xdot_  (4) ;
+    xd_m(5) = xdot_  (5) ;
 
-        xdd_m(2) = 0 ;
-        xdd_m(3) = 0 ;
-        xdd_m(4) = 0 ;
-        xdd_m(5) = 0 ;
+    xdd_m(2) = 0 ;
+    xdd_m(3) = 0 ;
+    xdd_m(4) = 0 ;
+    xdd_m(5) = 0 ;
 
-        kdl_xd_m_(0) = xd_m(0);
-        kdl_xd_m_(1) = xd_m(1);
-        kdl_xd_m_(2) = xd_m(2);
-        kdl_xd_m_(3) = xd_m(3);
-        kdl_xd_m_(4) = xd_m(4);
-        kdl_xd_m_(5) = xd_m(5);
+    kdl_xd_m_(0) = xd_m(0);
+    kdl_xd_m_(1) = xd_m(1);
+    kdl_xd_m_(2) = xd_m(2);
+    kdl_xd_m_(3) = xd_m(3);
+    kdl_xd_m_(4) = xd_m(4);
+    kdl_xd_m_(5) = xd_m(5);
 
 	// System Model END
 	/////////////////////////
 
-        double circleAmpl = (circleUlim - circleLlim)/2 ;
+    double circleAmpl = (circleUlim - circleLlim)/2 ;
 
 	// DEBUG
 	q_m(0)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
@@ -648,21 +476,15 @@ void PR2NeuroadptControllerClass::update()
 
 
 
-  /////////////////////////
-
-  // NN
-  nnController.UpdateJoint( q     ,
-                            qd    ,
-                            q_m   ,
-                            qd_m  ,
-                            qdd_m ,
-                            t_r   ,
-                            tau    );
-  // NN END
-  /////////////////////////
-
 	// Convert from Eigen to KDL
 //	tau_c_ = JointEigen2Kdl( tau );
+
+
+  for( uint ind_ = 0; ind_ < kdl_chain_.getNrOfJoints(); ind_++ )
+  {
+	  tau(ind_) = jointPid[ind_].updatePid(q(ind_) - q_m(ind_), qd(ind_), ros::Duration(dt));
+  }
+
 
 	tau_c_(0) = tau(0);
 	tau_c_(1) = tau(1);

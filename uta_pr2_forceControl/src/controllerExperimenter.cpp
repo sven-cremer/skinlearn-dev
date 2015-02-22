@@ -109,6 +109,8 @@ public:
       trialData[i].F                = 100  ;
       trialData[i].G                = 100  ;
 
+      // TODO add calls to services
+
     }
 
     fin.close();
