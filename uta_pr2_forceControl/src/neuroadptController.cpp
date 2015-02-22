@@ -230,13 +230,6 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   /////////////////////////
   // System Model
 
-  // FIXME remove below stuff
-//  num_Inputs  = 35 ;
-//  num_Outputs = 7  ;
-//  num_Hidden  = 100;
-//  num_Error   = 7  ;
-//  num_Joints  = 7  ;
-
   eigen_temp_joint.resize( num_Joints,1 );
   kdl_temp_joint_.resize(kdl_chain_.getNrOfJoints());
 
@@ -266,30 +259,6 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   task_ref = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
   tau      = Eigen::MatrixXd::Zero( num_Joints, 1 ) ;
 
-
-//  outerLoopMSDmodel.updateDelT( delT );
-//  outerLoopFIRmodelJoint1.updateDelT( delT );
-//  outerLoopFIRmodelJoint2.updateDelT( delT );
-
-//  outerLoopMSDmodelJoint1.updateDelT( delT );
-//  outerLoopMSDmodelJoint2.updateDelT( delT );
-
-//  outerLoopMSDmodelJoint1.updateMsd( m_M,
-//                                     m_S,
-//                                     m_D );
-//  outerLoopMSDmodelJoint2.updateMsd( m_M,
-//                                     m_S,
-//                                     m_D );
-
-// // outerLoopMSDmodelX.updateDelT( delT );
-// // outerLoopMSDmodelY.updateDelT( delT );
-
-//  outerLoopMSDmodelX.updateMsd( m_M,
-//                                m_S,
-//                                m_D );
-//  outerLoopMSDmodelY.updateMsd( m_M,
-//                                m_S,
-//                                m_D );
 
   // System Model END
   /////////////////////////
@@ -371,14 +340,6 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   pub_cycle_count_ = 0;
   should_publish_  = false;
 
-  // Initialize realtime publisher to publish to ROS topic
-//  pub_.init(n, "force_torque_stats", 1);
-//  pubModelStates_.init(     n, "model_joint_states" , 1 );
-//  pubRobotStates_.init(     n, "robot_joint_states" , 1 );
-//  pubModelCartPos_.init(    n, "model_cart_pos"     , 1 );
-//  pubRobotCartPos_.init(    n, "robot_cart_pos"     , 1 );
-//  pubControllerParam_.init( n, "controller_params"  , 1 );
-
   // Update controller paramters
   paramUpdate_srv_ = n.advertiseService("paramUpdate", &PR2NeuroadptControllerClass::paramUpdate, this);
 
@@ -422,32 +383,6 @@ void PR2NeuroadptControllerClass::starting()
   /////////////////////////
   // System Model
 
-//  outerLoopMSDmodelJoint2.init( m_M     ,
-//                                m_S     ,
-//                                m_D     ,
-//                                q0_m_(0),
-//                                0       ,
-//                                0        );
-//
-//  outerLoopMSDmodelJoint2.init( m_M     ,
-//                                m_S     ,
-//                                m_D     ,
-//                                q0_m_(3),
-//                                0       ,
-//                                0        );
-
-// // outerLoopMSDmodelX.init( m_M     ,
-// //                          m_S     ,
-// //                          m_D     ,
-// //                          x0_m_.p.x(),
-// //                          0       ,
-// //                          0        );
-// // outerLoopMSDmodelY.init( m_M     ,
-// //                          m_S     ,
-// //                          m_D     ,
-// //                          x0_m_.p.y(),
-// //                          0       ,
-// //                          0        );
 
   // System Model END
   /////////////////////////
@@ -658,42 +593,6 @@ void PR2NeuroadptControllerClass::update()
 //	5 - 'r_wrist_flex_joint'      | "r_wrist_flex_joint"     -1.54739   : 22 : r_wrist_flex_joint
 //	6 - 'r_wrist_roll_joint'      | "r_wrist_roll_joint"     -0.0322204 : 23 : r_wrist_roll_joint
 
-	// MSD
-//        outerLoopMSDmodel.Update( qd_m  ,
-//                                  qd    ,
-//                                  q_m   ,
-//                                  q     ,
-//                                  qdd_m ,
-//                                  t_r    );
-
-//        outerLoopMSDmodelJoint1.update( qd_m  (0),
-//                                        qd    (0),
-//                                        q_m   (0),
-//                                        q     (0),
-//                                        qdd_m (0),
-//                                        t_r   (0) );
-//
-//        outerLoopMSDmodelJoint2.update( qd_m  (3),
-//                                        qd    (3),
-//                                        q_m   (3),
-//                                        q     (3),
-//                                        qdd_m (3),
-//                                        t_r   (3) );
-
-//        outerLoopMSDmodelJoint1.update( qd_m  (0),
-//                                        qd    (0),
-//                                        q_m   (0),
-//                                        q     (0),
-//                                        qdd_m (0),
-//                                        t_r   (0) );
-//
-//        outerLoopMSDmodelJoint2.update( qd_m  (3),
-//                                        qd    (3),
-//                                        q_m   (3),
-//                                        q     (3),
-//                                        qdd_m (3),
-//                                        t_r   (3) );
-
 
 	if( (robot_state_->getTime() - start_time_).toSec() > 5 )
         {
@@ -706,23 +605,6 @@ void PR2NeuroadptControllerClass::update()
           task_ref   (3) = -1.42669  ;
         }
 
-//	// FIR
-//	outerLoopFIRmodelJoint1.Update( qd_m    (0) ,
-//                                        qd      (0) ,
-//                                        q_m     (0) ,
-//                                        q       (0) ,
-//                                        qdd_m   (0) ,
-//                                        t_r     (0) ,
-//                                        task_ref(0) );
-//
-//        outerLoopFIRmodelJoint2.Update( qd_m    (3) ,
-//                                        qd      (3) ,
-//                                        q_m     (3) ,
-//                                        q       (3) ,
-//                                        qdd_m   (3) ,
-//                                        t_r     (3) ,
-//                                        task_ref(3) );
-
 	q_m(0) = -0.48577   ;  qd_m(0) = 0;  qdd_m(0) = 0;
 	q_m(1) = -0.0190721 ;  qd_m(1) = 0;  qdd_m(1) = 0;
 	q_m(2) = -1.51115   ;  qd_m(2) = 0;  qdd_m(2) = 0;
@@ -732,21 +614,6 @@ void PR2NeuroadptControllerClass::update()
 	q_m(6) = -0.0436174 ;  qd_m(6) = 0;  qdd_m(6) = 0;
 
 
-	// Cartesian space MSD model
-    // //  outerLoopMSDmodelX.update( xd_m  (0),
-    // //                             xdot_ (0),
-    // //                             x_m   (0),
-    // //                             x_.p.data[0],
-    // //                             xdd_m (0),
-    // //                             ferr_ (0) );
-    // //
-    // //  outerLoopMSDmodelY.update( xd_m  (1),
-    // //                             xdot_ (1),
-    // //                             x_m   (1),
-    // //                             x_.p.data[1],
-    // //                             xdd_m (1),
-    // //                             ferr_ (1) );
-
         x_m(2) = 0.03 ;
         x_m(3) = 0 ;
         x_m(4) = 0 ;
@@ -754,7 +621,6 @@ void PR2NeuroadptControllerClass::update()
 
         // Compute the forward kinematics and Jacobian of the model (at this location).
         jnt_to_pose_solver_->JntToCart(q_m_, x_m_);
-        //  jnt_to_jac_solver_->JntToJac(q_m_, J_m_);
 
         modelCartPos_.position.x    = x_m_.p(0);
         modelCartPos_.position.y    = x_m_.p(1);
@@ -781,71 +647,8 @@ void PR2NeuroadptControllerClass::update()
         kdl_xd_m_(4) = xd_m(4);
         kdl_xd_m_(5) = xd_m(5);
 
-//        qd_m = pseudoInverse( J_.data )*xd_m;
-
-//        vel_to_jnt_solver_->CartToJnt( q_, kdl_xd_m_, kdl_qmdot_ );
-//
-//        joint_vel_qd[0] = kdl_qmdot_(0);
-//        joint_vel_qd[1] = kdl_qmdot_(1);
-//        joint_vel_qd[2] = kdl_qmdot_(2);
-//        joint_vel_qd[3] = kdl_qmdot_(3);
-//        joint_vel_qd[4] = kdl_qmdot_(4);
-//        joint_vel_qd[5] = kdl_qmdot_(5);
-//
-//        qd_m(0) = kdl_qmdot_(0);
-//        qd_m(1) = kdl_qmdot_(1);
-//        qd_m(2) = kdl_qmdot_(2);
-//        qd_m(3) = kdl_qmdot_(3);
-//        qd_m(4) = kdl_qmdot_(4);
-//        qd_m(5) = kdl_qmdot_(5);
-//        qd_m(6) = kdl_qmdot_(6);
-//
-//        // joint_integrator
-//        integrate( joint_integrator , joint_vel_qd , 0.0 , 0.001 , 0.001 );
-//
-//        q_m(0) = joint_vel_qd[0];
-//        q_m(1) = joint_vel_qd[1];
-//        q_m(2) = joint_vel_qd[2];
-//        q_m(3) = joint_vel_qd[3];
-//        q_m(4) = joint_vel_qd[4];
-//        q_m(5) = joint_vel_qd[5];
-//        q_m(6) = joint_vel_qd[6];
-
-/*
-	// Check for joint limits and reset
-	// (condition) ? (if_true) : (if_false)
-	q_m(0) = fmax( (double) q_m(0), (double) q_lower(0) );
-	q_m(1) = fmax( (double) q_m(1), (double) q_lower(1) );
-	q_m(2) = fmax( (double) q_m(2), (double) q_lower(2) );
-	q_m(3) = fmax( (double) q_m(3), (double) q_lower(3) );
-//	q_m(4) = fmax( (double) q_m(4), (double) q_lower(4) );
-	q_m(5) = fmax( (double) q_m(5), (double) q_lower(5) );
-//	q_m(6) = fmax( (double) q_m(6), (double) q_lower(6) );
-
-	q_m(0) = fmin( (double) q_m(0), (double) q_upper(0) );
-	q_m(1) = fmin( (double) q_m(1), (double) q_upper(1) );
-	q_m(2) = fmin( (double) q_m(2), (double) q_upper(2) );
-	q_m(3) = fmin( (double) q_m(3), (double) q_upper(3) );
-//	q_m(4) = fmin( (double) q_m(4), (double) q_upper(4) );
-	q_m(5) = fmin( (double) q_m(5), (double) q_upper(5) );
-//	q_m(6) = fmin( (double) q_m(6), (double) q_upper(6) );
-
-	qd_m(0) = fmin( (double) qd_m(0), (double) qd_limit(0) );
-	qd_m(1) = fmin( (double) qd_m(1), (double) qd_limit(1) );
-	qd_m(2) = fmin( (double) qd_m(2), (double) qd_limit(2) );
-	qd_m(3) = fmin( (double) qd_m(3), (double) qd_limit(3) );
-	qd_m(4) = fmin( (double) qd_m(4), (double) qd_limit(4) );
-	qd_m(5) = fmin( (double) qd_m(5), (double) qd_limit(5) );
-	qd_m(6) = fmin( (double) qd_m(6), (double) qd_limit(6) );
-	*/
-
-	// Van der poll
-//	integrate( vanderpol_model , vpol_init_x , 0.0 , 0.001 , 0.001 );
-
 	// System Model END
 	/////////////////////////
-
-//        0.8 -1.5
 
         double circleAmpl = (circleUlim - circleLlim)/2 ;
 
@@ -951,78 +754,19 @@ void PR2NeuroadptControllerClass::update()
 	/////////////////////////
 	// DATA COLLECTION
 
-        // bufferData( dt );
+        bufferData( dt );
 
 	// DATA COLLECTION END
 	/////////////////////////
 
 }
 
-/*
-void publishData()
-{
-      // Publish data in ROS message every 10 cycles (about 100Hz)
-        if (++pub_cycle_count_ > 10)
-        {
-                should_publish_ = true;
-                pub_cycle_count_ = 0;
-        }
-
-        if (should_publish_ && pub_.trylock())
-        {
-                should_publish_ = false;
-
-                pub_.msg_.header.stamp = robot_state_->getTime();
-                pub_.msg_.wrench = r_ftData.wrench; // wristFTdata.getRightData().wrench;
-
-                pubModelStates_.msg_ = modelState;
-                pubRobotStates_.msg_ = robotState;
-
-                pubControllerParam_.msg_.kappa            = kappa            ;
-                pubControllerParam_.msg_.Kv               = Kv               ;
-                pubControllerParam_.msg_.lambda           = lambda           ;
-                pubControllerParam_.msg_.Kz               = Kz               ;
-                pubControllerParam_.msg_.Zb               = Zb               ;
-                pubControllerParam_.msg_.feedForwardForce = feedForwardForce ;
-                pubControllerParam_.msg_.F                                = nnF              ;
-                pubControllerParam_.msg_.G                                = nnG              ;
-                pubControllerParam_.msg_.nn_ON                    = nn_ON            ;
-                pubControllerParam_.msg_.inParams         = Inputs           ;
-                pubControllerParam_.msg_.outParams                = Outputs          ;
-                pubControllerParam_.msg_.hiddenNodes      = Hidden           ;
-                pubControllerParam_.msg_.errorParams      = Error                        ;
-
-                pubControllerParam_.msg_.m                                = Mm(0,0)          ;
-                pubControllerParam_.msg_.d                                = Dm(0,0)          ;
-                pubControllerParam_.msg_.k                                = Km(0,0)          ;
-
-                pubModelCartPos_.msg_.header.stamp = robot_state_->getTime();
-                pubRobotCartPos_.msg_.header.stamp = robot_state_->getTime();
-
-  //            tf::PoseKDLToMsg(x_m_, modelCartPos_);
-  //            tf::PoseKDLToMsg(x_  , robotCartPos_);
-
-                pubModelCartPos_.msg_.pose = modelCartPos_;
-                pubRobotCartPos_.msg_.pose = robotCartPos_;
-
-                pub_.unlockAndPublish();
-                pubModelStates_.unlockAndPublish();
-                pubRobotStates_.unlockAndPublish();
-                pubModelCartPos_.unlockAndPublish();
-                pubRobotCartPos_.unlockAndPublish();
-                pubControllerParam_.unlockAndPublish();
-        }
-}
-*/
 
 void PR2NeuroadptControllerClass::bufferData( double & dt )
 {
 	int index = storage_index_;
 	if ((index >= 0) && (index < StoreLen))
 	{
-//		tf::PoseKDLToMsg(x_m_, modelCartPos_);
-//		tf::PoseKDLToMsg(x_  , robotCartPos_);
-
 		msgControllerFullData[index].dt                = dt                          ;
 
 		// Force Data
@@ -1137,12 +881,12 @@ void PR2NeuroadptControllerClass::bufferData( double & dt )
 		msgControllerFullData[index].r_acc_j5          = 0                           ;
 		msgControllerFullData[index].r_acc_j6          = 0                           ;
 
-                msgControllerFullData[index].r_eff_x           = ferr_(0)                    ;
-                msgControllerFullData[index].r_eff_y           = ferr_(1)                    ;
-                msgControllerFullData[index].r_eff_z           = ferr_(2)                    ;
-                msgControllerFullData[index].r_trq_x           = ferr_(3)                    ;
-                msgControllerFullData[index].r_trq_y           = ferr_(4)                    ;
-                msgControllerFullData[index].r_trq_z           = ferr_(5)                    ;
+        msgControllerFullData[index].r_eff_x           = ferr_(0)                    ;
+        msgControllerFullData[index].r_eff_y           = ferr_(1)                    ;
+        msgControllerFullData[index].r_eff_z           = ferr_(2)                    ;
+        msgControllerFullData[index].r_trq_x           = ferr_(3)                    ;
+        msgControllerFullData[index].r_trq_y           = ferr_(4)                    ;
+        msgControllerFullData[index].r_trq_z           = ferr_(5)                    ;
 
 		msgControllerFullData[index].r_eff_j0          = tau_f_(0)                   ;
 		msgControllerFullData[index].r_eff_j1          = tau_f_(1)                   ;
@@ -1276,12 +1020,6 @@ bool PR2NeuroadptControllerClass::publish( std_srvs::Empty::Request & req,
   int  index;
   for (index = 0 ; index < StoreLen ; index++)
   {
-//    pubFTData_         .publish(msgFTData         [index]);
-//    pubModelStates_    .publish(msgModelStates    [index]);
-//    pubRobotStates_    .publish(msgRobotStates    [index]);
-//    pubModelCartPos_   .publish(msgModelCartPos   [index]);
-//    pubRobotCartPos_   .publish(msgRobotCartPos   [index]);
-//    pubControllerParam_.publish(msgControllerParam[index]);
       pubControllerFullData_.publish(msgControllerFullData[index]);
   }
 
@@ -1323,12 +1061,6 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
   int  index;
   for (index = 0 ; index < StoreLen ; index++)
   {
-//    pubFTData_         .publish(msgFTData         [index]);
-//    pubModelStates_    .publish(msgModelStates    [index]);
-//    pubRobotStates_    .publish(msgRobotStates    [index]);
-//    pubModelCartPos_   .publish(msgModelCartPos   [index]);
-//    pubRobotCartPos_   .publish(msgRobotCartPos   [index]);
-//    pubControllerParam_.publish(msgControllerParam[index]);
 	  pubControllerFullData_.publish(msgControllerFullData[index]);
   }
 

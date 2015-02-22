@@ -39,7 +39,7 @@
 #include <boost/numeric/odeint.hpp>
 
 #include "csl/neural_network.hpp"
-#include "csl/outer_loop.h"
+//#include "csl/outer_loop.h"
 
 typedef boost::array< double , 21 > state_type;
 typedef boost::array< double , 4 > state_type_4;
@@ -132,14 +132,6 @@ private:
   ros::Time last_time_ ;        // Time of the last servo cycle
   ros::Time start_time_;        // Time of the first servo cycle
 
-  //! realtime publisher for max_force value
-//  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_;
-//  realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubModelStates_;
-//  realtime_tools::RealtimePublisher<sensor_msgs::JointState> pubRobotStates_;
-//  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pubModelCartPos_;
-//  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pubRobotCartPos_;
-//  realtime_tools::RealtimePublisher<uta_pr2_forceControl::controllerParam> pubControllerParam_;
-
   geometry_msgs::WrenchStamped r_forceData;
   geometry_msgs::Pose modelCartPos_;
   geometry_msgs::Pose robotCartPos_;
@@ -175,27 +167,11 @@ private:
   state_type_4 vpol_init_x;
   joint_type_6 joint_vel_qd;
 
-  //csl::outer_loop::JSpaceMsdModel outerLoopMSDmodel;
-
-  csl::outer_loop::MsdModel outerLoopMSDmodelJoint1;
-  csl::outer_loop::MsdModel outerLoopMSDmodelJoint2;
-
-  csl::outer_loop::RlsModel outerLoopFIRmodelJoint1;
-  csl::outer_loop::RlsModel outerLoopFIRmodelJoint2;
-
-  csl::outer_loop::MsdModel outerLoopMSDmodelX     ;
-  csl::outer_loop::MsdModel outerLoopMSDmodelY     ;
-
   // System Model END
   /////////////////////////
 
   /////////////////////////
   // NN
-
-//  enum { Inputs  = 35 }; // n Size of the inputs
-//  enum { Outputs = 7 }; // m Size of the outputs
-//  enum { Hidden  = 10 }; // l Size of the hidden layer
-//  enum { Error   = 7 }; // filtered error
 
   double num_Inputs  ; // n Size of the inputs
   double num_Outputs ; // m Size of the outputs
