@@ -1,4 +1,4 @@
-#include "uta_pr2_forceControl/neuroadptController.h"
+#include "uta_pr2_forceControl/pidController.h"
 #include <pluginlib/class_list_macros.h>
 #include <tf_conversions/tf_kdl.h>
 
@@ -8,7 +8,7 @@ using namespace std;
 using namespace boost::numeric::odeint;
 
 /// Controller initialization in non-realtime
-bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n )
+bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n )
 {
   // Get the root and tip link names from parameter server.
   std::string root_name, tip_name;
@@ -275,15 +275,15 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   should_publish_  = false;
 
   // Update controller paramters
-  paramUpdate_srv_ = n.advertiseService("paramUpdate", &PR2NeuroadptControllerClass::paramUpdate, this);
+  paramUpdate_srv_ = n.advertiseService("paramUpdate", &PR2PidControllerClass::paramUpdate, this);
 
 	/////////////////////////
 	// DATA COLLECTION
 
-    save_srv_              = n.advertiseService("save"     , &PR2NeuroadptControllerClass::save               , this);
-    publish_srv_           = n.advertiseService("publish"  , &PR2NeuroadptControllerClass::publish            , this);
-	capture_srv_           = n.advertiseService("capture"  , &PR2NeuroadptControllerClass::capture            , this);
-	save_srv_              = n.advertiseService("saveData" , &PR2NeuroadptControllerClass::saveControllerData , this);
+    save_srv_              = n.advertiseService("save"     , &PR2PidControllerClass::save               , this);
+    publish_srv_           = n.advertiseService("publish"  , &PR2PidControllerClass::publish            , this);
+	capture_srv_           = n.advertiseService("capture"  , &PR2PidControllerClass::capture            , this);
+	save_srv_              = n.advertiseService("saveData" , &PR2PidControllerClass::saveControllerData , this);
 
 	pubFTData_             = n.advertise< geometry_msgs::WrenchStamped             >( "FT_data"              , StoreLen);
 	pubModelStates_        = n.advertise< sensor_msgs::JointState                  >( "model_joint_states"   , StoreLen);
@@ -302,7 +302,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 }
 
 /// Controller startup in realtime
-void PR2NeuroadptControllerClass::starting()
+void PR2PidControllerClass::starting()
 {
   // Get the current joint values to compute the initial tip location.
   chain_.getPositions(q0_);
@@ -334,7 +334,7 @@ void PR2NeuroadptControllerClass::starting()
 
 
 /// Controller update loop in realtime
-void PR2NeuroadptControllerClass::update()
+void PR2PidControllerClass::update()
 {
 
   double dt;                    // Servo loop time step
@@ -561,7 +561,7 @@ void PR2NeuroadptControllerClass::update()
 }
 
 
-void PR2NeuroadptControllerClass::bufferData( double & dt )
+void PR2PidControllerClass::bufferData( double & dt )
 {
 	int index = storage_index_;
 	if ((index >= 0) && (index < StoreLen))
@@ -722,7 +722,7 @@ void PR2NeuroadptControllerClass::bufferData( double & dt )
 }
 
 /// Service call to capture and extract the data
-bool PR2NeuroadptControllerClass::paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
+bool PR2PidControllerClass::paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
                                                neuroadaptive_msgs::controllerParamUpdate::Response & resp )
 {
 
@@ -789,7 +789,7 @@ bool PR2NeuroadptControllerClass::paramUpdate( neuroadaptive_msgs::controllerPar
 }
 
 /// Service call to save the data
-bool PR2NeuroadptControllerClass::save( neuroadaptive_msgs::saveControllerData::Request & req,
+bool PR2PidControllerClass::save( neuroadaptive_msgs::saveControllerData::Request & req,
 		                                neuroadaptive_msgs::saveControllerData::Response& resp )
 {
   /* Record the starting time. */
@@ -812,7 +812,7 @@ bool PR2NeuroadptControllerClass::save( neuroadaptive_msgs::saveControllerData::
 }
 
 /// Service call to publish the saved data
-bool PR2NeuroadptControllerClass::publish( std_srvs::Empty::Request & req,
+bool PR2PidControllerClass::publish( std_srvs::Empty::Request & req,
                                            std_srvs::Empty::Response& resp )
 {
   /* Then we can publish the buffer contents. */
@@ -826,7 +826,7 @@ bool PR2NeuroadptControllerClass::publish( std_srvs::Empty::Request & req,
 }
 
 /// Service call to capture and extract the data
-bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
+bool PR2PidControllerClass::capture( std_srvs::Empty::Request& req,
                                	   	       std_srvs::Empty::Response& resp )
 {
   /* Record the starting time. */
@@ -867,7 +867,7 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
 }
 
 /// Service call to capture and extract the data
-bool PR2NeuroadptControllerClass::saveControllerData( neuroadaptive_msgs::saveControllerData::Request&  req,
+bool PR2PidControllerClass::saveControllerData( neuroadaptive_msgs::saveControllerData::Request&  req,
                                                       neuroadaptive_msgs::saveControllerData::Response& resp )
 {
 
@@ -909,56 +909,14 @@ bool PR2NeuroadptControllerClass::saveControllerData( neuroadaptive_msgs::saveCo
 
 }
 
-Eigen::MatrixXd
-PR2NeuroadptControllerClass::JointKdl2Eigen( KDL::JntArray & joint_ )
-{
-	eigen_temp_joint(0) = joint_(0);
-	eigen_temp_joint(1) = joint_(1);
-	eigen_temp_joint(2) = joint_(2);
-	eigen_temp_joint(3) = joint_(3);
-	eigen_temp_joint(4) = joint_(4);
-	eigen_temp_joint(5) = joint_(5);
-	eigen_temp_joint(6) = joint_(6);
-
-	return eigen_temp_joint;
-}
-
-Eigen::MatrixXd
-PR2NeuroadptControllerClass::JointVelKdl2Eigen( KDL::JntArrayVel & joint_ )
-{
-	eigen_temp_joint(0) = joint_.qdot(0);
-	eigen_temp_joint(1) = joint_.qdot(1);
-	eigen_temp_joint(2) = joint_.qdot(2);
-	eigen_temp_joint(3) = joint_.qdot(3);
-	eigen_temp_joint(4) = joint_.qdot(4);
-	eigen_temp_joint(5) = joint_.qdot(5);
-	eigen_temp_joint(6) = joint_.qdot(6);
-
-	return eigen_temp_joint;
-}
-
-KDL::JntArray
-PR2NeuroadptControllerClass::JointEigen2Kdl( Eigen::VectorXd & joint )
-{
-	kdl_temp_joint_(0) = joint(0);
-	kdl_temp_joint_(1) = joint(1);
-	kdl_temp_joint_(2) = joint(2);
-	kdl_temp_joint_(3) = joint(3);
-	kdl_temp_joint_(4) = joint(4);
-	kdl_temp_joint_(5) = joint(5);
-	kdl_temp_joint_(6) = joint(6);
-
-	return kdl_temp_joint_;
-}
-
 /// Controller stopping in realtime
-void PR2NeuroadptControllerClass::stopping()
+void PR2PidControllerClass::stopping()
 {
 
 }
 
 
 // Register controller to pluginlib
-PLUGINLIB_REGISTER_CLASS( PR2NeuroadptControllerClass,
-		          	      pr2_controller_ns::PR2NeuroadptControllerClass,
+PLUGINLIB_REGISTER_CLASS( PR2PidControllerClass,
+		          	      pr2_controller_ns::PR2PidControllerClass,
                           pr2_controller_interface::Controller )
