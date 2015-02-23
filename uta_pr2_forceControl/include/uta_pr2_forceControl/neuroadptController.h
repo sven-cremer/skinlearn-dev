@@ -58,7 +58,7 @@ enum
 
 class PR2NeuroadptControllerClass: public pr2_controller_interface::Controller
 {
-public:
+private:
   // The current robot state (to get the time stamp)
   pr2_mechanism_model::RobotState* robot_state_;
 
@@ -267,6 +267,7 @@ public:
 
   volatile int storage_index_;
 
+public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   bool init(pr2_mechanism_model::RobotState *robot,
