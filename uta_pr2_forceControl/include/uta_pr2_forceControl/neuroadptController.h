@@ -27,6 +27,7 @@
 #include <neuroadaptive_msgs/controllerFullData.h>
 #include <neuroadaptive_msgs/controllerParamUpdate.h>
 #include <neuroadaptive_msgs/saveControllerData.h>
+#include <neuroadaptive_msgs/setCircleRate.h>
 
 #include <std_srvs/Empty.h>
 
@@ -222,6 +223,9 @@ public:
   bool paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
                     neuroadaptive_msgs::controllerParamUpdate::Response & resp );
 
+  bool circleRateCB( neuroadaptive_msgs::setCircleRate::Request & req,
+  	                 neuroadaptive_msgs::setCircleRate::Response& resp );
+
   bool save( neuroadaptive_msgs::saveControllerData::Request & req,
   	         neuroadaptive_msgs::saveControllerData::Response& resp );
 
@@ -234,6 +238,7 @@ public:
   bool saveControllerData( neuroadaptive_msgs::saveControllerData::Request&  req,
                            neuroadaptive_msgs::saveControllerData::Response& resp );
 
+  ros::ServiceServer set_circle_rate_srv_;
   ros::ServiceServer save_srv_;
   ros::ServiceServer publish_srv_;
   ros::ServiceServer capture_srv_;
