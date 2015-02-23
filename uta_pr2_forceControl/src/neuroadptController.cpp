@@ -414,357 +414,7 @@ void PR2NeuroadptControllerClass::starting()
 
 
 /// Controller update loop in realtime
-void PR2NeuroadptControllerClass::update()
-{
 
-//	// retrieve our accelerometer data
-//	std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;
-//
-//	threeAccs[threeAccs.size()-1].x
-//	threeAccs[threeAccs.size()-1].y
-//	threeAccs[threeAccs.size()-1].z
-
-/*
-	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-	l_ft_samples    = l_ftData_vector.size() - 1;
-//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
-	l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
-	l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
-	l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
-	l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
-	l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
-	l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
-
-	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-	r_ft_samples    = r_ftData_vector.size() - 1;
-//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-	r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
-	r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
-	r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
-	r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
-	r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
-	r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
-*/
-
-
-
-//	if( (r_ftData.wrench.force.x > -18) && (r_ftData.wrench.force.x < 18) ){ r_ftData.wrench.force.x = 0; }
-//	if( (r_ftData.wrench.force.y > -18) && (r_ftData.wrench.force.y < 18) ){ r_ftData.wrench.force.y = 0; }
-//	if( (r_ftData.wrench.force.z > -18) && (r_ftData.wrench.force.z < 18) ){ r_ftData.wrench.force.z = 0; }
-
-
-  double dt;                    // Servo loop time step
-
-  // Calculate the dt between servo cycles.
-  dt = (robot_state_->getTime() - last_time_).toSec();
-  last_time_ = robot_state_->getTime();
-
-  // Get the current joint positions and velocities.
-  chain_.getPositions(q_);
-  chain_.getVelocities(qdot_);
-  chain_.getEfforts(tau_f_);
-
-  // Save model joints to KDL
-  q_m_ = JointEigen2Kdl(q_m);
-
-  // Compute the forward kinematics and Jacobian (at this location).
-  jnt_to_pose_solver_->JntToCart(q_, x_);
-  jnt_to_jac_solver_->JntToJac(q_, J_);
-
-  for (unsigned int i = 0 ; i < 6 ; i++)
-  {
-    xdot_(i) = 0;
-    for (unsigned int j = 0 ; j < kdl_chain_.getNrOfJoints() ; j++)
-      xdot_(i) += J_(i,j) * qdot_.qdot(j);
-  }
-
-  // Follow a circle of 10cm at 3 rad/sec.
-  if( startCircleTraj == true )
-  {
-    circle_phase_ += circle_rate * dt;
-  }
-
-  KDL::Vector  circle(0,0,0);
-  circle(2) = 0.1 * sin(circle_phase_);
-  circle(1) = 0.1 * (cos(circle_phase_) - 1);
-
-  xd_ = x0_;
-  xd_.p += circle;
-
-  // Calculate a Cartesian restoring force.
-  xerr_.vel = x_.p - xd_.p;
-  xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
-                     xd_.M.UnitY() * x_.M.UnitY() +
-                     xd_.M.UnitZ() * x_.M.UnitZ());
-
-  robotCartPos_.position.x    = x_.p(0);
-  robotCartPos_.position.y    = x_.p(1);
-  robotCartPos_.position.z    = x_.p(2);
-  x_.M.GetQuaternion( robotCartPos_.orientation.x ,
-                      robotCartPos_.orientation.y ,
-                      robotCartPos_.orientation.z ,
-                      robotCartPos_.orientation.w  );
-
-  modelCartPos_.position.x    = xd_.p(0);
-  modelCartPos_.position.y    = xd_.p(1);
-  modelCartPos_.position.z    = xd_.p(2);
-  xd_.M.GetQuaternion( modelCartPos_.orientation.x ,
-                       modelCartPos_.orientation.y ,
-                       modelCartPos_.orientation.z ,
-                       modelCartPos_.orientation.w  );
-
-//  for (unsigned int i = 0 ; i < 6 ; i++)
-//  {
-//    F_(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
-//  }
-
-  // Force control only ferr Z in ft sensor frame is x in robot frame
-//  F_(0) = ferr_(2); // - Kd_(i) * xdot_(i);
-
-
-  // Human force input
-  // Force error
-
-  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
-
-  //                               w       x       y      z
-  Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
-  Eigen::Vector3d transformed_force = ft_to_acc._transformVector( forceFT );
-
-  if( abs( double (transformed_force(0)) ) < 1 ){ transformed_force(0) = 0; }
-  if( abs( double (transformed_force(1)) ) < 1 ){ transformed_force(1) = 0; }
-
-  ferr_(0) =   transformed_force(0) ; // 30*sin(circle_phase_);
-  ferr_(1) =  -transformed_force(1) ; // 0				       ;
-  ferr_(2) =  // transformed_force(2) ; // 0				       ;
-  ferr_(3) =  0 ; // r_ftData.wrench.torque.x; // 0                    ;
-  ferr_(4) =  0 ; // r_ftData.wrench.torque.y; // 0                    ;
-  ferr_(5) =  0 ; // r_ftData.wrench.torque.z; // 0         s           ;
-
-  // Convert the force into a set of joint torques.
-  for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
-  {
-//    tau_t_(i) = 0;
-    tau_h_(i) = 0;
-    for (unsigned int j = 0 ; j < 6 ; j++)
-    {
-//      tau_t_(i) += J_(j,i) * F_(j);   // This will give the impedance to a trajectory
-      tau_h_(i)+= J_(j,i) * ferr_(j); // this will give the torque from human interaction
-    }
-  }
-
-    /////////////////////////
-	// System Model
-
-//  	// Integrator
-//	tau_h_(0) = 0 ; // tau_h(0);
-//	tau_h_(1) = vpol_init_x[0]; //sin(circle_phase_);    // tau_h(1);
-//	tau_h_(2) = 0 ; // tau_h(2);
-//	tau_h_(3) = 0 ; // tau_h(3);
-//	tau_h_(4) = 0 ; // tau_h(4);
-//	tau_h_(5) = 0 ; // tau_h(5);
-//	tau_h_(6) = 0 ; // tau_h(6);
-
-  // Reference torque from human interaction or trajectory following
-
-  // Human
-	t_r(0) = - tau_h_(0);
-	t_r(1) =   tau_h_(1);
-	t_r(2) =   tau_h_(2);
-	t_r(3) =   tau_h_(3);
-	t_r(4) =   tau_h_(4);
-	t_r(5) =   tau_h_(5);
-	t_r(6) =   tau_h_(6);
-
-//    // Trajectory/impedance
-//	t_r(0) = tau_t_(0);
-//	t_r(1) = tau_t_(1);
-//	t_r(2) = tau_t_(2);
-//	t_r(3) = tau_t_(3);
-//	t_r(4) = tau_t_(4);
-//	t_r(5) = tau_t_(5);
-//	t_r(6) = tau_t_(6);
-
-	// Current joint positions and velocities
-	q = JointKdl2Eigen( q_ );
-	qd = JointVelKdl2Eigen( qdot_ );
-
-
-//	0 - 'r_upper_arm_roll_joint' || "r_shoulder_pan_joint"   -0.309261  : 18 : r_shoulder_pan_joint
-//	1 - 'r_shoulder_pan_joint'    | "r_shoulder_lift_joint"  -0.0340454 : 19 : r_shoulder_lift_joint
-//	2 - 'r_shoulder_lift_joint'   | "r_upper_arm_roll_joint" -1.55365   : 17 : r_upper_arm_roll_joint
-//	3 - 'r_forearm_roll_joint'   || "r_elbow_flex_joint"     -1.84681   : 21 : r_elbow_flex_joint
-//	4 - 'r_elbow_flex_joint'      | "r_forearm_roll_joint"   -1.57489   : 20 : r_forearm_roll_joint
-//	5 - 'r_wrist_flex_joint'      | "r_wrist_flex_joint"     -1.54739   : 22 : r_wrist_flex_joint
-//	6 - 'r_wrist_roll_joint'      | "r_wrist_roll_joint"     -0.0322204 : 23 : r_wrist_roll_joint
-
-
-	if( (robot_state_->getTime() - start_time_).toSec() > 5 )
-        {
-	  task_ref   (0) = -0.821127 ;
-	  task_ref   (3) = -1.70016  ;
-        }else
-        {
-          start_time_ = robot_state_->getTime();
-          task_ref   (0) = -0.190788 ;
-          task_ref   (3) = -1.42669  ;
-        }
-
-	q_m(0) = -0.48577   ;  qd_m(0) = 0;  qdd_m(0) = 0;
-	q_m(1) = -0.0190721 ;  qd_m(1) = 0;  qdd_m(1) = 0;
-	q_m(2) = -1.51115   ;  qd_m(2) = 0;  qdd_m(2) = 0;
-	q_m(3) = -1.70928   ;  qd_m(3) = 0;  qdd_m(3) = 0;
-	q_m(4) =  1.54561   ;  qd_m(4) = 0;  qdd_m(4) = 0;
-	q_m(5) =  0.046854  ;  qd_m(5) = 0;  qdd_m(5) = 0;
-	q_m(6) = -0.0436174 ;  qd_m(6) = 0;  qdd_m(6) = 0;
-
-
-        x_m(2) = 0.03 ;
-        x_m(3) = 0 ;
-        x_m(4) = 0 ;
-        x_m(5) = 0 ;
-
-        // Compute the forward kinematics and Jacobian of the model (at this location).
-        jnt_to_pose_solver_->JntToCart(q_m_, x_m_);
-
-        modelCartPos_.position.x    = x_m_.p(0);
-        modelCartPos_.position.y    = x_m_.p(1);
-        modelCartPos_.position.z    = x_m_.p(2);
-        x_m_.M.GetQuaternion( modelCartPos_.orientation.x ,
-                            modelCartPos_.orientation.y ,
-                            modelCartPos_.orientation.z ,
-                            modelCartPos_.orientation.w  );
-
-        xd_m(2) = 0          ;
-        xd_m(3) = xdot_  (3) ;
-        xd_m(4) = xdot_  (4) ;
-        xd_m(5) = xdot_  (5) ;
-
-        xdd_m(2) = 0 ;
-        xdd_m(3) = 0 ;
-        xdd_m(4) = 0 ;
-        xdd_m(5) = 0 ;
-
-        kdl_xd_m_(0) = xd_m(0);
-        kdl_xd_m_(1) = xd_m(1);
-        kdl_xd_m_(2) = xd_m(2);
-        kdl_xd_m_(3) = xd_m(3);
-        kdl_xd_m_(4) = xd_m(4);
-        kdl_xd_m_(5) = xd_m(5);
-
-	// System Model END
-	/////////////////////////
-
-        double circleAmpl = (circleUlim - circleLlim)/2 ;
-
-	// DEBUG
-	q_m(0)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(1)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(2)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
-	q_m(3)  = - ( circleAmpl * sin(circle_phase_) + circleAmpl + circleLlim );
-	q_m(4)  =   0;
-	q_m(5)  =   0;
-	q_m(6)  =   0;
-
-	qd_m(0) =   0;
-	qd_m(1) =   0;
-	qd_m(2) =   0;
-	qd_m(3) = - circleAmpl * (cos(circle_phase_));
-	qd_m(4) =   0;
-	qd_m(5) =   0;
-	qd_m(6) =   0;
-
-
-
-  /////////////////////////
-
-  // NN
-  nnController.UpdateJoint( q     ,
-                            qd    ,
-                            q_m   ,
-                            qd_m  ,
-                            qdd_m ,
-                            t_r   ,
-                            tau    );
-  // NN END
-  /////////////////////////
-
-	// Convert from Eigen to KDL
-//	tau_c_ = JointEigen2Kdl( tau );
-
-	tau_c_(0) = tau(0);
-	tau_c_(1) = tau(1);
-	tau_c_(2) = tau(2);
-	tau_c_(3) = tau(3);
-	tau_c_(4) = tau(4);
-	tau_c_(5) = tau(5);
-	tau_c_(6) = tau(6);
-
-	modelState.header.stamp = robot_state_->getTime();
-	robotState.header.stamp = robot_state_->getTime();
-
-	modelState.position[0] = q_m(0);
-	modelState.position[1] = q_m(1);
-	modelState.position[2] = q_m(2);
-	modelState.position[3] = q_m(3);
-	modelState.position[4] = q_m(4);
-	modelState.position[5] = q_m(5);
-	modelState.position[6] = q_m(6);
-
-	modelState.velocity[0] = qd_m(0); // ode_init_x[0 ] ; // tau(0);
-	modelState.velocity[1] = qd_m(1); // ode_init_x[1 ] ; // tau(1);
-	modelState.velocity[2] = qd_m(2); // ode_init_x[2 ] ; // tau(2);
-	modelState.velocity[3] = qd_m(3); // ode_init_x[3 ] ; // tau(3);
-	modelState.velocity[4] = qd_m(4); // ode_init_x[4 ] ; // tau(4);
-	modelState.velocity[5] = qd_m(5); // ode_init_x[5 ] ; // tau(5);
-	modelState.velocity[6] = qd_m(6); // ode_init_x[6 ] ; // tau(6);
-
-	// Input torque to mode | torque from human
-	modelState.effort[0] = t_r(0);
-	modelState.effort[1] = t_r(1);
-	modelState.effort[2] = t_r(2);
-	modelState.effort[3] = t_r(3);
-	modelState.effort[4] = t_r(4);
-	modelState.effort[5] = t_r(5);
-	modelState.effort[6] = t_r(6);
-
-	robotState.position[0] = q(0);
-	robotState.position[1] = q(1);
-	robotState.position[2] = q(2);
-	robotState.position[3] = q(3);
-	robotState.position[4] = q(4);
-	robotState.position[5] = q(5);
-	robotState.position[6] = q(6);
-
-	robotState.velocity[0] = qd(0);
-	robotState.velocity[1] = qd(1);
-	robotState.velocity[2] = qd(2);
-	robotState.velocity[3] = qd(3);
-	robotState.velocity[4] = qd(4);
-	robotState.velocity[5] = qd(5);
-	robotState.velocity[6] = qd(6);
-
-	// Output torque from controller that is sent to the robot
-	robotState.effort[0] = tau_c_(0);
-	robotState.effort[1] = tau_c_(1);
-	robotState.effort[2] = tau_c_(2);
-	robotState.effort[3] = tau_c_(3);
-	robotState.effort[4] = tau_c_(4);
-	robotState.effort[5] = tau_c_(5);
-	robotState.effort[6] = tau_c_(6);
-
-	// And finally send these torques out.
-        chain_.setEfforts(tau_c_);
-
-	/////////////////////////
-	// DATA COLLECTION
-
-        bufferData( dt );
-
-	// DATA COLLECTION END
-	/////////////////////////
-
-}
 
 
 void PR2NeuroadptControllerClass::bufferData( double & dt )
@@ -1171,6 +821,233 @@ PR2NeuroadptControllerClass::JointEigen2Kdl( Eigen::VectorXd & joint )
 /// Controller stopping in realtime
 void PR2NeuroadptControllerClass::stopping()
 {
+
+}
+
+/// Controller update loop in realtime (PID)
+void PR2NeuroadptControllerClass::update()
+{
+
+  double dt;                    // Servo loop time step
+
+  // Calculate the dt between servo cycles.
+  dt = (robot_state_->getTime() - last_time_).toSec();
+  last_time_ = robot_state_->getTime();
+
+  // Get the current joint positions and velocities.
+  chain_.getPositions(q_);
+  chain_.getVelocities(qdot_);
+  chain_.getEfforts(tau_f_);
+
+  // Save model joints to KDL
+  q_m_ = JointEigen2Kdl(q_m);
+
+  // Compute the forward kinematics and Jacobian (at this location).
+  jnt_to_pose_solver_->JntToCart(q_, x_);
+  jnt_to_jac_solver_->JntToJac(q_, J_);
+
+  for (unsigned int i = 0 ; i < 6 ; i++)
+  {
+    xdot_(i) = 0;
+    for (unsigned int j = 0 ; j < kdl_chain_.getNrOfJoints() ; j++)
+      xdot_(i) += J_(i,j) * qdot_.qdot(j);
+  }
+
+  // Follow a circle of 10cm at 3 rad/sec.
+  if( startCircleTraj == true )
+  {
+    circle_phase_ += circle_rate * dt;
+  }
+
+  KDL::Vector  circle(0,0,0);
+  circle(2) = 0.1 * sin(circle_phase_);
+  circle(1) = 0.1 * (cos(circle_phase_) - 1);
+
+  xd_ = x0_;
+  xd_.p += circle;
+
+  // Calculate a Cartesian restoring force.
+  xerr_.vel = x_.p - xd_.p;
+  xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
+                     xd_.M.UnitY() * x_.M.UnitY() +
+                     xd_.M.UnitZ() * x_.M.UnitZ());
+
+  robotCartPos_.position.x    = x_.p(0);
+  robotCartPos_.position.y    = x_.p(1);
+  robotCartPos_.position.z    = x_.p(2);
+  x_.M.GetQuaternion( robotCartPos_.orientation.x ,
+                      robotCartPos_.orientation.y ,
+                      robotCartPos_.orientation.z ,
+                      robotCartPos_.orientation.w  );
+
+  modelCartPos_.position.x    = xd_.p(0);
+  modelCartPos_.position.y    = xd_.p(1);
+  modelCartPos_.position.z    = xd_.p(2);
+  xd_.M.GetQuaternion( modelCartPos_.orientation.x ,
+                       modelCartPos_.orientation.y ,
+                       modelCartPos_.orientation.z ,
+                       modelCartPos_.orientation.w  );
+
+	// Current joint positions and velocities
+	q = JointKdl2Eigen( q_ );
+	qd = JointVelKdl2Eigen( qdot_ );
+
+
+//	0 - 'r_upper_arm_roll_joint' || "r_shoulder_pan_joint"   -0.309261  : 18 : r_shoulder_pan_joint
+//	1 - 'r_shoulder_pan_joint'    | "r_shoulder_lift_joint"  -0.0340454 : 19 : r_shoulder_lift_joint
+//	2 - 'r_shoulder_lift_joint'   | "r_upper_arm_roll_joint" -1.55365   : 17 : r_upper_arm_roll_joint
+//	3 - 'r_forearm_roll_joint'   || "r_elbow_flex_joint"     -1.84681   : 21 : r_elbow_flex_joint
+//	4 - 'r_elbow_flex_joint'      | "r_forearm_roll_joint"   -1.57489   : 20 : r_forearm_roll_joint
+//	5 - 'r_wrist_flex_joint'      | "r_wrist_flex_joint"     -1.54739   : 22 : r_wrist_flex_joint
+//	6 - 'r_wrist_roll_joint'      | "r_wrist_roll_joint"     -0.0322204 : 23 : r_wrist_roll_joint
+
+	q_m(0) = -0.48577   ;  qd_m(0) = 0;  qdd_m(0) = 0;
+	q_m(1) = -0.0190721 ;  qd_m(1) = 0;  qdd_m(1) = 0;
+	q_m(2) = -1.51115   ;  qd_m(2) = 0;  qdd_m(2) = 0;
+	q_m(3) = -1.70928   ;  qd_m(3) = 0;  qdd_m(3) = 0;
+	q_m(4) =  1.54561   ;  qd_m(4) = 0;  qdd_m(4) = 0;
+	q_m(5) =  0.046854  ;  qd_m(5) = 0;  qdd_m(5) = 0;
+	q_m(6) = -0.0436174 ;  qd_m(6) = 0;  qdd_m(6) = 0;
+
+
+    x_m(2) = 0.03 ;
+    x_m(3) = 0    ;
+    x_m(4) = 0    ;
+    x_m(5) = 0    ;
+
+    // Compute the forward kinematics and Jacobian of the model (at this location).
+    jnt_to_pose_solver_->JntToCart(q_m_, x_m_);
+
+    modelCartPos_.position.x    = x_m_.p(0);
+    modelCartPos_.position.y    = x_m_.p(1);
+    modelCartPos_.position.z    = x_m_.p(2);
+    x_m_.M.GetQuaternion( modelCartPos_.orientation.x ,
+                        modelCartPos_.orientation.y ,
+                        modelCartPos_.orientation.z ,
+                        modelCartPos_.orientation.w  );
+
+    xd_m(2) = 0          ;
+    xd_m(3) = xdot_  (3) ;
+    xd_m(4) = xdot_  (4) ;
+    xd_m(5) = xdot_  (5) ;
+
+    xdd_m(2) = 0 ;
+    xdd_m(3) = 0 ;
+    xdd_m(4) = 0 ;
+    xdd_m(5) = 0 ;
+
+    kdl_xd_m_(0) = xd_m(0);
+    kdl_xd_m_(1) = xd_m(1);
+    kdl_xd_m_(2) = xd_m(2);
+    kdl_xd_m_(3) = xd_m(3);
+    kdl_xd_m_(4) = xd_m(4);
+    kdl_xd_m_(5) = xd_m(5);
+
+	// System Model END
+	/////////////////////////
+
+    double circleAmpl = (circleUlim - circleLlim)/2 ;
+
+	// DEBUG
+	q_m(0)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(1)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(2)  =   0 ; //- 0.5 * (sin(circle_phase_) + 1 );
+	q_m(3)  = - ( circleAmpl * sin(circle_phase_) + circleAmpl + circleLlim );
+	q_m(4)  =   0;
+	q_m(5)  =   0;
+	q_m(6)  =   0;
+
+	qd_m(0) =   0;
+	qd_m(1) =   0;
+	qd_m(2) =   0;
+	qd_m(3) = - circleAmpl * (cos(circle_phase_));
+	qd_m(4) =   0;
+	qd_m(5) =   0;
+	qd_m(6) =   0;
+
+
+
+	// Convert from Eigen to KDL
+//	tau_c_ = JointEigen2Kdl( tau );
+
+
+  for( uint ind_ = 0; ind_ < kdl_chain_.getNrOfJoints(); ind_++ )
+  {
+	  tau(ind_) = jointPid[ind_].updatePid(q(ind_) - q_m(ind_), qd(ind_), ros::Duration(dt));
+  }
+
+
+	tau_c_(0) = tau(0);
+	tau_c_(1) = tau(1);
+	tau_c_(2) = tau(2);
+	tau_c_(3) = tau(3);
+	tau_c_(4) = tau(4);
+	tau_c_(5) = tau(5);
+	tau_c_(6) = tau(6);
+
+	modelState.header.stamp = robot_state_->getTime();
+	robotState.header.stamp = robot_state_->getTime();
+
+	modelState.position[0] = q_m(0);
+	modelState.position[1] = q_m(1);
+	modelState.position[2] = q_m(2);
+	modelState.position[3] = q_m(3);
+	modelState.position[4] = q_m(4);
+	modelState.position[5] = q_m(5);
+	modelState.position[6] = q_m(6);
+
+	modelState.velocity[0] = qd_m(0); // ode_init_x[0 ] ; // tau(0);
+	modelState.velocity[1] = qd_m(1); // ode_init_x[1 ] ; // tau(1);
+	modelState.velocity[2] = qd_m(2); // ode_init_x[2 ] ; // tau(2);
+	modelState.velocity[3] = qd_m(3); // ode_init_x[3 ] ; // tau(3);
+	modelState.velocity[4] = qd_m(4); // ode_init_x[4 ] ; // tau(4);
+	modelState.velocity[5] = qd_m(5); // ode_init_x[5 ] ; // tau(5);
+	modelState.velocity[6] = qd_m(6); // ode_init_x[6 ] ; // tau(6);
+
+	// Input torque to mode | torque from human
+	modelState.effort[0] = t_r(0);
+	modelState.effort[1] = t_r(1);
+	modelState.effort[2] = t_r(2);
+	modelState.effort[3] = t_r(3);
+	modelState.effort[4] = t_r(4);
+	modelState.effort[5] = t_r(5);
+	modelState.effort[6] = t_r(6);
+
+	robotState.position[0] = q(0);
+	robotState.position[1] = q(1);
+	robotState.position[2] = q(2);
+	robotState.position[3] = q(3);
+	robotState.position[4] = q(4);
+	robotState.position[5] = q(5);
+	robotState.position[6] = q(6);
+
+	robotState.velocity[0] = qd(0);
+	robotState.velocity[1] = qd(1);
+	robotState.velocity[2] = qd(2);
+	robotState.velocity[3] = qd(3);
+	robotState.velocity[4] = qd(4);
+	robotState.velocity[5] = qd(5);
+	robotState.velocity[6] = qd(6);
+
+	// Output torque from controller that is sent to the robot
+	robotState.effort[0] = tau_c_(0);
+	robotState.effort[1] = tau_c_(1);
+	robotState.effort[2] = tau_c_(2);
+	robotState.effort[3] = tau_c_(3);
+	robotState.effort[4] = tau_c_(4);
+	robotState.effort[5] = tau_c_(5);
+	robotState.effort[6] = tau_c_(6);
+
+	// And finally send these torques out.
+        chain_.setEfforts(tau_c_);
+
+	/////////////////////////
+	// DATA COLLECTION
+
+        bufferData( dt );
+
+	// DATA COLLECTION END
+	/////////////////////////
 
 }
 
