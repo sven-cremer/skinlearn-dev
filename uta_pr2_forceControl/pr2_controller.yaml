@@ -111,7 +111,7 @@ nn_Zb               : 100
 nn_feedForwardForce : 1   
 nn_nnF              : 100 
 nn_nnG              : 200
-nn_ON               : 1
+nn_ON               : 0
 
 cartPos_Kp_x : 60.0
 cartPos_Kp_y : 60.0

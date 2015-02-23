@@ -1069,7 +1069,7 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
 		}
 	}
 
-  // Start circle traj
+  // Stop circle traj
   circle_phase_   = 0.0;
   startCircleTraj = false;
 
@@ -1111,7 +1111,7 @@ bool PR2NeuroadptControllerClass::saveControllerData( neuroadaptive_msgs::saveCo
 			}
 	}
 
-  // Start circle traj
+  // Stop circle traj
   circle_phase_   = 0.0;
   startCircleTraj = false;
 
