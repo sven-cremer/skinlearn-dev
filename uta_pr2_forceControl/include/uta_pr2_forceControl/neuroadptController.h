@@ -1,3 +1,6 @@
+#ifndef NEROADPTCONTROLLER_H_
+#define NEROADPTCONTROLLER_H_
+
 #include <pr2_controller_interface/controller.h>
 #include <pr2_hardware_interface/hardware_interface.h>
 #include <pr2_mechanism_model/chain.h>
@@ -58,7 +61,7 @@ enum
 
 class PR2NeuroadptControllerClass: public pr2_controller_interface::Controller
 {
-private:
+public:
   // The current robot state (to get the time stamp)
   pr2_mechanism_model::RobotState* robot_state_;
 
@@ -278,3 +281,5 @@ public:
 
 };
 }
+
+#endif /* NEROADPTCONTROLLER_H_ */
