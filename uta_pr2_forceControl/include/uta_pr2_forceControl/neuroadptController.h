@@ -61,7 +61,7 @@ enum
 
 class PR2NeuroadptControllerClass: public pr2_controller_interface::Controller
 {
-public:
+protected:
   // The current robot state (to get the time stamp)
   pr2_mechanism_model::RobotState* robot_state_;
 
