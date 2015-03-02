@@ -17,4 +17,7 @@
   <class name="PR2NeuroadptControllerClass"
   		 type="pr2_controller_ns::PR2NeuroadptControllerClass"
   		 base_class_type="pr2_controller_interface::Controller" />
+  <class name="PR2PidControllerClass"
+  		 type="pr2_controller_ns::PR2PidControllerClass"
+  		 base_class_type="pr2_controller_interface::Controller" />
 </library>

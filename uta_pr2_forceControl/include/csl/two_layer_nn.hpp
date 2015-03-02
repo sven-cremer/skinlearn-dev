@@ -11,7 +11,8 @@
  *
  */
 
-#pragma once
+#ifndef TWOLAYERNEURALNETWORKCONTROLLER_H_
+#define TWOLAYERNEURALNETWORKCONTROLLER_H_
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -357,3 +358,5 @@ TwoLayerNeuralNetworkController::sigmoid( Eigen::MatrixXd & z ) const
 }
 
 }
+
+#endif /* TWOLAYERNEURALNETWORKCONTROLLER_H_ */

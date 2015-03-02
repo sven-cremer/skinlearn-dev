@@ -11,7 +11,8 @@
  *
  */
 
-#pragma once
+#ifndef ONELAYERNEURALNETWORKCONTROLLER_H_
+#define ONELAYERNEURALNETWORKCONTROLLER_H_
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -327,3 +328,5 @@ OneLayerNeuralNetworkController::sigmoid( Eigen::MatrixXd & z ) const
 }
 
 }
+
+#endif /* ONELAYERNEURALNETWORKCONTROLLER_H_ */
