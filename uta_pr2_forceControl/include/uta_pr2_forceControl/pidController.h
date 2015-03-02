@@ -68,7 +68,7 @@ enum
 
 class PR2PidControllerClass: public pr2_controller_interface::Controller
 {
-protected:
+private:
   // The current robot state (to get the time stamp)
   pr2_mechanism_model::RobotState* robot_state_;
 
