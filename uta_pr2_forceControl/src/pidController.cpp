@@ -322,6 +322,7 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
 	/////////////////////////
 	// DATA COLLECTION
 
+    set_circle_rate_srv_   = n.advertiseService("circle_rate", &PR2PidControllerClass::circleRateCB       , this);
     save_srv_              = n.advertiseService("save"     , &PR2PidControllerClass::save               , this);
     publish_srv_           = n.advertiseService("publish"  , &PR2PidControllerClass::publish            , this);
 	capture_srv_           = n.advertiseService("capture"  , &PR2PidControllerClass::capture            , this);
@@ -764,6 +765,17 @@ void PR2PidControllerClass::bufferData( double & dt )
 }
 
 /// Service call to capture and extract the data
+bool PR2PidControllerClass::circleRateCB( neuroadaptive_msgs::setCircleRate::Request & req,
+		                                        neuroadaptive_msgs::setCircleRate::Response& resp )
+{
+
+  circle_rate = req.circle_rate;
+  resp.success = true;
+
+  return true;
+}
+
+
 bool PR2PidControllerClass::paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
                                                neuroadaptive_msgs::controllerParamUpdate::Response & resp )
 {
