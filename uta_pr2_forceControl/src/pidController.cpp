@@ -525,7 +525,7 @@ void PR2PidControllerClass::update()
 
   for( uint ind_ = 0; ind_ < kdl_chain_.getNrOfJoints(); ind_++ )
   {
-	  tau(ind_) = jointPid[ind_].updatePid(q(ind_) - q_m(ind_), qd(ind_), ros::Duration(dt));
+	  tau(ind_) = jointPid[ind_].updatePid(q(ind_) - q_m(ind_), qd(ind_) - qd_m(ind_), ros::Duration(dt));
   }
 
 
