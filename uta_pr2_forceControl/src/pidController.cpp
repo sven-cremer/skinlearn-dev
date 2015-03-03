@@ -461,6 +461,14 @@ void PR2PidControllerClass::update()
 	q_m(5) =  0.046854  ;  qd_m(5) = 0;  qdd_m(5) = 0;
 	q_m(6) = -0.0436174 ;  qd_m(6) = 0;  qdd_m(6) = 0;
 
+	// Left arm joint angles
+	q_m(0) = 0.067 ;
+	q_m(1) = 0.036;
+	q_m(2) = 0.012 ;
+	q_m(3) = -0.097 ;
+	q_m(4) = -0.983 ;
+	q_m(5) = -0.0947 ;
+	q_m(6) = 0.1114 ;
 
     x_m(2) = 0.03 ;
     x_m(3) = 0    ;

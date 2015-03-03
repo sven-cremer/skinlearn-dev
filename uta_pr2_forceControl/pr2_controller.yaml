@@ -160,7 +160,7 @@ pr2_neuroadptController:
 pr2_pidController:
   type: PR2PidControllerClass
   root_name: torso_lift_link
-  tip_name: r_gripper_tool_frame
+  tip_name: l_gripper_tool_frame
 
 saturation:
   l_shoulder_pan_joint: 11.88
