@@ -37,7 +37,7 @@ class MracModel
   Eigen::MatrixXd task_ref       ;
   Eigen::MatrixXd task_ref_model ;
 
-  Eigen::MatrixXd t_r   ;
+  Eigen::MatrixXd inputForce   ;
 
   double a              ;
   double b              ;
@@ -52,6 +52,8 @@ class MracModel
   double gamma_4        ;
   double gamma_5        ;
 
+  double P_m            ;
+  double P_h            ;
 
   double u_c            ;
   double u              ;
@@ -66,6 +68,7 @@ class MracModel
   double theta_1        ;
   double theta_2        ;
   double theta_3        ;
+  double theta_4        ;
   double ahat           ;
   double bhat           ;
 
@@ -78,6 +81,7 @@ class MracModel
   double theta_1_dot    ;
   double theta_2_dot    ;
   double theta_3_dot    ;
+  double theta_4_dot    ;
   double ahat_dot       ;
   double bhat_dot       ;
 
@@ -117,25 +121,28 @@ public:
   {
 
     // Transfer Functions
-    a  = 1  ; b  = 0.5 ;
-    am = 1  ; bm = 1   ;
-    an = 1  ; bn = 1   ;
+    a  = 3  ; b  = 3   ;
+    am = 6  ; bm = 6   ;
+    an = 2  ; bn = 2   ;
 
     // Intial Values
-    theta_1  = 0 ; theta_2 = 0 ; theta_3 = 0 ;
+    theta_1  = 0 ; theta_2 = 0 ; theta_3 = 0 ; theta_4 = 0 ;
     yhat_dot = 0 ; y_hat   = 0 ;
     yp       = 0 ; ym      = 0 ;
 
 //    u_c = 1;
 
     // Gains
-    gamma_1 = 1     ,
-    gamma_2 = 2000  ,
-    gamma_3 = 2500  ,
-    gamma_4 = 5000  ,
-    gamma_5 = 5000  ;
+    gamma_1 = 10    ;
+    gamma_2 = 100   ;
+    gamma_3 = 100   ;
+    gamma_4 = 5179  ;
+    gamma_5 = 5195  ;
 
-    u = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * y_hat;
+    P_m     = 1.0   ;
+    P_h     = 1.0   ;
+
+    u = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * y_hat - theta_4 * u_c;
     e = yp - ym;
 
     num_Joints = para_num_Joints;
@@ -157,7 +164,7 @@ public:
 
     task_ref  .resize( num_Joints, 1 ) ;
 
-    t_r       .resize( num_Joints, 1 ) ;
+    inputForce       .resize( num_Joints, 1 ) ;
 
     q         = Eigen::MatrixXd::Zero( num_Joints, 1 );
     qd        = Eigen::MatrixXd::Zero( num_Joints, 1 );
@@ -176,7 +183,7 @@ public:
 
     task_ref  = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    inputForce       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
   }
 
@@ -238,6 +245,7 @@ public:
 		                   double & param_theta_1,
 		                   double & param_theta_2,
 		                   double & param_theta_3,
+		                   double & param_theta_4,
 		                   double & param_ahat   ,
 		                   double & param_bhat    )
   {
@@ -245,6 +253,7 @@ public:
       param_theta_1 = theta_1 ;
       param_theta_2 = theta_2 ;
       param_theta_3 = theta_3 ;
+      param_theta_4 = theta_4 ;
       param_ahat    = ahat    ;
       param_bhat    = bhat    ;
   }
@@ -263,7 +272,7 @@ public:
     q_m     (0)       = param_q_m  ;
     q       (0)       = param_q    ;
     qdd_m   (0)       = param_qdd_m;
-    t_r     (0)       = param_t_r  ;
+    inputForce     (0)       = param_t_r  ;
     task_ref(0)       = param_task_ref;
 
     update();
@@ -289,7 +298,7 @@ public:
     q_m            = param_q_m           ;
     q              = param_q             ;
     qdd_m          = param_qdd_m         ;
-    t_r            = param_t_r           ;
+    inputForce            = param_t_r           ;
     task_ref       = param_task_ref      ;
 
     update();
@@ -302,19 +311,6 @@ public:
 
   void update()
   {
-//    ode_init_x[2] = task_ref(0);
-
-//    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
-
-//    ref_q_m(0)   = ref_q_m(0) + ref_qd_m(0)*delT;
-//    ref_qd_m(0)  = a_task*task_ref(0) -  b_task*ref_q_m(0);
-
-//    ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
-
-//    ref_q_m(0)   = ode_init_x[0 ] ;
-//    ref_qd_m(0)  = ode_init_x[1 ] ;
-//    ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
-
     // Save iteration number
     iter = iter + 1;
 
@@ -322,46 +318,88 @@ public:
     u_c = task_ref(0);
 
     {
-
       // Human force
-      y = t_r(0) ;
+      //y = inputForce(0) ;
 
-      u           = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * yhat_dot ;
-      e           = yp - ym                                                  ;
-      y_tilde     = y - y_hat                                                ;
+      u           = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * yhat_dot
+    		                                                  - theta_4 * u_c; //  Control Law
+      e           = yp - ym                                                  ; //  Model Error
+      y_tilde     = y - y_hat                                                ; //  Estimation Error
 
       // k + 1
       // dot
       // FIXME Fake Human Force
-      // y_dot       = -a         * y             + b      * u_c             ;
-      yp_dot      = -an        * yp            + bn     * u                  ;
-      ym_dot      = -am        * ym            + bm     * u_c                ;
+      y_dot       = -a         * y             + b      * u_c                ; // Human Model           (3)
+      yp_dot      = -an        * yp            + bn     * u                  ; // Robot Impedance Model (2)
+      ym_dot      = -am        * ym            + bm     * u_c                ; // Model Referance       (1)
 
-      yhat_dot    = -ahat      * y_hat         + bhat   * u_c                ;
-      theta_1_dot =  gamma_1   * e * u_c                                     ;
-      theta_2_dot =  gamma_2   * e * yp                                      ;
-      theta_3_dot =  gamma_3   * e * bn * y_hat + gamma_1 * ahat * e * u_c   ;
-      ahat_dot    = -gamma_4 * y_tilde * y_hat                               ;
-      bhat_dot    =  gamma_5 * y_tilde * u_c                                 ;
+      yhat_dot    = -ahat      * y_hat         + bhat   * u_c                ; // Human Identifier Model(4)
+
+      ahat_dot    = -gamma_4 * P_h * y_tilde * y_hat                         ; // A_hat     (5)
+      bhat_dot    =  gamma_5 * P_h * y_tilde * u_c                           ; // B_hat     (6)
+
+      theta_1_dot =  gamma_1 * 1/bn * P_m * e * u_c                          ; // FW Gain 1 (7)
+      theta_2_dot =  gamma_2 * 1/bn * P_m * e * yp                           ; // FW Gain 2 (8)
+      theta_3_dot =  gamma_3 * bn   * P_m * e * y_hat
+    		       + gamma_1 * ahat * 1/bn * P_m *e * u_c
+    		       - gamma_4 * theta_1 * P_h * y_tilde * y_hat               ; // FW Gain 3 (9)
+      theta_4_dot =  gamma_4 *(bhat-1/bn) * P_m * e * u_c                    ; // FW Gain 4 (10)
+
 
       // 1dt order integrator
       ym      = ym      + ym_dot      * delT ;
       yp      = yp      + yp_dot      * delT ;
 
       // FIXME Fake Human Force
-      // y       = y       + y_dot       * delT ;
+      y       = y       + y_dot       * delT ;
       y_hat   = y_hat   + yhat_dot    * delT ;
+
       theta_1 = theta_1 + theta_1_dot * delT ;
       theta_2 = theta_2 + theta_2_dot * delT ;
       theta_3 = theta_3 + theta_3_dot * delT ;
+      theta_4 = theta_4 + theta_4_dot * delT ;
+
       ahat    = ahat    + ahat_dot    * delT ;
       bhat    = bhat    + bhat_dot    * delT ;
+
+      ///
+//      yhat_dot   = -ahat * yhat + bhat * u_c;  % Human Identifier Model(4)
+//           u = - theta_1 * yhat_dot - theta_2 * yp    - theta_3 * y_hat    - theta_4 * u_c; //   Control Law
+//           e = yp- ym;                    //   Model Error
+//      y_tilde = y- y_hat;       				//  Estimation Error
+//
+//           yp_dot   = -an     *  yp     + bn         * u  ;     // Robot Impedance Model (2)
+//           ym_dot   = -am     *  ym     + bm         * u_c;     // Model Referance       (1)
+//            y_dot   = -a      *  y      + b          * u_c;     // Human Model           (3)
+//
+//           // Ph and Pm are 1 always so not including them above
+//         ahat_dot   =-gamma_4 * P_h * y_tilde * y_hat;             // A_hat     (5)
+//         bhat_dot   = gamma_5 * P_h * y_tilde * u_c  ;             // B_hat     (6)
+//
+//      theta_1_dot   = gamma_1 * bn^-1 * P_m  * e      * u_c;            // FW Gain 1 (7)
+//      theta_2_dot   = gamma_2 * bn^-1 * P_m  * e      * yp;             // FW Gain 2 (8)
+//      theta_3_dot   = gamma_3 * P_m     * bn'    * e      * y_hat
+//                    + gamma_1 * ahat   * bn^-1 * P_m * e      * u_c
+//                    - gamma_4 * theta_1   * P_h    * y_tilde      * y_hat; // FW Gain 3 (9)
+//      theta_4_dot   = gamma_4 *(bhat-bn^-1 )    * P_m * e * u_c;      // FW Gain 4 (10)
+//
+//      xdot = [ ym_dot;   // State 01
+//      		 yp_dot;   // State 02
+//                y_dot;   // State 03
+//             yhat_dot;   // State 04
+//      	   ahat_dot;   // State 05
+//      	   bhat_dot;   // State 06
+//          theta_1_dot;   // State 07
+//          theta_2_dot;   // State 08
+//          theta_3_dot;   // State 09
+//          theta_4_dot];  // State 10
+      ///
 
       // Model output
       q_m(0)   = yp ;
 
       // FIXME Fake Human Force
-      // t_r(0) = y;
+      inputForce(0) = y;
 
       // Backward difference
       // TODO better way to do this?
@@ -369,7 +407,6 @@ public:
       qdd_m = (qd_m - prv_qd_m)/delT ;
 
       ref_q_m(0) = ym ;
-
     }
 
     prv_q_m  = q_m ;
