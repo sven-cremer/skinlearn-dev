@@ -1683,6 +1683,7 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
         	                                      msgControllerFullData[index].theta_1,
         	                                      msgControllerFullData[index].theta_2,
         	                                      msgControllerFullData[index].theta_3,
+        	                                      msgControllerFullData[index].theta_4,
         	                                      msgControllerFullData[index].ahat   ,
         	                                      msgControllerFullData[index].bhat    );
 

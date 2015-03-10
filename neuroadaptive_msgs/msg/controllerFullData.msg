@@ -248,5 +248,6 @@ float64 y_hat
 float64 theta_1
 float64 theta_2
 float64 theta_3
+float64 theta_4
 float64 ahat   
 float64 bhat   
