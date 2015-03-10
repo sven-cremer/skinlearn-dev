@@ -169,29 +169,29 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   modelState.name[5] = kdl_chain_.getSegment(7).getJoint().getName(); // TODO test this stuff, better way to get joint names...
   modelState.name[6] = kdl_chain_.getSegment(8).getJoint().getName(); // TODO test this stuff, better way to get joint names...
 
-  q_lower(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->lower;
-  q_lower(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->lower;
-  q_lower(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->lower;
-  q_lower(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->lower;
-  q_lower(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->lower;
-  q_lower(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->lower;
-  q_lower(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->lower;
+  q_lower(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->lower;
+  q_lower(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->lower;
+  q_lower(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->lower;
+  q_lower(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->lower;
+  q_lower(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->lower;
+  q_lower(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->lower;
+  q_lower(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->lower;
 
-  q_upper(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->upper;
-  q_upper(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->upper;
-  q_upper(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->upper;
-  q_upper(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->upper;
-  q_upper(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->upper;
-  q_upper(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->upper;
-  q_upper(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->upper;
+  q_upper(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->upper;
+  q_upper(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->upper;
+  q_upper(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->upper;
+  q_upper(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->upper;
+  q_upper(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->upper;
+  q_upper(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->upper;
+  q_upper(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->upper;
 
-  qd_limit(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->velocity;
-  qd_limit(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->velocity;
-  qd_limit(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->velocity;
-  qd_limit(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->velocity;
-  qd_limit(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->velocity;
-  qd_limit(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->velocity;
-  qd_limit(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->velocity;
+  qd_limit(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->velocity;
+  qd_limit(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->velocity;
+  qd_limit(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->velocity;
+  qd_limit(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->velocity;
+  qd_limit(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->velocity;
+  qd_limit(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->velocity;
+  qd_limit(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->velocity;
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
@@ -261,6 +261,48 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   /////////////////////////
   // NN
 
+  nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
+                                    num_Outputs ,   // num_Outputs
+                                    num_Hidden  ,   // num_Hidden
+                                    num_Error   ,   // num_Error
+                                    num_Joints   ); // num_Joints
+
+    Eigen::MatrixXd p_Kv     ;
+    Eigen::MatrixXd p_lambda ;
+
+    p_Kv                  .resize( num_Joints, 1 ) ;
+    p_lambda              .resize( num_Joints, 1 ) ;
+
+    p_Kv << Kv ,
+            Kv ,
+            Kv ,
+            Kv ,
+            Kv ,
+            Kv ,
+            Kv ;
+
+    p_lambda << lambda ,
+                lambda ,
+                lambda ,
+                lambda ,
+                lambda ,
+                lambda ,
+                lambda ;
+
+  //  p_Kv     = joint_D;
+  //  p_lambda = joint_P.cwiseQuotient(joint_D);
+
+    nnController.init( kappa  ,
+                       p_Kv     ,
+                       p_lambda ,
+                       Kz     ,
+                       Zb     ,
+                       fFForce,
+                       nnF    ,
+                       nnG    ,
+                       nn_ON   );
+
+    nnController.updateDelT( delT );
 
 
   // NN END
@@ -280,6 +322,7 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
 	/////////////////////////
 	// DATA COLLECTION
 
+    set_circle_rate_srv_   = n.advertiseService("circle_rate", &PR2PidControllerClass::circleRateCB       , this);
     save_srv_              = n.advertiseService("save"     , &PR2PidControllerClass::save               , this);
     publish_srv_           = n.advertiseService("publish"  , &PR2PidControllerClass::publish            , this);
 	capture_srv_           = n.advertiseService("capture"  , &PR2PidControllerClass::capture            , this);
@@ -418,6 +461,14 @@ void PR2PidControllerClass::update()
 	q_m(5) =  0.046854  ;  qd_m(5) = 0;  qdd_m(5) = 0;
 	q_m(6) = -0.0436174 ;  qd_m(6) = 0;  qdd_m(6) = 0;
 
+	// Left arm joint angles
+	q_m(0) = 0.067 ;
+	q_m(1) = 0.036;
+	q_m(2) = 0.012 ;
+	q_m(3) = -0.097 ;
+	q_m(4) = -0.983 ;
+	q_m(5) = -0.0947 ;
+	q_m(6) = 0.1114 ;
 
     x_m(2) = 0.03 ;
     x_m(3) = 0    ;
@@ -482,7 +533,7 @@ void PR2PidControllerClass::update()
 
   for( uint ind_ = 0; ind_ < kdl_chain_.getNrOfJoints(); ind_++ )
   {
-	  tau(ind_) = jointPid[ind_].updatePid(q(ind_) - q_m(ind_), qd(ind_), ros::Duration(dt));
+	  tau(ind_) = jointPid[ind_].updatePid(q(ind_) - q_m(ind_), qd(ind_) - qd_m(ind_), ros::Duration(dt));
   }
 
 
@@ -722,6 +773,17 @@ void PR2PidControllerClass::bufferData( double & dt )
 }
 
 /// Service call to capture and extract the data
+bool PR2PidControllerClass::circleRateCB( neuroadaptive_msgs::setCircleRate::Request & req,
+		                                        neuroadaptive_msgs::setCircleRate::Response& resp )
+{
+
+  circle_rate = req.circle_rate;
+  resp.success = true;
+
+  return true;
+}
+
+
 bool PR2PidControllerClass::paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
                                                neuroadaptive_msgs::controllerParamUpdate::Response & resp )
 {
@@ -915,7 +977,49 @@ void PR2PidControllerClass::stopping()
 
 }
 
+Eigen::MatrixXd
+PR2PidControllerClass::JointKdl2Eigen( KDL::JntArray & joint_ )
+{
+        eigen_temp_joint(0) = joint_(0);
+        eigen_temp_joint(1) = joint_(1);
+        eigen_temp_joint(2) = joint_(2);
+        eigen_temp_joint(3) = joint_(3);
+        eigen_temp_joint(4) = joint_(4);
+        eigen_temp_joint(5) = joint_(5);
+        eigen_temp_joint(6) = joint_(6);
+
+        return eigen_temp_joint;
+}
+
+Eigen::MatrixXd
+PR2PidControllerClass::JointVelKdl2Eigen( KDL::JntArrayVel & joint_ )
+{
+        eigen_temp_joint(0) = joint_.qdot(0);
+        eigen_temp_joint(1) = joint_.qdot(1);
+        eigen_temp_joint(2) = joint_.qdot(2);
+        eigen_temp_joint(3) = joint_.qdot(3);
+        eigen_temp_joint(4) = joint_.qdot(4);
+        eigen_temp_joint(5) = joint_.qdot(5);
+        eigen_temp_joint(6) = joint_.qdot(6);
+
+        return eigen_temp_joint;
+}
+
+KDL::JntArray
+PR2PidControllerClass::JointEigen2Kdl( Eigen::VectorXd & joint )
+{
+        kdl_temp_joint_(0) = joint(0);
+        kdl_temp_joint_(1) = joint(1);
+        kdl_temp_joint_(2) = joint(2);
+        kdl_temp_joint_(3) = joint(3);
+        kdl_temp_joint_(4) = joint(4);
+        kdl_temp_joint_(5) = joint(5);
+        kdl_temp_joint_(6) = joint(6);
+
+        return kdl_temp_joint_;
+}
+
 // Register controller to pluginlib
 PLUGINLIB_REGISTER_CLASS( PR2PidControllerClass,
 		          	      pr2_controller_ns::PR2PidControllerClass,
-                          pr2_controller_interface::Controller      )
+                          pr2_controller_interface::Controller )

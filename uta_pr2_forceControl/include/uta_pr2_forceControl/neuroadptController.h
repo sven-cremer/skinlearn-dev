@@ -1,3 +1,6 @@
+#ifndef NEROADPTCONTROLLER_H_
+#define NEROADPTCONTROLLER_H_
+
 #include <pr2_controller_interface/controller.h>
 #include <pr2_hardware_interface/hardware_interface.h>
 #include <pr2_mechanism_model/chain.h>
@@ -27,6 +30,7 @@
 #include <neuroadaptive_msgs/controllerFullData.h>
 #include <neuroadaptive_msgs/controllerParamUpdate.h>
 #include <neuroadaptive_msgs/saveControllerData.h>
+#include <neuroadaptive_msgs/setCircleRate.h>
 
 #include <std_srvs/Empty.h>
 
@@ -57,7 +61,7 @@ enum
 
 class PR2NeuroadptControllerClass: public pr2_controller_interface::Controller
 {
-public:
+protected:
   // The current robot state (to get the time stamp)
   pr2_mechanism_model::RobotState* robot_state_;
 
@@ -222,6 +226,9 @@ public:
   bool paramUpdate( neuroadaptive_msgs::controllerParamUpdate::Request  & req ,
                     neuroadaptive_msgs::controllerParamUpdate::Response & resp );
 
+  bool circleRateCB( neuroadaptive_msgs::setCircleRate::Request & req,
+  	                 neuroadaptive_msgs::setCircleRate::Response& resp );
+
   bool save( neuroadaptive_msgs::saveControllerData::Request & req,
   	         neuroadaptive_msgs::saveControllerData::Response& resp );
 
@@ -234,6 +241,7 @@ public:
   bool saveControllerData( neuroadaptive_msgs::saveControllerData::Request&  req,
                            neuroadaptive_msgs::saveControllerData::Response& resp );
 
+  ros::ServiceServer set_circle_rate_srv_;
   ros::ServiceServer save_srv_;
   ros::ServiceServer publish_srv_;
   ros::ServiceServer capture_srv_;
@@ -262,6 +270,7 @@ public:
 
   volatile int storage_index_;
 
+public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   bool init(pr2_mechanism_model::RobotState *robot,
@@ -272,3 +281,5 @@ public:
 
 };
 }
+
+#endif /* NEROADPTCONTROLLER_H_ */

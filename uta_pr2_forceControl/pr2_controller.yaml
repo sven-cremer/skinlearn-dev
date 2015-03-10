@@ -111,7 +111,7 @@ nn_Zb               : 100
 nn_feedForwardForce : 1   
 nn_nnF              : 100 
 nn_nnG              : 200
-nn_ON               : 1
+nn_ON               : 0
 
 cartPos_Kp_x : 60.0
 cartPos_Kp_y : 60.0
@@ -156,6 +156,11 @@ pr2_neuroadptController:
   type: PR2NeuroadptControllerClass
   root_name: torso_lift_link
   tip_name: r_gripper_tool_frame
+
+pr2_pidController:
+  type: PR2PidControllerClass
+  root_name: torso_lift_link
+  tip_name: l_gripper_tool_frame
 
 saturation:
   l_shoulder_pan_joint: 11.88

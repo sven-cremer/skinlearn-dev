@@ -350,10 +350,11 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// DATA COLLECTION
 
-    save_srv_              = n.advertiseService("save"     , &PR2NeuroadptControllerClass::save               , this);
-    publish_srv_           = n.advertiseService("publish"  , &PR2NeuroadptControllerClass::publish            , this);
-	capture_srv_           = n.advertiseService("capture"  , &PR2NeuroadptControllerClass::capture            , this);
-	save_srv_              = n.advertiseService("saveData" , &PR2NeuroadptControllerClass::saveControllerData , this);
+    set_circle_rate_srv_   = n.advertiseService("circle_rate", &PR2NeuroadptControllerClass::circleRateCB       , this);
+    save_srv_              = n.advertiseService("save"       , &PR2NeuroadptControllerClass::save               , this);
+    publish_srv_           = n.advertiseService("publish"    , &PR2NeuroadptControllerClass::publish            , this);
+	capture_srv_           = n.advertiseService("capture"    , &PR2NeuroadptControllerClass::capture            , this);
+	save_srv_              = n.advertiseService("saveData"   , &PR2NeuroadptControllerClass::saveControllerData , this);
 
 	pubFTData_             = n.advertise< geometry_msgs::WrenchStamped             >( "FT_data"              , StoreLen);
 	pubModelStates_        = n.advertise< sensor_msgs::JointState                  >( "model_joint_states"   , StoreLen);
@@ -994,6 +995,17 @@ bool PR2NeuroadptControllerClass::paramUpdate( neuroadaptive_msgs::controllerPar
 }
 
 /// Service call to save the data
+bool PR2NeuroadptControllerClass::circleRateCB( neuroadaptive_msgs::setCircleRate::Request & req,
+		                                        neuroadaptive_msgs::setCircleRate::Response& resp )
+{
+
+  circle_rate = req.circle_rate;
+  resp.success = true;
+
+  return true;
+}
+
+/// Service call to save the data
 bool PR2NeuroadptControllerClass::save( neuroadaptive_msgs::saveControllerData::Request & req,
 		                                neuroadaptive_msgs::saveControllerData::Response& resp )
 {
@@ -1057,7 +1069,7 @@ bool PR2NeuroadptControllerClass::capture( std_srvs::Empty::Request& req,
 		}
 	}
 
-  // Start circle traj
+  // Stop circle traj
   circle_phase_   = 0.0;
   startCircleTraj = false;
 
@@ -1099,7 +1111,7 @@ bool PR2NeuroadptControllerClass::saveControllerData( neuroadaptive_msgs::saveCo
 			}
 	}
 
-  // Start circle traj
+  // Stop circle traj
   circle_phase_   = 0.0;
   startCircleTraj = false;
 

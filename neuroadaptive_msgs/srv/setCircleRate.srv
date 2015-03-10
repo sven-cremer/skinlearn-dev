@@ -1,0 +1,5 @@
+#request constants
+float64 circle_rate
+---
+#response constants
+bool success
