@@ -169,29 +169,29 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   modelState.name[5] = kdl_chain_.getSegment(7).getJoint().getName(); // TODO test this stuff, better way to get joint names...
   modelState.name[6] = kdl_chain_.getSegment(8).getJoint().getName(); // TODO test this stuff, better way to get joint names...
 
-  q_lower(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->lower;
-  q_lower(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->lower;
-  q_lower(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->lower;
-  q_lower(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->lower;
-  q_lower(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->lower;
-  q_lower(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->lower;
-  q_lower(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->lower;
+  q_lower(0) = urdf_model.getJoint(  "r_shoulder_pan_joint"  )->limits->lower;
+  q_lower(1) = urdf_model.getJoint(  "r_shoulder_lift_joint" )->limits->lower;
+  q_lower(2) = urdf_model.getJoint(  "r_upper_arm_roll_joint")->limits->lower;
+  q_lower(3) = urdf_model.getJoint(  "r_elbow_flex_joint"    )->limits->lower;
+  q_lower(4) = urdf_model.getJoint(  "r_forearm_roll_joint"  )->limits->lower;
+  q_lower(5) = urdf_model.getJoint(  "r_wrist_flex_joint"    )->limits->lower;
+  q_lower(6) = urdf_model.getJoint(  "r_wrist_roll_joint"    )->limits->lower;
 
-  q_upper(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->upper;
-  q_upper(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->upper;
-  q_upper(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->upper;
-  q_upper(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->upper;
-  q_upper(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->upper;
-  q_upper(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->upper;
-  q_upper(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->upper;
+  q_upper(0) = urdf_model.getJoint(  "r_shoulder_pan_joint"  )->limits->upper;
+  q_upper(1) = urdf_model.getJoint(  "r_shoulder_lift_joint" )->limits->upper;
+  q_upper(2) = urdf_model.getJoint(  "r_upper_arm_roll_joint")->limits->upper;
+  q_upper(3) = urdf_model.getJoint(  "r_elbow_flex_joint"    )->limits->upper;
+  q_upper(4) = urdf_model.getJoint(  "r_forearm_roll_joint"  )->limits->upper;
+  q_upper(5) = urdf_model.getJoint(  "r_wrist_flex_joint"    )->limits->upper;
+  q_upper(6) = urdf_model.getJoint(  "r_wrist_roll_joint"    )->limits->upper;
 
-  qd_limit(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->velocity;
-  qd_limit(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->velocity;
-  qd_limit(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->velocity;
-  qd_limit(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->velocity;
-  qd_limit(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->velocity;
-  qd_limit(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->velocity;
-  qd_limit(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->velocity;
+  qd_limit(0) = urdf_model.getJoint( "r_shoulder_pan_joint"  )->limits->velocity;
+  qd_limit(1) = urdf_model.getJoint( "r_shoulder_lift_joint" )->limits->velocity;
+  qd_limit(2) = urdf_model.getJoint( "r_upper_arm_roll_joint")->limits->velocity;
+  qd_limit(3) = urdf_model.getJoint( "r_elbow_flex_joint"    )->limits->velocity;
+  qd_limit(4) = urdf_model.getJoint( "r_forearm_roll_joint"  )->limits->velocity;
+  qd_limit(5) = urdf_model.getJoint( "r_wrist_flex_joint"    )->limits->velocity;
+  qd_limit(6) = urdf_model.getJoint( "r_wrist_roll_joint"    )->limits->velocity;
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
@@ -262,10 +262,10 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   // NN
 
   nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
-                                    num_Outputs ,   // num_Outputs
-                                    num_Hidden  ,   // num_Hidden
-                                    num_Error   ,   // num_Error
-                                    num_Joints   ); // num_Joints
+                                  num_Outputs ,   // num_Outputs
+                                  num_Hidden  ,   // num_Hidden
+                                  num_Error   ,   // num_Error
+                                  num_Joints   ); // num_Joints
 
     Eigen::MatrixXd p_Kv     ;
     Eigen::MatrixXd p_lambda ;
@@ -620,12 +620,12 @@ void PR2PidControllerClass::bufferData( double & dt )
 		msgControllerFullData[index].dt                = dt                          ;
 
 		// Force Data
-		msgControllerFullData[index].force_x           = r_ftData.wrench.force.x     ;
-		msgControllerFullData[index].force_y           = r_ftData.wrench.force.y     ;
-		msgControllerFullData[index].force_z           = r_ftData.wrench.force.z     ;
-		msgControllerFullData[index].torque_x          = r_ftData.wrench.torque.x    ;
-		msgControllerFullData[index].torque_y          = r_ftData.wrench.torque.y    ;
-		msgControllerFullData[index].torque_z          = r_ftData.wrench.torque.z    ;
+		msgControllerFullData[index].force_x           = ftData.wrench.force.x     ;
+		msgControllerFullData[index].force_y           = ftData.wrench.force.y     ;
+		msgControllerFullData[index].force_z           = ftData.wrench.force.z     ;
+		msgControllerFullData[index].torque_x          = ftData.wrench.torque.x    ;
+		msgControllerFullData[index].torque_y          = ftData.wrench.torque.y    ;
+		msgControllerFullData[index].torque_z          = ftData.wrench.torque.z    ;
 
 		// Input reference efforts(torques)
 		msgControllerFullData[index].reference_eff_j0  = t_r(0)                      ;
