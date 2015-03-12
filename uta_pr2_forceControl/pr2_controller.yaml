@@ -128,14 +128,14 @@ cartRot_Kd_y : 3
 cartRot_Kd_z : 3
 
 # Nominal angles for the arm joints
-# Left arm  # Right arm
-nom_joint_0  :  0.067      # -0.48577  
-nom_joint_1  :  0.036      # -0.0190721
-nom_joint_2  :  0.012      # -1.51115  
-nom_joint_3  : -0.097      # -1.70928  
-nom_joint_4  : -0.983      #  1.54561  
-nom_joint_5  : -0.0947     #  0.046854 
-nom_joint_6  :  0.1114     # -0.0436174
+                # Left arm              # Right arm
+nom_joint_0  :  0.0 # 0.067             # -0.48577  
+nom_joint_1  :  0.0 # 0.036             # -0.0190721
+nom_joint_2  :  1.5828     # 0.012      # -1.51115  
+nom_joint_3  : 0.0 #-0.097              # -1.70928  
+nom_joint_4  : 0.0 #-0.983              #  1.54561  
+nom_joint_5  : 0.0 #-0.0947             #  0.046854 
+nom_joint_6  : 0.0 # 0.1114             # -0.0436174
 
 pr2_cartesianController:
   type: PR2CartesianControllerClass
