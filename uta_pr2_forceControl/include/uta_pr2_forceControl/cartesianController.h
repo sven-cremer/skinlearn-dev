@@ -99,6 +99,7 @@ public:
   KDL::JntArray  q_lower;       // Joint position lower limits
   KDL::JntArray  q_upper;       // Joint position upper limits
   KDL::JntArray  qd_limit;      // Joint velocity limits
+  KDL::JntArray  q_nominal;     // Nominal joint angles
 
   urdf::Model urdf_model;
 

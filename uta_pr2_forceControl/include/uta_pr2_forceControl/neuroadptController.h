@@ -112,6 +112,7 @@ protected:
   KDL::JntArray     q_lower;       // Joint position lower limits
   KDL::JntArray     q_upper;       // Joint position upper limits
   KDL::JntArray     qd_limit;      // Joint velocity limits
+  KDL::JntArray     q_nominal;     // Nominal joint angles
 
   KDL::Frame        x_;            // Robot Tip pose
   KDL::Frame        xd_;           // Robot Tip desired pose

@@ -147,6 +147,7 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   q_lower.resize(kdl_chain_.getNrOfJoints());
   q_upper.resize(kdl_chain_.getNrOfJoints());
   qd_limit.resize(kdl_chain_.getNrOfJoints());
+  q_nominal.resize(kdl_chain_.getNrOfJoints());
 
   J_.resize(kdl_chain_.getNrOfJoints());
   J_m_.resize(kdl_chain_.getNrOfJoints());
@@ -192,6 +193,22 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   qd_limit(4) = urdf_model.getJoint( "l_forearm_roll_joint"  )->limits->velocity;
   qd_limit(5) = urdf_model.getJoint( "l_wrist_flex_joint"    )->limits->velocity;
   qd_limit(6) = urdf_model.getJoint( "l_wrist_roll_joint"    )->limits->velocity;
+
+  std::string nom_joint_0 = "/nom_joint_0";
+  std::string nom_joint_1 = "/nom_joint_1";
+  std::string nom_joint_2 = "/nom_joint_2";
+  std::string nom_joint_3 = "/nom_joint_3";
+  std::string nom_joint_4 = "/nom_joint_4";
+  std::string nom_joint_5 = "/nom_joint_5";
+  std::string nom_joint_6 = "/nom_joint_6";
+
+  if (!n.getParam( nom_joint_0, q_nominal(0) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_0.c_str()); return false; }
+  if (!n.getParam( nom_joint_1, q_nominal(1) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_1.c_str()); return false; }
+  if (!n.getParam( nom_joint_2, q_nominal(2) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_2.c_str()); return false; }
+  if (!n.getParam( nom_joint_3, q_nominal(3) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_3.c_str()); return false; }
+  if (!n.getParam( nom_joint_4, q_nominal(4) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_4.c_str()); return false; }
+  if (!n.getParam( nom_joint_5, q_nominal(5) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_5.c_str()); return false; }
+  if (!n.getParam( nom_joint_6, q_nominal(6) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_6.c_str()); return false; }
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
@@ -453,22 +470,13 @@ void PR2PidControllerClass::update()
 //	5 - 'r_wrist_flex_joint'      | "r_wrist_flex_joint"     -1.54739   : 22 : r_wrist_flex_joint
 //	6 - 'r_wrist_roll_joint'      | "r_wrist_roll_joint"     -0.0322204 : 23 : r_wrist_roll_joint
 
-	q_m(0) = -0.48577   ;  qd_m(0) = 0;  qdd_m(0) = 0;
-	q_m(1) = -0.0190721 ;  qd_m(1) = 0;  qdd_m(1) = 0;
-	q_m(2) = -1.51115   ;  qd_m(2) = 0;  qdd_m(2) = 0;
-	q_m(3) = -1.70928   ;  qd_m(3) = 0;  qdd_m(3) = 0;
-	q_m(4) =  1.54561   ;  qd_m(4) = 0;  qdd_m(4) = 0;
-	q_m(5) =  0.046854  ;  qd_m(5) = 0;  qdd_m(5) = 0;
-	q_m(6) = -0.0436174 ;  qd_m(6) = 0;  qdd_m(6) = 0;
-
-	// Left arm joint angles
-	q_m(0) = 0.067 ;
-	q_m(1) = 0.036;
-	q_m(2) = 0.012 ;
-	q_m(3) = -0.097 ;
-	q_m(4) = -0.983 ;
-	q_m(5) = -0.0947 ;
-	q_m(6) = 0.1114 ;
+	q_m(0) = q_nominal(0);  qd_m(0) = 0;  qdd_m(0) = 0;
+	q_m(1) = q_nominal(1);  qd_m(1) = 0;  qdd_m(1) = 0;
+	q_m(2) = q_nominal(2);  qd_m(2) = 0;  qdd_m(2) = 0;
+	q_m(3) = q_nominal(3);  qd_m(3) = 0;  qdd_m(3) = 0;
+	q_m(4) = q_nominal(4);  qd_m(4) = 0;  qdd_m(4) = 0;
+	q_m(5) = q_nominal(5);  qd_m(5) = 0;  qdd_m(5) = 0;
+	q_m(6) = q_nominal(6);  qd_m(6) = 0;  qdd_m(6) = 0;
 
     x_m(2) = 0.03 ;
     x_m(3) = 0    ;

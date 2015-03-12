@@ -147,6 +147,7 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   q_lower.resize(kdl_chain_.getNrOfJoints());
   q_upper.resize(kdl_chain_.getNrOfJoints());
   qd_limit.resize(kdl_chain_.getNrOfJoints());
+  q_nominal.resize(kdl_chain_.getNrOfJoints());
 
   joint_P   .resize(kdl_chain_.getNrOfJoints());
   joint_I   .resize(kdl_chain_.getNrOfJoints());
@@ -175,29 +176,45 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   modelState.name[5] = kdl_chain_.getSegment(7).getJoint().getName(); // TODO test this stuff, better way to get joint names...
   modelState.name[6] = kdl_chain_.getSegment(8).getJoint().getName(); // TODO test this stuff, better way to get joint names...
 
-  q_lower(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->lower;
-  q_lower(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->lower;
-  q_lower(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->lower;
-  q_lower(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->lower;
-  q_lower(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->lower;
-  q_lower(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->lower;
-  q_lower(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->lower;
+  q_lower(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->lower;
+  q_lower(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->lower;
+  q_lower(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->lower;
+  q_lower(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->lower;
+  q_lower(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->lower;
+  q_lower(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->lower;
+  q_lower(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->lower;
 
-  q_upper(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->upper;
-  q_upper(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->upper;
-  q_upper(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->upper;
-  q_upper(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->upper;
-  q_upper(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->upper;
-  q_upper(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->upper;
-  q_upper(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->upper;
+  q_upper(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->upper;
+  q_upper(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->upper;
+  q_upper(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->upper;
+  q_upper(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->upper;
+  q_upper(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->upper;
+  q_upper(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->upper;
+  q_upper(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->upper;
 
-  qd_limit(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->velocity;
-  qd_limit(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->velocity;
-  qd_limit(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->velocity;
-  qd_limit(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->velocity;
-  qd_limit(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->velocity;
-  qd_limit(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->velocity;
-  qd_limit(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->velocity;
+  qd_limit(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->velocity;
+  qd_limit(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->velocity;
+  qd_limit(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->velocity;
+  qd_limit(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->velocity;
+  qd_limit(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->velocity;
+  qd_limit(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->velocity;
+  qd_limit(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->velocity;
+
+  std::string nom_joint_0 = "/nom_joint_0";
+  std::string nom_joint_1 = "/nom_joint_1";
+  std::string nom_joint_2 = "/nom_joint_2";
+  std::string nom_joint_3 = "/nom_joint_3";
+  std::string nom_joint_4 = "/nom_joint_4";
+  std::string nom_joint_5 = "/nom_joint_5";
+  std::string nom_joint_6 = "/nom_joint_6";
+
+  if (!n.getParam( nom_joint_0, q_nominal(0) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_0.c_str()); return false; }
+  if (!n.getParam( nom_joint_1, q_nominal(1) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_1.c_str()); return false; }
+  if (!n.getParam( nom_joint_2, q_nominal(2) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_2.c_str()); return false; }
+  if (!n.getParam( nom_joint_3, q_nominal(3) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_3.c_str()); return false; }
+  if (!n.getParam( nom_joint_4, q_nominal(4) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_4.c_str()); return false; }
+  if (!n.getParam( nom_joint_5, q_nominal(5) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_5.c_str()); return false; }
+  if (!n.getParam( nom_joint_6, q_nominal(6) )) { ROS_ERROR("Value not loaded from parameter: %s !)", nom_joint_6.c_str()); return false; }
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
@@ -211,10 +228,10 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   {
 	  double p,i,d,i_max,i_min;
 
-	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/p"       , p            ));
-	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/i"       , i            ));
-	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/d"       , d            ));
-	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/i_clamp" , i_max        ));
+	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/p"       , p            ));
+	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/i"       , i            ));
+	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/d"       , d            ));
+	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/i_clamp" , i_max        ));
 
 	  i_min = -i_max;
 
@@ -610,13 +627,13 @@ void PR2NeuroadptControllerClass::update()
           task_ref   (3) = -1.42669  ;
         }
 
-	q_m(0) = -0.48577   ;  qd_m(0) = 0;  qdd_m(0) = 0;
-	q_m(1) = -0.0190721 ;  qd_m(1) = 0;  qdd_m(1) = 0;
-	q_m(2) = -1.51115   ;  qd_m(2) = 0;  qdd_m(2) = 0;
-	q_m(3) = -1.70928   ;  qd_m(3) = 0;  qdd_m(3) = 0;
-	q_m(4) =  1.54561   ;  qd_m(4) = 0;  qdd_m(4) = 0;
-	q_m(5) =  0.046854  ;  qd_m(5) = 0;  qdd_m(5) = 0;
-	q_m(6) = -0.0436174 ;  qd_m(6) = 0;  qdd_m(6) = 0;
+	q_m(0) = q_nominal(0) ;  qd_m(0) = 0;  qdd_m(0) = 0;
+	q_m(1) = q_nominal(1) ;  qd_m(1) = 0;  qdd_m(1) = 0;
+	q_m(2) = q_nominal(2) ;  qd_m(2) = 0;  qdd_m(2) = 0;
+	q_m(3) = q_nominal(3) ;  qd_m(3) = 0;  qdd_m(3) = 0;
+	q_m(4) = q_nominal(4) ;  qd_m(4) = 0;  qdd_m(4) = 0;
+	q_m(5) = q_nominal(5) ;  qd_m(5) = 0;  qdd_m(5) = 0;
+	q_m(6) = q_nominal(6) ;  qd_m(6) = 0;  qdd_m(6) = 0;
 
 
         x_m(2) = 0.03 ;
