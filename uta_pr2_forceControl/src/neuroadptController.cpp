@@ -504,27 +504,27 @@ void PR2NeuroadptControllerClass::update()
   xd_ = x0_;
   xd_.p += circle;
 
-  // Calculate a Cartesian restoring force.
-  xerr_.vel = x_.p - xd_.p;
-  xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
-                     xd_.M.UnitY() * x_.M.UnitY() +
-                     xd_.M.UnitZ() * x_.M.UnitZ());
-
-  robotCartPos_.position.x    = x_.p(0);
-  robotCartPos_.position.y    = x_.p(1);
-  robotCartPos_.position.z    = x_.p(2);
-  x_.M.GetQuaternion( robotCartPos_.orientation.x ,
-                      robotCartPos_.orientation.y ,
-                      robotCartPos_.orientation.z ,
-                      robotCartPos_.orientation.w  );
-
-  modelCartPos_.position.x    = xd_.p(0);
-  modelCartPos_.position.y    = xd_.p(1);
-  modelCartPos_.position.z    = xd_.p(2);
-  xd_.M.GetQuaternion( modelCartPos_.orientation.x ,
-                       modelCartPos_.orientation.y ,
-                       modelCartPos_.orientation.z ,
-                       modelCartPos_.orientation.w  );
+//  // Calculate a Cartesian restoring force.
+//  xerr_.vel = x_.p - xd_.p;
+//  xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
+//                     xd_.M.UnitY() * x_.M.UnitY() +
+//                     xd_.M.UnitZ() * x_.M.UnitZ());
+//
+//  robotCartPos_.position.x    = x_.p(0);
+//  robotCartPos_.position.y    = x_.p(1);
+//  robotCartPos_.position.z    = x_.p(2);
+//  x_.M.GetQuaternion( robotCartPos_.orientation.x ,
+//                      robotCartPos_.orientation.y ,
+//                      robotCartPos_.orientation.z ,
+//                      robotCartPos_.orientation.w  );
+//
+//  modelCartPos_.position.x    = xd_.p(0);
+//  modelCartPos_.position.y    = xd_.p(1);
+//  modelCartPos_.position.z    = xd_.p(2);
+//  xd_.M.GetQuaternion( modelCartPos_.orientation.x ,
+//                       modelCartPos_.orientation.y ,
+//                       modelCartPos_.orientation.z ,
+//                       modelCartPos_.orientation.w  );
 
 //  for (unsigned int i = 0 ; i < 6 ; i++)
 //  {
@@ -560,7 +560,7 @@ void PR2NeuroadptControllerClass::update()
   ferr_(4) =  0 ; // r_ftData.wrench.torque.y; // 0                    ;
   ferr_(5) =  0 ; // r_ftData.wrench.torque.z; // 0         s           ;
 
-  // Convert the force into a set of joint torques.
+/*  // Convert the force into a set of joint torques.
   for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++)
   {
 //    tau_t_(i) = 0;
@@ -570,7 +570,7 @@ void PR2NeuroadptControllerClass::update()
 //      tau_t_(i) += J_(j,i) * F_(j);   // This will give the impedance to a trajectory
       tau_h_(i)+= J_(j,i) * ferr_(j); // this will give the torque from human interaction
     }
-  }
+  }*/
 
     /////////////////////////
 	// System Model
@@ -643,7 +643,7 @@ void PR2NeuroadptControllerClass::update()
         x_m(4) = 0 ;
         x_m(5) = 0 ;
 
-        // Compute the forward kinematics and Jacobian of the model (at this location).
+/*        // Compute the forward kinematics and Jacobian of the model (at this location).
         jnt_to_pose_solver_->JntToCart(q_m_, x_m_);
 
         modelCartPos_.position.x    = x_m_.p(0);
@@ -652,7 +652,7 @@ void PR2NeuroadptControllerClass::update()
         x_m_.M.GetQuaternion( modelCartPos_.orientation.x ,
                             modelCartPos_.orientation.y ,
                             modelCartPos_.orientation.z ,
-                            modelCartPos_.orientation.w  );
+                            modelCartPos_.orientation.w  );*/
 
         xd_m(2) = 0          ;
         xd_m(3) = xdot_  (3) ;
