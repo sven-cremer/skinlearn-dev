@@ -55,9 +55,9 @@ filtW6             : -0.0013  #-0.0007 #-0.0018
 filtW7             :  0.0002  #-0.0009 # 0.0014
 
 # This makes zero any force less than below
-forceCutOffX       : 1.0
-forceCutOffY       : 1.0
-forceCutOffZ       : 1.0
+forceCutOffX       : 0.0
+forceCutOffY       : 0.0
+forceCutOffZ       : 0.0
 
 # Params for the MSD outer-loop controller
 m_M                 : 200.0
@@ -89,7 +89,7 @@ lCartIniRoll  :  1.57079633
 lCartIniPitch :  0.0
 lCartIniYaw   : -1.57079633
 
-circleRate          : 3
+circleRate          : 1
 circleLlim          : 0.5
 circleUlim          : 1.5
 
@@ -108,7 +108,7 @@ nn_lambda           : 20
 nn_kappa            : 0.3
 nn_Kz               : 0.001 
 nn_Zb               : 100 
-nn_feedForwardForce : 1   
+nn_feedForwardForce : 0   
 nn_nnF              : 100 
 nn_nnG              : 200
 nn_ON               : 1
@@ -132,7 +132,7 @@ cartRot_Kd_z : 3
 nom_joint_0  :  0.0 # 0.067             # -0.48577  
 nom_joint_1  :  0.0 # 0.036             # -0.0190721
 nom_joint_2  :  1.5828     # 0.012      # -1.51115  
-nom_joint_3  : 0.0 #-0.097              # -1.70928  
+nom_joint_3  : -0.5 #-0.097              # -1.70928  
 nom_joint_4  : 0.0 #-0.983              #  1.54561  
 nom_joint_5  : 0.0 #-0.0947             #  0.046854 
 nom_joint_6  : 0.0 # 0.1114             # -0.0436174
