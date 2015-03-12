@@ -8,9 +8,9 @@ forceTorqueOn      : true
 useARMAmodel       : false
 useCTARMAmodel     : false
 useFIRmodel        : false
-useMRACmodel       : false
+useMRACmodel       : true
 useIRLmodel        : false
-useMSDmodel        : true
+useMSDmodel        : false
 useDirectmodel     : false
 
 outerLoop_time     : 0.05

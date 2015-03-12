@@ -89,7 +89,7 @@ private:
   geometry_msgs::WrenchStamped r_ftBias;
 
   geometry_msgs::WrenchStamped l_ftData;
-  geometry_msgs::WrenchStamped r_ftData;
+  geometry_msgs::WrenchStamped ftData;
 
   sensor_msgs::JointState modelState;
   sensor_msgs::JointState robotState;

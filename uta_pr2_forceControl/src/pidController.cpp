@@ -169,29 +169,29 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   modelState.name[5] = kdl_chain_.getSegment(7).getJoint().getName(); // TODO test this stuff, better way to get joint names...
   modelState.name[6] = kdl_chain_.getSegment(8).getJoint().getName(); // TODO test this stuff, better way to get joint names...
 
-  q_lower(0) = urdf_model.getJoint(  "r_shoulder_pan_joint"  )->limits->lower;
-  q_lower(1) = urdf_model.getJoint(  "r_shoulder_lift_joint" )->limits->lower;
-  q_lower(2) = urdf_model.getJoint(  "r_upper_arm_roll_joint")->limits->lower;
-  q_lower(3) = urdf_model.getJoint(  "r_elbow_flex_joint"    )->limits->lower;
-  q_lower(4) = urdf_model.getJoint(  "r_forearm_roll_joint"  )->limits->lower;
-  q_lower(5) = urdf_model.getJoint(  "r_wrist_flex_joint"    )->limits->lower;
-  q_lower(6) = urdf_model.getJoint(  "r_wrist_roll_joint"    )->limits->lower;
+  q_lower(0) = urdf_model.getJoint(  "l_shoulder_pan_joint"  )->limits->lower;
+  q_lower(1) = urdf_model.getJoint(  "l_shoulder_lift_joint" )->limits->lower;
+  q_lower(2) = urdf_model.getJoint(  "l_upper_arm_roll_joint")->limits->lower;
+  q_lower(3) = urdf_model.getJoint(  "l_elbow_flex_joint"    )->limits->lower;
+  q_lower(4) = urdf_model.getJoint(  "l_forearm_roll_joint"  )->limits->lower;
+  q_lower(5) = urdf_model.getJoint(  "l_wrist_flex_joint"    )->limits->lower;
+  q_lower(6) = urdf_model.getJoint(  "l_wrist_roll_joint"    )->limits->lower;
 
-  q_upper(0) = urdf_model.getJoint(  "r_shoulder_pan_joint"  )->limits->upper;
-  q_upper(1) = urdf_model.getJoint(  "r_shoulder_lift_joint" )->limits->upper;
-  q_upper(2) = urdf_model.getJoint(  "r_upper_arm_roll_joint")->limits->upper;
-  q_upper(3) = urdf_model.getJoint(  "r_elbow_flex_joint"    )->limits->upper;
-  q_upper(4) = urdf_model.getJoint(  "r_forearm_roll_joint"  )->limits->upper;
-  q_upper(5) = urdf_model.getJoint(  "r_wrist_flex_joint"    )->limits->upper;
-  q_upper(6) = urdf_model.getJoint(  "r_wrist_roll_joint"    )->limits->upper;
+  q_upper(0) = urdf_model.getJoint(  "l_shoulder_pan_joint"  )->limits->upper;
+  q_upper(1) = urdf_model.getJoint(  "l_shoulder_lift_joint" )->limits->upper;
+  q_upper(2) = urdf_model.getJoint(  "l_upper_arm_roll_joint")->limits->upper;
+  q_upper(3) = urdf_model.getJoint(  "l_elbow_flex_joint"    )->limits->upper;
+  q_upper(4) = urdf_model.getJoint(  "l_forearm_roll_joint"  )->limits->upper;
+  q_upper(5) = urdf_model.getJoint(  "l_wrist_flex_joint"    )->limits->upper;
+  q_upper(6) = urdf_model.getJoint(  "l_wrist_roll_joint"    )->limits->upper;
 
-  qd_limit(0) = urdf_model.getJoint( "r_shoulder_pan_joint"  )->limits->velocity;
-  qd_limit(1) = urdf_model.getJoint( "r_shoulder_lift_joint" )->limits->velocity;
-  qd_limit(2) = urdf_model.getJoint( "r_upper_arm_roll_joint")->limits->velocity;
-  qd_limit(3) = urdf_model.getJoint( "r_elbow_flex_joint"    )->limits->velocity;
-  qd_limit(4) = urdf_model.getJoint( "r_forearm_roll_joint"  )->limits->velocity;
-  qd_limit(5) = urdf_model.getJoint( "r_wrist_flex_joint"    )->limits->velocity;
-  qd_limit(6) = urdf_model.getJoint( "r_wrist_roll_joint"    )->limits->velocity;
+  qd_limit(0) = urdf_model.getJoint( "l_shoulder_pan_joint"  )->limits->velocity;
+  qd_limit(1) = urdf_model.getJoint( "l_shoulder_lift_joint" )->limits->velocity;
+  qd_limit(2) = urdf_model.getJoint( "l_upper_arm_roll_joint")->limits->velocity;
+  qd_limit(3) = urdf_model.getJoint( "l_elbow_flex_joint"    )->limits->velocity;
+  qd_limit(4) = urdf_model.getJoint( "l_forearm_roll_joint"  )->limits->velocity;
+  qd_limit(5) = urdf_model.getJoint( "l_wrist_flex_joint"    )->limits->velocity;
+  qd_limit(6) = urdf_model.getJoint( "l_wrist_roll_joint"    )->limits->velocity;
 
   // Pick the gains.
   Kp_.vel(0) = 100.0;  Kd_.vel(0) = 1.0;        // Translation x
@@ -241,10 +241,10 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   {
 	  double p,i,d,i_max,i_min;
 
-	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/p"       , p            ));
-	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/i"       , i            ));
-	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/d"       , d            ));
-	  if (!n.getParam( "/r_arm_controller/gains/" + modelState.name[ind_] + "/i_clamp" , i_max        ));
+	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/p"       , p            ));
+	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/i"       , i            ));
+	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/d"       , d            ));
+	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/i_clamp" , i_max        ));
 
 	  i_min = -i_max;
 
