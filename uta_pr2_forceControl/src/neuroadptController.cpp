@@ -158,6 +158,8 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   J_.resize(kdl_chain_.getNrOfJoints());
   J_m_.resize(kdl_chain_.getNrOfJoints());
 
+  transformed_force = Eigen::Vector3d::Zero();
+
   modelState.name.resize(kdl_chain_.getNrOfJoints());
   modelState.position.resize(kdl_chain_.getNrOfJoints());
   modelState.velocity.resize(kdl_chain_.getNrOfJoints());
@@ -242,6 +244,13 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
 	  joint_Imin(ind_) = i_min ;
   }
 
+  std::string para_forceCutOffX = "/forceCutOffX";
+  std::string para_forceCutOffY = "/forceCutOffY";
+  std::string para_forceCutOffZ = "/forceCutOffZ";
+
+  if (!n.getParam( para_forceCutOffX , forceCutOffX )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffX.c_str()) ; return false; }
+  if (!n.getParam( para_forceCutOffY , forceCutOffY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffY.c_str()) ; return false; }
+  if (!n.getParam( para_forceCutOffZ , forceCutOffZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffZ.c_str()) ; return false; }
 
   delT = 0.001;
 
@@ -335,16 +344,20 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
   if(!hardwareInterface)
       ROS_ERROR("Something wrong with the hardware interface pointer!");
-/*
-  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
-  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+
+  if( tip_name == "l_gripper_tool_frame" )
+  {
+  	ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+  }
+
+  if( tip_name == "r_gripper_tool_frame" )
+  {
+  	ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+  }
 
 
-  if( !l_ft_handle_ )
-      ROS_ERROR("Something wrong with getting l_ft handle");
-  if( !r_ft_handle_ )
-      ROS_ERROR("Something wrong with getting r_ft handle");
-   */
+  if( !ft_handle_ )
+      ROS_ERROR("Something wrong with getting ft handle");
 
 
 //  /* get a handle to the left gripper accelerometer */
@@ -441,34 +454,17 @@ void PR2NeuroadptControllerClass::update()
 //	threeAccs[threeAccs.size()-1].y
 //	threeAccs[threeAccs.size()-1].z
 
-/*
-	std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-	l_ft_samples    = l_ftData_vector.size() - 1;
-//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
-	l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
-	l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
-	l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
-	l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
-	l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
-	l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
-
-	std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+  {
+	std::vector<geometry_msgs::Wrench> r_ftData_vector = ft_handle_->state_.samples_;
 	r_ft_samples    = r_ftData_vector.size() - 1;
 //      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-	r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
-	r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
-	r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
-	r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
-	r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
-	r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
-*/
-
-
-
-//	if( (r_ftData.wrench.force.x > -18) && (r_ftData.wrench.force.x < 18) ){ r_ftData.wrench.force.x = 0; }
-//	if( (r_ftData.wrench.force.y > -18) && (r_ftData.wrench.force.y < 18) ){ r_ftData.wrench.force.y = 0; }
-//	if( (r_ftData.wrench.force.z > -18) && (r_ftData.wrench.force.z < 18) ){ r_ftData.wrench.force.z = 0; }
-
+	ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
+	ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
+	ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
+	ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
+	ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
+	ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
+  }
 
   double dt;                    // Servo loop time step
 
@@ -538,21 +534,27 @@ void PR2NeuroadptControllerClass::update()
   // Force control only ferr Z in ft sensor frame is x in robot frame
 //  F_(0) = ferr_(2); // - Kd_(i) * xdot_(i);
 
-
+  ///////////////////////////////
   // Human force input
   // Force error
 
-  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
+  Eigen::Vector3d forceFT( ftData.wrench.force.x, ftData.wrench.force.y, ftData.wrench.force.z );
 
   //                               w       x       y      z
   Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
-  Eigen::Vector3d transformed_force = ft_to_acc._transformVector( forceFT );
+  transformed_force = ft_to_acc._transformVector( forceFT );
 
-  if( abs( double (transformed_force(0)) ) < 1 ){ transformed_force(0) = 0; }
-  if( abs( double (transformed_force(1)) ) < 1 ){ transformed_force(1) = 0; }
+  if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
+  if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
+  if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
 
-  ferr_(0) =   transformed_force(0) ; // 30*sin(circle_phase_);
-  ferr_(1) =  -transformed_force(1) ; // 0				       ;
+  transformed_force(1) = - transformed_force(1);
+
+  // Human force input END
+  ///////////////////////////////
+
+  ferr_(0) =  transformed_force(0) ; // 30*sin(circle_phase_);
+  ferr_(1) =  transformed_force(1) ; // 0				       ;
   ferr_(2) =  // transformed_force(2) ; // 0				       ;
   ferr_(3) =  0 ; // r_ftData.wrench.torque.x; // 0                    ;
   ferr_(4) =  0 ; // r_ftData.wrench.torque.y; // 0                    ;
@@ -791,13 +793,13 @@ void PR2NeuroadptControllerClass::bufferData( double & dt )
 	{
 		msgControllerFullData[index].dt                = dt                          ;
 
-		// Force Data
-		msgControllerFullData[index].force_x           = r_ftData.wrench.force.x     ;
-		msgControllerFullData[index].force_y           = r_ftData.wrench.force.y     ;
-		msgControllerFullData[index].force_z           = r_ftData.wrench.force.z     ;
-		msgControllerFullData[index].torque_x          = r_ftData.wrench.torque.x    ;
-		msgControllerFullData[index].torque_y          = r_ftData.wrench.torque.y    ;
-		msgControllerFullData[index].torque_z          = r_ftData.wrench.torque.z    ;
+        // Force Data
+        msgControllerFullData[index].force_x           = transformed_force(0)        ; // r_ftData.wrench.force.x     ;
+        msgControllerFullData[index].force_y           = transformed_force(1)        ; // r_ftData.wrench.force.y     ;
+        msgControllerFullData[index].force_z           = transformed_force(2)        ; // r_ftData.wrench.force.z     ;
+        msgControllerFullData[index].torque_x          = 0                           ; // r_ftData.wrench.torque.x    ;
+        msgControllerFullData[index].torque_y          = 0                           ; // r_ftData.wrench.torque.y    ;
+        msgControllerFullData[index].torque_z          = 0                           ; // r_ftData.wrench.torque.z    ;
 
 		// Input reference efforts(torques)
 		msgControllerFullData[index].reference_eff_j0  = t_r(0)                      ;

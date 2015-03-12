@@ -11,7 +11,10 @@
  *
  */
 
-#pragma once
+#ifndef NEURAL_NETWORK_HPP_
+#define NEURAL_NETWORK_HPP_
 
 #include "two_layer_nn.hpp"
 #include "one_layer_nn.hpp"
+
+#endif /* NEURAL_NETWORK_HPP_ */

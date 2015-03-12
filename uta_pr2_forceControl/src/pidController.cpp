@@ -152,6 +152,8 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   J_.resize(kdl_chain_.getNrOfJoints());
   J_m_.resize(kdl_chain_.getNrOfJoints());
 
+  transformed_force = Eigen::Vector3d::Zero();
+
   modelState.name.resize(kdl_chain_.getNrOfJoints());
   modelState.position.resize(kdl_chain_.getNrOfJoints());
   modelState.velocity.resize(kdl_chain_.getNrOfJoints());
@@ -326,9 +328,22 @@ bool PR2PidControllerClass::init( pr2_mechanism_model::RobotState *robot, ros::N
   /////////////////////////
 
   /* get a handle to the hardware interface */
-  pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
-  if(!hardwareInterface)
-      ROS_ERROR("Something wrong with the hardware interface pointer!");
+    pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
+    if(!hardwareInterface)
+        ROS_ERROR("Something wrong with the hardware interface pointer!");
+
+    if( tip_name == "l_gripper_tool_frame" )
+    {
+    	ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+    }
+
+    if( tip_name == "r_gripper_tool_frame" )
+    {
+    	ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+    }
+
+    if( !ft_handle_ )
+        ROS_ERROR("Something wrong with getting ft handle");
 
   pub_cycle_count_ = 0;
   should_publish_  = false;
@@ -397,6 +412,18 @@ void PR2PidControllerClass::starting()
 void PR2PidControllerClass::update()
 {
 
+  {
+	std::vector<geometry_msgs::Wrench> r_ftData_vector = ft_handle_->state_.samples_;
+	r_ft_samples    = r_ftData_vector.size() - 1;
+//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
+	ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
+	ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
+	ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
+	ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
+	ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
+	ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
+  }
+
   double dt;                    // Servo loop time step
 
   // Calculate the dt between servo cycles.
@@ -461,6 +488,24 @@ void PR2PidControllerClass::update()
 	q = JointKdl2Eigen( q_ );
 	qd = JointVelKdl2Eigen( qdot_ );
 
+	///////////////////////////////
+	// Human force input
+	// Force error
+
+	Eigen::Vector3d forceFT( ftData.wrench.force.x, ftData.wrench.force.y, ftData.wrench.force.z );
+
+	//                               w       x       y      z
+	Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
+	transformed_force = ft_to_acc._transformVector( forceFT );
+
+	if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
+	if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
+	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
+
+	transformed_force(1) = - transformed_force(1);
+
+	// Human force input END
+	///////////////////////////////
 
 //	0 - 'r_upper_arm_roll_joint' || "r_shoulder_pan_joint"   -0.309261  : 18 : r_shoulder_pan_joint
 //	1 - 'r_shoulder_pan_joint'    | "r_shoulder_lift_joint"  -0.0340454 : 19 : r_shoulder_lift_joint
@@ -627,13 +672,13 @@ void PR2PidControllerClass::bufferData( double & dt )
 	{
 		msgControllerFullData[index].dt                = dt                          ;
 
-		// Force Data
-		msgControllerFullData[index].force_x           = ftData.wrench.force.x     ;
-		msgControllerFullData[index].force_y           = ftData.wrench.force.y     ;
-		msgControllerFullData[index].force_z           = ftData.wrench.force.z     ;
-		msgControllerFullData[index].torque_x          = ftData.wrench.torque.x    ;
-		msgControllerFullData[index].torque_y          = ftData.wrench.torque.y    ;
-		msgControllerFullData[index].torque_z          = ftData.wrench.torque.z    ;
+        // Force Data
+        msgControllerFullData[index].force_x           = transformed_force(0)        ; // r_ftData.wrench.force.x     ;
+        msgControllerFullData[index].force_y           = transformed_force(1)        ; // r_ftData.wrench.force.y     ;
+        msgControllerFullData[index].force_z           = transformed_force(2)        ; // r_ftData.wrench.force.z     ;
+        msgControllerFullData[index].torque_x          = 0                           ; // r_ftData.wrench.torque.x    ;
+        msgControllerFullData[index].torque_y          = 0                           ; // r_ftData.wrench.torque.y    ;
+        msgControllerFullData[index].torque_z          = 0                           ; // r_ftData.wrench.torque.z    ;
 
 		// Input reference efforts(torques)
 		msgControllerFullData[index].reference_eff_j0  = t_r(0)                      ;

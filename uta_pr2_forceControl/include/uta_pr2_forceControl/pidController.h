@@ -80,7 +80,7 @@ private:
   pr2_hardware_interface::Accelerometer* accelerometer_handle_;
 
   pr2_hardware_interface::ForceTorque* l_ft_handle_;
-  pr2_hardware_interface::ForceTorque* r_ft_handle_;
+  pr2_hardware_interface::ForceTorque* ft_handle_;
 
   int l_ft_samples;
   int r_ft_samples;
@@ -90,6 +90,8 @@ private:
 
   geometry_msgs::WrenchStamped l_ftData;
   geometry_msgs::WrenchStamped ftData;
+
+  Eigen::Vector3d transformed_force    ;
 
   sensor_msgs::JointState modelState;
   sensor_msgs::JointState robotState;
@@ -136,6 +138,10 @@ private:
 
   KDL::Jacobian     J_;            // Robot Jacobian
   KDL::Jacobian     J_m_;          // Model Jacobian
+
+  double forceCutOffX ;
+  double forceCutOffY ;
+  double forceCutOffZ ;
 
   // Note the gains are incorrectly typed as a twist,
   // as there is no appropriate type!
