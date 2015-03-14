@@ -226,23 +226,23 @@ bool PR2NeuroadptControllerClass::init( pr2_mechanism_model::RobotState *robot, 
   Kp_.rot(1) = 100.0;  Kd_.rot(1) = 1.0;        // Rotation y
   Kp_.rot(2) = 100.0;  Kd_.rot(2) = 1.0;        // Rotation z
 
-  for( uint ind_ = 0; ind_ < kdl_chain_.getNrOfJoints(); ind_++ )
-  {
-	  double p,i,d,i_max,i_min;
-
-	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/p"       , p            ));
-	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/i"       , i            ));
-	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/d"       , d            ));
-	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/i_clamp" , i_max        ));
-
-	  i_min = -i_max;
-
-	  joint_P   (ind_) = p     ;
-	  joint_I   (ind_) = i     ;
-	  joint_D   (ind_) = d     ;
-	  joint_Imax(ind_) = i_max ;
-	  joint_Imin(ind_) = i_min ;
-  }
+//  for( uint ind_ = 0; ind_ < kdl_chain_.getNrOfJoints(); ind_++ )
+//  {
+//	  double p,i,d,i_max,i_min;
+//
+//	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/p"       , p            ));
+//	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/i"       , i            ));
+//	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/d"       , d            ));
+//	  if (!n.getParam( "/l_arm_controller/gains/" + modelState.name[ind_] + "/i_clamp" , i_max        ));
+//
+//	  i_min = -i_max;
+//
+//	  joint_P   (ind_) = p     ;
+//	  joint_I   (ind_) = i     ;
+//	  joint_D   (ind_) = d     ;
+//	  joint_Imax(ind_) = i_max ;
+//	  joint_Imin(ind_) = i_min ;
+//  }
 
   std::string para_forceCutOffX = "/forceCutOffX";
   std::string para_forceCutOffY = "/forceCutOffY";
