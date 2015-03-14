@@ -70,7 +70,7 @@ rosbuild_add_library( pr2_controller_lib src/cartesianController.cpp
                                          )
  
 #target_link_libraries( pr2_controller_lib cslLIB )
-target_link_libraries( pr2_controller_lib oelLIB )
+target_link_libraries( pr2_controller_lib oelLIB ${Boost_LIBRARIES} )
 
 target_link_libraries( pr2_controller_lib pr2_gripper_sensor_controller_lib )
 
