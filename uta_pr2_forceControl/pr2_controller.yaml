@@ -1,3 +1,6 @@
+# Flexiforce settings
+port               : /dev/ttyACM0
+baud               : 2000000
 
 useCurrentCartPose : false
 useNullspacePose   : true

@@ -456,6 +456,18 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   ode_init_x[2 ] = 0.0;
   ode_init_x[3 ] = 0.0;
 
+
+  std::string para_port = "/port";
+  std::string para_baud = "/baud";
+
+  if (!n.getParam( para_port , port )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_port.c_str()) ; return false; }
+  if (!n.getParam( para_baud , baud )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_baud.c_str()) ; return false; }
+
+
+  // Flexiforce sensors
+  tacSerial = new TactileSerial( port, baud );
+//  tacSerial->getDataArrayFromSerialPort( force );
+
   /////////////////////////
   // System Model
 

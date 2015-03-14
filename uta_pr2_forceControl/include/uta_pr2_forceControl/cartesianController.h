@@ -182,6 +182,8 @@ public:
   bool useDirectmodel;
 
   // For reading the flexi force sensors
+  std::string port;
+  std::string baud;
   TactileSerial *tacSerial;
 
   // Use FT sensors or not

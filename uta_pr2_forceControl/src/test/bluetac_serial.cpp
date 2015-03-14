@@ -31,6 +31,8 @@ class TactileViz
 
   visualization_msgs::Marker m_vizMarker;
 
+  std::string port;
+  std::string baud;
   TactileSerial *tacSerial;
 
 public:
@@ -51,7 +53,16 @@ public:
 
         forceScale = 1024;
 
-	tacSerial = new TactileSerial( argc, argv );
+    std::string para_port = "/port";
+    std::string para_baud = "/baud";
+
+    if (!m_node.getParam( para_port , port )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_port.c_str()) ; return false; }
+    if (!m_node.getParam( para_baud , baud )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_baud.c_str()) ; return false; }
+
+
+    // Flexiforce sensors
+    tacSerial = new TactileSerial( port, baud );
+//	tacSerial = new TactileSerial( argc, argv );
   }
 
   ~TactileViz() { }
