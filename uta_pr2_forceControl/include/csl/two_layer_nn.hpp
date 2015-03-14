@@ -235,29 +235,6 @@ void TwoLayerNeuralNetworkController::UpdateCart( Eigen::VectorXd & X     ,
                                                   Eigen::VectorXd & t_r   ,
                                                   Eigen::VectorXd & tau    )
 {
-
-//// Debug
-//  X(3) =  0;
-//  X(4) =  0;
-//  X(5) =  0;
-//
-// Xd(3) =  0;
-// Xd(4) =  0;
-// Xd(5) =  0;
-//
-// X_m(3) =  0;
-// X_m(4) =  0;
-// X_m(5) =  0;
-//
-// Xd_m(3) =  0;
-// Xd_m(4) =  0;
-// Xd_m(5) =  0;
-//
-// Xdd_m(3) =  0;
-// Xdd_m(4) =  0;
-// Xdd_m(5) =  0;
-//// Debug
-
         // NN Input Vector
         x <<           1 ,
             (  X_m -  X) , //   q( 0 ) ;
@@ -275,7 +252,6 @@ void TwoLayerNeuralNetworkController::UpdateCart( Eigen::VectorXd & X     ,
                 Xd_m ,
                 t_r  ,
                 tau   );
-
 }
 
 void TwoLayerNeuralNetworkController::UpdateJoint( Eigen::VectorXd & q     ,
@@ -300,7 +276,6 @@ void TwoLayerNeuralNetworkController::UpdateJoint( Eigen::VectorXd & q     ,
                 qd_m ,
                 t_r  ,
                 tau   );
-
 }
 
 void TwoLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
@@ -310,7 +285,7 @@ void TwoLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
                                               Eigen::VectorXd & t_r  ,
                                               Eigen::VectorXd & tau   )
 {
-        W_trans = W_trans_next;
+	W_trans = W_trans_next;
 	V_trans = V_trans_next;
 
 	// Filtered error
