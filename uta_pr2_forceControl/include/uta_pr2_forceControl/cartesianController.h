@@ -24,6 +24,8 @@
 #include <neuroadaptive_msgs/saveControllerData.h>
 #include <neuroadaptive_msgs/setCartPose.h>
 
+#include <uta_pr2_forceControl/tactile_serial.h>
+
 #include <Eigen/Geometry>
 
 #include <std_srvs/Empty.h>
@@ -178,6 +180,9 @@ public:
   bool useIRLmodel ;
   // Use Direct model x_d = x_m
   bool useDirectmodel;
+
+  // For reading the flexi force sensors
+  TactileSerial *tacSerial;
 
   // Use FT sensors or not
   bool forceTorqueOn;

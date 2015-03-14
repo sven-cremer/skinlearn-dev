@@ -571,13 +571,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   // RLS
 
   outerLoopRLSmodelX.updateDelT( outerLoopTime );
-//  outerLoopRLSmodelX.updateDelT( delT );
   outerLoopRLSmodelX.updateAB( task_mA,
                                task_mB );
+  outerLoopRLSmodelX.initRls( rls_lambda, rls_sigma );
 
 
   outerLoopRLSmodelY.updateDelT( outerLoopTime );
-//  outerLoopRLSmodelY.updateDelT( delT );
   outerLoopRLSmodelY.updateAB( task_mA,
                                task_mB );
   outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
@@ -1032,14 +1031,14 @@ void PR2CartneuroControllerClass::update()
 		// RLS ARMA
 		if( useARMAmodel )
 		{
-	//      outerLoopRLSmodelX.updateARMA( Xd_m              (0) ,
-	//                                     Xd                (0) ,
-	//                                     X_m               (0) ,
-	//                                     X                 (0) ,
-	//                                     Xdd_m             (0) ,
-	//                                     transformed_force (0) ,
-	//                                     task_ref          (0) ,
-	//                                     task_refModel     (0)  );
+	      outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
+	                                     Xd                     (0) ,
+	                                     X_m                    (0) ,
+	                                     X                      (0) ,
+	                                     Xdd_m                  (0) ,
+	                                     transformed_force      (0) ,
+	                                     task_ref               (0) ,
+	                                     task_refModel_output   (0)  );
 
 		  // Y axis
 		  outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
@@ -1052,9 +1051,8 @@ void PR2CartneuroControllerClass::update()
 										 task_refModel_output   (1)  );
 
 	//      ROS_ERROR_STREAM("USING RLS ARMA");
-
+		    outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
 			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
-	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
 		}
 
 		// CT RLS ARMA
@@ -1081,8 +1079,8 @@ void PR2CartneuroControllerClass::update()
 
 	//      ROS_ERROR_STREAM("USING CT RLS ARMA");
 
-			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
-	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
+		    outerLoopCTRLSmodelY.getWeights( outerLoopWk ) ;
+	//		outerLoopCTRLSmodelY.setWeights( outerLoopWk ) ;
 		}
 
 		// RLS FIR

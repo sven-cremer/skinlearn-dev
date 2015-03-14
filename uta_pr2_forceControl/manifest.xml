@@ -22,6 +22,7 @@
   <depend package="neuroadaptive_msgs"/>
   <depend package="pr2_gripper_sensor_controller"/>
   <depend package="control_toolbox"/>
+  <depend package="serial"/>
   
   <depend package="rbdl"/>
 

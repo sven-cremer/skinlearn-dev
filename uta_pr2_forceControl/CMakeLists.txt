@@ -62,8 +62,8 @@ rosbuild_add_library( pr2_controller_lib src/cartesianController.cpp
                                          src/explforceController.cpp
                                          # FIXME only one neuroadptController or
                                          # cartresnnController compiles
-                                         src/neuroadptController.cpp
-                                         #src/cartneuroController.cpp
+                                         #src/neuroadptController.cpp
+                                         src/cartneuroController.cpp
                                          #src/cartresnnController.cpp
                                          #src/pidController.cpp
                                          #src/computedTorqueController.cpp
@@ -77,9 +77,12 @@ target_link_libraries( pr2_controller_lib pr2_gripper_sensor_controller_lib )
 # protobuf link
 #target_link_libraries(pr2_controller_lib controllerFullDataLIB ${PROTOBUF_LIBRARIES})
 
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
+rosbuild_add_boost_directories()
+rosbuild_link_boost(${PROJECT_NAME} thread)
 #rosbuild_add_executable(example examples/example.cpp)
+
+rosbuild_add_executable(bluetac_serial src/test/bluetac_serial.cpp)
+target_link_libraries(bluetac_serial ${Boost_LIBRARIES})
 
 #rosbuild_add_library( rbdlUtilLIB src/rbdl_urdfreader.cc )
 #rosbuild_add_executable( rbdlTest src/test/rbdlTest.cpp)
