@@ -9,6 +9,15 @@ float64 torque_x
 float64 torque_y
 float64 torque_z
 
+float64 flexiforce_1
+float64 flexiforce_2
+float64 flexiforce_3
+float64 flexiforce_4
+
+float64 FT_force_x
+float64 FT_force_y
+float64 FT_force_z
+
 # Accelerometer data
 float64 acc_x
 float64 acc_y

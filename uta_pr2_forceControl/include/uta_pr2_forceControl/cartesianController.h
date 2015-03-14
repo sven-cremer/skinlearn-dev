@@ -72,6 +72,8 @@ public:
   geometry_msgs::WrenchStamped l_ftData;
   geometry_msgs::WrenchStamped r_ftData;
 
+  Eigen::Vector3d FT_transformed_force ;
+  Eigen::Vector3d FLEX_force          ;
   Eigen::Vector3d transformed_force    ;
   Eigen::Vector3d l_acc_data           ;
   Eigen::Vector3d r_acc_data           ;
@@ -188,6 +190,7 @@ public:
 
   // Use FT sensors or not
   bool forceTorqueOn;
+  bool useFlexiForce;
 
   double forceCutOffX ;
   double forceCutOffY ;

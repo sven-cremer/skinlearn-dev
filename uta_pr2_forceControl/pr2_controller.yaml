@@ -6,6 +6,7 @@ useCurrentCartPose : false
 useNullspacePose   : true
 useFTinput         : true
 forceTorqueOn      : true
+useFlexiForce      : true
 
 # Only one can be true
 useARMAmodel       : false

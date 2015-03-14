@@ -74,6 +74,7 @@ private:
   Eigen::VectorXd task_refModel_output;
   Eigen::VectorXd tau;
   Eigen::VectorXd force;
+  Eigen::VectorXd flexiForce;
 
   Eigen::MatrixXd Jacobian;
 

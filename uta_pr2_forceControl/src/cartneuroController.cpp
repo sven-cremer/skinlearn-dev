@@ -341,6 +341,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_forceTorqueOn = "/forceTorqueOn";
   if (!n.getParam( para_forceTorqueOn , forceTorqueOn )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceTorqueOn.c_str()) ; return false; }
 
+  std::string para_useFlexiForce = "/useFlexiForce";
+  if (!n.getParam( para_useFlexiForce , useFlexiForce )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFlexiForce.c_str()) ; return false; }
+
   std::string para_filtW0 = "/filtW0" ;
   std::string para_filtW1 = "/filtW1" ;
   std::string para_filtW2 = "/filtW2" ;
@@ -466,7 +469,6 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // Flexiforce sensors
   tacSerial = new TactileSerial( port, baud );
-//  tacSerial->getDataArrayFromSerialPort( force );
 
   /////////////////////////
   // System Model
@@ -539,11 +541,13 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   transformed_force = Eigen::Vector3d::Zero();
   r_acc_data          = Eigen::Vector3d::Zero();
 
-  t_r      = Eigen::VectorXd::Zero( num_Outputs ) ;
-  task_ref = Eigen::VectorXd::Zero( num_Outputs           ) ;
-  task_refModel_output = Eigen::VectorXd::Zero( num_Outputs      ) ;
-  tau      = Eigen::VectorXd::Zero( num_Outputs ) ;
-  force    = Eigen::VectorXd::Zero( num_Outputs ) ;
+  t_r                  = Eigen::VectorXd::Zero( num_Outputs ) ;
+  task_ref             = Eigen::VectorXd::Zero( num_Outputs ) ;
+  task_refModel_output = Eigen::VectorXd::Zero( num_Outputs ) ;
+  tau                  = Eigen::VectorXd::Zero( num_Outputs ) ;
+  force                = Eigen::VectorXd::Zero( num_Outputs ) ;
+  // FIXME remove this hardcoded 4 value
+  flexiForce           = Eigen::VectorXd::Zero( 4 ) ;
 
   // Initial Reference
   task_ref = X_m ;
@@ -799,6 +803,16 @@ void PR2CartneuroControllerClass::starting()
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
 {
+  // Read flexi force serial data
+  tacSerial->getDataArrayFromSerialPort( flexiForce );
+
+//             0
+//
+//     1   >   ^    >   3 y
+//
+//             2
+//             x
+
   if( forceTorqueOn )
   {
     // retrieve right accelerometer data
@@ -862,17 +876,48 @@ void PR2CartneuroControllerClass::update()
   // Human force input
   // Force error
 
-  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
+  /////////////////////////
+  // Flexiforce sensor ////
 
+  // X axis
+  if( flexiForce(0) > flexiForce(2) ){
+	  FLEX_force(0) = -flexiForce(0);
+  }else{
+	  FLEX_force(0) =  flexiForce(2);
+  }
+  // Y axis
+  if( flexiForce(1) > flexiForce(3) ){
+	  FLEX_force(1) =  flexiForce(1);
+  }else{
+	  FLEX_force(1) = -flexiForce(3);
+  }
+  // Z axis
+  FLEX_force(2) = 0 ;
+
+  // Flexiforce sensor END ////
+
+  /////////////////
+  // FT sensor ////
+
+  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
   //                               w       x       y      z
   Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
-  transformed_force = ft_to_acc._transformVector( forceFT );
+  FT_transformed_force = ft_to_acc._transformVector( forceFT );
+  FT_transformed_force(1) = - FT_transformed_force(1);
 
+  // FT sensor END ////
+
+  if( useFlexiForce )
+  {
+	  transformed_force = FLEX_force;
+  }else{
+	  transformed_force = FT_transformed_force;
+  }
+
+  // Force threshold
   if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
   if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
   if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
-
-  transformed_force(1) = - transformed_force(1);
 
   // Human force input END
   ///////////////////////////////
@@ -1065,6 +1110,19 @@ void PR2CartneuroControllerClass::update()
 	//      ROS_ERROR_STREAM("USING RLS ARMA");
 		    outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
 			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
+
+            if( flexiForce(0) > flexiForce(2) ){
+
+            }else{
+
+            }
+            // Y axis
+            if( flexiForce(1) > flexiForce(3) ){
+
+            }else{
+
+            }
+
 		}
 
 		// CT RLS ARMA
@@ -1459,9 +1517,18 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].torque_y          = 0                           ; // r_ftData.wrench.torque.y    ;
           msgControllerFullData[index].torque_z          = 0                           ; // r_ftData.wrench.torque.z    ;
 
-          msgControllerFullData[index].acc_x             = r_acc_data(0)                 ;
-          msgControllerFullData[index].acc_y             = r_acc_data(1)                 ;
-          msgControllerFullData[index].acc_z             = r_acc_data(2)                 ;
+          msgControllerFullData[index].flexiforce_1      = flexiForce(0)               ;
+          msgControllerFullData[index].flexiforce_2      = flexiForce(1)               ;
+          msgControllerFullData[index].flexiforce_3      = flexiForce(2)               ;
+          msgControllerFullData[index].flexiforce_4      = flexiForce(3)               ;
+
+          msgControllerFullData[index].FT_force_x        = FT_transformed_force(0)     ;
+          msgControllerFullData[index].FT_force_y        = FT_transformed_force(1)     ;
+          msgControllerFullData[index].FT_force_z        = FT_transformed_force(2)     ;
+
+          msgControllerFullData[index].acc_x             = r_acc_data(0)               ;
+          msgControllerFullData[index].acc_y             = r_acc_data(1)               ;
+          msgControllerFullData[index].acc_z             = r_acc_data(2)               ;
 
           // Input reference efforts(torques)
           msgControllerFullData[index].reference_eff_j0  = 0                           ; //t_r(0) ;
