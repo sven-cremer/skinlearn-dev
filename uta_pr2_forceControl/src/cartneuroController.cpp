@@ -121,21 +121,21 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   q_upper.resize(kdl_chain_.getNrOfJoints());
   qd_limit.resize(kdl_chain_.getNrOfJoints());
 
-  q_lower(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->lower;
-  q_lower(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->lower;
-  q_lower(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->lower;
-  q_lower(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->lower;
-  q_lower(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->lower;
-  q_lower(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->lower;
-  q_lower(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->lower;
+  q_lower(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->lower;
+  q_lower(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->lower;
+  q_lower(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->lower;
+  q_lower(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->lower;
+  q_lower(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->lower;
+  q_lower(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->lower;
+  q_lower(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->lower;
 
-  q_upper(0) = urdf_model.getJoint("r_shoulder_pan_joint"  )->limits->upper;
-  q_upper(1) = urdf_model.getJoint("r_shoulder_lift_joint" )->limits->upper;
-  q_upper(2) = urdf_model.getJoint("r_upper_arm_roll_joint")->limits->upper;
-  q_upper(3) = urdf_model.getJoint("r_elbow_flex_joint"    )->limits->upper;
-  q_upper(4) = urdf_model.getJoint("r_forearm_roll_joint"  )->limits->upper;
-  q_upper(5) = urdf_model.getJoint("r_wrist_flex_joint"    )->limits->upper;
-  q_upper(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->upper;
+  q_upper(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->upper;
+  q_upper(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->upper;
+  q_upper(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->upper;
+  q_upper(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->upper;
+  q_upper(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->upper;
+  q_upper(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->upper;
+  q_upper(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->upper;
 
   // Since two joints are continuous
   q_upper(4) =   6.28 ;

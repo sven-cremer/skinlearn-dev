@@ -64,7 +64,7 @@ void print_usage()
 
 public:
 
-TactileSerial(string port_, string baud_)
+TactileSerial(string port_, unsigned long baud)
 {
 
 forceBias.resize(4);
@@ -73,14 +73,6 @@ firstRead=true;
   if( port_ == "-e" ) {
 	  enumerate_ports();
   }
-
-  // Argument 2 is the baudrate
-  unsigned long baud = 0;
-#if defined(WIN32) && !defined(__MINGW32__)
-  sscanf_s(baud_.c_str(), "%lu", &baud);
-#else
-  sscanf(baud_.c_str(), "%lu", &baud);
-#endif
 
   // port, baudrate, timeout in milliseconds
   my_serial = new serial::Serial(port_, baud, serial::Timeout::simpleTimeout(1000));

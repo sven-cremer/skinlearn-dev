@@ -12,9 +12,9 @@ useFlexiForce      : true
 useARMAmodel       : false
 useCTARMAmodel     : false
 useFIRmodel        : false
-useMRACmodel       : true
+useMRACmodel       : false
 useIRLmodel        : false
-useMSDmodel        : false
+useMSDmodel        : true
 useDirectmodel     : false
 
 outerLoop_time     : 0.05
@@ -72,12 +72,19 @@ m_D                 : 10.0
 task_mA             : 1.5
 task_mB             : 1.5
 
-cartIniX     :  0.7
-cartIniY     :  0.0
-cartIniZ     :  0.1
-cartIniRoll  :  0.0
+# cartIniX     :  0.7
+# cartIniY     :  0.0
+# cartIniZ     :  0.1
+# cartIniRoll  :  0.0
+# cartIniPitch :  0.0
+# cartIniYaw   :  0.0
+
+cartIniX     :  0.8
+cartIniY     : -0.05
+cartIniZ     :  0.0
+cartIniRoll  :  1.57079633
 cartIniPitch :  0.0
-cartIniYaw   :  0.0
+cartIniYaw   :  1.57079633
 
 cartDesX     :  0.7
 cartDesY     : -0.3
@@ -86,12 +93,19 @@ cartDesRoll  :  0.0
 cartDesPitch :  0.0
 cartDesYaw   :  0.0
 
-lCartIniX     :  0.8
-lCartIniY     :  0.05
-lCartIniZ     :  0.0
-lCartIniRoll  :  1.57079633
+# lCartIniX     :  0.8
+# lCartIniY     :  0.05
+# lCartIniZ     :  0.0
+# lCartIniRoll  :  1.57079633
+# lCartIniPitch :  0.0
+# lCartIniYaw   : -1.57079633
+
+lCartIniX     :  0.7
+lCartIniY     :  0.0
+lCartIniZ     :  0.1
+lCartIniRoll  :  0.0
 lCartIniPitch :  0.0
-lCartIniYaw   : -1.57079633
+lCartIniYaw   :  0.0
 
 circleRate          : 1
 circleLlim          : 0.5

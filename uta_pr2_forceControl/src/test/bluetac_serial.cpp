@@ -32,7 +32,7 @@ class TactileViz
   visualization_msgs::Marker m_vizMarker;
 
   std::string port;
-  std::string baud;
+  double      baud;
   TactileSerial *tacSerial;
 
 public:

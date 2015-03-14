@@ -185,7 +185,7 @@ public:
 
   // For reading the flexi force sensors
   std::string port;
-  std::string baud;
+  double      baud;
   TactileSerial *tacSerial;
 
   // Use FT sensors or not
