@@ -156,8 +156,8 @@ main( int argc, char** argv )
     ros::init (argc, argv, "tactile_viz");
     ros::NodeHandle node;
 
-//    TactileViz tacViz;
-    TactileViz tacViz(argc, argv);
+    TactileViz tacViz;
+//    TactileViz tacViz(argc, argv);
 
     try {
         return tacViz.go();

@@ -804,7 +804,7 @@ void PR2CartneuroControllerClass::starting()
 void PR2CartneuroControllerClass::update()
 {
   // Read flexi force serial data
-  tacSerial->getDataArrayFromSerialPort( flexiForce );
+//  tacSerial->getDataArrayFromSerialPort( flexiForce );
 
 //             0
 //
