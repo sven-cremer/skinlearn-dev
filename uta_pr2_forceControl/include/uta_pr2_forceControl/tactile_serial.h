@@ -64,18 +64,18 @@ void print_usage()
 
 public:
 
-TactileSerial(string port_, unsigned long baud)
+TactileSerial(string port, unsigned long baud)
 {
 
 forceBias.resize(4);
 firstRead=true;
 
-  if( port_ == "-e" ) {
+  if( port == "-e" ) {
 	  enumerate_ports();
   }
 
   // port, baudrate, timeout in milliseconds
-  my_serial = new serial::Serial(port_, baud, serial::Timeout::simpleTimeout(1000));
+  my_serial = new serial::Serial(port, baud, serial::Timeout::simpleTimeout(1000));
 
   cout << "Is the serial port open?";
   if(my_serial->isOpen())

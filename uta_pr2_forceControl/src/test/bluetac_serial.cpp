@@ -37,6 +37,35 @@ class TactileViz
 
 public:
 
+  TactileViz( )
+  {
+	m_tactileVizPub     = m_node.advertise<visualization_msgs::MarkerArray>("viz/tactile", 1);
+	force.resize(4);
+	forceBias.resize(4);
+	pos.resize(4,3);
+	firstRead=true;
+
+	pos << 0.1,-0.1, 0,
+		  -0.1,-0.1, 0,
+		  -0.1, 0.1, 0,
+		   0.0, 0.0, 0;
+		   //0.1, 0.1, 0;
+
+	forceScale = 1024;
+
+    std::string para_port = "/port";
+    std::string para_baud = "/baud";
+
+    if (!m_node.getParam( para_port , port )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_port.c_str()) ; return false; }
+    if (!m_node.getParam( para_baud , baud )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_baud.c_str()) ; return false; }
+
+    ROS_INFO_STREAM(port);
+    ROS_INFO_STREAM(baud);
+
+    // Flexiforce sensors
+    tacSerial = new TactileSerial( port, baud );
+  }
+
   TactileViz( int argc, char** argv )
   {
 	m_tactileVizPub     = m_node.advertise<visualization_msgs::MarkerArray>("viz/tactile", 1);
@@ -45,24 +74,19 @@ public:
 	pos.resize(4,3);
 	firstRead=true;
 
-        pos << 0.1,-0.1, 0,
-              -0.1,-0.1, 0,
-              -0.1, 0.1, 0,
-               0.0, 0.0, 0;
-               //0.1, 0.1, 0;
+	pos << 0.1,-0.1, 0,
+		  -0.1,-0.1, 0,
+		  -0.1, 0.1, 0,
+		   0.0, 0.0, 0;
+		   //0.1, 0.1, 0;
 
-        forceScale = 1024;
+	forceScale = 1024;
 
-    std::string para_port = "/port";
-    std::string para_baud = "/baud";
-
-    if (!m_node.getParam( para_port , port )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_port.c_str()) ; return false; }
-    if (!m_node.getParam( para_baud , baud )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_baud.c_str()) ; return false; }
-
+	port = "";
+	baud = 0;
 
     // Flexiforce sensors
-    tacSerial = new TactileSerial( port, baud );
-//	tacSerial = new TactileSerial( argc, argv );
+	tacSerial = new TactileSerial( argc, argv );
   }
 
   ~TactileViz() { }
@@ -108,7 +132,7 @@ public:
 
 void publishTactileData()
   {
-        tacSerial->getDataArrayFromSerialPort( force );
+    tacSerial->getDataArrayFromSerialPort( force );
 	m_tactileVizPub.publish( genVizvizMarkerArray(pos, force ) );
   }
 
@@ -132,6 +156,7 @@ main( int argc, char** argv )
     ros::init (argc, argv, "tactile_viz");
     ros::NodeHandle node;
 
+//    TactileViz tacViz;
     TactileViz tacViz(argc, argv);
 
     try {
