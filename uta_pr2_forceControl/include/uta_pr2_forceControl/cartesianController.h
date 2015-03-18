@@ -24,8 +24,6 @@
 #include <neuroadaptive_msgs/saveControllerData.h>
 #include <neuroadaptive_msgs/setCartPose.h>
 
-#include <uta_pr2_forceControl/tactile_serial.h>
-
 #include <Eigen/Geometry>
 
 #include <std_srvs/Empty.h>
@@ -183,11 +181,6 @@ public:
   // Use Direct model x_d = x_m
   bool useDirectmodel;
 
-  // For reading the flexi force sensors
-  std::string port;
-  double      baud;
-  TactileSerial *tacSerial;
-
   // Use FT sensors or not
   bool forceTorqueOn;
   bool useFlexiForce;
@@ -237,12 +230,17 @@ public:
 
   volatile int storage_index_;
 
+  void command(const geometry_msgs::WrenchConstPtr& wrench_msg);
+
 public:
   bool init(pr2_mechanism_model::RobotState *robot,
             ros::NodeHandle &n);
   void starting();
   void update();
   void stopping();
+
+  // input of the controller
+  KDL::Wrench flexiforce_wrench_desi_;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

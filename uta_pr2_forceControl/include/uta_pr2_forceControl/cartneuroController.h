@@ -185,6 +185,9 @@ public:
 
   void calcHumanIntentPos( Eigen::Vector3d & force, Eigen::VectorXd & pos, double delT, double m );
 
+  // FIXME change this message type
+  void command(const geometry_msgs::WrenchConstPtr& wrench_msg);
+
 
 };
 }

@@ -459,17 +459,6 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   ode_init_x[2 ] = 0.0;
   ode_init_x[3 ] = 0.0;
 
-
-  std::string para_port = "/port";
-  std::string para_baud = "/baud";
-
-  if (!n.getParam( para_port , port )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_port.c_str()) ; return false; }
-  if (!n.getParam( para_baud , baud )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_baud.c_str()) ; return false; }
-
-
-  // Flexiforce sensors
-  tacSerial = new TactileSerial( port, baud );
-
   /////////////////////////
   // System Model
 
@@ -805,6 +794,10 @@ void PR2CartneuroControllerClass::update()
 {
   // Read flexi force serial data
 //  tacSerial->getDataArrayFromSerialPort( flexiForce );
+  flexiForce(0) = flexiforce_wrench_desi_.force(0) ;
+  flexiForce(1) = flexiforce_wrench_desi_.force(1) ;
+  flexiForce(2) = flexiforce_wrench_desi_.force(2) ;
+  flexiForce(3) = flexiforce_wrench_desi_.torque(0);
 
 //             0
 //
@@ -2340,6 +2333,18 @@ PR2CartneuroControllerClass::calcHumanIntentPos( Eigen::Vector3d & force,
 
   pos = intentPos;
 }
+
+void PR2CartneuroControllerClass::command(const geometry_msgs::WrenchConstPtr& wrench_msg)
+{
+  // convert to wrench command
+  flexiforce_wrench_desi_.force(0) = wrench_msg->force.x;
+  flexiforce_wrench_desi_.force(1) = wrench_msg->force.y;
+  flexiforce_wrench_desi_.force(2) = wrench_msg->force.z;
+  flexiforce_wrench_desi_.torque(0) = wrench_msg->torque.x;
+  flexiforce_wrench_desi_.torque(1) = wrench_msg->torque.y;
+  flexiforce_wrench_desi_.torque(2) = wrench_msg->torque.z;
+}
+
 
 // Register controller to pluginlib
 PLUGINLIB_REGISTER_CLASS( PR2CartneuroControllerClass,

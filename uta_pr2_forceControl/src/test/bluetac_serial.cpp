@@ -9,6 +9,8 @@
 
 #include "uta_pr2_forceControl/tactile_serial.h"
 
+#include <geometry_msgs/Wrench.h>
+
 #include <vector>
 #include <string>
 
@@ -19,7 +21,10 @@ class TactileViz
 {
   ros::NodeHandle  m_node;
   ros::Publisher   m_tactileVizPub;
+  ros::Publisher   m_tactilePub;
   ros::Subscriber  m_sensorSub;
+
+  geometry_msgs::Wrench m_flexiforce_wrench;
 
   bool firstRead;
 
@@ -39,7 +44,9 @@ public:
 
   TactileViz( )
   {
-	m_tactileVizPub     = m_node.advertise<visualization_msgs::MarkerArray>("viz/tactile", 1);
+	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("viz/tactile", 1);
+	m_tactilePub    = m_node.advertise<geometry_msgs::Wrench>("command", 1);
+
 	force.resize(4);
 	forceBias.resize(4);
 	pos.resize(4,3);
@@ -68,7 +75,8 @@ public:
 
   TactileViz( int argc, char** argv )
   {
-	m_tactileVizPub     = m_node.advertise<visualization_msgs::MarkerArray>("viz/tactile", 1);
+	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("viz/tactile", 1);
+	m_tactilePub    = m_node.advertise<geometry_msgs::Wrench>("command", 1);
 	force.resize(4);
 	forceBias.resize(4);
 	pos.resize(4,3);
@@ -134,6 +142,14 @@ void publishTactileData()
   {
     tacSerial->getDataArrayFromSerialPort( force );
 	m_tactileVizPub.publish( genVizvizMarkerArray(pos, force ) );
+
+	m_flexiforce_wrench.force.x  = force(0);
+	m_flexiforce_wrench.force.y  = force(1);
+	m_flexiforce_wrench.force.z  = force(2);
+	m_flexiforce_wrench.torque.x = force(3);
+	m_flexiforce_wrench.torque.y = 0.0;
+	m_flexiforce_wrench.torque.z = 0.0;
+	m_tactilePub.publish(m_flexiforce_wrench);
   }
 
 int go()
@@ -159,10 +175,5 @@ main( int argc, char** argv )
     TactileViz tacViz;
 //    TactileViz tacViz(argc, argv);
 
-    try {
-        return tacViz.go();
-      } catch (exception &e) {
-        cerr << "Unhandled Exception: " << e.what() << endl;
-      }
-
+    tacViz.go();
 }
