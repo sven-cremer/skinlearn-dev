@@ -2,7 +2,7 @@
 port               : /dev/ttyACM0
 baud               : 2000000
 
-useCurrentCartPose : true
+useCurrentCartPose : false
 useNullspacePose   : true
 useFTinput         : true
 forceTorqueOn      : false

@@ -2356,6 +2356,8 @@ void PR2CartneuroControllerClass::command(const geometry_msgs::WrenchConstPtr& w
 
 
 // Register controller to pluginlib
-PLUGINLIB_REGISTER_CLASS( PR2CartneuroControllerClass,
-						  pr2_controller_ns::PR2CartneuroControllerClass,
-                          pr2_controller_interface::Controller )
+//PLUGINLIB_REGISTER_CLASS( PR2CartneuroControllerClass,
+//						  pr2_controller_ns::PR2CartneuroControllerClass,
+//                          pr2_controller_interface::Controller )
+
+PLUGINLIB_EXPORT_CLASS( pr2_controller_ns::PR2CartneuroControllerClass, pr2_controller_interface::Controller)
