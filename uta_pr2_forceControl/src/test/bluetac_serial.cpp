@@ -45,7 +45,7 @@ public:
   TactileViz( )
   {
 	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("viz/tactile", 1);
-	m_tactilePub    = m_node.advertise<geometry_msgs::Wrench>("command", 1);
+	m_tactilePub    = m_node.advertise<geometry_msgs::Wrench>("pr2_cartneuroController/command", 1);
 
 	force.resize(4);
 	forceBias.resize(4);

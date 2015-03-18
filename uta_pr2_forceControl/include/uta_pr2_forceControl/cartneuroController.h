@@ -27,6 +27,8 @@ class PR2CartneuroControllerClass: public pr2_controller_ns::PR2CartesianControl
 {
 private:
 
+  ros::Subscriber sub_command_;
+
   /////////////////////////
   // System Model
 
