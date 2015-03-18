@@ -3,10 +3,19 @@
 
 using namespace pr2_controller_ns;
 
+PR2CartneuroControllerClass::~PR2CartneuroControllerClass()
+{
+  sub_command_.shutdown();
+}
+
 /// Controller initialization in non-realtime
 bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                  ros::NodeHandle &n)
 {
+  // subscribe to wrench commands
+  sub_command_ = n.subscribe<geometry_msgs::Wrench>
+	("command", 1, &PR2CartneuroControllerClass::command, this);
+
 //	// Verify that the version of the library that we linked against is
 //	  // compatible with the version of the headers we compiled against.
 //	  GOOGLE_PROTOBUF_VERIFY_VERSION;

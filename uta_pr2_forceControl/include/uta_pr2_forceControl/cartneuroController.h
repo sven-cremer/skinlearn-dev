@@ -175,6 +175,7 @@ private:
   std::fstream saveDataFile;
 
 public:
+  ~PR2CartneuroControllerClass();
   bool init(pr2_mechanism_model::RobotState *robot,
             ros::NodeHandle &n);
   void starting();

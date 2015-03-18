@@ -2,10 +2,10 @@
 port               : /dev/ttyACM0
 baud               : 2000000
 
-useCurrentCartPose : false
+useCurrentCartPose : true
 useNullspacePose   : true
 useFTinput         : true
-forceTorqueOn      : true
+forceTorqueOn      : false
 useFlexiForce      : true
 
 # Only one can be true
@@ -163,7 +163,7 @@ pr2_cartesianController:
 pr2_cartneuroController:
   type: PR2CartneuroControllerClass
   root_name: torso_lift_link
-  tip_name: r_gripper_tool_frame
+  tip_name: l_gripper_tool_frame
 
 pr2_cartresnnController:
   type: PR2CartresnnControllerClass
