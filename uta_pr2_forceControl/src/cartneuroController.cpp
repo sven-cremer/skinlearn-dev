@@ -1210,13 +1210,13 @@ void PR2CartneuroControllerClass::update()
 		// MSD
 		if( useMSDmodel )
 		{
-	//    // Cartesian space MSD model
-	//    outerLoopMSDmodelX.update( Xd_m  (0),
-	//                               xdot_ (0),
-	//                               X_m   (0),
-	//                               x_.p.data[0],
-	//                               Xdd_m (0),
-	//                               transformed_force(0) );
+	      // Cartesian space MSD model
+	      outerLoopMSDmodelX.update( Xd_m             (0) ,
+	                                 Xd               (0) ,
+	                                 X_m              (0) ,
+	                                 X                (0) ,
+	                                 Xdd_m            (0) ,
+	                                 transformed_force(0)  );
 
 		  outerLoopMSDmodelY.update( Xd_m             (1) ,
 									 Xd               (1) ,
