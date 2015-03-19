@@ -1166,16 +1166,34 @@ void PR2CartneuroControllerClass::update()
             // Set ARMA parameters
             // X axis
             if( flexiForce(0) > flexiForce(2) ){
+
                 outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_1 ) ;
+                if( useFixedWeights )
+                	outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_1 );
+			    else
+			    	outerLoopRLSmodelX.setUpdatedWeights();
+
             }else{
             	outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_3 ) ;
+            	if( useFixedWeights )
+            		outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_3 );
+                else
+                	outerLoopRLSmodelX.setUpdatedWeights();
             }
 
             // Y axis
             if( flexiForce(1) > flexiForce(3) ){
             	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_2 ) ;
+            	if( useFixedWeights )
+            		outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_2 );
+            	else
+            		outerLoopRLSmodelY.setUpdatedWeights();
             }else{
             	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_4 ) ;
+            	if( useFixedWeights )
+            		outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_4 );
+            	else
+            		outerLoopRLSmodelY.setUpdatedWeights();
             }
 
             // X axis
