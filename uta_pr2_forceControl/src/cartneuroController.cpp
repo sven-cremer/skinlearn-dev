@@ -243,8 +243,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // Desired cartesian pose
   cartDesX     = 0.0 ;
-  cartDesY     = 0.1 ;
-  cartDesZ     = 0.1 ;
+  cartDesY     = 0.0 ;
+  cartDesZ     = 0.0 ;
   cartDesRoll  = 0.0 ;
   cartDesPitch = 0.0 ;
   cartDesYaw   = 0.0 ;
@@ -264,8 +264,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; return false; }
 
   // Initial cartesian pose
-  cartIniX     = 0.1 ;
-  cartIniY     = 0.1 ;
+  cartIniX     = 0.0 ;
+  cartIniY     = 0.0 ;
   cartIniZ     = 0.0 ;
   cartIniRoll  = 0.0 ;
   cartIniPitch = 0.0 ;
