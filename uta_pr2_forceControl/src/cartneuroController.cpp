@@ -353,54 +353,127 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_useFlexiForce = "/useFlexiForce";
   if (!n.getParam( para_useFlexiForce , useFlexiForce )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFlexiForce.c_str()) ; return false; }
 
-  std::string para_filtW0 = "/filtW0" ;
-  std::string para_filtW1 = "/filtW1" ;
-  std::string para_filtW2 = "/filtW2" ;
-  std::string para_filtW3 = "/filtW3" ;
-  std::string para_filtW4 = "/filtW4" ;
-  std::string para_filtW5 = "/filtW5" ;
-  std::string para_filtW6 = "/filtW6" ;
-  std::string para_filtW7 = "/filtW7" ;
+  std::string para_filtW0        = "/filtW0"        ;
+  std::string para_filtW1        = "/filtW1"        ;
+  std::string para_filtW2        = "/filtW2"        ;
+  std::string para_filtW3        = "/filtW3"        ;
+  std::string para_filtW4        = "/filtW4"        ;
+  std::string para_filtW5        = "/filtW5"        ;
+  std::string para_filtW6        = "/filtW6"        ;
+  std::string para_filtW7        = "/filtW7"        ;
 
-  filtW0 = 0.0 ;
-  filtW1 = 0.0 ;
-  filtW2 = 0.0 ;
-  filtW3 = 0.0 ;
-  filtW4 = 0.0 ;
-  filtW5 = 0.0 ;
-  filtW6 = 0.0 ;
-  filtW7 = 0.0 ;
+  std::string para_flex_1_filtW0 = "/flex_1_filtW0" ;
+  std::string para_flex_1_filtW1 = "/flex_1_filtW1" ;
+  std::string para_flex_1_filtW2 = "/flex_1_filtW2" ;
+  std::string para_flex_1_filtW3 = "/flex_1_filtW3" ;
+  std::string para_flex_1_filtW4 = "/flex_1_filtW4" ;
+  std::string para_flex_1_filtW5 = "/flex_1_filtW5" ;
+  std::string para_flex_1_filtW6 = "/flex_1_filtW6" ;
+  std::string para_flex_1_filtW7 = "/flex_1_filtW7" ;
 
-  if (!n.getParam( para_filtW0 , filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW0.c_str()) ; return false; }
-  if (!n.getParam( para_filtW1 , filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW1.c_str()) ; return false; }
-  if (!n.getParam( para_filtW2 , filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW2.c_str()) ; return false; }
-  if (!n.getParam( para_filtW3 , filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW3.c_str()) ; return false; }
-  if (!n.getParam( para_filtW4 , filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW4.c_str()) ; return false; }
-  if (!n.getParam( para_filtW5 , filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW5.c_str()) ; return false; }
-  if (!n.getParam( para_filtW6 , filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW6.c_str()) ; return false; }
-  if (!n.getParam( para_filtW7 , filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW7.c_str()) ; return false; }
+  std::string para_flex_2_filtW0 = "/flex_2_filtW0" ;
+  std::string para_flex_2_filtW1 = "/flex_2_filtW1" ;
+  std::string para_flex_2_filtW2 = "/flex_2_filtW2" ;
+  std::string para_flex_2_filtW3 = "/flex_2_filtW3" ;
+  std::string para_flex_2_filtW4 = "/flex_2_filtW4" ;
+  std::string para_flex_2_filtW5 = "/flex_2_filtW5" ;
+  std::string para_flex_2_filtW6 = "/flex_2_filtW6" ;
+  std::string para_flex_2_filtW7 = "/flex_2_filtW7" ;
+
+  std::string para_flex_3_filtW0 = "/flex_3_filtW0" ;
+  std::string para_flex_3_filtW1 = "/flex_3_filtW1" ;
+  std::string para_flex_3_filtW2 = "/flex_3_filtW2" ;
+  std::string para_flex_3_filtW3 = "/flex_3_filtW3" ;
+  std::string para_flex_3_filtW4 = "/flex_3_filtW4" ;
+  std::string para_flex_3_filtW5 = "/flex_3_filtW5" ;
+  std::string para_flex_3_filtW6 = "/flex_3_filtW6" ;
+  std::string para_flex_3_filtW7 = "/flex_3_filtW7" ;
+
+  std::string para_flex_4_filtW0 = "/flex_4_filtW0" ;
+  std::string para_flex_4_filtW1 = "/flex_4_filtW1" ;
+  std::string para_flex_4_filtW2 = "/flex_4_filtW2" ;
+  std::string para_flex_4_filtW3 = "/flex_4_filtW3" ;
+  std::string para_flex_4_filtW4 = "/flex_4_filtW4" ;
+  std::string para_flex_4_filtW5 = "/flex_4_filtW5" ;
+  std::string para_flex_4_filtW6 = "/flex_4_filtW6" ;
+  std::string para_flex_4_filtW7 = "/flex_4_filtW7" ;
+
+  filtW0 = 0.0 ;  flex_1_filtW0 = 0.0 ;  flex_2_filtW0 = 0.0 ;  flex_3_filtW0 = 0.0 ;  flex_4_filtW0 = 0.0 ;
+  filtW1 = 0.0 ;  flex_1_filtW1 = 0.0 ;  flex_2_filtW1 = 0.0 ;  flex_3_filtW1 = 0.0 ;  flex_4_filtW1 = 0.0 ;
+  filtW2 = 0.0 ;  flex_1_filtW2 = 0.0 ;  flex_2_filtW2 = 0.0 ;  flex_3_filtW2 = 0.0 ;  flex_4_filtW2 = 0.0 ;
+  filtW3 = 0.0 ;  flex_1_filtW3 = 0.0 ;  flex_2_filtW3 = 0.0 ;  flex_3_filtW3 = 0.0 ;  flex_4_filtW3 = 0.0 ;
+  filtW4 = 0.0 ;  flex_1_filtW4 = 0.0 ;  flex_2_filtW4 = 0.0 ;  flex_3_filtW4 = 0.0 ;  flex_4_filtW4 = 0.0 ;
+  filtW5 = 0.0 ;  flex_1_filtW5 = 0.0 ;  flex_2_filtW5 = 0.0 ;  flex_3_filtW5 = 0.0 ;  flex_4_filtW5 = 0.0 ;
+  filtW6 = 0.0 ;  flex_1_filtW6 = 0.0 ;  flex_2_filtW6 = 0.0 ;  flex_3_filtW6 = 0.0 ;  flex_4_filtW6 = 0.0 ;
+  filtW7 = 0.0 ;  flex_1_filtW7 = 0.0 ;  flex_2_filtW7 = 0.0 ;  flex_3_filtW7 = 0.0 ;  flex_4_filtW7 = 0.0 ;
+
+  if (!n.getParam( para_filtW0        , filtW0        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW0       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW1        , filtW1        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW1       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW2        , filtW2        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW2       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW3        , filtW3        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW3       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW4        , filtW4        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW4       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW5        , filtW5        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW5       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW6        , filtW6        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW6       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW7        , filtW7        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW7       .c_str()) ; return false; }
+
+  if (!n.getParam( para_flex_1_filtW0 , flex_1_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW0.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW1 , flex_1_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW1.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW2 , flex_1_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW2.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW3 , flex_1_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW3.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW4 , flex_1_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW4.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW5 , flex_1_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW5.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW6 , flex_1_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW6.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW7 , flex_1_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW7.c_str()) ; return false; }
+
+  if (!n.getParam( para_flex_2_filtW0 , flex_2_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW0.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW1 , flex_2_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW1.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW2 , flex_2_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW2.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW3 , flex_2_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW3.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW4 , flex_2_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW4.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW5 , flex_2_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW5.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW6 , flex_2_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW6.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW7 , flex_2_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW7.c_str()) ; return false; }
+
+  if (!n.getParam( para_flex_3_filtW0 , flex_3_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW0.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW1 , flex_3_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW1.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW2 , flex_3_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW2.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW3 , flex_3_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW3.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW4 , flex_3_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW4.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW5 , flex_3_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW5.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW6 , flex_3_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW6.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW7 , flex_3_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW7.c_str()) ; return false; }
+
+  if (!n.getParam( para_flex_4_filtW0 , flex_4_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW0.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW1 , flex_4_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW1.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW2 , flex_4_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW2.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW3 , flex_4_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW3.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW4 , flex_4_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW4.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW5 , flex_4_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW5.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW6 , flex_4_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW6.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW7 , flex_4_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW7.c_str()) ; return false; }
+
 
   outerLoopWk.resize(8,1);
   if( useFIRmodel || useARMAmodel || useCTARMAmodel)
   {
-	  outerLoopWk(0,0) = filtW0 ;
-	  outerLoopWk(1,0) = filtW1 ;
-	  outerLoopWk(2,0) = filtW2 ;
-	  outerLoopWk(3,0) = filtW3 ;
-	  outerLoopWk(4,0) = filtW4 ;
-	  outerLoopWk(5,0) = filtW5 ;
-	  outerLoopWk(6,0) = filtW6 ;
-	  outerLoopWk(7,0) = filtW7 ;
+	  outerLoopWk(0,0) = filtW0 ; outerLoopWk_flexi_1(0,0) = flex_1_filtW0 ; outerLoopWk_flexi_2(0,0) = flex_2_filtW0 ; outerLoopWk_flexi_3(0,0) = flex_3_filtW0 ; outerLoopWk_flexi_4(0,0) = flex_4_filtW0 ;
+	  outerLoopWk(1,0) = filtW1 ; outerLoopWk_flexi_1(1,0) = flex_1_filtW1 ; outerLoopWk_flexi_2(1,0) = flex_2_filtW1 ; outerLoopWk_flexi_3(1,0) = flex_3_filtW1 ; outerLoopWk_flexi_4(1,0) = flex_4_filtW1 ;
+	  outerLoopWk(2,0) = filtW2 ; outerLoopWk_flexi_1(2,0) = flex_1_filtW2 ; outerLoopWk_flexi_2(2,0) = flex_2_filtW2 ; outerLoopWk_flexi_3(2,0) = flex_3_filtW2 ; outerLoopWk_flexi_4(2,0) = flex_4_filtW2 ;
+	  outerLoopWk(3,0) = filtW3 ; outerLoopWk_flexi_1(3,0) = flex_1_filtW3 ; outerLoopWk_flexi_2(3,0) = flex_2_filtW3 ; outerLoopWk_flexi_3(3,0) = flex_3_filtW3 ; outerLoopWk_flexi_4(3,0) = flex_4_filtW3 ;
+	  outerLoopWk(4,0) = filtW4 ; outerLoopWk_flexi_1(4,0) = flex_1_filtW4 ; outerLoopWk_flexi_2(4,0) = flex_2_filtW4 ; outerLoopWk_flexi_3(4,0) = flex_3_filtW4 ; outerLoopWk_flexi_4(4,0) = flex_4_filtW4 ;
+	  outerLoopWk(5,0) = filtW5 ; outerLoopWk_flexi_1(5,0) = flex_1_filtW5 ; outerLoopWk_flexi_2(5,0) = flex_2_filtW5 ; outerLoopWk_flexi_3(5,0) = flex_3_filtW5 ; outerLoopWk_flexi_4(5,0) = flex_4_filtW5 ;
+	  outerLoopWk(6,0) = filtW6 ; outerLoopWk_flexi_1(6,0) = flex_1_filtW6 ; outerLoopWk_flexi_2(6,0) = flex_2_filtW6 ; outerLoopWk_flexi_3(6,0) = flex_3_filtW6 ; outerLoopWk_flexi_4(6,0) = flex_4_filtW6 ;
+	  outerLoopWk(7,0) = filtW7 ; outerLoopWk_flexi_1(7,0) = flex_1_filtW7 ; outerLoopWk_flexi_2(7,0) = flex_2_filtW7 ; outerLoopWk_flexi_3(7,0) = flex_3_filtW7 ; outerLoopWk_flexi_4(7,0) = flex_4_filtW7 ;
   }else
   {
-	  outerLoopWk(0,0) = 0.0 ;
-	  outerLoopWk(1,0) = 0.0 ;
-	  outerLoopWk(2,0) = 0.0 ;
-	  outerLoopWk(3,0) = 0.0 ;
-	  outerLoopWk(4,0) = 0.0 ;
-	  outerLoopWk(5,0) = 0.0 ;
-	  outerLoopWk(6,0) = 0.0 ;
-	  outerLoopWk(7,0) = 0.0 ;
+	  outerLoopWk(0,0) = 0.0 ; outerLoopWk_flexi_1(0,0) = 0.0 ; outerLoopWk_flexi_2(0,0) = 0.0 ; outerLoopWk_flexi_3(0,0) = 0.0 ; outerLoopWk_flexi_4(0,0) = 0.0 ;
+	  outerLoopWk(1,0) = 0.0 ; outerLoopWk_flexi_1(1,0) = 0.0 ; outerLoopWk_flexi_2(1,0) = 0.0 ; outerLoopWk_flexi_3(1,0) = 0.0 ; outerLoopWk_flexi_4(1,0) = 0.0 ;
+	  outerLoopWk(2,0) = 0.0 ; outerLoopWk_flexi_1(2,0) = 0.0 ; outerLoopWk_flexi_2(2,0) = 0.0 ; outerLoopWk_flexi_3(2,0) = 0.0 ; outerLoopWk_flexi_4(2,0) = 0.0 ;
+	  outerLoopWk(3,0) = 0.0 ; outerLoopWk_flexi_1(3,0) = 0.0 ; outerLoopWk_flexi_2(3,0) = 0.0 ; outerLoopWk_flexi_3(3,0) = 0.0 ; outerLoopWk_flexi_4(3,0) = 0.0 ;
+	  outerLoopWk(4,0) = 0.0 ; outerLoopWk_flexi_1(4,0) = 0.0 ; outerLoopWk_flexi_2(4,0) = 0.0 ; outerLoopWk_flexi_3(4,0) = 0.0 ; outerLoopWk_flexi_4(4,0) = 0.0 ;
+	  outerLoopWk(5,0) = 0.0 ; outerLoopWk_flexi_1(5,0) = 0.0 ; outerLoopWk_flexi_2(5,0) = 0.0 ; outerLoopWk_flexi_3(5,0) = 0.0 ; outerLoopWk_flexi_4(5,0) = 0.0 ;
+	  outerLoopWk(6,0) = 0.0 ; outerLoopWk_flexi_1(6,0) = 0.0 ; outerLoopWk_flexi_2(6,0) = 0.0 ; outerLoopWk_flexi_3(6,0) = 0.0 ; outerLoopWk_flexi_4(6,0) = 0.0 ;
+	  outerLoopWk(7,0) = 0.0 ; outerLoopWk_flexi_1(7,0) = 0.0 ; outerLoopWk_flexi_2(7,0) = 0.0 ; outerLoopWk_flexi_3(7,0) = 0.0 ; outerLoopWk_flexi_4(7,0) = 0.0 ;
   }
 
   int numIrlSamples = 100;
@@ -1090,40 +1163,59 @@ void PR2CartneuroControllerClass::update()
 		// RLS ARMA
 		if( useARMAmodel )
 		{
-	      outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
-	                                     Xd                     (0) ,
-	                                     X_m                    (0) ,
-	                                     X                      (0) ,
-	                                     Xdd_m                  (0) ,
-	                                     transformed_force      (0) ,
-	                                     task_ref               (0) ,
-	                                     task_refModel_output   (0)  );
-
-		  // Y axis
-		  outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
-										 Xd                     (1) ,
-										 X_m                    (1) ,
-										 X                      (1) ,
-										 Xdd_m                  (1) ,
-										 transformed_force      (1) ,
-										 task_ref               (1) ,
-										 task_refModel_output   (1)  );
-
-	//      ROS_ERROR_STREAM("USING RLS ARMA");
-		    outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
-			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
-
+            // Set ARMA parameters
+            // X axis
             if( flexiForce(0) > flexiForce(2) ){
-
+                outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_1 ) ;
             }else{
-
+            	outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_3 ) ;
             }
+
             // Y axis
             if( flexiForce(1) > flexiForce(3) ){
-
+            	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_2 ) ;
             }else{
-
+            	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_4 ) ;
             }
+
+            // X axis
+	        outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
+	                                       Xd                     (0) ,
+	                                       X_m                    (0) ,
+	                                       X                      (0) ,
+	                                       Xdd_m                  (0) ,
+	                                       transformed_force      (0) ,
+	                                       task_ref               (0) ,
+	                                       task_refModel_output   (0)  );
+
+		    // Y axis
+		    outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
+                                           Xd                     (1) ,
+                                           X_m                    (1) ,
+                                           X                      (1) ,
+                                           Xdd_m                  (1) ,
+                                           transformed_force      (1) ,
+                                           task_ref               (1) ,
+                                           task_refModel_output   (1)  );
+
+            // ROS_ERROR_STREAM("USING RLS ARMA");
+            outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
+            outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
+
+   	 	    // X axis
+            if( flexiForce(0) > flexiForce(2) ){
+   	 	    outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_1 ) ;
+            }else{
+            	outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_3 ) ;
+            }
+
+            // Y axis
+            if( flexiForce(1) > flexiForce(3) ){
+   	 		outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_2 ) ;
+            }else{
+            	outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_4 ) ;
+            }
+
 
 		}
 
@@ -1750,6 +1842,42 @@ void PR2CartneuroControllerClass::bufferData( double & dt )
           msgControllerFullData[index].w5                = outerLoopWk(5,0)            ;
           msgControllerFullData[index].w6                = outerLoopWk(6,0)            ;
           msgControllerFullData[index].w7                = outerLoopWk(7,0)            ;
+
+          msgControllerFullData[index].f1_w0             = outerLoopWk_flexi_1(0,0)    ;
+          msgControllerFullData[index].f1_w1             = outerLoopWk_flexi_1(1,0)    ;
+          msgControllerFullData[index].f1_w2             = outerLoopWk_flexi_1(2,0)    ;
+          msgControllerFullData[index].f1_w3             = outerLoopWk_flexi_1(3,0)    ;
+          msgControllerFullData[index].f1_w4             = outerLoopWk_flexi_1(4,0)    ;
+          msgControllerFullData[index].f1_w5             = outerLoopWk_flexi_1(5,0)    ;
+          msgControllerFullData[index].f1_w6             = outerLoopWk_flexi_1(6,0)    ;
+          msgControllerFullData[index].f1_w7             = outerLoopWk_flexi_1(7,0)    ;
+
+          msgControllerFullData[index].f2_w0             = outerLoopWk_flexi_2(0,0)    ;
+          msgControllerFullData[index].f2_w1             = outerLoopWk_flexi_2(1,0)    ;
+          msgControllerFullData[index].f2_w2             = outerLoopWk_flexi_2(2,0)    ;
+          msgControllerFullData[index].f2_w3             = outerLoopWk_flexi_2(3,0)    ;
+          msgControllerFullData[index].f2_w4             = outerLoopWk_flexi_2(4,0)    ;
+          msgControllerFullData[index].f2_w5             = outerLoopWk_flexi_2(5,0)    ;
+          msgControllerFullData[index].f2_w6             = outerLoopWk_flexi_2(6,0)    ;
+          msgControllerFullData[index].f2_w7             = outerLoopWk_flexi_2(7,0)    ;
+
+          msgControllerFullData[index].f3_w0             = outerLoopWk_flexi_3(0,0)    ;
+          msgControllerFullData[index].f3_w1             = outerLoopWk_flexi_3(1,0)    ;
+          msgControllerFullData[index].f3_w2             = outerLoopWk_flexi_3(2,0)    ;
+          msgControllerFullData[index].f3_w3             = outerLoopWk_flexi_3(3,0)    ;
+          msgControllerFullData[index].f3_w4             = outerLoopWk_flexi_3(4,0)    ;
+          msgControllerFullData[index].f3_w5             = outerLoopWk_flexi_3(5,0)    ;
+          msgControllerFullData[index].f3_w6             = outerLoopWk_flexi_3(6,0)    ;
+          msgControllerFullData[index].f3_w7             = outerLoopWk_flexi_3(7,0)    ;
+
+          msgControllerFullData[index].f4_w0             = outerLoopWk_flexi_4(0,0)    ;
+          msgControllerFullData[index].f4_w1             = outerLoopWk_flexi_4(1,0)    ;
+          msgControllerFullData[index].f4_w2             = outerLoopWk_flexi_4(2,0)    ;
+          msgControllerFullData[index].f4_w3             = outerLoopWk_flexi_4(3,0)    ;
+          msgControllerFullData[index].f4_w4             = outerLoopWk_flexi_4(4,0)    ;
+          msgControllerFullData[index].f4_w5             = outerLoopWk_flexi_4(5,0)    ;
+          msgControllerFullData[index].f4_w6             = outerLoopWk_flexi_4(6,0)    ;
+          msgControllerFullData[index].f4_w7             = outerLoopWk_flexi_4(7,0)    ;
 
           // MRAC Params
           outerLoopMRACmodelY.getGamma( msgControllerFullData[index].gamma_1,

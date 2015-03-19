@@ -58,6 +58,43 @@ filtW5             :  0.0001  #-0.0010 #-0.0018
 filtW6             : -0.0013  #-0.0007 #-0.0018
 filtW7             :  0.0002  #-0.0009 # 0.0014
 
+# ARMA parameters for flexiforce          
+flex_1_filtW0      : 0.0
+flex_1_filtW1      : 0.0
+flex_1_filtW2      : 0.0
+flex_1_filtW3      : 0.0
+flex_1_filtW4      : 0.0
+flex_1_filtW5      : 0.0
+flex_1_filtW6      : 0.0
+flex_1_filtW7      : 0.0
+
+flex_2_filtW0      : 0.0
+flex_2_filtW1      : 0.0
+flex_2_filtW2      : 0.0
+flex_2_filtW3      : 0.0
+flex_2_filtW4      : 0.0
+flex_2_filtW5      : 0.0
+flex_2_filtW6      : 0.0
+flex_2_filtW7      : 0.0
+
+flex_3_filtW0      : 0.0
+flex_3_filtW1      : 0.0
+flex_3_filtW2      : 0.0
+flex_3_filtW3      : 0.0
+flex_3_filtW4      : 0.0
+flex_3_filtW5      : 0.0
+flex_3_filtW6      : 0.0
+flex_3_filtW7      : 0.0
+
+flex_4_filtW0      : 0.0
+flex_4_filtW1      : 0.0
+flex_4_filtW2      : 0.0
+flex_4_filtW3      : 0.0
+flex_4_filtW4      : 0.0
+flex_4_filtW5      : 0.0
+flex_4_filtW6      : 0.0
+flex_4_filtW7      : 0.0
+
 # This makes zero any force less than below
 forceCutOffX       : 0.0
 forceCutOffY       : 0.0

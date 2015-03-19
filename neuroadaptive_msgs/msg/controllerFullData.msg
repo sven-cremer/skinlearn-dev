@@ -246,6 +246,43 @@ float64 w5
 float64 w6
 float64 w7
 
+# Flexi Force Filter Weights
+float64 f1_w0
+float64 f1_w1
+float64 f1_w2
+float64 f1_w3
+float64 f1_w4
+float64 f1_w5
+float64 f1_w6
+float64 f1_w7
+
+float64 f2_w0
+float64 f2_w1
+float64 f2_w2
+float64 f2_w3
+float64 f2_w4
+float64 f2_w5
+float64 f2_w6
+float64 f2_w7
+
+float64 f3_w0
+float64 f3_w1
+float64 f3_w2
+float64 f3_w3
+float64 f3_w4
+float64 f3_w5
+float64 f3_w6
+float64 f3_w7
+
+float64 f4_w0
+float64 f4_w1
+float64 f4_w2
+float64 f4_w3
+float64 f4_w4
+float64 f4_w5
+float64 f4_w6
+float64 f4_w7
+
 # MRAC Params
 float64 gamma_1
 float64 gamma_2
