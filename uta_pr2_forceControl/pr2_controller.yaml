@@ -5,7 +5,7 @@ baud               : 2000000
 useCurrentCartPose : false
 useNullspacePose   : true
 useFTinput         : true
-forceTorqueOn      : false
+forceTorqueOn      : true
 useFlexiForce      : true
 
 # Only one can be true
@@ -64,9 +64,9 @@ forceCutOffY       : 0.0
 forceCutOffZ       : 0.0
 
 # Params for the MSD outer-loop controller
-m_M                 : 200.0
-m_S                 : 50.0
-m_D                 : 10.0
+m_M                 : 1.0
+m_S                 : 0.0
+m_D                 : 5.0
 
 # Params for M(s) of the RLS models
 task_mA             : 1.5
@@ -123,13 +123,23 @@ nnNum_Joints        : 7
 
 nn_Kv               : 5
 nn_lambda           : 20
-nn_kappa            : 0.07
+nn_kappa            : 0.3
 nn_Kz               : 0.001 
-nn_Zb               : 1000 
-nn_feedForwardForce : 0   
+nn_Zb               : 100 
+nn_feedForwardForce : 1   
 nn_nnF              : 100 
-nn_nnG              : 100
+nn_nnG              : 200
 nn_ON               : 1
+
+# nn_Kv               : 5
+# nn_lambda           : 20
+# nn_kappa            : 0.07
+# nn_Kz               : 0.001 
+# nn_Zb               : 1000 
+# nn_feedForwardForce : 0   
+# nn_nnF              : 100 
+# nn_nnG              : 100
+# nn_ON               : 1
 
 cartPos_Kp_x : 60.0
 cartPos_Kp_y : 60.0
