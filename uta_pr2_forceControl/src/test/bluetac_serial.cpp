@@ -141,6 +141,8 @@ public:
 void publishTactileData()
   {
     tacSerial->getDataArrayFromSerialPort( force );
+    force = force / 100.0;
+
 	m_tactileVizPub.publish( genVizvizMarkerArray(pos, force ) );
 
 	m_flexiforce_wrench.force.x  = force(0);
