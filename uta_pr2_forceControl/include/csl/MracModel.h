@@ -298,7 +298,7 @@ public:
     q_m            = param_q_m           ;
     q              = param_q             ;
     qdd_m          = param_qdd_m         ;
-    inputForce            = param_t_r           ;
+    inputForce     = param_t_r           ;
     task_ref       = param_task_ref      ;
 
     update();

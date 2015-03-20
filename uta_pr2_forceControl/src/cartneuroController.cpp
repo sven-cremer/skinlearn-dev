@@ -454,6 +454,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
 
   outerLoopWk.resize(8,1);
+  outerLoopWk_flexi_1.resize(8,1);
+  outerLoopWk_flexi_2.resize(8,1);
+  outerLoopWk_flexi_3.resize(8,1);
+  outerLoopWk_flexi_4.resize(8,1);
+
+
   if( useFIRmodel || useARMAmodel || useCTARMAmodel)
   {
 	  outerLoopWk(0,0) = filtW0 ; outerLoopWk_flexi_1(0,0) = flex_1_filtW0 ; outerLoopWk_flexi_2(0,0) = flex_2_filtW0 ; outerLoopWk_flexi_3(0,0) = flex_3_filtW0 ; outerLoopWk_flexi_4(0,0) = flex_4_filtW0 ;
