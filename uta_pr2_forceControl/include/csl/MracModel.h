@@ -331,7 +331,7 @@ public:
       // FIXME Fake Human Force
       y_dot       = -a         * y             + b      * u_c                ; // Human Model           (3)
       yp_dot      = -an        * yp            + bn     * u                  ; // Robot Impedance Model (2)
-      ym_dot      = -am        * ym            + bm     * u_c                ; // Model Referance       (1)
+      ym_dot      = -am        * ym            + bm     * u_c                ; // Model Reference       (1)
 
       yhat_dot    = -ahat      * y_hat         + bhat   * u_c                ; // Human Identifier Model(4)
 
