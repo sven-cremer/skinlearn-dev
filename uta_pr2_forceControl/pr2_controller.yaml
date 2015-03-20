@@ -12,9 +12,9 @@ useFlexiForce      : true
 useARMAmodel       : false
 useCTARMAmodel     : false
 useFIRmodel        : false
-useMRACmodel       : false
+useMRACmodel       : true
 useIRLmodel        : false
-useMSDmodel        : true
+useMSDmodel        : false
 useDirectmodel     : false
 
 outerLoop_time     : 0.05
@@ -123,8 +123,15 @@ cartIniRoll  :  1.57079633
 cartIniPitch :  0.0
 cartIniYaw   :  1.57079633
 
+# cartDesX     :  0.7
+# cartDesY     : -0.3
+# cartDesZ     :  0.1
+# cartDesRoll  :  0.0
+# cartDesPitch :  0.0
+# cartDesYaw   :  0.0
+
 cartDesX     :  0.7
-cartDesY     : -0.3
+cartDesY     :  0.3
 cartDesZ     :  0.1
 cartDesRoll  :  0.0
 cartDesPitch :  0.0
