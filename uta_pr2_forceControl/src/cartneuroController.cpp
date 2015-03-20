@@ -1213,15 +1213,15 @@ void PR2CartneuroControllerClass::update()
 	                                       task_ref               (0) ,
 	                                       task_refModel_output   (0)  );
 
-		    // Y axis
-		    outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
-                                           Xd                     (1) ,
-                                           X_m                    (1) ,
-                                           X                      (1) ,
-                                           Xdd_m                  (1) ,
-                                           transformed_force      (1) ,
-                                           task_ref               (1) ,
-                                           task_refModel_output   (1)  );
+//		    // Y axis
+//		    outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
+//                                           Xd                     (1) ,
+//                                           X_m                    (1) ,
+//                                           X                      (1) ,
+//                                           Xdd_m                  (1) ,
+//                                           transformed_force      (1) ,
+//                                           task_ref               (1) ,
+//                                           task_refModel_output   (1)  );
 
             // ROS_ERROR_STREAM("USING RLS ARMA");
             outerLoopRLSmodelX.getWeights( outerLoopWk ) ;

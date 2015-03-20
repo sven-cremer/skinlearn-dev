@@ -100,8 +100,8 @@ public:
 	  m_reloadLibrariesClient    = m_node.serviceClient<pr2_mechanism_msgs::ReloadControllerLibraries>("pr2_controller_manager/reload_controller_libraries");
 	  m_listControllersClient    = m_node.serviceClient<pr2_mechanism_msgs::ListControllers>("pr2_controller_manager/list_controllers");
 	  
-	  m_rCartPub = m_node.advertise<geometry_msgs::PoseStamped>( "/r_cart/command_pose", 10 );
-	  m_lCartPub = m_node.advertise<geometry_msgs::PoseStamped>( "/l_cart/command_pose", 10 );
+	  m_rCartPub = m_node.advertise<geometry_msgs::PoseStamped>( "/l_cart/command_pose", 10 );
+	  m_lCartPub = m_node.advertise<geometry_msgs::PoseStamped>( "/r_cart/command_pose", 10 );
 
 	  // Initial cartesian pose
 	  r_cartIniX     = 0.7 ;
@@ -228,7 +228,7 @@ void switchToCartneuroController()
 	pr2_mechanism_msgs::SwitchController m_cartneuroControllerStart;
 	m_cartneuroControllerStart.request.strictness  = m_cartneuroControllerStart.request.BEST_EFFORT;
 	m_cartneuroControllerStart.request.start_controllers.push_back("pr2_cartneuroController");
-	m_cartneuroControllerStart.request.stop_controllers.push_back("r_cart");
+	m_cartneuroControllerStart.request.stop_controllers.push_back("l_cart");
 	m_switchControllerClient.call(m_cartneuroControllerStart);
 }
 
@@ -236,7 +236,7 @@ void switchToArmController()
 {
 	pr2_mechanism_msgs::SwitchController m_armControllerStart;
 	m_armControllerStart.request.strictness  = m_armControllerStart.request.BEST_EFFORT;
-	m_armControllerStart.request.start_controllers.push_back("r_cart");
+	m_armControllerStart.request.start_controllers.push_back("l_cart");
 	m_armControllerStart.request.stop_controllers.push_back("pr2_cartneuroController");
 	m_switchControllerClient.call(m_armControllerStart);
 }
