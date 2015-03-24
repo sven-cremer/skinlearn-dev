@@ -130,6 +130,9 @@ public:
     yhat_dot = 0 ; y_hat   = 0 ;
     yp       = 0 ; ym      = 0 ;
 
+    // Human model
+	y        = 0 ;
+
 //    u_c = 1;
 
     // Gains
@@ -213,8 +216,6 @@ public:
   {
 	yp     = param_yp ;
 	ym     = param_ym ;
-	y      = param_ym ;
-	y_hat  = param_ym ;
   }
 
   void updateGamma( double param_gamma_1,
@@ -320,8 +321,8 @@ public:
     u_c = task_ref(0);
 
     {
-      // Human force
-      //y = inputForce(0) ;
+      // Real Human force
+      y = inputForce(0) ;
 
       u           = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * yhat_dot
     		                                                  - theta_4 * u_c; //  Control Law
@@ -331,7 +332,7 @@ public:
       // k + 1
       // dot
       // FIXME Fake Human Force
-      y_dot       = -a         * y             + b      * u_c                ; // Human Model           (3)
+//      y_dot       = -a         * y             + b      * u_c                ; // Human Model           (3)
       yp_dot      = -an        * yp            + bn     * u                  ; // Robot Impedance Model (2)
       ym_dot      = -am        * ym            + bm     * u_c                ; // Model Reference       (1)
 
@@ -353,7 +354,7 @@ public:
       yp      = yp      + yp_dot      * delT ;
 
       // FIXME Fake Human Force
-      y       = y       + y_dot       * delT ;
+//      y       = y       + y_dot       * delT ;
       y_hat   = y_hat   + yhat_dot    * delT ;
 
       theta_1 = theta_1 + theta_1_dot * delT ;
@@ -401,7 +402,7 @@ public:
       q_m(0)   = yp ;
 
       // FIXME Fake Human Force
-      inputForce(0) = y;
+//      inputForce(0) = y;
 
       // Backward difference
       // TODO better way to do this?
