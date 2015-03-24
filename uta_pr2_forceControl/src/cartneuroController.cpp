@@ -1170,38 +1170,41 @@ void PR2CartneuroControllerClass::update()
 		// RLS ARMA
 		if( useARMAmodel )
 		{
-            // Set ARMA parameters
-            // X axis
-            if( flexiForce(0) > flexiForce(2) ){
+			if( useFlexiForce )
+			{
+                // Set ARMA parameters
+                // X axis
+                if( flexiForce(0) > flexiForce(2) ){
 
-                outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_1 ) ;
-                if( useFixedWeights )
-                	outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_1 );
-			    else
-			    	outerLoopRLSmodelX.setUpdatedWeights();
+                    outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_1 ) ;
+                    if( useFixedWeights )
+                    	outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_1 );
+			        else
+			        	outerLoopRLSmodelX.setUpdatedWeights();
 
-            }else{
-            	outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_3 ) ;
-            	if( useFixedWeights )
-            		outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_3 );
-                else
-                	outerLoopRLSmodelX.setUpdatedWeights();
-            }
+                }else{
+                	outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_3 ) ;
+                	if( useFixedWeights )
+                		outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_3 );
+                    else
+                    	outerLoopRLSmodelX.setUpdatedWeights();
+                }
 
-            // Y axis
-            if( flexiForce(1) > flexiForce(3) ){
-            	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_2 ) ;
-            	if( useFixedWeights )
-            		outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_2 );
-            	else
-            		outerLoopRLSmodelY.setUpdatedWeights();
-            }else{
-            	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_4 ) ;
-            	if( useFixedWeights )
-            		outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_4 );
-            	else
-            		outerLoopRLSmodelY.setUpdatedWeights();
-            }
+                // Y axis
+                if( flexiForce(1) > flexiForce(3) ){
+                	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_2 ) ;
+                	if( useFixedWeights )
+                		outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_2 );
+                	else
+                		outerLoopRLSmodelY.setUpdatedWeights();
+                }else{
+                	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_4 ) ;
+                	if( useFixedWeights )
+                		outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_4 );
+                	else
+                		outerLoopRLSmodelY.setUpdatedWeights();
+                }
+			}
 
             // X axis
 	        outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
@@ -1224,21 +1227,26 @@ void PR2CartneuroControllerClass::update()
 //                                           task_refModel_output   (1)  );
 
             // ROS_ERROR_STREAM("USING RLS ARMA");
-            outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
-            outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
 
-   	 	    // X axis
-            if( flexiForce(0) > flexiForce(2) ){
-   	 	    outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_1 ) ;
-            }else{
-            	outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_3 ) ;
-            }
+            if( useFlexiForce )
+            {
+   	 	        // X axis
+                if( flexiForce(0) > flexiForce(2) ){
+   	 	        outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_1 ) ;
+                }else{
+                	outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_3 ) ;
+                }
 
-            // Y axis
-            if( flexiForce(1) > flexiForce(3) ){
-   	 		outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_2 ) ;
-            }else{
-            	outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_4 ) ;
+                // Y axis
+                if( flexiForce(1) > flexiForce(3) ){
+   	 		    outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_2 ) ;
+                }else{
+                	outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_4 ) ;
+                }
+            }else
+            {
+            	outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
+				outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
             }
 
 
