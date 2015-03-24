@@ -265,7 +265,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   // Initial cartesian pose
   cartIniX     = 0.0 ;
-  cartIniY     = 0.0 ;
+  cartIniY     = 0.3 ;
   cartIniZ     = 0.0 ;
   cartIniRoll  = 0.0 ;
   cartIniPitch = 0.0 ;
@@ -541,6 +541,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_intentLoopTime = "/intentEst_time";
   if (!n.getParam( para_intentLoopTime , intentLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentLoopTime.c_str()) ; return false; }
 
+  useSimHuman = false ;
+  std::string para_simHuman = "/simHuman";
+  if (!n.getParam( para_simHuman , useSimHuman )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman.c_str()) ; return false; }
+
+
   // initial conditions
   ode_init_x[0 ] = 0.0;
   ode_init_x[1 ] = 0.0;
@@ -648,7 +653,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                 task_mB );
   outerLoopMRACmodelX.updateIni( cartIniX,
   		  	  	  	  	  	  	 cartIniX );
-
+  outerLoopMRACmodelX.updateSimHuman( useSimHuman );
   outerLoopMRACmodelX.updateGamma( mrac_gamma_1,
 			                       mrac_gamma_2,
 			                       mrac_gamma_3,
@@ -660,7 +665,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
                                 task_mB );
   outerLoopMRACmodelY.updateIni( cartIniY,
 		  	  	  	  	  	  	 cartIniY );
-
+  outerLoopMRACmodelY.updateSimHuman( useSimHuman );
   outerLoopMRACmodelY.updateGamma( mrac_gamma_1,
 			                       mrac_gamma_2,
 			                       mrac_gamma_3,

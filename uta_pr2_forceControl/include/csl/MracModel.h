@@ -101,6 +101,9 @@ class MracModel
   double a_task ;
   double b_task ;
 
+  // If true simulated human used to generate force
+  bool simHuman;
+
 public:
   MracModel()
   {
@@ -120,6 +123,8 @@ public:
   void init( int para_num_Joints )
   {
 
+	simHuman = false ;
+
     // Transfer Functions
     a  = 3  ; b  = 3   ;
     am = 6  ; bm = 6   ;
@@ -129,8 +134,6 @@ public:
     theta_1  = 0 ; theta_2 = 0 ; theta_3 = 0 ; theta_4 = 0 ;
     yhat_dot = 0 ; y_hat   = 0 ;
     yp       = 0 ; ym      = 0 ;
-
-    // Human model
 	y        = 0 ;
 
 //    u_c = 1;
@@ -188,6 +191,11 @@ public:
 
     inputForce       = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
+  }
+
+  void updateSimHuman(double p_simHuman)
+  {
+	simHuman = p_simHuman;
   }
 
   void updateDelT(double p_delT)
@@ -270,13 +278,13 @@ public:
                double & param_task_ref       ,
                double & param_task_ref_model  )
   {
-    qd_m    (0)       = param_qd_m ;
-    qd      (0)       = param_qd   ;
-    q_m     (0)       = param_q_m  ;
-    q       (0)       = param_q    ;
-    qdd_m   (0)       = param_qdd_m;
-    inputForce     (0)       = param_t_r  ;
-    task_ref(0)       = param_task_ref;
+    qd_m      (0) = param_qd_m    ;
+    qd        (0) = param_qd      ;
+    q_m       (0) = param_q_m     ;
+    q         (0) = param_q       ;
+    qdd_m     (0) = param_qdd_m   ;
+    inputForce(0) = param_t_r     ;
+    task_ref  (0) = param_task_ref;
 
     update();
 
@@ -284,7 +292,7 @@ public:
     param_q_m            = q_m(0);
     param_qd_m           = qd_m(0);
     param_qdd_m          = qdd_m(0);
-//    param_t_r            = t_r(0);
+    param_t_r            = inputForce(0);
   }
 
   void update( Eigen::MatrixXd & param_qd_m          ,
@@ -321,8 +329,11 @@ public:
     u_c = task_ref(0);
 
     {
-      // Real Human force
-      y = inputForce(0) ;
+    	if( !simHuman )
+    	{
+            // Real Human force
+            y = inputForce(0) ;
+    	}
 
       u           = - theta_1 * yhat_dot - theta_2 * yp - theta_3 * yhat_dot
     		                                                  - theta_4 * u_c; //  Control Law
@@ -331,8 +342,12 @@ public:
 
       // k + 1
       // dot
-      // FIXME Fake Human Force
-//      y_dot       = -a         * y             + b      * u_c                ; // Human Model           (3)
+      if( simHuman )
+      {
+    	  // FIXME Fake Human Force
+          y_dot   = -a         * y             + b      * u_c                ; // Human Model           (3)
+      }
+
       yp_dot      = -an        * yp            + bn     * u                  ; // Robot Impedance Model (2)
       ym_dot      = -am        * ym            + bm     * u_c                ; // Model Reference       (1)
 
@@ -341,20 +356,24 @@ public:
       ahat_dot    = -gamma_4 * P_h * y_tilde * y_hat                         ; // A_hat     (5)
       bhat_dot    =  gamma_5 * P_h * y_tilde * u_c                           ; // B_hat     (6)
 
-      theta_1_dot =  gamma_1 * 1/bn * P_m * e * u_c                          ; // FW Gain 1 (7)
-      theta_2_dot =  gamma_2 * 1/bn * P_m * e * yp                           ; // FW Gain 2 (8)
-      theta_3_dot =  gamma_3 * bn   * P_m * e * y_hat
-    		       + gamma_1 * ahat * 1/bn * P_m *e * u_c
-    		       - gamma_4 * theta_1 * P_h * y_tilde * y_hat               ; // FW Gain 3 (9)
-      theta_4_dot =  gamma_4 *(bhat-1/bn) * P_m * e * u_c                    ; // FW Gain 4 (10)
+      theta_1_dot =  gamma_1 * 1/bn       * P_m  * e       * u_c             ; // FW Gain 1 (7)
+      theta_2_dot =  gamma_2 * 1/bn       * P_m  * e       * yp              ; // FW Gain 2 (8)
+      theta_3_dot =  gamma_3 * bn         * P_m  * e       * y_hat
+    		       + gamma_1 * ahat       * 1/bn * P_m     * e * u_c
+    		       - gamma_4 * theta_1    * P_h  * y_tilde * y_hat           ; // FW Gain 3 (9)
+      theta_4_dot =  gamma_4 *(bhat-1/bn) * P_m  * e       * u_c             ; // FW Gain 4 (10)
 
 
       // 1dt order integrator
       ym      = ym      + ym_dot      * delT ;
       yp      = yp      + yp_dot      * delT ;
 
-      // FIXME Fake Human Force
-//      y       = y       + y_dot       * delT ;
+      if( simHuman )
+      {
+    	  // FIXME Fake Human Force
+          y   = y       + y_dot       * delT ;
+      }
+
       y_hat   = y_hat   + yhat_dot    * delT ;
 
       theta_1 = theta_1 + theta_1_dot * delT ;
@@ -365,44 +384,14 @@ public:
       ahat    = ahat    + ahat_dot    * delT ;
       bhat    = bhat    + bhat_dot    * delT ;
 
-      ///
-//      yhat_dot   = -ahat * yhat + bhat * u_c;  % Human Identifier Model(4)
-//           u = - theta_1 * yhat_dot - theta_2 * yp    - theta_3 * y_hat    - theta_4 * u_c; //   Control Law
-//           e = yp- ym;                    //   Model Error
-//      y_tilde = y- y_hat;       				//  Estimation Error
-//
-//           yp_dot   = -an     *  yp     + bn         * u  ;     // Robot Impedance Model (2)
-//           ym_dot   = -am     *  ym     + bm         * u_c;     // Model Referance       (1)
-//            y_dot   = -a      *  y      + b          * u_c;     // Human Model           (3)
-//
-//           // Ph and Pm are 1 always so not including them above
-//         ahat_dot   =-gamma_4 * P_h * y_tilde * y_hat;             // A_hat     (5)
-//         bhat_dot   = gamma_5 * P_h * y_tilde * u_c  ;             // B_hat     (6)
-//
-//      theta_1_dot   = gamma_1 * bn^-1 * P_m  * e      * u_c;            // FW Gain 1 (7)
-//      theta_2_dot   = gamma_2 * bn^-1 * P_m  * e      * yp;             // FW Gain 2 (8)
-//      theta_3_dot   = gamma_3 * P_m     * bn'    * e      * y_hat
-//                    + gamma_1 * ahat   * bn^-1 * P_m * e      * u_c
-//                    - gamma_4 * theta_1   * P_h    * y_tilde      * y_hat; // FW Gain 3 (9)
-//      theta_4_dot   = gamma_4 *(bhat-bn^-1 )    * P_m * e * u_c;      // FW Gain 4 (10)
-//
-//      xdot = [ ym_dot;   // State 01
-//      		 yp_dot;   // State 02
-//                y_dot;   // State 03
-//             yhat_dot;   // State 04
-//      	   ahat_dot;   // State 05
-//      	   bhat_dot;   // State 06
-//          theta_1_dot;   // State 07
-//          theta_2_dot;   // State 08
-//          theta_3_dot;   // State 09
-//          theta_4_dot];  // State 10
-      ///
-
       // Model output
       q_m(0)   = yp ;
 
-      // FIXME Fake Human Force
-//      inputForce(0) = y;
+      if( simHuman )
+      {
+    	   // FIXME Fake Human Force
+           inputForce(0) = y;
+      }
 
       // Backward difference
       // TODO better way to do this?

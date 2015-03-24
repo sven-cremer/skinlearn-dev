@@ -181,6 +181,8 @@ public:
   // Use Direct model x_d = x_m
   bool useDirectmodel;
 
+  bool useSimHuman;
+
   // Use FT sensors or not
   bool forceTorqueOn;
   bool useFlexiForce;

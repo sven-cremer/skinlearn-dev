@@ -8,6 +8,9 @@ useFTinput         : true
 forceTorqueOn      : true
 useFlexiForce      : false
 
+# Specifically for MRAC
+useSimHuman        : true
+
 # Only one can be true
 useARMAmodel       : false
 useCTARMAmodel     : false
@@ -96,9 +99,9 @@ flex_4_filtW6         : 0.0
 flex_4_filtW7         : 0.0
 
 # This makes zero any force less than below
-forceCutOffX          : 0.1
-forceCutOffY          : 0.1
-forceCutOffZ          : 0.1
+forceCutOffX          : 0.0
+forceCutOffY          : 0.0
+forceCutOffZ          : 0.0
 
 # Params for the MSD outer-loop controller
 m_M                   : 1.0
