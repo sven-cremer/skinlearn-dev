@@ -646,8 +646,14 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopMRACmodelX.updateDelT( outerLoopTime );
   outerLoopMRACmodelX.updateAB( task_mA,
                                 task_mB );
-  outerLoopMRACmodelY.updateIni( cartIniX,
+  outerLoopMRACmodelX.updateIni( cartIniX,
   		  	  	  	  	  	  	 cartIniX );
+
+  outerLoopMRACmodelX.updateGamma( mrac_gamma_1,
+			                       mrac_gamma_2,
+			                       mrac_gamma_3,
+			                       mrac_gamma_4,
+			                       mrac_gamma_5 ) ;
 
   outerLoopMRACmodelY.updateDelT( outerLoopTime );
   outerLoopMRACmodelY.updateAB( task_mA,
