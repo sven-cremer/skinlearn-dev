@@ -311,6 +311,8 @@ public:
 
   void update()
   {
+	yp = q_m(0);
+
     // Save iteration number
     iter = iter + 1;
 
