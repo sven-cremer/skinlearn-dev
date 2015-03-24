@@ -213,6 +213,8 @@ public:
   {
 	yp     = param_yp ;
 	ym     = param_ym ;
+	y      = param_ym ;
+	y_hat  = param_ym ;
   }
 
   void updateGamma( double param_gamma_1,
