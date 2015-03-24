@@ -264,9 +264,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; return false; }
 
   // Initial cartesian pose
-  cartIniX     = 0.0 ;
+  cartIniX     = 0.7 ;
   cartIniY     = 0.3 ;
-  cartIniZ     = 0.0 ;
+  cartIniZ     = 0.1 ;
   cartIniRoll  = 0.0 ;
   cartIniPitch = 0.0 ;
   cartIniYaw   = 0.0 ;
@@ -542,7 +542,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_intentLoopTime , intentLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentLoopTime.c_str()) ; return false; }
 
   useSimHuman = false ;
-  std::string para_simHuman = "/simHuman";
+  std::string para_simHuman = "/useSimHuman";
   if (!n.getParam( para_simHuman , useSimHuman )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman.c_str()) ; return false; }
 
 
