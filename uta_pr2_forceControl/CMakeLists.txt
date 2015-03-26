@@ -84,6 +84,7 @@ rosbuild_link_boost(${PROJECT_NAME} thread)
 
 rosbuild_add_executable(bluetac_serial src/test/bluetac_serial.cpp)
 target_link_libraries(bluetac_serial ${Boost_LIBRARIES})
+target_link_libraries( bluetac_serial pr2_gripper_sensor_controller_lib )
 
 #rosbuild_add_library( rbdlUtilLIB src/rbdl_urdfreader.cc )
 #rosbuild_add_executable( rbdlTest src/test/rbdlTest.cpp)

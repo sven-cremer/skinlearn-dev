@@ -20,6 +20,8 @@
 
 #include "serial/serial.h"
 
+#include <pr2_gripper_sensor_controller/digitalFilter.h>
+
 using std::string;
 using std::exception;
 using std::cout;
@@ -34,6 +36,10 @@ class TactileSerial
 
   bool firstRead;
   Eigen::VectorXd forceBias;
+
+  digitalFilter *forceLPFilt[4];
+
+  float tempData;
 
 private:
   void my_sleep(unsigned long milliseconds) {
@@ -67,6 +73,8 @@ public:
 TactileSerial(string port, unsigned long baud)
 {
 
+initFilter();
+
 forceBias.resize(4);
 firstRead=true;
 
@@ -86,6 +94,8 @@ firstRead=true;
 
 TactileSerial(int argc, char **argv)
 {
+
+initFilter();
 
 forceBias.resize(4);
 firstRead=true;
@@ -126,13 +136,23 @@ if(argc < 2)
 ~TactileSerial()
 {}
 
+void initFilter()
+{
+	  // create our filter for low-passed accelerometer data
+	  // 1st order butterworth. low-pass 1000 hz
+	  float b_lpfilt[] = {0.634, 0.634};
+	  float a_lpfilt[] = {1.0, 0.2679};
+	  for(int i=0; i < 4; i++)
+	    forceLPFilt[i] = new digitalFilter(1, true,b_lpfilt,a_lpfilt);
+}
+
 bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 {
     result = my_serial->readline();
     std::vector<std::string> strvec;
 
-    force << 1000,1000,0,0;
-	
+    force << 0.0,0.0,0.0,0.0;
+
     boost::algorithm::split(strvec,result,boost::algorithm::is_any_of(","), boost::algorithm::token_compress_on);
 	    
     for( unsigned int i=0; i<force.size(); i++)
@@ -147,9 +167,11 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
     }
 
 	force = force + Eigen::VectorXd::Ones(force.size()) - forceBias;
+
     for( unsigned int i=0; i<force.size(); i++)
     {
-	if(force(i) < 0){force(i) = 0;}
+    	force(i) = forceLPFilt[i]->getNextFilteredValue(force(i));
+    	if(force(i) < 0){force(i) = 0;}
     }
 }
 
