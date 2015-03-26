@@ -3,10 +3,10 @@ port               : /dev/ttyACM0
 baud               : 2000000
 
 useCurrentCartPose : false
-useNullspacePose   : true
+useNullspacePose   : false
 useFTinput         : true
 forceTorqueOn      : true
-useFlexiForce      : true
+useFlexiForce      : false
 
 # Specifically for MRAC
 useSimHuman        : false
@@ -20,7 +20,7 @@ useIRLmodel        : false
 useMSDmodel        : false
 useDirectmodel     : false
 
-outerLoop_time     : 0.001
+outerLoop_time     : 0.05
 
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
@@ -121,7 +121,7 @@ task_mB               : 1.5
 
 cartIniX              :  0.7
 cartIniY              :  0.0
-cartIniZ              :  0.1
+cartIniZ              : -0.1
 cartIniRoll           :  0.0
 cartIniPitch          :  0.0
 cartIniYaw            :  0.0
@@ -135,7 +135,7 @@ cartIniYaw            :  0.0
 
 cartDesX              :  0.7
 cartDesY              :  0.3
-cartDesZ              :  0.1
+cartDesZ              : -0.1
 cartDesRoll           :  0.0
 cartDesPitch          :  0.0
 cartDesYaw            :  0.0
@@ -147,8 +147,8 @@ cartDesYaw            :  0.0
 # lCartIniPitch       :  0.0
 # lCartIniYaw         : -1.57079633
 
-lCartIniX             :  0.8
-lCartIniY             :  0.05
+lCartIniX             :  0.6
+lCartIniY             : -0.3
 lCartIniZ             :  0.0
 lCartIniRoll          :  1.57079633
 lCartIniPitch         :  0.0
