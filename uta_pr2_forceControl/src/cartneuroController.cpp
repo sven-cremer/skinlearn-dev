@@ -990,12 +990,15 @@ void PR2CartneuroControllerClass::update()
   /////////////////
   // FT sensor ////
 
-//  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
-  Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
-  //                               w       x       y      z
-  Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
-  FT_transformed_force = ft_to_acc._transformVector( forceFT );
-  FT_transformed_force(1) = - FT_transformed_force(1);
+  if( forceTorqueOn )
+  {
+	  //  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
+	  Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
+	  //                               w       x       y      z
+	  Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
+	  FT_transformed_force = ft_to_acc._transformVector( forceFT );
+	  FT_transformed_force(1) = - FT_transformed_force(1);
+  }
 
   // FT sensor END ////
 

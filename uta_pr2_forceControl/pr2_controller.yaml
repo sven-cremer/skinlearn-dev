@@ -5,8 +5,8 @@ baud               : 2000000
 useCurrentCartPose : false
 useNullspacePose   : false
 useFTinput         : true
-forceTorqueOn      : true
-useFlexiForce      : false
+forceTorqueOn      : false
+useFlexiForce      : true
 
 # Specifically for MRAC
 useSimHuman        : false
