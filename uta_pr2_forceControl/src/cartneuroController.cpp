@@ -887,7 +887,6 @@ void PR2CartneuroControllerClass::starting()
 
 }
 
-
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
 {
@@ -1218,24 +1217,24 @@ void PR2CartneuroControllerClass::update()
 			}
 
             // X axis
-	        outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
-	                                       Xd                     (0) ,
-	                                       X_m                    (0) ,
-	                                       X                      (0) ,
-	                                       Xdd_m                  (0) ,
-	                                       transformed_force      (0) ,
-	                                       task_ref               (0) ,
-	                                       task_refModel_output   (0)  );
+//	        outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
+//	                                       Xd                     (0) ,
+//	                                       X_m                    (0) ,
+//	                                       X                      (0) ,
+//	                                       Xdd_m                  (0) ,
+//	                                       transformed_force      (0) ,
+//	                                       task_ref               (0) ,
+//	                                       task_refModel_output   (0)  );
 
-//		    // Y axis
-//		    outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
-//                                           Xd                     (1) ,
-//                                           X_m                    (1) ,
-//                                           X                      (1) ,
-//                                           Xdd_m                  (1) ,
-//                                           transformed_force      (1) ,
-//                                           task_ref               (1) ,
-//                                           task_refModel_output   (1)  );
+		    // Y axis
+		    outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
+                                           Xd                     (1) ,
+                                           X_m                    (1) ,
+                                           X                      (1) ,
+                                           Xdd_m                  (1) ,
+                                           transformed_force      (1) ,
+                                           task_ref               (1) ,
+                                           task_refModel_output   (1)  );
 
             // ROS_ERROR_STREAM("USING RLS ARMA");
 
