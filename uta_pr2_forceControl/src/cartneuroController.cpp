@@ -1114,6 +1114,7 @@ void PR2CartneuroControllerClass::update()
       /////////////////////////
       // Simulated human model
 
+/*
       // Open loop version
       ode_init_x[2] = task_ref(1); // q_r
       ode_init_x[3] = 0          ; // qd_r
@@ -1145,6 +1146,7 @@ void PR2CartneuroControllerClass::update()
 
 
       ROS_ERROR_STREAM("USING Simulated human model");
+*/
 
       // END Simulated human model
       /////////////////////////

@@ -6,16 +6,16 @@ useCurrentCartPose : false
 useNullspacePose   : true
 useFTinput         : true
 forceTorqueOn      : true
-useFlexiForce      : false
+useFlexiForce      : true
 
 # Specifically for MRAC
-useSimHuman        : true
+useSimHuman        : false
 
 # Only one can be true
-useARMAmodel       : false
+useARMAmodel       : true
 useCTARMAmodel     : false
 useFIRmodel        : false
-useMRACmodel       : true
+useMRACmodel       : false
 useIRLmodel        : false
 useMSDmodel        : false
 useDirectmodel     : false
@@ -109,8 +109,8 @@ m_S                   : 0.0
 m_D                   : 5.0
 
 # Params for M(s) of the RLS models
-task_mA               : 0.5
-task_mB               : 0.5
+task_mA               : 1.5
+task_mB               : 1.5
 
 # cartIniX            :  0.7
 # cartIniY            :  0.0
@@ -120,7 +120,7 @@ task_mB               : 0.5
 # cartIniYaw          :  0.0
 
 cartIniX              :  0.7
-cartIniY              :  0.3
+cartIniY              :  0.0
 cartIniZ              :  0.1
 cartIniRoll           :  0.0
 cartIniPitch          :  0.0
@@ -134,7 +134,7 @@ cartIniYaw            :  0.0
 # cartDesYaw          :  0.0
 
 cartDesX              :  0.7
-cartDesY              :  0.0
+cartDesY              :  0.3
 cartDesZ              :  0.1
 cartDesRoll           :  0.0
 cartDesPitch          :  0.0
@@ -203,14 +203,14 @@ cartRot_Kd_y          : 3
 cartRot_Kd_z          : 3
 
 # Nominal angles for the arm joints
-                # Left arm              # Right arm
-nom_joint_0  :  0.0 # 0.067             # -0.48577  
-nom_joint_1  :  0.0 # 0.036             # -0.0190721
-nom_joint_2  :  1.5828     # 0.012      # -1.51115  
-nom_joint_3  : -0.5 #-0.097              # -1.70928  
-nom_joint_4  : 0.0 #-0.983              #  1.54561  
-nom_joint_5  : 0.0 #-0.0947             #  0.046854 
-nom_joint_6  : 0.0 # 0.1114             # -0.0436174
+                # Left arm          # Right arm
+nom_joint_0  :  0.0    # 0.067      # -0.48577  
+nom_joint_1  :  0.0    # 0.036      # -0.0190721
+nom_joint_2  :  1.5828 # 0.012      # -1.51115  
+nom_joint_3  : -0.5    #-0.097      # -1.70928  
+nom_joint_4  :  0.0    #-0.983      #  1.54561  
+nom_joint_5  :  0.0    #-0.0947     #  0.046854 
+nom_joint_6  :  0.0    # 0.1114     # -0.0436174
 
 pr2_cartesianController:
   type: PR2CartesianControllerClass
