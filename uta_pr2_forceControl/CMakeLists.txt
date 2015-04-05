@@ -87,7 +87,7 @@ target_link_libraries(bluetac_serial ${Boost_LIBRARIES})
 target_link_libraries( bluetac_serial pr2_gripper_sensor_controller_lib )
 
 #rosbuild_add_library( rbdlUtilLIB src/rbdl_urdfreader.cc )
-#rosbuild_add_executable( rbdlTest src/test/rbdlTest.cpp)
+rosbuild_add_executable( rbdlTest src/test/rbdlTest.cpp)
 #target_link_libraries(   rbdlTest rbdlUtilLIB )
 
 #rosbuild_add_executable(odeTest src/odeTest.cpp)

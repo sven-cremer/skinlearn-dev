@@ -1,6 +1,6 @@
 #include <rbdl/rbdl.h>
 
-#include "rbdl_urdfreader.h"
+//#include "rbdl_urdfreader.h"
 
 #include <assert.h>
 #include <iostream>
@@ -253,6 +253,7 @@ bool construct_model (Model* rbdl_model, ModelPtr urdf_model, bool verbose) {
 }
 
 bool construct_model (Model* rbdl_model, ModelPtr urdf_model, bool verbose, string root_name, string tip_name) {
+
         boost::shared_ptr<urdf::Link> urdf_root_link;
 
         URDFLinkMap link_map;
@@ -324,20 +325,30 @@ bool construct_model (Model* rbdl_model, ModelPtr urdf_model, bool verbose, stri
                 cout << "  body name   : " << root->name << endl;
         }
 
+    	std::cout << endl << "End -1 ###########" << endl ;
+
         rbdl_model->AppendBody(root_joint_frame,
-                root_joint,
-                root_link,
-                root->name);
+                               root_joint,
+                               root_link,
+                               root->name);
+
+        std::cout << endl << "End 0 ###########" << endl ;
 
         if (link_stack.top()->child_joints.size() > 0) {
                 joint_index_stack.push(0);
         }
 
+        std::cout << endl << "End 1 ###########" << endl ;
+
         while (link_stack.size() > 0) {
+
+        	std::cout << endl << "End 2 ###########" << endl ;
+
                 LinkPtr cur_link = link_stack.top();
                 int joint_idx = joint_index_stack.top();
 
                 if (joint_idx < cur_link->child_joints.size()) {
+
                         JointPtr cur_joint = cur_link->child_joints[joint_idx];
 
                         // increment joint index
@@ -351,10 +362,18 @@ bool construct_model (Model* rbdl_model, ModelPtr urdf_model, bool verbose, stri
                                 for (int i = 1; i < joint_index_stack.size() - 1; i++) {
                                         cout << "  ";
                                 }
-                                cout << "joint '" << cur_joint->name << "' child link '" << link_stack.top()->name << "' type = " << cur_joint->type << endl;
+                                cout << "joint '" << cur_joint->name
+                                     << "' child link '" << link_stack.top()->name
+                                     << "' type = "      << cur_joint->type << endl;
                         }
 
                         joint_names.push_back(cur_joint->name);
+
+                    	if( ( cur_link->child_joints.size() <= 0 ) || ( cur_link->name != tip_name ) )
+                    	{
+                    		joint_names.clear();
+                    	}
+
                 } else {
                         link_stack.pop();
                         joint_index_stack.pop();
@@ -477,7 +496,7 @@ bool construct_model (Model* rbdl_model, ModelPtr urdf_model, bool verbose, stri
         return true;
 }
 
-RBDL_DLLAPI bool read_urdf_model (const char* filename, Model* model, bool verbose) {
+bool read_urdf_model (const char* filename, Model* model, bool verbose) {
 	assert (model);
 
 	cerr << "Warning: this code (RigidBodyDynamics::Addons::" << __func__ << "()) is not properly tested as" << endl;
@@ -491,6 +510,29 @@ RBDL_DLLAPI bool read_urdf_model (const char* filename, Model* model, bool verbo
 	}
 
 	if (!construct_model (model, urdf_model, verbose)) {
+		cerr << "Error constructing model from urdf file." << endl;
+		return false;
+	}
+
+	model->gravity.set (0., 0., -9.81);
+
+	return true;
+}
+
+bool read_urdf_model (const char* filename, Model* model, bool verbose, string root_name, string tip_name) {
+	assert (model);
+
+	cerr << "Warning: this code (RigidBodyDynamics::Addons::" << __func__ << "()) is not properly tested as" << endl;
+	cerr << "         I do not have a proper urdf model that I can use to validate the model loading." << endl;
+	cerr << "         Please use with care." << endl;
+
+	boost::shared_ptr<urdf::ModelInterface> urdf_model = urdf::parseURDF (filename);
+
+	if (!urdf_model) {
+		cerr << "Error opening urdf file" << endl;
+	}
+
+	if (!construct_model (model, urdf_model, verbose, root_name, tip_name)) {
 		cerr << "Error constructing model from urdf file." << endl;
 		return false;
 	}

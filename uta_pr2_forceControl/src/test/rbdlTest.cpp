@@ -42,7 +42,7 @@
 
 #include "rbdl.h"
 #include "rbdl_utils.h"
-#include "rbdl_urdfreader.h"
+#include "rbdl_urdfreader.cc"
 
 #include <urdf_model/model.h>
 #include <urdf_parser/urdf_parser.h>
@@ -70,6 +70,12 @@ int main(int argc, char** argv)
   Rmodel->gravity = Vector3d (0., -9.81, 0.);
 
   bool verbose = true;
+
+  std::cout << s_urdfString;
+
+  std::string root_name = "pelvis";
+  std::string tip_name = "r_gripper_tool_frame";
+
   if (!RigidBodyDynamics::Addons::read_urdf_model(s_urdfString.c_str(), Rmodel, verbose))
   {
     std::cerr << "Loading of urdf model failed!" << std::endl;
