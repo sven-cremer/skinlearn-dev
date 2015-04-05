@@ -44,7 +44,7 @@ include_directories(${PROTOBUF_INCLUDE_DIRS})
 #add_executable(bar bar.cc ${PROTO_SRCS} ${PROTO_HDRS})
 #target_link_libraries(bar ${PROTOBUF_LIBRARIES})
 
-rosbuild_add_library( controllerFullDataLIB src/controllerFullData.pb.cc )
+#rosbuild_add_library( controllerFullDataLIB src/controllerFullData.pb.cc )
 #rosbuild_add_executable( testProtobuf src/test/testProtobuf.cpp )
 #target_link_libraries(testProtobuf controllerFullDataLIB ${PROTOBUF_LIBRARIES})
 
