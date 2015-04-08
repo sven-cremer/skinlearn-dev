@@ -268,10 +268,11 @@ bool construct_model (Model* rbdl_model, ModelPtr urdf_model, bool verbose, stri
         stack<int> joint_index_stack;
 
         // add the bodies in a depth-first order of the model tree
-        link_stack.push (link_map[(urdf_model->getRoot()->name)]);
+        link_stack.push (link_map[(root_name)]);
+        //link_stack.push (link_map[(urdf_model->getRoot()->name)]);
 
         // add the root body
-        const boost::shared_ptr<const urdf::Link>& root = urdf_model->getRoot ();
+        const boost::shared_ptr<const urdf::Link>& root = urdf_model->getLink(root_name);
         Vector3d root_inertial_rpy;
         Vector3d root_inertial_position;
         Matrix3d root_inertial_inertia;
@@ -325,24 +326,16 @@ bool construct_model (Model* rbdl_model, ModelPtr urdf_model, bool verbose, stri
                 cout << "  body name   : " << root->name << endl;
         }
 
-    	std::cout << endl << "End -1 ###########" << endl ;
-
         rbdl_model->AppendBody(root_joint_frame,
                                root_joint,
                                root_link,
                                root->name);
 
-        std::cout << endl << "End 0 ###########" << endl ;
-
         if (link_stack.top()->child_joints.size() > 0) {
                 joint_index_stack.push(0);
         }
 
-        std::cout << endl << "End 1 ###########" << endl ;
-
         while (link_stack.size() > 0) {
-
-        	std::cout << endl << "End 2 ###########" << endl ;
 
                 LinkPtr cur_link = link_stack.top();
                 int joint_idx = joint_index_stack.top();
@@ -369,10 +362,10 @@ bool construct_model (Model* rbdl_model, ModelPtr urdf_model, bool verbose, stri
 
                         joint_names.push_back(cur_joint->name);
 
-                    	if( ( cur_link->child_joints.size() <= 0 ) || ( cur_link->name != tip_name ) )
-                    	{
-                    		joint_names.clear();
-                    	}
+//                    	if( ( cur_link->child_joints.size() <= 0 ) || ( cur_link->name != tip_name ) )
+//                    	{
+//                    		joint_names.clear();
+//                    	}
 
                 } else {
                         link_stack.pop();

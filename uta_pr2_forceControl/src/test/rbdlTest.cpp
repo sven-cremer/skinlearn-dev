@@ -73,14 +73,30 @@ int main(int argc, char** argv)
 
   std::cout << s_urdfString;
 
-  std::string root_name = "pelvis";
-  std::string tip_name = "r_gripper_tool_frame";
+  std::string root_name = "torso_lift_link";
+  std::string tip_name = "r_shoulder_pan_link"; // "r_gripper_tool_frame";
 
-  if (!RigidBodyDynamics::Addons::read_urdf_model(s_urdfString.c_str(), Rmodel, verbose))
+  if (!RigidBodyDynamics::Addons::read_urdf_model(s_urdfString.c_str(), Rmodel, verbose, root_name, tip_name))
   {
     std::cerr << "Loading of urdf model failed!" << std::endl;
     return -1;
   }
+
+  std::cout << std::endl << "DOF: " <<  Rmodel->dof_count << endl;
+
+//  for( int i = 0; i < Rmodel->dof_count; i++ )
+//  {
+//    std::cout << std::endl << "Body " << i << " : " << Rmodel->mBodyNameMap;
+//  }
+
+  std::map<std::string, unsigned int> bodyMap = Rmodel->mBodyNameMap;
+
+  typedef std::map< string, unsigned int >::const_iterator MapIterator;
+  for (MapIterator iter = bodyMap.begin(); iter != bodyMap.end(); iter++)
+  {
+      cout << "Key: " << iter->first << " | Values: " << iter->second << endl;
+  }
+
 
   //RigidBodyDynamics::InverseDynamics ( model, Q, QDot, QDDot,  Tau); //, &f_ext);
 
