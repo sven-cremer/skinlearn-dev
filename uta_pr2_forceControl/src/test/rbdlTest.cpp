@@ -97,22 +97,33 @@ int main(int argc, char** argv)
       cout << "Key: " << iter->first << " | Values: " << iter->second << endl;
   }
 
-  Math::VectorNd Q;
-  Math::MatrixNd H;
-
-  Q =  Math::VectorNd::Zero( Rmodel->dof_count );
-  H.resize( Rmodel->dof_count, Rmodel->dof_count );
 
   RigidBodyDynamics::Model model = *Rmodel;
 
-  RigidBodyDynamics::CompositeRigidBodyAlgorithm( model ,
-                                                      Q     ,
-                                                      H     ,
-                                                      true   );
+  cout << "Degree of freedom overview:" << endl;
+  cout << RigidBodyDynamics::Utils::GetModelDOFOverview(model);
 
-  std::cout << endl << H <<endl << endl << Q.transpose() << endl;
+  MatrixNd H = MatrixNd::Zero (model.dof_count, model.dof_count);
+  VectorNd Q = VectorNd::Zero (model.dof_count);
+  VectorNd QDot = VectorNd::Zero (model.dof_count);
+  VectorNd Tau = VectorNd::Ones (model.dof_count);
+  VectorNd QDDot = VectorNd::Zero (model.dof_count);
 
-  //RigidBodyDynamics::InverseDynamics ( model, Q, QDot, QDDot,  Tau); //, &f_ext);
+  std::cout << endl << "BEFORE: " << endl << H <<endl << endl << Q.transpose() << endl;
+
+  // Computes the joint space inertia matrix by using the Composite Rigid Body Algorithm
+  RigidBodyDynamics::CompositeRigidBodyAlgorithm( model, Q, H, false );
+
+  std::cout << endl << "AFTER: " << endl << H <<endl << endl << Q.transpose() << endl;
+
+  // Computes forward dynamics with the Articulated Body Algorithm
+  RigidBodyDynamics::ForwardDynamics ( model, Q, QDot, Tau, QDDot );
+
+  std::cout << "Q: "<< QDDot.transpose() << std::endl << std::endl;
+
+  RigidBodyDynamics::InverseDynamics ( model, Q, QDot, QDDot, Tau );
+
+  std::cout << "Tau: "<< Tau.transpose() << std::endl << std::endl;
 
   return 0;
 }
