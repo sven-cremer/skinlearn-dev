@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 
   std::cout << s_urdfString;
 
-  std::string root_name = "torso_lift_link";
+  std::string root_name = "r_shoulder_pan_link";
   std::string tip_name = "r_shoulder_pan_link"; // "r_gripper_tool_frame";
 
   if (!RigidBodyDynamics::Addons::read_urdf_model(s_urdfString.c_str(), Rmodel, verbose, root_name, tip_name))
@@ -97,6 +97,20 @@ int main(int argc, char** argv)
       cout << "Key: " << iter->first << " | Values: " << iter->second << endl;
   }
 
+  Math::VectorNd Q;
+  Math::MatrixNd H;
+
+  Q =  Math::VectorNd::Zero( Rmodel->dof_count );
+  H.resize( Rmodel->dof_count, Rmodel->dof_count );
+
+  RigidBodyDynamics::Model model = *Rmodel;
+
+  RigidBodyDynamics::CompositeRigidBodyAlgorithm( model ,
+                                                      Q     ,
+                                                      H     ,
+                                                      true   );
+
+  std::cout << endl << H <<endl << endl << Q.transpose() << endl;
 
   //RigidBodyDynamics::InverseDynamics ( model, Q, QDot, QDDot,  Tau); //, &f_ext);
 
