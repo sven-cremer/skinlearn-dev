@@ -45,6 +45,12 @@
 #include <std_srvs/Empty.h>
 #include <sound_play/sound_play.h>
 
+#include <vector>
+
+#include <Eigen/Core>
+#include <Eigen/StdVector>
+#include <Eigen/Geometry>
+
 using namespace std;
 
 class referenceTrajectoryClient
@@ -58,12 +64,26 @@ class referenceTrajectoryClient
   ros::Time start_time;        // Time of the first servo cycle
 
   // Desired cartesian pose
-  double cartDesX     ;
-  double cartDesY     ;
-  double cartDesZ     ;
-  double cartDesRoll  ;
-  double cartDesPitch ;
-  double cartDesYaw   ;
+  double cartDesX      ;
+  double cartDesY      ;
+  double cartDesZ      ;
+  double cartDesRoll   ;
+  double cartDesPitch  ;
+  double cartDesYaw    ;
+
+  double cartDes2X     ;
+  double cartDes2Y     ;
+  double cartDes2Z     ;
+  double cartDes2Roll  ;
+  double cartDes2Pitch ;
+  double cartDes2Yaw   ;
+
+  double cartDes3X     ;
+  double cartDes3Y     ;
+  double cartDes3Z     ;
+  double cartDes3Roll  ;
+  double cartDes3Pitch ;
+  double cartDes3Yaw   ;
 
   // Initial cartesian pose
   double cartIniX ;
@@ -77,9 +97,14 @@ class referenceTrajectoryClient
   bool runFlag     ;
   bool runAgainFlag;
 
+  vector<string> pointNames;
+  std::vector< Eigen::Vector3d,Eigen::aligned_allocator<Eigen::Vector3d> > desPoses ;
+
   // No of switch
   // How many times switched positions
   uint switchNo    ;
+
+  int posIndex;
 
 public:
 
@@ -89,13 +114,26 @@ public:
     setRefTraj_client= node.serviceClient<neuroadaptive_msgs::setCartPose>("pr2_cartneuroController/setRefTraj");
     start_time = ros::Time::now();
 
-    std::string para_cartDesX     = "/cartDesX";
-    std::string para_cartDesY     = "/cartDesY";
-    std::string para_cartDesZ     = "/cartDesZ";
-    std::string para_cartDesRoll  = "/cartDesRoll";
-    std::string para_cartDesPitch = "/cartDesPitch";
-    std::string para_cartDesYaw   = "/cartDesYaw";
+    std::string para_cartDesX     = "/cartDesX"      ;
+    std::string para_cartDesY     = "/cartDesY"      ;
+    std::string para_cartDesZ     = "/cartDesZ"      ;
+    std::string para_cartDesRoll  = "/cartDesRoll"   ;
+    std::string para_cartDesPitch = "/cartDesPitch"  ;
+    std::string para_cartDesYaw   = "/cartDesYaw"    ;
 
+    std::string para_cartDes2X     = "/cartDes2X"    ;
+    std::string para_cartDes2Y     = "/cartDes2Y"    ;
+    std::string para_cartDes2Z     = "/cartDes2Z"    ;
+    std::string para_cartDes2Roll  = "/cartDes2Roll" ;
+    std::string para_cartDes2Pitch = "/cartDes2Pitch";
+    std::string para_cartDes2Yaw   = "/cartDes2Yaw"  ;
+
+    std::string para_cartDes3X     = "/cartDes3X"    ;
+    std::string para_cartDes3Y     = "/cartDes3Y"    ;
+    std::string para_cartDes3Z     = "/cartDes3Z"    ;
+    std::string para_cartDes3Roll  = "/cartDes3Roll" ;
+    std::string para_cartDes3Pitch = "/cartDes3Pitch";
+    std::string para_cartDes3Yaw   = "/cartDes3Yaw"  ;
 
     std::string para_cartIniX     = "/cartIniX";
     std::string para_cartIniY     = "/cartIniY";
@@ -107,6 +145,21 @@ public:
     if (!node.getParam( para_cartDesRoll  , cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; }
     if (!node.getParam( para_cartDesPitch , cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; }
     if (!node.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; }
+
+    if (!node.getParam( para_cartDes2X     , cartDes2X     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2X    .c_str()) ; }
+    if (!node.getParam( para_cartDes2Y     , cartDes2Y     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Y    .c_str()) ; }
+    if (!node.getParam( para_cartDes2Z     , cartDes2Z     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Z    .c_str()) ; }
+    if (!node.getParam( para_cartDes2Roll  , cartDes2Roll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Roll .c_str()) ; }
+    if (!node.getParam( para_cartDes2Pitch , cartDes2Pitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Pitch.c_str()) ; }
+    if (!node.getParam( para_cartDes2Yaw   , cartDes2Yaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Yaw  .c_str()) ; }
+
+    if (!node.getParam( para_cartDes3X     , cartDes3X     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3X    .c_str()) ; }
+    if (!node.getParam( para_cartDes3Y     , cartDes3Y     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Y    .c_str()) ; }
+    if (!node.getParam( para_cartDes3Z     , cartDes3Z     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Z    .c_str()) ; }
+    if (!node.getParam( para_cartDes3Roll  , cartDes3Roll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Roll .c_str()) ; }
+    if (!node.getParam( para_cartDes3Pitch , cartDes3Pitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Pitch.c_str()) ; }
+    if (!node.getParam( para_cartDes3Yaw   , cartDes3Yaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Yaw  .c_str()) ; }
+
 
     if (!node.getParam( para_cartIniX, cartIniX )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; }
     if (!node.getParam( para_cartIniY, cartIniY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; }
@@ -120,6 +173,27 @@ public:
     runAgainFlag= false ;
 
     switchNo    = 0     ;
+
+    pointNames.push_back("Green!");
+    desPoses.push_back( Eigen::Vector3d(cartDesX,
+    		                            cartDesY,
+    		                            cartDesZ) );
+
+    pointNames.push_back("Blue!");
+    desPoses.push_back( Eigen::Vector3d(cartDes2X,
+    		                            cartDes2Y,
+    		                            cartDes2Z) );
+
+    pointNames.push_back("Yellow!");
+    desPoses.push_back( Eigen::Vector3d(cartDes3X,
+    		                            cartDes3Y,
+    		                            cartDes3Z) );
+
+    pointNames.push_back("Red!");
+    desPoses.push_back( Eigen::Vector3d(cartIniX,
+    		                            cartIniY,
+    		                            cartIniZ) );
+    posIndex = 0;
 
   }
 
@@ -151,41 +225,63 @@ public:
         captureFlag = true ;
       }
 
-      if( (ros::Time::now() - start_time).toSec() > 5 && !blueFlag )
+      if( (ros::Time::now() - start_time).toSec() > 5 )
       {
-    	ROS_INFO_STREAM("# BLUE # | Time: " << (ros::Time::now() - start_time).toSec() );
-        sc.say("Blue!");
+    	ROS_INFO_STREAM("# " << pointNames[posIndex] << " # | Time: " << (ros::Time::now() - start_time).toSec() );
+        sc.say(pointNames[posIndex]);
         sleepok(1, node);
-        setCartPoseAction.request.msg.position.x = cartDesX ;
-        setCartPoseAction.request.msg.position.y = cartDesY ;
-        setCartPoseAction.request.msg.position.z = cartDesZ ;
-        blueFlag = true ;
-        setRefTraj_client.call(setCartPoseAction);
-        switchNo++;
-      }
+        setCartPoseAction.request.msg.position.x = desPoses[posIndex].x() ;
+        setCartPoseAction.request.msg.position.y = desPoses[posIndex].y() ;
+        setCartPoseAction.request.msg.position.z = desPoses[posIndex].z() ;
 
-      if( (ros::Time::now() - start_time).toSec() > 10 && !redFlag )
-      {
-    	ROS_INFO_STREAM("# RED  # | Time: " << (ros::Time::now() - start_time).toSec() );
-        sc.say("Red!");
-        sleepok(1, node);
-        setCartPoseAction.request.msg.position.x = cartIniX ;
-        setCartPoseAction.request.msg.position.y = cartIniY ;
-        setCartPoseAction.request.msg.position.z = cartIniZ ;
         setRefTraj_client.call(setCartPoseAction);
-        redFlag = true ;
-
         start_time = ros::Time::now();
-        blueFlag   = false ;
-        redFlag = false ;
         switchNo++;
+        posIndex++;
+
+        if( posIndex >= pointNames.size() )
+        {
+        	posIndex = 0;
+        }
+
       }
+
+//      if( (ros::Time::now() - start_time).toSec() > 5 && !blueFlag )
+//      {
+//    	ROS_INFO_STREAM("# BLUE # | Time: " << (ros::Time::now() - start_time).toSec() );
+//        sc.say("Red!");
+//        sleepok(1, node);
+//        setCartPoseAction.request.msg.position.x = cartDesX ;
+//        setCartPoseAction.request.msg.position.y = cartDesY ;
+//        setCartPoseAction.request.msg.position.z = cartDesZ ;
+//        blueFlag = true ;
+//        setRefTraj_client.call(setCartPoseAction);
+//        switchNo++;
+//      }
+//
+//      if( (ros::Time::now() - start_time).toSec() > 10 && !redFlag )
+//      {
+//    	ROS_INFO_STREAM("# RED  # | Time: " << (ros::Time::now() - start_time).toSec() );
+//        sc.say("Blue!");
+//        sleepok(1, node);
+//        setCartPoseAction.request.msg.position.x = cartIniX ;
+//        setCartPoseAction.request.msg.position.y = cartIniY ;
+//        setCartPoseAction.request.msg.position.z = cartIniZ ;
+//        setRefTraj_client.call(setCartPoseAction);
+//        redFlag = true ;
+//
+//        start_time = ros::Time::now();
+//        blueFlag   = false ;
+//        redFlag = false ;
+//        switchNo++;
+//      }
 
       if( switchNo > 11 )
 	  {
     	  sleep(2);
 		  captureFlag = false ;
 		  switchNo    = 0     ;
+		  posIndex    = 0     ;
 		  ROS_INFO_STREAM("# Experiment DONE #");
 		  sc.say("Experiment complete!");
 		  ROS_INFO_STREAM("0 - no");
