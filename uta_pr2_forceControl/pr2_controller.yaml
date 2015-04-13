@@ -12,12 +12,12 @@ useFlexiForce      : true
 useSimHuman        : false
 
 # Only one can be true
-useARMAmodel       : false
+useARMAmodel       : true
 useCTARMAmodel     : false
 useFIRmodel        : false
 useMRACmodel       : false
 useIRLmodel        : false
-useMSDmodel        : true
+useMSDmodel        : false
 useDirectmodel     : false
 
 outerLoop_time     : 0.05
@@ -49,7 +49,7 @@ mrac_gamma_3       : 2.5
 mrac_gamma_4       : 5
 mrac_gamma_5       : 5
 
-fixedFilterWeights : true
+fixedFilterWeights : false
 
 # ARMA parameters
 filtW0                : -1.8775  #-1.8136 #-2.3646
@@ -139,6 +139,20 @@ cartDesZ              : -0.1
 cartDesRoll           :  0.0
 cartDesPitch          :  0.0
 cartDesYaw            :  0.0
+
+cartDes2X             :  0.9
+cartDes2Y             :  0.0
+cartDes2Z             : -0.1
+cartDes2Roll          :  0.0
+cartDes2Pitch         :  0.0
+cartDes2Yaw           :  0.0
+
+cartDes3X             :  0.9
+cartDes3Y             :  0.3
+cartDes3Z             : -0.1
+cartDes3Roll          :  0.0
+cartDes3Pitch         :  0.0
+cartDes3Yaw           :  0.0
 
 # lCartIniX           :  0.8
 # lCartIniY           :  0.05
