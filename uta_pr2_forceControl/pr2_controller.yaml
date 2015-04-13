@@ -141,14 +141,14 @@ cartDesPitch          :  0.0
 cartDesYaw            :  0.0
 
 cartDes2X             :  0.9
-cartDes2Y             :  0.0
+cartDes2Y             :  0.3
 cartDes2Z             : -0.1
 cartDes2Roll          :  0.0
 cartDes2Pitch         :  0.0
 cartDes2Yaw           :  0.0
 
 cartDes3X             :  0.9
-cartDes3Y             :  0.3
+cartDes3Y             :  0.0
 cartDes3Z             : -0.1
 cartDes3Roll          :  0.0
 cartDes3Pitch         :  0.0
