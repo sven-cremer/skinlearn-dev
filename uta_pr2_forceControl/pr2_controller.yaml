@@ -5,19 +5,19 @@ baud               : 2000000
 useCurrentCartPose : false
 useNullspacePose   : false
 useFTinput         : true
-forceTorqueOn      : false
+forceTorqueOn      : true
 useFlexiForce      : true
 
 # Specifically for MRAC
 useSimHuman        : false
 
 # Only one can be true
-useARMAmodel       : true
+useARMAmodel       : false
 useCTARMAmodel     : false
 useFIRmodel        : false
 useMRACmodel       : false
 useIRLmodel        : false
-useMSDmodel        : false
+useMSDmodel        : true
 useDirectmodel     : false
 
 outerLoop_time     : 0.05
@@ -49,7 +49,7 @@ mrac_gamma_3       : 2.5
 mrac_gamma_4       : 5
 mrac_gamma_5       : 5
 
-fixedFilterWeights : false
+fixedFilterWeights : true
 
 # ARMA parameters
 filtW0                : -1.8775  #-1.8136 #-2.3646
@@ -62,46 +62,46 @@ filtW6                : -0.0013  #-0.0007 #-0.0018
 filtW7                :  0.0002  #-0.0009 # 0.0014
 
 # ARMA parameters for flexiforce          
-flex_1_filtW0         : 0.0
-flex_1_filtW1         : 0.0
-flex_1_filtW2         : 0.0
-flex_1_filtW3         : 0.0
-flex_1_filtW4         : 0.0
-flex_1_filtW5         : 0.0
-flex_1_filtW6         : 0.0
-flex_1_filtW7         : 0.0
-
-flex_2_filtW0         : 0.0
-flex_2_filtW1         : 0.0
-flex_2_filtW2         : 0.0
-flex_2_filtW3         : 0.0
-flex_2_filtW4         : 0.0
-flex_2_filtW5         : 0.0
-flex_2_filtW6         : 0.0
-flex_2_filtW7         : 0.0
-
-flex_3_filtW0         : 0.0
-flex_3_filtW1         : 0.0
-flex_3_filtW2         : 0.0
-flex_3_filtW3         : 0.0
-flex_3_filtW4         : 0.0
-flex_3_filtW5         : 0.0
-flex_3_filtW6         : 0.0
-flex_3_filtW7         : 0.0
-
-flex_4_filtW0         : 0.0
-flex_4_filtW1         : 0.0
-flex_4_filtW2         : 0.0
-flex_4_filtW3         : 0.0
-flex_4_filtW4         : 0.0
-flex_4_filtW5         : 0.0
-flex_4_filtW6         : 0.0
-flex_4_filtW7         : 0.0
+flex_1_filtW0         :  0.0
+flex_1_filtW1         :  0.0
+flex_1_filtW2         :  0.0
+flex_1_filtW3         :  0.0
+flex_1_filtW4         :  0.0
+flex_1_filtW5         :  0.0
+flex_1_filtW6         :  0.0
+flex_1_filtW7         :  0.0
+                        
+flex_2_filtW0         : -0.6283
+flex_2_filtW1         : -0.3757
+flex_2_filtW2         :  0.1192
+flex_2_filtW3         : -0.1512
+flex_2_filtW4         :  0.0063
+flex_2_filtW5         : -0.0017
+flex_2_filtW6         : -0.0030
+flex_2_filtW7         :  0.0026
+                      
+flex_3_filtW0         :  0.0
+flex_3_filtW1         :  0.0
+flex_3_filtW2         :  0.0
+flex_3_filtW3         :  0.0
+flex_3_filtW4         :  0.0
+flex_3_filtW5         :  0.0
+flex_3_filtW6         :  0.0
+flex_3_filtW7         :  0.0
+                        
+flex_4_filtW0         : -0.7185
+flex_4_filtW1         :  0.1265
+flex_4_filtW2         : -0.1395
+flex_4_filtW3         : -0.2230
+flex_4_filtW4         : -0.0009
+flex_4_filtW5         :  0.0003
+flex_4_filtW6         : -0.0001
+flex_4_filtW7         :  0.0013
 
 # This makes zero any force less than below
-forceCutOffX          : 0.0
-forceCutOffY          : 0.0
-forceCutOffZ          : 0.0
+forceCutOffX          : 0.1
+forceCutOffY          : 0.1
+forceCutOffZ          : 0.1
 
 # Params for the MSD outer-loop controller
 m_M                   : 1.0
@@ -173,7 +173,7 @@ nn_lambda             : 20
 nn_kappa              : 0.3
 nn_Kz                 : 0.001 
 nn_Zb                 : 100 
-nn_feedForwardForce   : 0   
+nn_feedForwardForce   : 1   
 nn_nnF                : 100 
 nn_nnG                : 200
 nn_ON                 : 1
