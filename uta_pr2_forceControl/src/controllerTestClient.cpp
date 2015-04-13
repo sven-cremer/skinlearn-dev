@@ -178,26 +178,26 @@ public:
 	  std::string para_cartIniY     = "/cartIniY";
 	  std::string para_cartIniZ     = "/cartIniZ";
 
-	  if (!node.getParam( para_cartDesX     , r_cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX    .c_str()) ; }
-	  if (!node.getParam( para_cartDesY     , r_cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY    .c_str()) ; }
-	  if (!node.getParam( para_cartDesZ     , r_cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ    .c_str()) ; }
-	  if (!node.getParam( para_cartDesRoll  , r_cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; }
-	  if (!node.getParam( para_cartDesPitch , r_cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; }
-	  if (!node.getParam( para_cartDesYaw   , r_cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; }
+	  if (!m_node.getParam( para_cartDesX     , r_cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX    .c_str()) ; }
+	  if (!m_node.getParam( para_cartDesY     , r_cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY    .c_str()) ; }
+	  if (!m_node.getParam( para_cartDesZ     , r_cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ    .c_str()) ; }
+	  if (!m_node.getParam( para_cartDesRoll  , r_cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; }
+	  if (!m_node.getParam( para_cartDesPitch , r_cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; }
+	  if (!m_node.getParam( para_cartDesYaw   , r_cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; }
 
-	  if (!node.getParam( para_cartDes2X     , cartDes2X     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2X    .c_str()) ; }
-	  if (!node.getParam( para_cartDes2Y     , cartDes2Y     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Y    .c_str()) ; }
-	  if (!node.getParam( para_cartDes2Z     , cartDes2Z     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Z    .c_str()) ; }
-	  if (!node.getParam( para_cartDes2Roll  , cartDes2Roll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Roll .c_str()) ; }
-	  if (!node.getParam( para_cartDes2Pitch , cartDes2Pitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Pitch.c_str()) ; }
-	  if (!node.getParam( para_cartDes2Yaw   , cartDes2Yaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Yaw  .c_str()) ; }
+	  if (!m_node.getParam( para_cartDes2X     , cartDes2X     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2X    .c_str()) ; }
+	  if (!m_node.getParam( para_cartDes2Y     , cartDes2Y     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Y    .c_str()) ; }
+	  if (!m_node.getParam( para_cartDes2Z     , cartDes2Z     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Z    .c_str()) ; }
+	  if (!m_node.getParam( para_cartDes2Roll  , cartDes2Roll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Roll .c_str()) ; }
+	  if (!m_node.getParam( para_cartDes2Pitch , cartDes2Pitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Pitch.c_str()) ; }
+	  if (!m_node.getParam( para_cartDes2Yaw   , cartDes2Yaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes2Yaw  .c_str()) ; }
 
-	  if (!node.getParam( para_cartDes3X     , cartDes3X     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3X    .c_str()) ; }
-	  if (!node.getParam( para_cartDes3Y     , cartDes3Y     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Y    .c_str()) ; }
-	  if (!node.getParam( para_cartDes3Z     , cartDes3Z     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Z    .c_str()) ; }
-	  if (!node.getParam( para_cartDes3Roll  , cartDes3Roll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Roll .c_str()) ; }
-	  if (!node.getParam( para_cartDes3Pitch , cartDes3Pitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Pitch.c_str()) ; }
-	  if (!node.getParam( para_cartDes3Yaw   , cartDes3Yaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Yaw  .c_str()) ; }
+	  if (!m_node.getParam( para_cartDes3X     , cartDes3X     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3X    .c_str()) ; }
+	  if (!m_node.getParam( para_cartDes3Y     , cartDes3Y     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Y    .c_str()) ; }
+	  if (!m_node.getParam( para_cartDes3Z     , cartDes3Z     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Z    .c_str()) ; }
+	  if (!m_node.getParam( para_cartDes3Roll  , cartDes3Roll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Roll .c_str()) ; }
+	  if (!m_node.getParam( para_cartDes3Pitch , cartDes3Pitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Pitch.c_str()) ; }
+	  if (!m_node.getParam( para_cartDes3Yaw   , cartDes3Yaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDes3Yaw  .c_str()) ; }
 
 	  std::string para_leftcartIniX     = "/lCartIniX";
 	  std::string para_leftcartIniY     = "/lCartIniY";
