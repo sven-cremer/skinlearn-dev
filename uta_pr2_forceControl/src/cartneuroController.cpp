@@ -1241,6 +1241,13 @@ void PR2CartneuroControllerClass::update()
                                            task_ref               (1) ,
                                            task_refModel_output   (1)  );
 
+		    X_m(0) =  X_m(0) + cartIniX     ;
+		    X_m(1) =  X_m(1) + cartIniY     ;
+		    X_m(2) =  X_m(2) + cartIniZ     ;
+		    X_m(3) =  X_m(3) + cartIniRoll  ;
+		    X_m(4) =  X_m(4) + cartIniPitch ;
+		    X_m(5) =  X_m(5) + cartIniYaw   ;
+
             // ROS_ERROR_STREAM("USING RLS ARMA");
 
             if( useFlexiForce )
