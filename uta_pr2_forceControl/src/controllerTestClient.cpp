@@ -174,10 +174,6 @@ public:
 	  std::string para_cartDes3Pitch = "/cartDes3Pitch";
 	  std::string para_cartDes3Yaw   = "/cartDes3Yaw"  ;
 
-	  std::string para_cartIniX     = "/cartIniX";
-	  std::string para_cartIniY     = "/cartIniY";
-	  std::string para_cartIniZ     = "/cartIniZ";
-
 	  if (!m_node.getParam( para_cartDesX     , r_cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX    .c_str()) ; }
 	  if (!m_node.getParam( para_cartDesY     , r_cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY    .c_str()) ; }
 	  if (!m_node.getParam( para_cartDesZ     , r_cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ    .c_str()) ; }
