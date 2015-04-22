@@ -179,15 +179,15 @@ public:
     		                            cartDesY,
     		                            cartDesZ) );
 
-    pointNames.push_back("Blue!");
-    desPoses.push_back( Eigen::Vector3d(cartDes2X,
-    		                            cartDes2Y,
-    		                            cartDes2Z) );
+//    pointNames.push_back("Blue!");
+//    desPoses.push_back( Eigen::Vector3d(cartDes2X,
+//    		                            cartDes2Y,
+//    		                            cartDes2Z) );
 
-    pointNames.push_back("Yellow!");
-    desPoses.push_back( Eigen::Vector3d(cartDes3X,
-    		                            cartDes3Y,
-    		                            cartDes3Z) );
+//    pointNames.push_back("Yellow!");
+//    desPoses.push_back( Eigen::Vector3d(cartDes3X,
+//    		                            cartDes3Y,
+//    		                            cartDes3Z) );
 
     pointNames.push_back("Red!");
     desPoses.push_back( Eigen::Vector3d(cartIniX,

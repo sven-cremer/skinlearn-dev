@@ -1426,6 +1426,31 @@ void PR2CartneuroControllerClass::update()
 			Xdd_m = (Xd_m - p_Xd_m)/outerLoopTime;
 		}
 
+        // MRAC
+        if( useMRACmodel )
+        {
+//      outerLoopMRACmodelX.update( Xd_m              (0) ,
+//                                  Xd                (0) ,
+//                                  X_m               (0) ,
+//                                  X                 (0) ,
+//                                  Xdd_m             (0) ,
+//                                  transformed_force (0) ,
+//                                  task_ref          (0) ,
+//                                  task_refModel     (0)  );
+
+          // Y axis
+          outerLoopMRACmodelY.update( Xd_m                 (1) ,
+                                      Xd                   (1) ,
+                                      X_m                  (1) ,
+                                      X                    (1) ,
+                                      Xdd_m                (1) ,
+                                      transformed_force    (1) ,
+                                      task_ref             (1) ,
+                                      task_refModel_output (1)  );
+
+//      ROS_ERROR_STREAM("USING MRAC");
+        }
+
 		p_X_m    = X_m   ;
 		p_Xd_m   = Xd_m  ;
 		p_Xdd_m  = Xdd_m ;
@@ -1433,32 +1458,6 @@ void PR2CartneuroControllerClass::update()
 		outer_elapsed_ = robot_state_->getTime() ;
 
     }
-
-                // MRAC
-                if( useMRACmodel )
-                {
-        //      outerLoopMRACmodelX.update( Xd_m              (0) ,
-        //                                  Xd                (0) ,
-        //                                  X_m               (0) ,
-        //                                  X                 (0) ,
-        //                                  Xdd_m             (0) ,
-        //                                  transformed_force (0) ,
-        //                                  task_ref          (0) ,
-        //                                  task_refModel     (0)  );
-
-                  // Y axis
-                  outerLoopMRACmodelY.update( Xd_m                 (1) ,
-                                              Xd                   (1) ,
-                                              X_m                  (1) ,
-                                              X                    (1) ,
-                                              Xdd_m                (1) ,
-                                              transformed_force    (1) ,
-                                              task_ref             (1) ,
-                                              task_refModel_output (1)  );
-
-        //      ROS_ERROR_STREAM("USING MRAC");
-                }
-
 
 
     // System Model END
