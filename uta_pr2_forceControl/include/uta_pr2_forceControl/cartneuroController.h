@@ -128,6 +128,9 @@ private:
   double task_mA ;
   double task_mB ;
 
+  double simHuman_a;
+  double simHuman_b;
+
   double fFForce;
 
   csl::neural_network::OneLayerNeuralNetworkController nnController;

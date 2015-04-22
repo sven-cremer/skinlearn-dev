@@ -219,6 +219,14 @@ public:
     d = param_m_D ; // damper
   }
 
+  void updateSimHuman( double param_a,
+                       double param_b )
+  {
+    a = param_a ;
+    b = param_b ;
+  }
+
+
   void updateAB( double param_a_task,
                  double param_b_task )
   {

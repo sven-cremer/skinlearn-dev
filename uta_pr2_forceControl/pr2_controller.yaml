@@ -9,7 +9,7 @@ forceTorqueOn      : true
 useFlexiForce      : false
 
 # Specifically for MRAC
-useSimHuman        : false
+useSimHuman        : true
 
 # Only one can be true
 useARMAmodel       : false
@@ -46,8 +46,8 @@ irlOneshot         : true
 mrac_gamma_1       : 0.1
 mrac_gamma_2       : 2.0
 mrac_gamma_3       : 2.5
-mrac_gamma_4       : 5
-mrac_gamma_5       : 5
+mrac_gamma_4       : 4
+mrac_gamma_5       : 4
 
 mrac_P_m           : 1
 mrac_P_h           : 1
@@ -112,8 +112,12 @@ m_S                   : 0.0
 m_D                   : 5.0
 
 # Params for M(s) of the RLS models
-task_mA               : 1.5
-task_mB               : 1.5
+task_mA               : 6.0
+task_mB               : 6.0
+
+# Params for MRAC Sim Human
+simHuman_a            : 0.1
+simHuman_b            : 2.6
 
 # cartIniX            :  0.7
 # cartIniY            :  0.0

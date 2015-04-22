@@ -554,6 +554,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_simHuman = "/useSimHuman";
   if (!n.getParam( para_simHuman , useSimHuman )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman.c_str()) ; return false; }
 
+  std::string para_simHuman_a = "/simHuman_a" ;
+  std::string para_simHuman_b = "/simHuman_b" ;
+
+  if (!n.getParam( para_simHuman_a , simHuman_a )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman_a .c_str()) ; return false; }
+  if (!n.getParam( para_simHuman_b , simHuman_b )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman_b .c_str()) ; return false; }
 
   // initial conditions
   ode_init_x[0 ] = 0.0;
@@ -663,6 +668,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopMRACmodelX.updateIni( cartIniX,
   		  	  	  	  	  	  	 cartIniX );
   outerLoopMRACmodelX.updateSimHuman( useSimHuman );
+  outerLoopMRACmodelX.updateSimHuman( simHuman_a,
+                                      simHuman_b );
   outerLoopMRACmodelX.updateGamma( mrac_gamma_1,
 			                       mrac_gamma_2,
 			                       mrac_gamma_3,
@@ -677,6 +684,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopMRACmodelY.updateIni( cartIniY,
 		  	  	  	  	  	  	 cartIniY );
   outerLoopMRACmodelY.updateSimHuman( useSimHuman );
+  outerLoopMRACmodelY.updateSimHuman( simHuman_a,
+                                      simHuman_b );
   outerLoopMRACmodelY.updateGamma( mrac_gamma_1,
 			                       mrac_gamma_2,
 			                       mrac_gamma_3,
