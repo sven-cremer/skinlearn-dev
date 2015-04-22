@@ -529,6 +529,15 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_mrac_gamma_4 , mrac_gamma_4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_4.c_str()) ; return false; }
   if (!n.getParam( para_mrac_gamma_5 , mrac_gamma_5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_5.c_str()) ; return false; }
 
+  double mrac_P_m = 1 ;
+  double mrac_P_h = 1 ;
+
+  std::string para_mrac_P_m = "/mrac_P_m";
+  std::string para_mrac_P_h = "/mrac_P_h";
+
+  if (!n.getParam( para_mrac_P_m , mrac_P_m )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_P_m.c_str()) ; return false; }
+  if (!n.getParam( para_mrac_P_h , mrac_P_h )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_P_h.c_str()) ; return false; }
+
   for (int i = 0; i < num_Joints; ++i)
       n.param("saturation/" + chain_.getJoint(i)->joint_->name, saturation_[i], 0.0);
 
@@ -659,6 +668,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 			                       mrac_gamma_3,
 			                       mrac_gamma_4,
 			                       mrac_gamma_5 ) ;
+  outerLoopMRACmodelX.updateCov( mrac_P_m,
+                                 mrac_P_h ) ;
 
   outerLoopMRACmodelY.updateDelT( outerLoopTime );
   outerLoopMRACmodelY.updateAB( task_mA,
@@ -671,6 +682,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 			                       mrac_gamma_3,
 			                       mrac_gamma_4,
 			                       mrac_gamma_5 ) ;
+  outerLoopMRACmodelY.updateCov( mrac_P_m,
+                                 mrac_P_h ) ;
 
   // RLS
 

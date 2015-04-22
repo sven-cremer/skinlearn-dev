@@ -189,8 +189,15 @@ public:
 
     task_ref  = Eigen::MatrixXd::Zero( num_Joints, 1 );
 
-    inputForce       = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    inputForce= Eigen::MatrixXd::Zero( num_Joints, 1 );
 
+  }
+
+  void updateCov( double param_P_m,
+                  double param_P_h )
+  {
+    P_m    = param_P_m  ;
+    P_h    = param_P_h  ;
   }
 
   void updateSimHuman(double p_simHuman)
