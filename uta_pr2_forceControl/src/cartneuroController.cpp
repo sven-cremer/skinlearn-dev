@@ -1263,32 +1263,41 @@ void PR2CartneuroControllerClass::update()
                                            task_ref               (1) ,
                                            task_refModel_output   (1)  );
 
-		    X_m(0) =  X_m(0) + cartIniX     ;
-		    X_m(1) =  X_m(1) + cartIniY     ;
-
             // ROS_ERROR_STREAM("USING RLS ARMA");
 
             if( useFlexiForce )
             {
    	 	        // X axis
-                if( flexiForce(0) > flexiForce(2) ){
-   	 	        outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_1 ) ;
+                if( flexiForce(0) > flexiForce(2) )
+                {
+                	outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_1 ) ;
                 }else{
                 	outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_3 ) ;
                 }
 
                 // Y axis
-                if( flexiForce(1) > flexiForce(3) ){
-   	 		    outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_2 ) ;
+                if( flexiForce(1) > flexiForce(3) )
+                {
+                	outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_2 ) ;
                 }else{
                 	outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_4 ) ;
                 }
+
             }else
             {
             	outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
 				outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
             }
 
+		    if( outerLoopWk_flexi_1.norm() == 0 && outerLoopWk_flexi_3.norm() == 0 )
+		    {
+		    	X_m(0) =  cartIniX     ;
+		    }
+
+		    if(  outerLoopWk_flexi_2.norm() == 0 && outerLoopWk_flexi_4.norm() == 0  )
+		    {
+		    	X_m(1) =  cartIniY     ;
+		    }
 
 		}
 
