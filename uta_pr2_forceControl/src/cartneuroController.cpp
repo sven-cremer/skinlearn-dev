@@ -700,12 +700,14 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopRLSmodelX.updateAB( task_mA,
                                task_mB );
   outerLoopRLSmodelX.initRls( rls_lambda, rls_sigma );
+  outerLoopRLSmodelX.initPos( cartIniX );
 
 
   outerLoopRLSmodelY.updateDelT( outerLoopTime );
   outerLoopRLSmodelY.updateAB( task_mA,
                                task_mB );
   outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
+  outerLoopRLSmodelY.initPos( cartIniY );
 
   // CT RLS
   outerLoopCTRLSmodelX.updateDelT( outerLoopTime );
@@ -1180,6 +1182,7 @@ void PR2CartneuroControllerClass::update()
 
     if( !useFTinput )
     {
+      transformed_force(0) = 0 ;
       transformed_force(1) = 0 ;
     }
 
@@ -1484,7 +1487,7 @@ void PR2CartneuroControllerClass::update()
 //ROS_ERROR_STREAM("Joints: " << q.transpose());
 
     // FIXME only care about Y for now, need to check the orientation of other forces
-//    t_r(0) = transformed_force(0) ;
+    t_r(0) = transformed_force(0) ;
     t_r(1) = transformed_force(1) ;
 //    t_r(2) = transformed_force(2) ;
 
