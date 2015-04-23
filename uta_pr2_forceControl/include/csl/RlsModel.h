@@ -194,7 +194,15 @@ public:
   void initPos( double p_posInit )
   {
 	  posInit = p_posInit;
-	  Uk_plus.block<4, 1>(0,0) = Eigen::MatrixXd::Ones( 4, 1 )*posInit;
+
+	  Uk_plus(0) = posInit ;
+	  Uk_plus(1) = posInit ;
+	  Uk_plus(2) = posInit ;
+	  Uk_plus(3) = posInit ;
+
+	  Uk = Uk_plus;
+
+	  rls_filter.init( Wk, Uk, Dk, Pk, m_lm );
   }
 
   void updateDelT(double p_delT)
