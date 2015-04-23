@@ -1288,16 +1288,16 @@ void PR2CartneuroControllerClass::update()
             	outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
 				outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
             }
-
-		    if( outerLoopWk_flexi_1.norm() == 0 && outerLoopWk_flexi_3.norm() == 0 )
-		    {
-		    	X_m(0) =  cartIniX     ;
-		    }
-
-		    if(  outerLoopWk_flexi_2.norm() == 0 && outerLoopWk_flexi_4.norm() == 0  )
-		    {
-		    	X_m(1) =  cartIniY     ;
-		    }
+// Delete this
+//		    if( outerLoopWk_flexi_1.norm() == 0 && outerLoopWk_flexi_3.norm() == 0 )
+//		    {
+//		    	X_m(0) =  cartIniX     ;
+//		    }
+//
+//		    if(  outerLoopWk_flexi_2.norm() == 0 && outerLoopWk_flexi_4.norm() == 0  )
+//		    {
+//		    	X_m(1) =  cartIniY     ;
+//		    }
 
 		}
 
