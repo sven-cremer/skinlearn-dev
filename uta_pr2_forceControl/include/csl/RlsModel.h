@@ -50,6 +50,8 @@ class RlsModel
   double m_lm;
   double m_sigma;
 
+  double posInit;
+
   int iter;
 
   // Task model
@@ -183,8 +185,16 @@ public:
     ode_init_x[1 ] = 0.0;
     ode_init_x[2 ] = 0.0;
 
+    posInit = 0;
+
     rls_filter.init( Wk, Uk, Dk, Pk, m_lm );
 
+  }
+
+  void initPos( double p_posInit )
+  {
+	  posInit = p_posInit;
+	  Uk_plus.block<4, 1>(0,0) = Eigen::MatrixXd::Ones( 4, 1 )*posInit;
   }
 
   void updateDelT(double p_delT)
