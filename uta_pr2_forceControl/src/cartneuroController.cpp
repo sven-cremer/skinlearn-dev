@@ -700,14 +700,14 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   outerLoopRLSmodelX.updateAB( task_mA,
                                task_mB );
   outerLoopRLSmodelX.initRls( rls_lambda, rls_sigma );
-  outerLoopRLSmodelX.initPos( cartIniX );
+//  outerLoopRLSmodelX.initPos( cartIniX );
 
 
   outerLoopRLSmodelY.updateDelT( outerLoopTime );
   outerLoopRLSmodelY.updateAB( task_mA,
                                task_mB );
   outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
-  outerLoopRLSmodelY.initPos( cartIniY );
+//  outerLoopRLSmodelY.initPos( cartIniY );
 
   // CT RLS
   outerLoopCTRLSmodelX.updateDelT( outerLoopTime );
