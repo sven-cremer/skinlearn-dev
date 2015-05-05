@@ -70,6 +70,8 @@ class RlsModel
   // Switch RLS on/off
   bool useFixedWeights ;
 
+  bool firstTime ;
+
   void stackFirIn( Eigen::MatrixXd & u_in )
   {
     // TODO parameterize this
@@ -179,6 +181,8 @@ public:
 
     // Don't use fixed weights by default
     useFixedWeights = false;
+
+    firstTime = true;
 
     // initial conditions
     ode_init_x[0 ] = 0.0;
@@ -370,6 +374,15 @@ public:
 
   void update()
   {
+	if( firstTime )
+	{
+		prv_q_m  = q_m ;
+		prv_qd_m = qd_m;
+
+		firstTime = false;
+	}
+
+
     ode_init_x[2] = task_ref(0);
 
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
