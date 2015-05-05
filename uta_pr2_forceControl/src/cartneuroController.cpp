@@ -817,6 +817,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
          ROS_ERROR("Something wrong with getting l_ft handle");
      if( !r_ft_handle_ )
          ROS_ERROR("Something wrong with getting r_ft handle");
+   }
 
      /* get a handle to the left gripper accelerometer */
      l_accelerometer_handle_ = hardwareInterface->getAccelerometer("l_gripper_motor");
@@ -847,7 +848,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
      l_accelerationObserver = new accelerationObserver(l_accelerometer_handle_);
      r_accelerationObserver = new accelerationObserver(r_accelerometer_handle_);
 
-   }
+
 
   /////////////////////////
   // DATA COLLECTION
