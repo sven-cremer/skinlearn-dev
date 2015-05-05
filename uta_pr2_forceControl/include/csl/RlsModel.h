@@ -379,6 +379,8 @@ public:
 		prv_q_m  = q_m ;
 		prv_qd_m = qd_m;
 
+		ref_q_d  = q_m;
+
 		firstTime = false;
 	}
 
