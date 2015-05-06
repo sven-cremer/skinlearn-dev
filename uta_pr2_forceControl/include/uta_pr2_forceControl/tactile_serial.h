@@ -140,8 +140,15 @@ void initFilter()
 {
 	  // create our filter for low-passed accelerometer data
 	  // 1st order butterworth. low-pass 1000 hz
-	  float b_lpfilt[] = {0.634, 0.634};
-	  float a_lpfilt[] = {1.0, 0.2679};
+	  // float b_lpfilt[] = {0.634, 0.634};
+	  // float a_lpfilt[] = {1.0, 0.2679};
+
+	  // 1st order butterworth. low-pass 100 hz
+	  // b = 0.2452    0.2452
+	  // a = 1.0000   -0.5095
+	  float b_lpfilt[] = {0.2452,  0.2452};
+	  float a_lpfilt[] = {1.0000, -0.5095};
+
 	  for(int i=0; i < 4; i++)
 	    forceLPFilt[i] = new digitalFilter(1, true,b_lpfilt,a_lpfilt);
 }
