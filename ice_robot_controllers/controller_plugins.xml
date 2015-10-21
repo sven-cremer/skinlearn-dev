@@ -1,0 +1,5 @@
+<library path="lib/libpr2_controller_lib">
+  <class name="PR2CartesianControllerClass"
+  		 type="pr2_controller_ns::PR2CartesianControllerClass"
+  		 base_class_type="pr2_controller_interface::Controller" />
+</library>
