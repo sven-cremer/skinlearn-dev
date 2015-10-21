@@ -350,6 +350,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   std::string para_forceTorqueOn = "/forceTorqueOn";
   if (!n.getParam( para_forceTorqueOn , forceTorqueOn )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceTorqueOn.c_str()) ; return false; }
 
+  std::string para_accelerometerOn = "/accelerometerOn";
+  if (!n.getParam( para_accelerometerOn , accelerometerOn )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_accelerometerOn.c_str()) ; return false; }
+
   std::string para_useFlexiForce = "/useFlexiForce";
   if (!n.getParam( para_useFlexiForce , useFlexiForce )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFlexiForce.c_str()) ; return false; }
 
@@ -819,6 +822,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
          ROS_ERROR("Something wrong with getting r_ft handle");
    }
 
+   if(accelerometerOn)
+   {
      /* get a handle to the left gripper accelerometer */
      l_accelerometer_handle_ = hardwareInterface->getAccelerometer("l_gripper_motor");
      if(!l_accelerometer_handle_)
@@ -847,7 +852,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
      l_accelerationObserver = new accelerationObserver(l_accelerometer_handle_);
      r_accelerationObserver = new accelerationObserver(r_accelerometer_handle_);
-
+   }
 
 
   /////////////////////////
@@ -1673,8 +1678,11 @@ void PR2CartneuroControllerClass::update()
 
 
   // Acceleration estimator
-  l_accelerationObserver->spin();
-  r_accelerationObserver->spin();
+  if(accelerometerOn)
+  {
+	  l_accelerationObserver->spin();
+	  r_accelerationObserver->spin();
+  }
 
 }
 

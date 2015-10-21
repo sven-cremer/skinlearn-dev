@@ -42,8 +42,28 @@ If the build fails due to the pr2 gripper sensor package, try compiling it from 
     git clone https://github.com/PR2/pr2_gripper_sensor.git -b hydro-devel
 
 
-# Running
-
+# Running in Simulation
+Make sure the following parameters in *ice_robot_controllers/config/pr2_controller.yaml* are set to false:  
+```
+useFTinput         : false
+forceTorqueOn      : false
+useFlexiForce      : false
+accelerometerOn    : false
+```
+Start gazebo and launch the controller:  
+```
     roslaunch pr2_gazebo pr2_empty_world.launch
     roslaunch ice_robot_controllers cartneuroController.launch
     rosrun pr2_controller_manager pr2_controller_manager list
+```
+Apply a force:  
+```
+rosservice call /gazebo/apply_body_wrench "body_name: 'l_gripper_l_finger_tip_link'
+reference_frame: 'l_gripper_l_finger_tip_link'
+reference_point: {x: 0.0, y: 0.0, z: 0.0}
+wrench:
+  force: {x: 10.0, y: 15.0, z: 0.0}
+  torque: {x: 0.0, y: 0.0, z: 0.0}
+start_time: {secs: 0, nsecs: 0}
+duration: {secs: 3, nsecs: 0}" 
+```

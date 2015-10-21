@@ -180,6 +180,7 @@ private:
 //  dataPoint::controllerFullData controllerData;
 
   std::fstream saveDataFile;
+  bool accelerometerOn;
 
 public:
   ~PR2CartneuroControllerClass();
