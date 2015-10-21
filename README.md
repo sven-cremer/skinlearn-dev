@@ -35,3 +35,8 @@ Download repository and build:
     cd ..
     catkin_make
 
+# Troubleshooting
+If the build fails due to the pr2 gripper sensor package, try compiling it from source:
+
+    cd ~/ice_ws/src
+    git clone https://github.com/PR2/pr2_gripper_sensor.git
