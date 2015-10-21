@@ -31,7 +31,7 @@ Workspace setup:
 Download repository and build:  
 
     cd ~/ice_ws/src
-    git clone git clone https://<USER>@bitbucket.org/<USER>/uta_pr2-dev2.git
+    git clone git clone https://<USER>@bitbucket.org/<USER>/uta_pr2-dev2.git -b catkin-devel
     cd ..
     catkin_make
 
