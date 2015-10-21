@@ -1,5 +1,5 @@
-<library path="lib/libpr2_controller_lib">
-  <class name="PR2CartesianControllerClass"
-  		 type="pr2_controller_ns::PR2CartesianControllerClass"
+<library path="lib/libice_robot_controllers">
+  <class name="ice_robot_controllers/PR2CartneuroControllerClass"
+  		 type="pr2_controller_ns::PR2CartneuroControllerClass"
   		 base_class_type="pr2_controller_interface::Controller" />
 </library>

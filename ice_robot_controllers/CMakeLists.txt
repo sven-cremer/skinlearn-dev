@@ -55,10 +55,26 @@ include_directories(
 ## Declare a cpp library
 add_library(ice_robot_controllers
   src/cartneuroController.cpp
+  src/cartesianController.cpp
 )
 
 target_link_libraries(ice_robot_controllers ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(ice_robot_controllers ice_robot_controllers_generate_messages_cpp)
+
+add_dependencies(ice_robot_controllers 
+   ${ice_robot_controllers_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+pr2_enable_rpath(ice_robot_controllers)
+
+install(TARGETS ice_robot_controllers
+   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
+install(FILES controller_plugins.xml
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 ## Declare a cpp executable
 # add_executable(ice_robot_controllers_node src/ice_robot_controllers_node.cpp)

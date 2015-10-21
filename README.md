@@ -39,4 +39,11 @@ Download repository and build:
 If the build fails due to the pr2 gripper sensor package, try compiling it from source:
 
     cd ~/ice_ws/src
-    git clone https://github.com/PR2/pr2_gripper_sensor.git
+    git clone https://github.com/PR2/pr2_gripper_sensor.git -b hydro-devel
+
+
+# Running
+
+    roslaunch pr2_gazebo pr2_empty_world.launch
+    roslaunch ice_robot_controllers cartneuroController.launch
+    rosrun pr2_controller_manager pr2_controller_manager list

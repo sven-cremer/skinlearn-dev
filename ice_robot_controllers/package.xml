@@ -47,6 +47,7 @@
   <run_depend>angles</run_depend>
 
   <export>
+	      <cpp lflags="-Wl,-rpath,${prefix}/lib/ -L${prefix}/lib -lice_robot_controllers" cflags="-I${prefix}/include"/>
     <pr2_controller_interface plugin="${prefix}/controller_plugins.xml"/>
   </export>
   
