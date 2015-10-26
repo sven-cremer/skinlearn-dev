@@ -57,8 +57,10 @@ add_dependencies(      pr2_cart_lib   pr2_cart_lib_generate_messages_cpp)
 
 ## Declare a cpp executable
 #add_executable(        pr2_cart_manager   src/pr2_cart_manager.cpp
-#target_link_libraries( pr2_cart_manager   pr2_cart_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES}) 
-#add_executable(   	   ft_sim			src/ft_simulation.cpp)     
+#target_link_libraries( pr2_cart_manager   pr2_cart_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+ 
+add_executable(         ft_sim             src/ft_simulation.cpp)     
+target_link_libraries(  ft_sim             ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 # Keyboard interface
 #add_executable(        keyboard			src/keyboard.cpp)

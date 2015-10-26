@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   f1.request.reference_point.y = 0;
   f1.request.reference_point.z = 0;
 
-  f1.request.wrench.force.x =	 10.0;
+  f1.request.wrench.force.x =	 25.0;
   f1.request.wrench.force.y =	 0.0;
   f1.request.wrench.force.z =	 0.0;
   f1.request.wrench.torque.x =	 0.0;
@@ -49,12 +49,12 @@ int main(int argc, char **argv)
   f2.request.reference_point.y = 0;
   f2.request.reference_point.z = 0;
 
-  f2.request.wrench.force.x =	 2.5;
-  f2.request.wrench.force.y =	 2.5;
-  f2.request.wrench.force.z =	 2.5;
-  f2.request.wrench.torque.x =	 2.5;
-  f2.request.wrench.torque.y =	 2.5;
-  f2.request.wrench.torque.z =	 2.5;
+  f2.request.wrench.force.x =	 -25.0;
+  f2.request.wrench.force.y =	 0.0;
+  f2.request.wrench.force.z =	 0.0;
+  f2.request.wrench.torque.x =	 0.0;
+  f2.request.wrench.torque.y =	 0.0;
+  f2.request.wrench.torque.z =	 0.0;
 
 
 

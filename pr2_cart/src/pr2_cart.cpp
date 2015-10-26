@@ -230,19 +230,24 @@ bool PR2CartClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHandle
   qd_limit(6) = urdf_model.getJoint("r_wrist_roll_joint"    )->limits->velocity;
 
 
+  controller_on = true;
+  forceTorque_on = false;
+
   /* get a handle to the hardware interface */
   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
   if(!hardwareInterface)
       ROS_ERROR("Something wrong with the hardware interface pointer!");
 
-  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
-  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+  if(forceTorque_on)
+  {
+	  l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+	  r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
 
-  if( !l_ft_handle_ /*wristFTdata.getLeftHandle()*/ )
-      ROS_ERROR("Something wrong with getting l_ft handle");
-  if( !r_ft_handle_ /*wristFTdata.getRightHandle()*/ )
-      ROS_ERROR("Something wrong with getting r_ft handle");
-
+	  if( !l_ft_handle_ /*wristFTdata.getLeftHandle()*/ )
+		  ROS_ERROR("Something wrong with getting l_ft handle");
+	  if( !r_ft_handle_ /*wristFTdata.getRightHandle()*/ )
+		  ROS_ERROR("Something wrong with getting r_ft handle");
+  }
   pub_cycle_count_ = 0;
   should_publish_  = false;
 
@@ -278,9 +283,6 @@ bool PR2CartClass::init( pr2_mechanism_model::RobotState *robot, ros::NodeHandle
    realtime_pub_pose_error.init(node,"/pr2_cartPull/combined_pose_error",1);
    realtime_pub_twist_error.init(node,"/pr2_cartPull/combined_twist_error",1);
 
-
-  controller_on = true;
-  forceTorque_on = true;
 
   for(int i = 0;i<10;i++)
   {
