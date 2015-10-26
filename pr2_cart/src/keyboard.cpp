@@ -14,15 +14,15 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 
-#include <pr2_cart/pr2_cartPull_manager.h>
-#include <pr2_cart/getState.h>
+#include <pr2_cart/pr2_cart_manager.h>
+#include <ice_msgs/getState.h>
 
 
 using namespace std;
 
 
 static bool pr2_cartPull_active = false;			// TODO: get from PR2, this could be wrong OR send srv at beginning?
-pr2_cartPull::getState currentState;
+ice_msgs::getState currentState;
 
 void displayMainMenu()
 {
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
 
   ros::NodeHandle nh;
 
-  PR2CartPullManager manager;
+  PR2CartManager manager;
 
   manager.get_State_(&currentState);
 

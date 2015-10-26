@@ -66,9 +66,9 @@ accelerometerOn    : false
 ```
 Start gazebo and launch the controller:  
 ```
-    roslaunch pr2_gazebo pr2_empty_world.launch
-    roslaunch ice_robot_controllers cartneuroController.launch
-    rosrun pr2_controller_manager pr2_controller_manager list
+roslaunch pr2_gazebo pr2_empty_world.launch
+roslaunch ice_robot_controllers cartneuroController.launch
+rosrun pr2_controller_manager pr2_controller_manager list
 ```
 Apply a force:  
 ```

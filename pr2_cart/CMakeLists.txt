@@ -57,21 +57,18 @@ target_link_libraries( pr2_cart_manager_lib  pr2_cart_lib ${catkin_LIBRARIES} ${
 add_dependencies(      pr2_cart_manager_lib  pr2_cart_manager_lib_generate_messages_cpp)
 
 ## Declare a cpp executable
-add_executable(        pr2_cart_manager      src/pr2_cart_manager.cpp)
-target_link_libraries( pr2_cart_manager      pr2_cart_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-add_dependencies(      pr2_cart_manager      pr2_cart_manager_generate_messages_cpp)
+#add_executable(        pr2_cart_manager      src/pr2_cart_manager.cpp)
+#target_link_libraries( pr2_cart_manager      pr2_cart_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#add_dependencies(      pr2_cart_manager      pr2_cart_manager_generate_messages_cpp)
  
 add_executable(         ft_sim             src/ft_simulation.cpp)     
 target_link_libraries(  ft_sim             ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 # Keyboard interface
-#add_executable(        keyboard			src/keyboard.cpp)
-#target_link_libraries( keyboard		 	pr2_cart_manager_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_executable(        keyboard   src/keyboard.cpp)
+target_link_libraries( keyboard   pr2_cart_manager_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_dependencies(      keyboard   keyboard_generate_messages_cpp)
 
-
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(pr2_cart_node pr2_cart_generate_messages_cpp)
 
 #############
 ## Install ##
