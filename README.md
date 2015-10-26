@@ -9,6 +9,13 @@ Versions:
   * master (Groovy, rosbuild) - deprecated
   * catkin-devel (Hydro, catkin) - work in progress
 
+Ported packages:
+
+  * ice_msgs
+  * ice_robot_controllers
+  * pr2_cart
+
+
 # Install Dependencies
 The following needs to be installed:
 
