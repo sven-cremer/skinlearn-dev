@@ -1,10 +1,10 @@
 /***********************************************************************************************************************
-FILENAME:   pr2_cartPull_manager.h
+FILENAME:   pr2_cart_manager.h
 AUTHORS:    Sven Cremer 		sven.cremer@mavs.uta.edu
             University of Texas at Arlington, Copyright (C) 2013.
 
 DESCRIPTION:
-Manger for pr2_cartPull realtime controller. Uses custom pr2_motion_clients packages for torso, arm, and gripper setup.
+Manger for pr2_cart realtime controller. Uses custom pr2_motion_clients packages for torso, arm, and gripper setup.
 
 PUBLISHES:  NA
 SUBSCRIBES: NA
@@ -14,6 +14,7 @@ REVISION HISTORY:
 2014.02.07  SC     original file creation
 2014.02.14  SC     code cleanup, new gripper client
 2014.02.17  SC     services for setting gains
+2015.10.26  SC     ported to hydro
 ***********************************************************************************************************************/
 
 #ifndef PR2_CARTPULL_MANAGER_H_
@@ -27,19 +28,19 @@ REVISION HISTORY:
 #include <pr2_mechanism_msgs/SwitchController.h>
 #include <pr2_mechanism_msgs/ListControllers.h>
 
-#include <pr2_motion_clients/torsojointspacecontroller.h>
-#include <pr2_motion_clients/armjointspacecontroller.h>
-#include <pr2_motion_clients/gripper_both.h>
+//#include <pr2_motion_clients/torsojointspacecontroller.h>
+//#include <pr2_motion_clients/armjointspacecontroller.h>
+//#include <pr2_motion_clients/gripper_both.h>
 
 #include <pr2_controllers_msgs/JointTrajectoryAction.h>
 
 // Service messages for changing gains
-#include <pr2_cartPull/setValue.h>
-#include <pr2_cartPull/setGains.h>
-#include <pr2_cartPull/getState.h>
+#include <ice_msgs/setValue.h>
+#include <ice_msgs/setGains.h>
+#include <ice_msgs/getState.h>
 
 
-class PR2CartPullManager
+class PR2CartManager
 {
 public:
 
@@ -50,8 +51,8 @@ public:
 	    FAILURE
 	  };
 
-	PR2CartPullManager();
-	~PR2CartPullManager();
+	PR2CartManager();
+	~PR2CartManager();
 
 	void robotInit(	bool open_grippers=true);
 	void on(		bool close_grippers=true);
@@ -64,7 +65,7 @@ public:
 
 
 	void switchControllers(const std::vector<std::string>& start_controllers, const std::vector<std::string>& stop_controllers);
-	PR2CartPullManager::ControlState controllerState(std::string name);
+	PR2CartManager::ControlState controllerState(std::string name);
 
 
 	  bool set_Kd_rot_(double x, double y, double z) ;
@@ -82,7 +83,7 @@ public:
 	  bool set_velDGain_(double value) 	;
 	  bool set_velPGain_(double value) 	;
 
-	  bool get_State_(pr2_cartPull::getState * currentState);
+	  bool get_State_(ice_msgs::getState * currentState);
 
 	  void initGains();
 
@@ -95,9 +96,9 @@ private:
 	std::vector<std::string> arm_controllers_default;
 	std::vector<std::string> arm_controllers_cart;
 
-	TorsoJointSpaceController torso;
-	ArmJointSpaceController arm;
-	Gripper grippers;
+//	TorsoJointSpaceController torso;		// TODO: use apc_robot instead
+//	ArmJointSpaceController arm;
+//	Gripper grippers;
 
 	pr2_controllers_msgs::JointTrajectoryGoal leftArmStartPosition();
 	pr2_controllers_msgs::JointTrajectoryGoal rightArmStartPosition();

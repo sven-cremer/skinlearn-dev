@@ -1,10 +1,10 @@
 /***********************************************************************************************************************
-FILENAME:   pr2_cartPull_manager.cpp
+FILENAME:   pr2_cart_manager.cpp
 AUTHORS:    Sven Cremer 		sven.cremer@mavs.uta.edu
             University of Texas at Arlington, Copyright (C) 2013.
 
 DESCRIPTION:
-Manger for pr2_cartPull realtime controller. Uses custom pr2_motion_clients packages for torso, arm, and gripper setup.
+Manger for pr2_cart realtime controller. Uses custom pr2_motion_clients packages for torso, arm, and gripper setup.
 
 PUBLISHES:  NA
 SUBSCRIBES: NA
@@ -21,14 +21,14 @@ REVISION HISTORY:
 /***********************************************************************************************************************
 controllers
  ***********************************************************************************************************************/
-std::string PR2CartPullManager::RIGHT_ARM_CONTROLLER  	= "r_arm_controller";
-std::string PR2CartPullManager::LEFT_ARM_CONTROLLER   	= "l_arm_controller";
-std::string PR2CartPullManager::PR2_CARTPULL_CONTROLLER = "pr2_cartPull";
+std::string PR2CartManager::RIGHT_ARM_CONTROLLER  	= "r_arm_controller";
+std::string PR2CartManager::LEFT_ARM_CONTROLLER   	= "l_arm_controller";
+std::string PR2CartManager::PR2_CARTPULL_CONTROLLER = "pr2_cart";
 
 /***********************************************************************************************************************
 initializes services and clients
 ***********************************************************************************************************************/
-PR2CartPullManager::PR2CartPullManager()
+PR2CartManager::PR2CartManager()
 {
 	list_srv_ = nh.serviceClient<pr2_mechanism_msgs::ListControllers>("pr2_controller_manager/list_controllers");
 
@@ -87,73 +87,73 @@ PR2CartPullManager::PR2CartPullManager()
 
 
 	  // Wait for services
-	  ROS_INFO("Waiting for /pr2_cartPull services...");
+	  ROS_INFO("Waiting for /pr2_cart services...");
 
-	  ros::service::waitForService("/pr2_cartPull/set_Kd_rot",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_Kd_vel",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_Kp_rot",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_Kp_vel",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_psiThresh",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_rThresh",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_restDGain",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_restPGain",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_rotDGain",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_rotPGain",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_velDGain",-1);
-	  ros::service::waitForService("/pr2_cartPull/set_velPGain",-1);
-	  ros::service::waitForService("/pr2_cartPull/getState",-1);
+	  ros::service::waitForService("/pr2_cart/set_Kd_rot",-1);
+	  ros::service::waitForService("/pr2_cart/set_Kd_vel",-1);
+	  ros::service::waitForService("/pr2_cart/set_Kp_rot",-1);
+	  ros::service::waitForService("/pr2_cart/set_Kp_vel",-1);
+	  ros::service::waitForService("/pr2_cart/set_psiThresh",-1);
+	  ros::service::waitForService("/pr2_cart/set_rThresh",-1);
+	  ros::service::waitForService("/pr2_cart/set_restDGain",-1);
+	  ros::service::waitForService("/pr2_cart/set_restPGain",-1);
+	  ros::service::waitForService("/pr2_cart/set_rotDGain",-1);
+	  ros::service::waitForService("/pr2_cart/set_rotPGain",-1);
+	  ros::service::waitForService("/pr2_cart/set_velDGain",-1);
+	  ros::service::waitForService("/pr2_cart/set_velPGain",-1);
+	  ros::service::waitForService("/pr2_cart/getState",-1);
 
-	  srv_set_Kd_rot = nh.serviceClient<pr2_cartPull::setGains>("/pr2_cartPull/set_Kd_rot");
-	  srv_set_Kd_vel = nh.serviceClient<pr2_cartPull::setGains>("/pr2_cartPull/set_Kd_vel");
-	  srv_set_Kp_rot = nh.serviceClient<pr2_cartPull::setGains>("/pr2_cartPull/set_Kp_rot");
-	  srv_set_Kp_vel = nh.serviceClient<pr2_cartPull::setGains>("/pr2_cartPull/set_Kp_vel");
+	  srv_set_Kd_rot = nh.serviceClient<ice_msgs::setGains>("/pr2_cart/set_Kd_rot");
+	  srv_set_Kd_vel = nh.serviceClient<ice_msgs::setGains>("/pr2_cart/set_Kd_vel");
+	  srv_set_Kp_rot = nh.serviceClient<ice_msgs::setGains>("/pr2_cart/set_Kp_rot");
+	  srv_set_Kp_vel = nh.serviceClient<ice_msgs::setGains>("/pr2_cart/set_Kp_vel");
 
-	  srv_set_restDGain	= nh.serviceClient<pr2_cartPull::setValue>("/pr2_cartPull/set_restDGain");
-	  srv_set_restPGain = nh.serviceClient<pr2_cartPull::setValue>("/pr2_cartPull/set_restPGain");
+	  srv_set_restDGain	= nh.serviceClient<ice_msgs::setValue>("/pr2_cart/set_restDGain");
+	  srv_set_restPGain = nh.serviceClient<ice_msgs::setValue>("/pr2_cart/set_restPGain");
 
-	  srv_set_psiThresh = nh.serviceClient<pr2_cartPull::setValue>("/pr2_cartPull/set_psiThresh");
-	  srv_set_rThresh 	= nh.serviceClient<pr2_cartPull::setValue>("/pr2_cartPull/set_rThresh");
-	  srv_set_rotDGain 	= nh.serviceClient<pr2_cartPull::setValue>("/pr2_cartPull/set_rotDGain");
-	  srv_set_rotPGain 	= nh.serviceClient<pr2_cartPull::setValue>("/pr2_cartPull/set_rotPGain");
-	  srv_set_velDGain 	= nh.serviceClient<pr2_cartPull::setValue>("/pr2_cartPull/set_velDGain");
-	  srv_set_velPGain 	= nh.serviceClient<pr2_cartPull::setValue>("/pr2_cartPull/set_velPGain");
+	  srv_set_psiThresh = nh.serviceClient<ice_msgs::setValue>("/pr2_cart/set_psiThresh");
+	  srv_set_rThresh 	= nh.serviceClient<ice_msgs::setValue>("/pr2_cart/set_rThresh");
+	  srv_set_rotDGain 	= nh.serviceClient<ice_msgs::setValue>("/pr2_cart/set_rotDGain");
+	  srv_set_rotPGain 	= nh.serviceClient<ice_msgs::setValue>("/pr2_cart/set_rotPGain");
+	  srv_set_velDGain 	= nh.serviceClient<ice_msgs::setValue>("/pr2_cart/set_velDGain");
+	  srv_set_velPGain 	= nh.serviceClient<ice_msgs::setValue>("/pr2_cart/set_velPGain");
 
-	  srv_get_State = nh.serviceClient<pr2_cartPull::getState>("/pr2_cartPull/getState");
+	  srv_get_State = nh.serviceClient<ice_msgs::getState>("/pr2_cart/getState");
 
 
-	  ros::service::waitForService("/pr2_cartPull/reinitCtrl",-1);
-	  srv_reinitCtrl = nh.serviceClient<pr2_cartPull::setValue>("/pr2_cartPull/reinitCtrl");
+//	  ros::service::waitForService("/pr2_cart/reinitCtrl",-1);
+//	  srv_reinitCtrl = nh.serviceClient<ice_msgs::setValue>("/pr2_cart/reinitCtrl");
 
 		// Position robot with grippers open
 		robotInit(true);
 
 
-	ROS_INFO("PR2CartPullManager initialized!");
+	ROS_INFO("PR2CartManager initialized!");
 }
 /***********************************************************************************************************************
 Initialize robot position
 ***********************************************************************************************************************/
-void PR2CartPullManager::robotInit(bool open_grippers)
+void PR2CartManager::robotInit(bool open_grippers)
 {
 	off();	//Make sure manager is off
 
 	// Open grippers
-	if(open_grippers)
-		grippers.open();
+//	if(open_grippers)
+//		grippers.open();
 
 	// Lift torso
-	torso.position(0.05);					//To avoid waiting: torso.sendGoal(0.3);    // TODO make this a variable (use 0.3 with cart)
-	ROS_INFO("Torso at %f meters.", 0.01);
+//	torso.position(0.05);					//To avoid waiting: torso.sendGoal(0.3);    // TODO make this a variable (use 0.3 with cart)
+//	ROS_INFO("Torso at %f meters.", 0.01);
 
 	// Position arms
-	arm.sendGoal(leftArmStartPosition());
-	arm.sendGoal(rightArmStartPosition());
+//	arm.sendGoal(leftArmStartPosition());
+//	arm.sendGoal(rightArmStartPosition());
 
-	while(!arm.motionComplete()||!grippers.motionComplete())					// TODO: don't move the arms while the grippers are close
-	{																		//       this could be very bad if the PR2 is grabbing onto something
-		ROS_INFO("Waiting for arm and/or gripper motions to complete ...");
-		sleep(2);
-	}
+//	while(!arm.motionComplete()||!grippers.motionComplete())					// TODO: don't move the arms while the grippers are close
+//	{																		//       this could be very bad if the PR2 is grabbing onto something
+//		ROS_INFO("Waiting for arm and/or gripper motions to complete ...");
+//		sleep(2);
+//	}
 	ROS_INFO("PR2 in position!");
 
 	//Re-initialize controller
@@ -163,48 +163,48 @@ void PR2CartPullManager::robotInit(bool open_grippers)
 /***********************************************************************************************************************
 Turn on
 ***********************************************************************************************************************/
-void PR2CartPullManager::on(bool close_grippers)
+void PR2CartManager::on(bool close_grippers)
 {
-	if(close_grippers)
-		closeGrippers();
+//	if(close_grippers)
+//		closeGrippers();
 	switchControllers(arm_controllers_cart, arm_controllers_default);
 }
 /***********************************************************************************************************************
 Turn off
 ***********************************************************************************************************************/
-void PR2CartPullManager::off(bool open_grippers)
+void PR2CartManager::off(bool open_grippers)
 {
 	switchControllers(arm_controllers_default, arm_controllers_cart);
-	if(open_grippers)
-		openGrippers();
+//	if(open_grippers)
+//		openGrippers();
 }
 /***********************************************************************************************************************
 Open/close grippers
 ***********************************************************************************************************************/
-void PR2CartPullManager::openGrippers()
+void PR2CartManager::openGrippers()
 {
-	grippers.open();
-	while(!grippers.motionComplete())
-	{
-		ROS_INFO("Waiting for gripper motions to complete ...");
-		sleep(2);
-	}
+//	grippers.open();
+//	while(!grippers.motionComplete())
+//	{
+//		ROS_INFO("Waiting for gripper motions to complete ...");
+//		sleep(2);
+//	}
 }
-void PR2CartPullManager::closeGrippers()
+void PR2CartManager::closeGrippers()
 {
-	grippers.close();
-	while(!grippers.motionComplete())
-	{
-		ROS_INFO("Waiting for gripper motions to complete ...");
-		sleep(2);
-	}
+//	grippers.close();
+//	while(!grippers.motionComplete())
+//	{
+//		ROS_INFO("Waiting for gripper motions to complete ...");
+//		sleep(2);
+//	}
 }
 /***********************************************************************************************************************
 Set gain values
 ***********************************************************************************************************************/
-bool PR2CartPullManager::set_Value_(ros::ServiceClient * ptrSrvClient, double value)
+bool PR2CartManager::set_Value_(ros::ServiceClient * ptrSrvClient, double value)
 {
-	pr2_cartPull::setValue srv_setValue;
+	ice_msgs::setValue srv_setValue;
 	srv_setValue.request.value = value;
 	if (ptrSrvClient->call(srv_setValue))
 	{
@@ -217,9 +217,9 @@ bool PR2CartPullManager::set_Value_(ros::ServiceClient * ptrSrvClient, double va
 		return false;
 	}
 }
-bool PR2CartPullManager::set_Gains_(ros::ServiceClient * ptrSrvClient, double K_x, double K_y, double K_z)
+bool PR2CartManager::set_Gains_(ros::ServiceClient * ptrSrvClient, double K_x, double K_y, double K_z)
 {
-	pr2_cartPull::setGains srv_setGains;
+	ice_msgs::setGains srv_setGains;
 	srv_setGains.request.K_x = K_x;
 	srv_setGains.request.K_y = K_y;
 	srv_setGains.request.K_z = K_z;
@@ -235,22 +235,22 @@ bool PR2CartPullManager::set_Gains_(ros::ServiceClient * ptrSrvClient, double K_
 	}
 }
 
-bool PR2CartPullManager::set_restDGain_(double value)	{return set_Value_(&srv_set_restDGain, value);}
-bool PR2CartPullManager::set_restPGain_(double value) 	{return set_Value_(&srv_set_restPGain, value);}
+bool PR2CartManager::set_restDGain_(double value)	{return set_Value_(&srv_set_restDGain, value);}
+bool PR2CartManager::set_restPGain_(double value) 	{return set_Value_(&srv_set_restPGain, value);}
 
-bool PR2CartPullManager::set_psiThresh_(double value) 	{return set_Value_(&srv_set_psiThresh, value);}
-bool PR2CartPullManager::set_rThresh_(double value) 	{return set_Value_(&srv_set_rThresh, value);}
-bool PR2CartPullManager::set_rotDGain_(double value) 	{return set_Value_(&srv_set_rotDGain, value);}
-bool PR2CartPullManager::set_rotPGain_(double value) 	{return set_Value_(&srv_set_rotPGain, value);}
-bool PR2CartPullManager::set_velDGain_(double value) 	{return set_Value_(&srv_set_velDGain, value);}
-bool PR2CartPullManager::set_velPGain_(double value) 	{return set_Value_(&srv_set_velPGain, value);}
+bool PR2CartManager::set_psiThresh_(double value) 	{return set_Value_(&srv_set_psiThresh, value);}
+bool PR2CartManager::set_rThresh_(double value) 	{return set_Value_(&srv_set_rThresh, value);}
+bool PR2CartManager::set_rotDGain_(double value) 	{return set_Value_(&srv_set_rotDGain, value);}
+bool PR2CartManager::set_rotPGain_(double value) 	{return set_Value_(&srv_set_rotPGain, value);}
+bool PR2CartManager::set_velDGain_(double value) 	{return set_Value_(&srv_set_velDGain, value);}
+bool PR2CartManager::set_velPGain_(double value) 	{return set_Value_(&srv_set_velPGain, value);}
 
-bool PR2CartPullManager::set_Kd_rot_(double x, double y, double z) {return set_Gains_(&srv_set_Kd_rot, x, y, z);}
-bool PR2CartPullManager::set_Kd_vel_(double x, double y, double z) {return set_Gains_(&srv_set_Kd_vel, x, y, z);}
-bool PR2CartPullManager::set_Kp_rot_(double x, double y, double z) {return set_Gains_(&srv_set_Kp_rot, x, y, z);}
-bool PR2CartPullManager::set_Kp_vel_(double x, double y, double z) {return set_Gains_(&srv_set_Kp_vel, x, y, z);}
+bool PR2CartManager::set_Kd_rot_(double x, double y, double z) {return set_Gains_(&srv_set_Kd_rot, x, y, z);}
+bool PR2CartManager::set_Kd_vel_(double x, double y, double z) {return set_Gains_(&srv_set_Kd_vel, x, y, z);}
+bool PR2CartManager::set_Kp_rot_(double x, double y, double z) {return set_Gains_(&srv_set_Kp_rot, x, y, z);}
+bool PR2CartManager::set_Kp_vel_(double x, double y, double z) {return set_Gains_(&srv_set_Kp_vel, x, y, z);}
 
-void PR2CartPullManager::initGains()
+void PR2CartManager::initGains()
 {
 	set_restDGain_(0.0);
 	set_restPGain_(3.5);
@@ -270,9 +270,9 @@ void PR2CartPullManager::initGains()
 	set_Kd_rot_(1.0,1.0,1.0);
 }
 
-bool PR2CartPullManager::get_State_(pr2_cartPull::getState * currentState)
+bool PR2CartManager::get_State_(ice_msgs::getState * currentState)
 {
-	pr2_cartPull::getState temp;
+	ice_msgs::getState temp;
 
 	if (srv_get_State.call(temp))
 	{
@@ -288,9 +288,9 @@ bool PR2CartPullManager::get_State_(pr2_cartPull::getState * currentState)
 /***********************************************************************************************************************
 Print state
 ***********************************************************************************************************************/
-void PR2CartPullManager::printState()
+void PR2CartManager::printState()
 {
-	pr2_cartPull::getState srv_getState;
+	ice_msgs::getState srv_getState;
 
 	if (srv_get_State.call(srv_getState))
 	{
@@ -326,7 +326,7 @@ void PR2CartPullManager::printState()
 /***********************************************************************************************************************
 clean up clients
 ***********************************************************************************************************************/
-PR2CartPullManager::~PR2CartPullManager()
+PR2CartManager::~PR2CartManager()
 {
 	//off;
 
@@ -334,7 +334,7 @@ PR2CartPullManager::~PR2CartPullManager()
 /***********************************************************************************************************************
 Goal objects for starting positions
 ***********************************************************************************************************************/
-pr2_controllers_msgs::JointTrajectoryGoal PR2CartPullManager::leftArmStartPosition()
+pr2_controllers_msgs::JointTrajectoryGoal PR2CartManager::leftArmStartPosition()
 {
 
 	pr2_controllers_msgs::JointTrajectoryGoal goal_left;
@@ -369,7 +369,7 @@ pr2_controllers_msgs::JointTrajectoryGoal PR2CartPullManager::leftArmStartPositi
 	return goal_left;
 }
 
-pr2_controllers_msgs::JointTrajectoryGoal PR2CartPullManager::rightArmStartPosition()
+pr2_controllers_msgs::JointTrajectoryGoal PR2CartManager::rightArmStartPosition()
 {
 	  pr2_controllers_msgs::JointTrajectoryGoal goal_right;
 
@@ -406,7 +406,7 @@ pr2_controllers_msgs::JointTrajectoryGoal PR2CartPullManager::rightArmStartPosit
 Get current state of controller
 example: http://docs.ros.org/hydro/api/pr2_controller_manager/html/test_8cpp_source.html
  ***********************************************************************************************************************/
-PR2CartPullManager::ControlState PR2CartPullManager::controllerState(std::string name)
+PR2CartManager::ControlState PR2CartManager::controllerState(std::string name)
 {
 	pr2_mechanism_msgs::ListControllers srv_msg;
 	if (!list_srv_.call(srv_msg))
@@ -430,7 +430,7 @@ PR2CartPullManager::ControlState PR2CartPullManager::controllerState(std::string
 /***********************************************************************************************************************
 switch controllers
 ***********************************************************************************************************************/
-void PR2CartPullManager::switchControllers(const std::vector<std::string>& start_controllers, const std::vector<std::string>& stop_controllers) {
+void PR2CartManager::switchControllers(const std::vector<std::string>& start_controllers, const std::vector<std::string>& stop_controllers) {
 
 	pr2_mechanism_msgs::SwitchController::Request req;
 	pr2_mechanism_msgs::SwitchController::Response res;
@@ -466,11 +466,11 @@ Main loop for testing
 int main(int argc, char **argv)
 {
 	// Init the ROS node
-	ros::init(argc, argv, "pr2_cartpull_manager");
+	ros::init(argc, argv, "pr2_cart_manager");
 
-	ROS_INFO("### Starting pr2_cartpull_manager ###");
+	ROS_INFO("### Starting pr2_cart_manager ###");
 
-	PR2CartPullManager manager;
+	PR2CartManager manager;
 
 	manager.printState();
 
@@ -485,7 +485,7 @@ int main(int argc, char **argv)
 //	manager.off();
 
 
-	ROS_INFO("### Stopping pr2_cartpull_manager ###");
+	ROS_INFO("### Stopping pr2_cart_manager ###");
 
 
 
