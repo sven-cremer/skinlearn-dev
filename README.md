@@ -14,6 +14,7 @@ The following needs to be installed:
 
     sudo apt-get install ros-hydro-pr2-desktop
     sudo apt-get install ros-hydro-pr2-gripper-sensor*
+    sudo apt-get install ros-hydro-cmake-modules
 
 # Install Library
 Workspace setup:  
@@ -31,9 +32,15 @@ Workspace setup:
 Download repository and build:  
 
     cd ~/ice_ws/src
-    git clone git clone https://<USER>@bitbucket.org/<USER>/uta_pr2-dev2.git -b catkin-devel
+    git clone https://<USER>@bitbucket.org/<USER>/uta_pr2-dev2.git -b catkin-devel
     cd ..
     catkin_make
+
+The branch can also be changed using the following command:  
+
+    cd /path/to/repository
+    git checkout catkin-devel
+    git status
 
 # Troubleshooting
 If the build fails due to the pr2 gripper sensor package, try compiling it from source:

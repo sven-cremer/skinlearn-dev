@@ -4,7 +4,7 @@ project(ice_robot_controllers)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   control_toolbox
-  eigen
+  cmake_modules
   ice_msgs
   kdl_conversions
   pluginlib
@@ -37,7 +37,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ice_robot_controllers
-#  CATKIN_DEPENDS control_toolbox eigen ice_msgs kdl_conversions pluginlib pr2_controller_interface pr2_gripper_sensor_controller pr2_hardware_interface pr2_mechanism_model pr2_mechanism_msgs pr2_msgs realtime_tools roscpp std_srvs tf angles
+#  CATKIN_DEPENDS control_toolbox cmake_modules ice_msgs kdl_conversions pluginlib pr2_controller_interface pr2_gripper_sensor_controller pr2_hardware_interface pr2_mechanism_model pr2_mechanism_msgs pr2_msgs realtime_tools roscpp std_srvs tf angles
 #  DEPENDS system_lib
 )
 
