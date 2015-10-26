@@ -1,0 +1,14 @@
+float64 L_lin_x
+float64 L_lin_y
+float64 L_lin_z
+float64 L_rot_x
+float64 L_rot_y
+float64 L_rot_z
+float64 R_lin_x
+float64 R_lin_y
+float64 R_lin_z
+float64 R_rot_x
+float64 R_rot_y
+float64 R_rot_z
+---
+bool completed

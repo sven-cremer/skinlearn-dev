@@ -1,0 +1,3 @@
+<library path="lib/libpr2_cart_lib">
+  <class name="PR2CartClass" type="pr2_controller_ns::PR2CartClass" base_class_type="pr2_controller_interface::Controller" />
+</library>

@@ -9,16 +9,27 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 add_message_files(DIRECTORY msg FILES
+  # ice_robot_controllers
   controllerFullData.msg
   controllerParam.msg
+  # pr2_cart
+  combinedError.msg
+  combinedTwistError.msg
+  controllerState.msg
 )
 
 add_service_files(DIRECTORY srv FILES
+  # ice_robot_controllers
   controllerParamUpdate.srv
   fixedWeightToggle.srv
   saveControllerData.srv
   setCartPose.srv
   setCircleRate.srv
+  # pr2_cart
+  getState.srv
+  setCarteDofMatrix.srv
+  setGains.srv
+  setValue.srv
 )
 
 generate_messages(DEPENDENCIES

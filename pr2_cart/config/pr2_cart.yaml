@@ -1,0 +1,41 @@
+pr2_cart:
+  type: PR2CartClass
+  root_name: torso_lift_link
+  r_tip_name: r_gripper_tool_frame
+  l_tip_name: l_gripper_tool_frame
+
+### Velocity Controller  ###
+
+velPGain :  4.0
+velDGain :  0.1
+
+rotPGain :  3.5
+rotDGain :  0.0
+
+rThresh   : 0.02
+psiThresh : 0.10
+
+
+### Torque Controller  ###
+
+restPGain : 3.5
+restDGain : 0.0
+
+
+### Impedance Controller  ###
+
+Kp_vel_x : 100.0
+Kp_vel_y : 100.0  
+Kp_vel_z : 100.0 
+
+Kd_vel_x :   1.0
+Kd_vel_y :   1.0
+Kd_vel_z :   1.0
+
+Kp_rot_x : 100.0
+Kp_rot_y : 100.0
+Kp_rot_z :  10.0
+
+Kd_rot_x :   1.0
+Kd_rot_y :   1.0
+Kd_rot_z :   1.0
