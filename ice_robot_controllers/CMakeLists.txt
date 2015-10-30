@@ -4,7 +4,7 @@ project(ice_robot_controllers)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   control_toolbox
-  eigen
+  cmake_modules
   ice_msgs
   kdl_conversions
   pluginlib
@@ -20,6 +20,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   angles
 )
+
+find_package(Eigen REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
