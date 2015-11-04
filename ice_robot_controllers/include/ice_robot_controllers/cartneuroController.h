@@ -388,9 +388,10 @@ private:
 	bool accelerometerOn;
 
 
-	bool initOuterLoop(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
-	bool initInnerLoop(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 	bool initRobot(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
+	bool initTrajectories(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
+	bool initInnerLoop(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
+	bool initOuterLoop(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 	bool initSensors(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 	bool initNN(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
 

@@ -9,100 +9,23 @@ PR2CartneuroControllerClass::~PR2CartneuroControllerClass()
 }
 
 /// Controller initialization in non-realtime
-bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
-                                 ros::NodeHandle &n)
+bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
-  // subscribe to wrench commands
-  sub_command_ = n.subscribe<geometry_msgs::Wrench>
-	("command", 1, &PR2CartneuroControllerClass::command, this);
 
-//	// Verify that the version of the library that we linked against is
-//	  // compatible with the version of the headers we compiled against.
-//	  GOOGLE_PROTOBUF_VERIFY_VERSION;
+  // Verify that the version of the library that we linked against is
+  // compatible with the version of the headers we compiled against.
+  // GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-  /* PR2 solvers */
+	if( !initRobot(robot,n) )
+	{
+		ROS_ERROR("initRobot failed!");
+		return false;
+	}
 
-  initRobot(robot,n);
+
+  initTrajectories(robot,n);
 
   initInnerLoop(robot,n);
-
-
-//  ROS_ERROR("Joint no: %d", kdl_chain_.getNrOfJoints());
-
-
-  // Circle rate 3 rad/sec
-  circle_rate = 3  ;
-  circleLlim  = 0  ;
-  circleUlim  = 1.5;
-
-  std::string para_circleRate  = "/circleRate" ;
-  std::string para_circleLlim  = "/circleLlim" ;
-  std::string para_circleUlim  = "/circleUlim" ;
-
-  if (!n.getParam( para_circleRate , circle_rate )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleRate .c_str()) ; return false; }
-  if (!n.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; return false; }
-  if (!n.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
-
-
-
-  std::string para_m_M = "/m_M" ;
-  std::string para_m_S = "/m_S" ;
-  std::string para_m_D = "/m_D" ;
-
-  if (!n.getParam( para_m_M , m_M )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_M .c_str()) ; return false; }
-  if (!n.getParam( para_m_S , m_S )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_S .c_str()) ; return false; }
-  if (!n.getParam( para_m_D , m_D )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_D .c_str()) ; return false; }
-
-  std::string para_task_mA = "/task_mA" ;
-  std::string para_task_mB = "/task_mB" ;
-
-  if (!n.getParam( para_task_mA , task_mA )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_task_mA .c_str()) ; return false; }
-  if (!n.getParam( para_task_mB , task_mB )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_task_mB .c_str()) ; return false; }
-
-  // Desired cartesian pose
-  cartDesX     = 0.0 ;
-  cartDesY     = 0.0 ;
-  cartDesZ     = 0.0 ;
-  cartDesRoll  = 0.0 ;
-  cartDesPitch = 0.0 ;
-  cartDesYaw   = 0.0 ;
-
-  std::string para_cartDesX     = "/cartDesX";
-  std::string para_cartDesY     = "/cartDesY";
-  std::string para_cartDesZ     = "/cartDesZ";
-  std::string para_cartDesRoll  = "/cartDesRoll";
-  std::string para_cartDesPitch = "/cartDesPitch";
-  std::string para_cartDesYaw   = "/cartDesYaw";
-
-  if (!n.getParam( para_cartDesX     , cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX    .c_str()) ; return false; }
-  if (!n.getParam( para_cartDesY     , cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY    .c_str()) ; return false; }
-  if (!n.getParam( para_cartDesZ     , cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ    .c_str()) ; return false; }
-  if (!n.getParam( para_cartDesRoll  , cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; return false; }
-  if (!n.getParam( para_cartDesPitch , cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; return false; }
-  if (!n.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; return false; }
-
-  // Initial cartesian pose
-  cartIniX     = 0.7 ;
-  cartIniY     = 0.3 ;
-  cartIniZ     = 0.1 ;
-  cartIniRoll  = 0.0 ;
-  cartIniPitch = 0.0 ;
-  cartIniYaw   = 0.0 ;
-
-  std::string para_cartIniX     = "/cartIniX";
-  std::string para_cartIniY     = "/cartIniY";
-  std::string para_cartIniZ     = "/cartIniZ";
-  std::string para_cartIniRoll  = "/cartIniRoll";
-  std::string para_cartIniPitch = "/cartIniPitch";
-  std::string para_cartIniYaw   = "/cartIniYaw";
-
-  if (!n.getParam( para_cartIniX     , cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
-  if (!n.getParam( para_cartIniY     , cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
-  if (!n.getParam( para_cartIniZ     , cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
-  if (!n.getParam( para_cartIniRoll  , cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; return false; }
-  if (!n.getParam( para_cartIniPitch , cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; return false; }
-  if (!n.getParam( para_cartIniYaw   , cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; return false; }
-
 
   initOuterLoop(robot,n);
 
@@ -110,6 +33,9 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   initSensors(robot,n);
 
+
+  // Subscribe to Flexiforce wrench commands
+  sub_command_ = n.subscribe<geometry_msgs::Wrench>("command", 1, &PR2CartneuroControllerClass::command, this);
 
   /////////////////////////
   // DATA COLLECTION
@@ -1838,6 +1764,24 @@ bool PR2CartneuroControllerClass::initOuterLoop(pr2_mechanism_model::RobotState 
 {
 	bool result=true;
 
+
+	  std::string para_m_M = "/m_M" ;
+	  std::string para_m_S = "/m_S" ;
+	  std::string para_m_D = "/m_D" ;
+
+	  if (!n.getParam( para_m_M , m_M )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_M .c_str()) ; return false; }
+	  if (!n.getParam( para_m_S , m_S )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_S .c_str()) ; return false; }
+	  if (!n.getParam( para_m_D , m_D )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_D .c_str()) ; return false; }
+
+	  std::string para_task_mA = "/task_mA" ;
+	  std::string para_task_mB = "/task_mB" ;
+
+	  if (!n.getParam( para_task_mA , task_mA )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_task_mA .c_str()) ; return false; }
+	  if (!n.getParam( para_task_mB , task_mB )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_task_mB .c_str()) ; return false; }
+
+
+
+
 	  useCurrentCartPose = false ;
   std::string para_useCurrentCartPose     = "/useCurrentCartPose";
   if (!n.getParam( para_useCurrentCartPose, useCurrentCartPose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCurrentCartPose.c_str()) ; return false; }
@@ -2365,42 +2309,47 @@ bool PR2CartneuroControllerClass::initInnerLoop(pr2_mechanism_model::RobotState 
 }
 bool PR2CartneuroControllerClass::initRobot(pr2_mechanism_model::RobotState *robot,ros::NodeHandle &n)
 {
-	bool result=true;
+  bool result=true;
 
   // Get the root and tip link names from parameter server.
   std::string root_name, tip_name;
   if (!n.getParam("root_name", root_name))
   {
-    ROS_ERROR("No root name given in namespace: %s)",
-              n.getNamespace().c_str());
-    return false;
+    ROS_ERROR("No root name given in namespace: %s)",n.getNamespace().c_str());
+    result=false;
   }
   if (!n.getParam("tip_name", tip_name))
   {
-    ROS_ERROR("No tip name given in namespace: %s)",
-              n.getNamespace().c_str());
-    return false;
+    ROS_ERROR("No tip name given in namespace: %s)",n.getNamespace().c_str());
+    result=false;
   }
+
+  // Test if we got robot pointer
+  assert(robot);
 
   // Construct a chain from the root to the tip and prepare the kinematics.
   // Note the joints must be calibrated.
   if (!chain_.init(robot, root_name, tip_name))
   {
-    ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'",
-              root_name.c_str(), tip_name.c_str());
-    return false;
+    ROS_ERROR("The Cartesian Controller could not use the chain from '%s' to '%s'", root_name.c_str(), tip_name.c_str());
+    result=false;
   }
 
-
-    std::string gripper_acc_tip = "r_gripper_motor_accelerometer_link";
-
+  // Get gripper accelerometer tip name and construct a chain
+  std::string gripper_acc_tip;
+  if (!n.getParam("/gripper_acc_tip", gripper_acc_tip))
+  {
+	ROS_ERROR("No accelerometer tip name given in namespace: %s)",n.getNamespace().c_str());
+    result=false;
+  }
   if (!chain_acc_link.init(robot, root_name, gripper_acc_tip))
   {
-    ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'",
-              root_name.c_str(), gripper_acc_tip.c_str());
-    return false;
+    ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'", root_name.c_str(), gripper_acc_tip.c_str());
+    result=false;
   }
 
+  // Load urdf
+  /*
   std::string urdf_param_ = "/robot_description";
   std::string urdf_string;
 
@@ -2412,13 +2361,15 @@ bool PR2CartneuroControllerClass::initRobot(pr2_mechanism_model::RobotState *rob
 
   if (!urdf_model.initString(urdf_string))
   {
-        ROS_ERROR("Failed to parse URDF file");
+    ROS_ERROR("Failed to parse URDF file");
     return -1;
   }else {
         ROS_INFO("Successfully parsed URDF file");
   }
+  */
 
-    std::string para_cartPos_Kp_x = "/cartPos_Kp_x";
+  // Load Cartesian gains
+  std::string para_cartPos_Kp_x = "/cartPos_Kp_x";
   std::string para_cartPos_Kp_y = "/cartPos_Kp_y";
   std::string para_cartPos_Kp_z = "/cartPos_Kp_z";
   std::string para_cartPos_Kd_x = "/cartPos_Kd_x";
@@ -2520,9 +2471,78 @@ bool PR2CartneuroControllerClass::initRobot(pr2_mechanism_model::RobotState *rob
   nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
   controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
 
-
-	return result;
+  return result;
 }
+
+bool PR2CartneuroControllerClass::initTrajectories(pr2_mechanism_model::RobotState *robot,ros::NodeHandle &n)
+{
+	bool result=true;
+
+	// Circle rate 3 rad/sec
+	  circle_rate = 3  ;
+	  circleLlim  = 0  ;
+	  circleUlim  = 1.5;
+
+	  std::string para_circleRate  = "/circleRate" ;
+	  std::string para_circleLlim  = "/circleLlim" ;
+	  std::string para_circleUlim  = "/circleUlim" ;
+
+	  if (!n.getParam( para_circleRate , circle_rate )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleRate .c_str()) ; return false; }
+	  if (!n.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; return false; }
+	  if (!n.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
+
+
+	  // Desired cartesian pose
+	  cartDesX     = 0.0 ;
+	  cartDesY     = 0.0 ;
+	  cartDesZ     = 0.0 ;
+	  cartDesRoll  = 0.0 ;
+	  cartDesPitch = 0.0 ;
+	  cartDesYaw   = 0.0 ;
+
+	  std::string para_cartDesX     = "/cartDesX";
+	  std::string para_cartDesY     = "/cartDesY";
+	  std::string para_cartDesZ     = "/cartDesZ";
+	  std::string para_cartDesRoll  = "/cartDesRoll";
+	  std::string para_cartDesPitch = "/cartDesPitch";
+	  std::string para_cartDesYaw   = "/cartDesYaw";
+
+	  if (!n.getParam( para_cartDesX     , cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX    .c_str()) ; return false; }
+	  if (!n.getParam( para_cartDesY     , cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY    .c_str()) ; return false; }
+	  if (!n.getParam( para_cartDesZ     , cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ    .c_str()) ; return false; }
+	  if (!n.getParam( para_cartDesRoll  , cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; return false; }
+	  if (!n.getParam( para_cartDesPitch , cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; return false; }
+	  if (!n.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; return false; }
+
+
+	  // Initial cartesian pose
+	  cartIniX     = 0.7 ;
+	  cartIniY     = 0.3 ;
+	  cartIniZ     = 0.1 ;
+	  cartIniRoll  = 0.0 ;
+	  cartIniPitch = 0.0 ;
+	  cartIniYaw   = 0.0 ;
+
+	  std::string para_cartIniX     = "/cartIniX";
+	  std::string para_cartIniY     = "/cartIniY";
+	  std::string para_cartIniZ     = "/cartIniZ";
+	  std::string para_cartIniRoll  = "/cartIniRoll";
+	  std::string para_cartIniPitch = "/cartIniPitch";
+	  std::string para_cartIniYaw   = "/cartIniYaw";
+
+	  if (!n.getParam( para_cartIniX     , cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
+	  if (!n.getParam( para_cartIniY     , cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
+	  if (!n.getParam( para_cartIniZ     , cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
+	  if (!n.getParam( para_cartIniRoll  , cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; return false; }
+	  if (!n.getParam( para_cartIniPitch , cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; return false; }
+	  if (!n.getParam( para_cartIniYaw   , cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; return false; }
+
+
+
+	  return result;
+
+}
+
 bool PR2CartneuroControllerClass::initSensors(pr2_mechanism_model::RobotState *robot,ros::NodeHandle &n)
 {
 	bool result=true;

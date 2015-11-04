@@ -234,6 +234,10 @@ nom_joint_4  :  0.0    #-0.983      #  1.54561
 nom_joint_5  :  0.0    #-0.0947     #  0.046854 
 nom_joint_6  :  0.0    # 0.1114     # -0.0436174
 
+
+gripper_acc_tip: r_gripper_motor_accelerometer_link
+#gripper_acc_tip: l_gripper_motor_accelerometer_link
+
 pr2_cartesianController:
   type: PR2CartesianControllerClass
   root_name: torso_lift_link
