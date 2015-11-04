@@ -22,201 +22,13 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   /* PR2 solvers */
 
-  // Get the root and tip link names from parameter server.
-  std::string root_name, tip_name;
-  if (!n.getParam("root_name", root_name))
-  {
-    ROS_ERROR("No root name given in namespace: %s)",
-              n.getNamespace().c_str());
-    return false;
-  }
-  if (!n.getParam("tip_name", tip_name))
-  {
-    ROS_ERROR("No tip name given in namespace: %s)",
-              n.getNamespace().c_str());
-    return false;
-  }
+  initRobot(robot,n);
 
-  // Construct a chain from the root to the tip and prepare the kinematics.
-  // Note the joints must be calibrated.
-  if (!chain_.init(robot, root_name, tip_name))
-  {
-    ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'",
-              root_name.c_str(), tip_name.c_str());
-    return false;
-  }
+  initInnerLoop(robot,n);
 
-  /* PR2 hardware */
-
-  std::string gripper_acc_tip = "r_gripper_motor_accelerometer_link";
-
-  if (!chain_acc_link.init(robot, root_name, gripper_acc_tip))
-  {
-    ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'",
-              root_name.c_str(), gripper_acc_tip.c_str());
-    return false;
-  }
-
-  std::string urdf_param_ = "/robot_description";
-  std::string urdf_string;
-
-  if (!n.getParam(urdf_param_, urdf_string))
-  {
-    ROS_ERROR("URDF not loaded from parameter: %s)", urdf_param_.c_str());
-    return false;
-  }
-
-  if (!urdf_model.initString(urdf_string))
-  {
-        ROS_ERROR("Failed to parse URDF file");
-    return -1;
-  }else {
-        ROS_INFO("Successfully parsed URDF file");
-  }
-
-  std::string para_cartPos_Kp_x = "/cartPos_Kp_x";
-  std::string para_cartPos_Kp_y = "/cartPos_Kp_y";
-  std::string para_cartPos_Kp_z = "/cartPos_Kp_z";
-  std::string para_cartPos_Kd_x = "/cartPos_Kd_x";
-  std::string para_cartPos_Kd_y = "/cartPos_Kd_y";
-  std::string para_cartPos_Kd_z = "/cartPos_Kd_z";
-
-  std::string para_cartRot_Kp_x = "/cartRot_Kp_x";
-  std::string para_cartRot_Kp_y = "/cartRot_Kp_y";
-  std::string para_cartRot_Kp_z = "/cartRot_Kp_z";
-  std::string para_cartRot_Kd_x = "/cartRot_Kd_x";
-  std::string para_cartRot_Kd_y = "/cartRot_Kd_y";
-  std::string para_cartRot_Kd_z = "/cartRot_Kd_z";
-
-  cartPos_Kp_x = 0 ; cartRot_Kp_x = 0 ;
-  cartPos_Kp_y = 0 ; cartRot_Kp_y = 0 ;
-  cartPos_Kp_z = 0 ; cartRot_Kp_z = 0 ;
-  cartPos_Kd_x = 0 ; cartRot_Kd_x = 0 ;
-  cartPos_Kd_y = 0 ; cartRot_Kd_y = 0 ;
-  cartPos_Kd_z = 0 ; cartRot_Kd_z = 0 ;
-
-  if (!n.getParam( para_cartPos_Kp_x , cartPos_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_x.c_str()) ; return false; }
-  if (!n.getParam( para_cartPos_Kp_y , cartPos_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_y.c_str()) ; return false; }
-  if (!n.getParam( para_cartPos_Kp_z , cartPos_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_z.c_str()) ; return false; }
-  if (!n.getParam( para_cartPos_Kd_x , cartPos_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_x.c_str()) ; return false; }
-  if (!n.getParam( para_cartPos_Kd_y , cartPos_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_y.c_str()) ; return false; }
-  if (!n.getParam( para_cartPos_Kd_z , cartPos_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_z.c_str()) ; return false; }
-
-  if (!n.getParam( para_cartRot_Kp_x , cartRot_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_x.c_str()) ; return false; }
-  if (!n.getParam( para_cartRot_Kp_y , cartRot_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_y.c_str()) ; return false; }
-  if (!n.getParam( para_cartRot_Kp_z , cartRot_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_z.c_str()) ; return false; }
-  if (!n.getParam( para_cartRot_Kd_x , cartRot_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_x.c_str()) ; return false; }
-  if (!n.getParam( para_cartRot_Kd_y , cartRot_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_y.c_str()) ; return false; }
-  if (!n.getParam( para_cartRot_Kd_z , cartRot_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_z.c_str()) ; return false; }
-
-
-  // Store the robot handle for later use (to get time).
-  robot_state_ = robot;
-
-  // Construct the kdl solvers in non-realtime.
-  chain_.toKDL(kdl_chain_);
-  chain_acc_link.toKDL(kdl_chain_acc_link);
-
-  jnt_to_pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
-  jnt_to_jac_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
-
-  jnt_to_pose_solver_acc_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_acc_link));
-
-  // Resize (pre-allocate) the variables in non-realtime.
-  q_.resize(kdl_chain_.getNrOfJoints());
-  q0_.resize(kdl_chain_.getNrOfJoints());
-  qdot_.resize(kdl_chain_.getNrOfJoints());
-  tau_c_.resize(kdl_chain_.getNrOfJoints());
-  J_.resize(kdl_chain_.getNrOfJoints());
-
-  qnom.resize(kdl_chain_.getNrOfJoints());
-  q_lower.resize(kdl_chain_.getNrOfJoints());
-  q_upper.resize(kdl_chain_.getNrOfJoints());
-  qd_limit.resize(kdl_chain_.getNrOfJoints());
-
-  q_lower(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->lower;
-  q_lower(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->lower;
-  q_lower(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->lower;
-  q_lower(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->lower;
-  q_lower(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->lower;
-  q_lower(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->lower;
-  q_lower(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->lower;
-
-  q_upper(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->upper;
-  q_upper(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->upper;
-  q_upper(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->upper;
-  q_upper(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->upper;
-  q_upper(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->upper;
-  q_upper(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->upper;
-  q_upper(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->upper;
-
-  // Since two joints are continuous
-  q_upper(4) =   6.28 ;
-  q_upper(6) =   6.28 ;
-
-  q_lower(4) = - 6.28 ;
-  q_lower(6) = - 6.28 ;
-
-  qnom(0) = ( q_upper(0) - q_lower(0) ) / 2 ;
-  qnom(1) = ( q_upper(1) - q_lower(1) ) / 2 ;
-  qnom(2) = ( q_upper(2) - q_lower(2) ) / 2 ;
-  qnom(3) = ( q_upper(3) - q_lower(3) ) / 2 ;
-  qnom(4) = ( q_upper(4) - q_lower(4) ) / 2 ;
-  qnom(5) = ( q_upper(5) - q_lower(5) ) / 2 ;
-  qnom(6) = ( q_upper(6) - q_lower(6) ) / 2 ;
-
-  Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
-  JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
-  JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
-  JacobianTransPinv= Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
-  nullSpace        = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints() ) ;
-
-  cartControlForce = Eigen::VectorXd::Zero( 6 ) ;
-  nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
-  controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
 
 //  ROS_ERROR("Joint no: %d", kdl_chain_.getNrOfJoints());
 
-  std::string nn_kappa            = "/nn_kappa"            ;
-  std::string nn_Kv               = "/nn_Kv"               ;
-  std::string nn_lambda           = "/nn_lambda"           ;
-  std::string nn_Kz               = "/nn_Kz"               ;
-  std::string nn_Zb               = "/nn_Zb"               ;
-  std::string nn_feedForwardForce = "/nn_feedForwardForce" ;
-  std::string nn_nnF              = "/nn_nnF"              ;
-  std::string nn_nnG              = "/nn_nnG"              ;
-  std::string nn_ONparam          = "/nn_ON"               ;
-
-  if (!n.getParam( nn_kappa            , kappa            ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_kappa.c_str())                        ; return false; }
-  if (!n.getParam( nn_Kv               , Kv               ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kv.c_str())                           ; return false; }
-  if (!n.getParam( nn_lambda           , lambda           ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_lambda.c_str())                       ; return false; }
-  if (!n.getParam( nn_Kz               , Kz               ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kz.c_str())                           ; return false; }
-  if (!n.getParam( nn_Zb               , Zb               ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())                           ; return false; }
-  if (!n.getParam( nn_feedForwardForce , fFForce ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str())             ; return false; }
-  if (!n.getParam( nn_nnF              , nnF              ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())                          ; return false; }
-  if (!n.getParam( nn_nnG              , nnG              ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnG.c_str())                          ; return false; }
-  if (!n.getParam( nn_ONparam          , nn_ON            ))
-  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_ONparam.c_str())                      ; return false; }
-
-  std::string para_nnNum_Inputs  = "/nnNum_Inputs" ;
-  std::string para_nnNum_Outputs = "/nnNum_Outputs" ;
-  std::string para_nnNum_Hidden  = "/nnNum_Hidden" ;
-  std::string para_nnNum_Error   = "/nnNum_Error" ;
-  std::string para_nnNum_Joints  = "/nnNum_Joints" ;
-
-  if (!n.getParam( para_nnNum_Inputs , num_Inputs  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Inputs .c_str()) ; return false; }
-  if (!n.getParam( para_nnNum_Outputs, num_Outputs )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Outputs.c_str()) ; return false; }
-  if (!n.getParam( para_nnNum_Hidden , num_Hidden  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Hidden .c_str()) ; return false; }
-  if (!n.getParam( para_nnNum_Error  , num_Error   )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Error  .c_str()) ; return false; }
-  if (!n.getParam( para_nnNum_Joints , num_Joints  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Joints .c_str()) ; return false; }
 
   // Circle rate 3 rad/sec
   circle_rate = 3  ;
@@ -230,6 +42,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_circleRate , circle_rate )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleRate .c_str()) ; return false; }
   if (!n.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; return false; }
   if (!n.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
+
+
 
   std::string para_m_M = "/m_M" ;
   std::string para_m_S = "/m_S" ;
@@ -289,574 +103,12 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
   if (!n.getParam( para_cartIniPitch , cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; return false; }
   if (!n.getParam( para_cartIniYaw   , cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; return false; }
 
-  useCurrentCartPose = false ;
-  std::string para_useCurrentCartPose     = "/useCurrentCartPose";
-  if (!n.getParam( para_useCurrentCartPose, useCurrentCartPose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCurrentCartPose.c_str()) ; return false; }
 
-  useNullspacePose = true ;
-  std::string para_useNullspacePose     = "/useNullspacePose";
-  if (!n.getParam( para_useNullspacePose, useNullspacePose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useNullspacePose.c_str()) ; return false; }
+  initOuterLoop(robot,n);
 
-  useFTinput = false ;
-  std::string para_useFTinput   = "/useFTinput";
-  if (!n.getParam( para_useFTinput, useFTinput )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFTinput.c_str()) ; return false; }
+  initNN(robot,n);
 
-  useARMAmodel = false ;
-  std::string para_useARMAmodel = "/useARMAmodel";
-  if (!n.getParam( para_useARMAmodel, useARMAmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useARMAmodel.c_str()) ; return false; }
-
-  useCTARMAmodel = false ;
-  std::string para_useCTARMAmodel = "/useCTARMAmodel";
-  if (!n.getParam( para_useCTARMAmodel, useCTARMAmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCTARMAmodel.c_str()) ; return false; }
-
-  useFIRmodel = false ;
-  std::string para_useFIRmodel = "/useFIRmodel";
-  if (!n.getParam( para_useFIRmodel, useFIRmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFIRmodel.c_str()) ; return false; }
-
-  useMRACmodel = false ;
-  std::string para_useMRACmodel = "/useMRACmodel";
-  if (!n.getParam( para_useMRACmodel, useMRACmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMRACmodel.c_str()) ; return false; }
-
-  useMSDmodel = false ;
-  std::string para_useMSDmodel = "/useMSDmodel";
-  if (!n.getParam( para_useMSDmodel, useMSDmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMSDmodel.c_str()) ; return false; }
-
-  useIRLmodel = false ;
-  std::string para_useIRLmodel = "/useIRLmodel";
-  if (!n.getParam( para_useIRLmodel, useIRLmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useIRLmodel.c_str()) ; return false; }
-
-  useDirectmodel = false ;
-  std::string para_useDirectmodel = "/useDirectmodel";
-  if (!n.getParam( para_useDirectmodel, useDirectmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useDirectmodel.c_str()) ; return false; }
-
-
-  externalRefTraj = true ;
-  std::string para_externalRefTraj = "/externalRefTraj";
-  if (!n.getParam( para_externalRefTraj, externalRefTraj )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_externalRefTraj.c_str()) ; return false; }
-
-  intentEst_delT = 0.1 ;
-  std::string para_intentEst_delT = "/intentEst_delT";
-  if (!n.getParam( para_intentEst_delT, intentEst_delT )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentEst_delT.c_str()) ; return false; }
-
-  intentEst_M = 1.0 ;
-  std::string para_intentEst_M = "/intentEst_M";
-  if (!n.getParam( para_intentEst_M, intentEst_M )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentEst_M.c_str()) ; return false; }
-
-
-  std::string para_forceCutOffX = "/forceCutOffX";
-  std::string para_forceCutOffY = "/forceCutOffY";
-  std::string para_forceCutOffZ = "/forceCutOffZ";
-
-  if (!n.getParam( para_forceCutOffX , forceCutOffX )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffX.c_str()) ; return false; }
-  if (!n.getParam( para_forceCutOffY , forceCutOffY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffY.c_str()) ; return false; }
-  if (!n.getParam( para_forceCutOffZ , forceCutOffZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffZ.c_str()) ; return false; }
-
-  std::string para_forceTorqueOn = "/forceTorqueOn";
-  if (!n.getParam( para_forceTorqueOn , forceTorqueOn )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceTorqueOn.c_str()) ; return false; }
-
-  std::string para_accelerometerOn = "/accelerometerOn";
-  if (!n.getParam( para_accelerometerOn , accelerometerOn )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_accelerometerOn.c_str()) ; return false; }
-
-  std::string para_useFlexiForce = "/useFlexiForce";
-  if (!n.getParam( para_useFlexiForce , useFlexiForce )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFlexiForce.c_str()) ; return false; }
-
-  std::string para_filtW0        = "/filtW0"        ;
-  std::string para_filtW1        = "/filtW1"        ;
-  std::string para_filtW2        = "/filtW2"        ;
-  std::string para_filtW3        = "/filtW3"        ;
-  std::string para_filtW4        = "/filtW4"        ;
-  std::string para_filtW5        = "/filtW5"        ;
-  std::string para_filtW6        = "/filtW6"        ;
-  std::string para_filtW7        = "/filtW7"        ;
-
-  std::string para_flex_1_filtW0 = "/flex_1_filtW0" ;
-  std::string para_flex_1_filtW1 = "/flex_1_filtW1" ;
-  std::string para_flex_1_filtW2 = "/flex_1_filtW2" ;
-  std::string para_flex_1_filtW3 = "/flex_1_filtW3" ;
-  std::string para_flex_1_filtW4 = "/flex_1_filtW4" ;
-  std::string para_flex_1_filtW5 = "/flex_1_filtW5" ;
-  std::string para_flex_1_filtW6 = "/flex_1_filtW6" ;
-  std::string para_flex_1_filtW7 = "/flex_1_filtW7" ;
-
-  std::string para_flex_2_filtW0 = "/flex_2_filtW0" ;
-  std::string para_flex_2_filtW1 = "/flex_2_filtW1" ;
-  std::string para_flex_2_filtW2 = "/flex_2_filtW2" ;
-  std::string para_flex_2_filtW3 = "/flex_2_filtW3" ;
-  std::string para_flex_2_filtW4 = "/flex_2_filtW4" ;
-  std::string para_flex_2_filtW5 = "/flex_2_filtW5" ;
-  std::string para_flex_2_filtW6 = "/flex_2_filtW6" ;
-  std::string para_flex_2_filtW7 = "/flex_2_filtW7" ;
-
-  std::string para_flex_3_filtW0 = "/flex_3_filtW0" ;
-  std::string para_flex_3_filtW1 = "/flex_3_filtW1" ;
-  std::string para_flex_3_filtW2 = "/flex_3_filtW2" ;
-  std::string para_flex_3_filtW3 = "/flex_3_filtW3" ;
-  std::string para_flex_3_filtW4 = "/flex_3_filtW4" ;
-  std::string para_flex_3_filtW5 = "/flex_3_filtW5" ;
-  std::string para_flex_3_filtW6 = "/flex_3_filtW6" ;
-  std::string para_flex_3_filtW7 = "/flex_3_filtW7" ;
-
-  std::string para_flex_4_filtW0 = "/flex_4_filtW0" ;
-  std::string para_flex_4_filtW1 = "/flex_4_filtW1" ;
-  std::string para_flex_4_filtW2 = "/flex_4_filtW2" ;
-  std::string para_flex_4_filtW3 = "/flex_4_filtW3" ;
-  std::string para_flex_4_filtW4 = "/flex_4_filtW4" ;
-  std::string para_flex_4_filtW5 = "/flex_4_filtW5" ;
-  std::string para_flex_4_filtW6 = "/flex_4_filtW6" ;
-  std::string para_flex_4_filtW7 = "/flex_4_filtW7" ;
-
-  filtW0 = 0.0 ;  flex_1_filtW0 = 0.0 ;  flex_2_filtW0 = 0.0 ;  flex_3_filtW0 = 0.0 ;  flex_4_filtW0 = 0.0 ;
-  filtW1 = 0.0 ;  flex_1_filtW1 = 0.0 ;  flex_2_filtW1 = 0.0 ;  flex_3_filtW1 = 0.0 ;  flex_4_filtW1 = 0.0 ;
-  filtW2 = 0.0 ;  flex_1_filtW2 = 0.0 ;  flex_2_filtW2 = 0.0 ;  flex_3_filtW2 = 0.0 ;  flex_4_filtW2 = 0.0 ;
-  filtW3 = 0.0 ;  flex_1_filtW3 = 0.0 ;  flex_2_filtW3 = 0.0 ;  flex_3_filtW3 = 0.0 ;  flex_4_filtW3 = 0.0 ;
-  filtW4 = 0.0 ;  flex_1_filtW4 = 0.0 ;  flex_2_filtW4 = 0.0 ;  flex_3_filtW4 = 0.0 ;  flex_4_filtW4 = 0.0 ;
-  filtW5 = 0.0 ;  flex_1_filtW5 = 0.0 ;  flex_2_filtW5 = 0.0 ;  flex_3_filtW5 = 0.0 ;  flex_4_filtW5 = 0.0 ;
-  filtW6 = 0.0 ;  flex_1_filtW6 = 0.0 ;  flex_2_filtW6 = 0.0 ;  flex_3_filtW6 = 0.0 ;  flex_4_filtW6 = 0.0 ;
-  filtW7 = 0.0 ;  flex_1_filtW7 = 0.0 ;  flex_2_filtW7 = 0.0 ;  flex_3_filtW7 = 0.0 ;  flex_4_filtW7 = 0.0 ;
-
-  if (!n.getParam( para_filtW0        , filtW0        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW0       .c_str()) ; return false; }
-  if (!n.getParam( para_filtW1        , filtW1        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW1       .c_str()) ; return false; }
-  if (!n.getParam( para_filtW2        , filtW2        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW2       .c_str()) ; return false; }
-  if (!n.getParam( para_filtW3        , filtW3        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW3       .c_str()) ; return false; }
-  if (!n.getParam( para_filtW4        , filtW4        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW4       .c_str()) ; return false; }
-  if (!n.getParam( para_filtW5        , filtW5        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW5       .c_str()) ; return false; }
-  if (!n.getParam( para_filtW6        , filtW6        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW6       .c_str()) ; return false; }
-  if (!n.getParam( para_filtW7        , filtW7        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW7       .c_str()) ; return false; }
-
-  if (!n.getParam( para_flex_1_filtW0 , flex_1_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW0.c_str()) ; return false; }
-  if (!n.getParam( para_flex_1_filtW1 , flex_1_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW1.c_str()) ; return false; }
-  if (!n.getParam( para_flex_1_filtW2 , flex_1_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW2.c_str()) ; return false; }
-  if (!n.getParam( para_flex_1_filtW3 , flex_1_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW3.c_str()) ; return false; }
-  if (!n.getParam( para_flex_1_filtW4 , flex_1_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW4.c_str()) ; return false; }
-  if (!n.getParam( para_flex_1_filtW5 , flex_1_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW5.c_str()) ; return false; }
-  if (!n.getParam( para_flex_1_filtW6 , flex_1_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW6.c_str()) ; return false; }
-  if (!n.getParam( para_flex_1_filtW7 , flex_1_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW7.c_str()) ; return false; }
-
-  if (!n.getParam( para_flex_2_filtW0 , flex_2_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW0.c_str()) ; return false; }
-  if (!n.getParam( para_flex_2_filtW1 , flex_2_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW1.c_str()) ; return false; }
-  if (!n.getParam( para_flex_2_filtW2 , flex_2_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW2.c_str()) ; return false; }
-  if (!n.getParam( para_flex_2_filtW3 , flex_2_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW3.c_str()) ; return false; }
-  if (!n.getParam( para_flex_2_filtW4 , flex_2_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW4.c_str()) ; return false; }
-  if (!n.getParam( para_flex_2_filtW5 , flex_2_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW5.c_str()) ; return false; }
-  if (!n.getParam( para_flex_2_filtW6 , flex_2_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW6.c_str()) ; return false; }
-  if (!n.getParam( para_flex_2_filtW7 , flex_2_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW7.c_str()) ; return false; }
-
-  if (!n.getParam( para_flex_3_filtW0 , flex_3_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW0.c_str()) ; return false; }
-  if (!n.getParam( para_flex_3_filtW1 , flex_3_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW1.c_str()) ; return false; }
-  if (!n.getParam( para_flex_3_filtW2 , flex_3_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW2.c_str()) ; return false; }
-  if (!n.getParam( para_flex_3_filtW3 , flex_3_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW3.c_str()) ; return false; }
-  if (!n.getParam( para_flex_3_filtW4 , flex_3_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW4.c_str()) ; return false; }
-  if (!n.getParam( para_flex_3_filtW5 , flex_3_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW5.c_str()) ; return false; }
-  if (!n.getParam( para_flex_3_filtW6 , flex_3_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW6.c_str()) ; return false; }
-  if (!n.getParam( para_flex_3_filtW7 , flex_3_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW7.c_str()) ; return false; }
-
-  if (!n.getParam( para_flex_4_filtW0 , flex_4_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW0.c_str()) ; return false; }
-  if (!n.getParam( para_flex_4_filtW1 , flex_4_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW1.c_str()) ; return false; }
-  if (!n.getParam( para_flex_4_filtW2 , flex_4_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW2.c_str()) ; return false; }
-  if (!n.getParam( para_flex_4_filtW3 , flex_4_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW3.c_str()) ; return false; }
-  if (!n.getParam( para_flex_4_filtW4 , flex_4_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW4.c_str()) ; return false; }
-  if (!n.getParam( para_flex_4_filtW5 , flex_4_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW5.c_str()) ; return false; }
-  if (!n.getParam( para_flex_4_filtW6 , flex_4_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW6.c_str()) ; return false; }
-  if (!n.getParam( para_flex_4_filtW7 , flex_4_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW7.c_str()) ; return false; }
-
-
-  outerLoopWk.resize(8,1);
-  outerLoopWk_flexi_1.resize(8,1);
-  outerLoopWk_flexi_2.resize(8,1);
-  outerLoopWk_flexi_3.resize(8,1);
-  outerLoopWk_flexi_4.resize(8,1);
-
-
-  if( useFIRmodel || useARMAmodel || useCTARMAmodel)
-  {
-	  outerLoopWk(0,0) = filtW0 ; outerLoopWk_flexi_1(0,0) = flex_1_filtW0 ; outerLoopWk_flexi_2(0,0) = flex_2_filtW0 ; outerLoopWk_flexi_3(0,0) = flex_3_filtW0 ; outerLoopWk_flexi_4(0,0) = flex_4_filtW0 ;
-	  outerLoopWk(1,0) = filtW1 ; outerLoopWk_flexi_1(1,0) = flex_1_filtW1 ; outerLoopWk_flexi_2(1,0) = flex_2_filtW1 ; outerLoopWk_flexi_3(1,0) = flex_3_filtW1 ; outerLoopWk_flexi_4(1,0) = flex_4_filtW1 ;
-	  outerLoopWk(2,0) = filtW2 ; outerLoopWk_flexi_1(2,0) = flex_1_filtW2 ; outerLoopWk_flexi_2(2,0) = flex_2_filtW2 ; outerLoopWk_flexi_3(2,0) = flex_3_filtW2 ; outerLoopWk_flexi_4(2,0) = flex_4_filtW2 ;
-	  outerLoopWk(3,0) = filtW3 ; outerLoopWk_flexi_1(3,0) = flex_1_filtW3 ; outerLoopWk_flexi_2(3,0) = flex_2_filtW3 ; outerLoopWk_flexi_3(3,0) = flex_3_filtW3 ; outerLoopWk_flexi_4(3,0) = flex_4_filtW3 ;
-	  outerLoopWk(4,0) = filtW4 ; outerLoopWk_flexi_1(4,0) = flex_1_filtW4 ; outerLoopWk_flexi_2(4,0) = flex_2_filtW4 ; outerLoopWk_flexi_3(4,0) = flex_3_filtW4 ; outerLoopWk_flexi_4(4,0) = flex_4_filtW4 ;
-	  outerLoopWk(5,0) = filtW5 ; outerLoopWk_flexi_1(5,0) = flex_1_filtW5 ; outerLoopWk_flexi_2(5,0) = flex_2_filtW5 ; outerLoopWk_flexi_3(5,0) = flex_3_filtW5 ; outerLoopWk_flexi_4(5,0) = flex_4_filtW5 ;
-	  outerLoopWk(6,0) = filtW6 ; outerLoopWk_flexi_1(6,0) = flex_1_filtW6 ; outerLoopWk_flexi_2(6,0) = flex_2_filtW6 ; outerLoopWk_flexi_3(6,0) = flex_3_filtW6 ; outerLoopWk_flexi_4(6,0) = flex_4_filtW6 ;
-	  outerLoopWk(7,0) = filtW7 ; outerLoopWk_flexi_1(7,0) = flex_1_filtW7 ; outerLoopWk_flexi_2(7,0) = flex_2_filtW7 ; outerLoopWk_flexi_3(7,0) = flex_3_filtW7 ; outerLoopWk_flexi_4(7,0) = flex_4_filtW7 ;
-  }else
-  {
-	  outerLoopWk(0,0) = 0.0 ; outerLoopWk_flexi_1(0,0) = 0.0 ; outerLoopWk_flexi_2(0,0) = 0.0 ; outerLoopWk_flexi_3(0,0) = 0.0 ; outerLoopWk_flexi_4(0,0) = 0.0 ;
-	  outerLoopWk(1,0) = 0.0 ; outerLoopWk_flexi_1(1,0) = 0.0 ; outerLoopWk_flexi_2(1,0) = 0.0 ; outerLoopWk_flexi_3(1,0) = 0.0 ; outerLoopWk_flexi_4(1,0) = 0.0 ;
-	  outerLoopWk(2,0) = 0.0 ; outerLoopWk_flexi_1(2,0) = 0.0 ; outerLoopWk_flexi_2(2,0) = 0.0 ; outerLoopWk_flexi_3(2,0) = 0.0 ; outerLoopWk_flexi_4(2,0) = 0.0 ;
-	  outerLoopWk(3,0) = 0.0 ; outerLoopWk_flexi_1(3,0) = 0.0 ; outerLoopWk_flexi_2(3,0) = 0.0 ; outerLoopWk_flexi_3(3,0) = 0.0 ; outerLoopWk_flexi_4(3,0) = 0.0 ;
-	  outerLoopWk(4,0) = 0.0 ; outerLoopWk_flexi_1(4,0) = 0.0 ; outerLoopWk_flexi_2(4,0) = 0.0 ; outerLoopWk_flexi_3(4,0) = 0.0 ; outerLoopWk_flexi_4(4,0) = 0.0 ;
-	  outerLoopWk(5,0) = 0.0 ; outerLoopWk_flexi_1(5,0) = 0.0 ; outerLoopWk_flexi_2(5,0) = 0.0 ; outerLoopWk_flexi_3(5,0) = 0.0 ; outerLoopWk_flexi_4(5,0) = 0.0 ;
-	  outerLoopWk(6,0) = 0.0 ; outerLoopWk_flexi_1(6,0) = 0.0 ; outerLoopWk_flexi_2(6,0) = 0.0 ; outerLoopWk_flexi_3(6,0) = 0.0 ; outerLoopWk_flexi_4(6,0) = 0.0 ;
-	  outerLoopWk(7,0) = 0.0 ; outerLoopWk_flexi_1(7,0) = 0.0 ; outerLoopWk_flexi_2(7,0) = 0.0 ; outerLoopWk_flexi_3(7,0) = 0.0 ; outerLoopWk_flexi_4(7,0) = 0.0 ;
-  }
-
-  int numIrlSamples = 100;
-  std::string para_numIrlSamples = "/numIrlSamples";
-  if (!n.getParam( para_numIrlSamples , numIrlSamples )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numIrlSamples.c_str()) ; return false; }
-
-  int numIrlLsIter = 10;
-  std::string para_numIrlLsIter = "/numIrlLsIter";
-  if (!n.getParam( para_numIrlLsIter , numIrlLsIter )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numIrlLsIter.c_str()) ; return false; }
-
-  int numCartDof = 1;
-  std::string para_numCartDof = "/numCartDof";
-  if (!n.getParam( para_numCartDof , numCartDof )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numCartDof.c_str()) ; return false; }
-
-  bool irlOneshot = true;
-  std::string para_irlOneshot = "/irlOneshot";
-  if (!n.getParam( para_irlOneshot , irlOneshot )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_irlOneshot.c_str()) ; return false; }
-
-
-  std::string para_fixedFilterWeights = "/fixedFilterWeights";
-  if (!n.getParam( para_fixedFilterWeights , useFixedWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
-
-  double rls_lambda = 0.98 ;
-  double rls_sigma  = 1000 ;
-
-  std::string para_rls_lambda = "/rls_lambda";
-  std::string para_rls_sigma  = "/rls_sigma";
-
-  if (!n.getParam( para_rls_lambda , rls_lambda )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_rls_lambda.c_str()) ; return false; }
-  if (!n.getParam( para_rls_sigma  , rls_sigma  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_rls_sigma .c_str()) ; return false; }
-
-  double mrac_gamma_1 = 1 ;
-  double mrac_gamma_2 = 1 ;
-  double mrac_gamma_3 = 1 ;
-  double mrac_gamma_4 = 1 ;
-  double mrac_gamma_5 = 1 ;
-
-  std::string para_mrac_gamma_1 = "/mrac_gamma_1";
-  std::string para_mrac_gamma_2 = "/mrac_gamma_2";
-  std::string para_mrac_gamma_3 = "/mrac_gamma_3";
-  std::string para_mrac_gamma_4 = "/mrac_gamma_4";
-  std::string para_mrac_gamma_5 = "/mrac_gamma_5";
-
-  if (!n.getParam( para_mrac_gamma_1 , mrac_gamma_1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_1.c_str()) ; return false; }
-  if (!n.getParam( para_mrac_gamma_2 , mrac_gamma_2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_2.c_str()) ; return false; }
-  if (!n.getParam( para_mrac_gamma_3 , mrac_gamma_3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_3.c_str()) ; return false; }
-  if (!n.getParam( para_mrac_gamma_4 , mrac_gamma_4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_4.c_str()) ; return false; }
-  if (!n.getParam( para_mrac_gamma_5 , mrac_gamma_5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_5.c_str()) ; return false; }
-
-  double mrac_P_m = 1 ;
-  double mrac_P_h = 1 ;
-
-  std::string para_mrac_P_m = "/mrac_P_m";
-  std::string para_mrac_P_h = "/mrac_P_h";
-
-  if (!n.getParam( para_mrac_P_m , mrac_P_m )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_P_m.c_str()) ; return false; }
-  if (!n.getParam( para_mrac_P_h , mrac_P_h )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_P_h.c_str()) ; return false; }
-
-  for (int i = 0; i < num_Joints; ++i)
-      n.param("saturation/" + chain_.getJoint(i)->joint_->name, saturation_[i], 0.0);
-
-  delT = 0.001;
-
-  std::string para_outerLoopTime = "/outerLoop_time";
-  if (!n.getParam( para_outerLoopTime , outerLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_outerLoopTime.c_str()) ; return false; }
-
-  intentLoopTime = outerLoopTime;
-  std::string para_intentLoopTime = "/intentEst_time";
-  if (!n.getParam( para_intentLoopTime , intentLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentLoopTime.c_str()) ; return false; }
-
-  useSimHuman = false ;
-  std::string para_simHuman = "/useSimHuman";
-  if (!n.getParam( para_simHuman , useSimHuman )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman.c_str()) ; return false; }
-
-  std::string para_simHuman_a = "/simHuman_a" ;
-  std::string para_simHuman_b = "/simHuman_b" ;
-
-  if (!n.getParam( para_simHuman_a , simHuman_a )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman_a .c_str()) ; return false; }
-  if (!n.getParam( para_simHuman_b , simHuman_b )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman_b .c_str()) ; return false; }
-
-  // initial conditions
-  ode_init_x[0 ] = 0.0;
-  ode_init_x[1 ] = 0.0;
-  ode_init_x[2 ] = 0.0;
-  ode_init_x[3 ] = 0.0;
-
-  /////////////////////////
-  // System Model
-
-  // FIXME remove below stuff
-  num_Inputs  = 44 ;
-  num_Outputs = 6  ; // 6 for 6 cart dof
-//  num_Hidden  = 100;
-  num_Error   = 6  ;
-  num_Joints  = 7  ;
-
-  kdl_temp_joint_.resize( num_Joints );
-  eigen_temp_joint.resize( num_Joints,1 );
-
-  q       .resize( num_Joints ) ;
-  qd      .resize( num_Joints ) ;
-  qdd     .resize( num_Joints ) ;
-
-  q_m     .resize( num_Outputs ) ;
-  qd_m    .resize( num_Outputs ) ;
-  qdd_m   .resize( num_Outputs ) ;
-
-  // desired Cartesian states
-  X_m     .resize( num_Outputs ) ;
-  Xd_m    .resize( num_Outputs ) ;
-  Xdd_m   .resize( num_Outputs ) ;
-
-  // Prev desired Cartesian states
-  p_X_m     .resize( num_Outputs ) ;
-  p_Xd_m    .resize( num_Outputs ) ;
-  p_Xdd_m   .resize( num_Outputs ) ;
-
-  // Cartesian states
-  X       .resize( num_Outputs ) ;
-  Xd      .resize( num_Outputs ) ;
-
-  t_r     .resize( num_Outputs ) ;
-  task_ref.resize( num_Outputs ) ;
-  task_refModel_output.resize( num_Outputs ) ;
-  tau     .resize( num_Outputs ) ;
-
-  q        = Eigen::VectorXd::Zero( num_Joints ) ;
-  qd       = Eigen::VectorXd::Zero( num_Joints ) ;
-  qdd      = Eigen::VectorXd::Zero( num_Joints ) ;
-  q_m      = Eigen::VectorXd::Zero( num_Joints ) ;
-  qd_m     = Eigen::VectorXd::Zero( num_Joints ) ;
-  qdd_m    = Eigen::VectorXd::Zero( num_Joints ) ;
-
-  X_m      = Eigen::VectorXd::Zero( num_Outputs ) ;
-  Xd_m     = Eigen::VectorXd::Zero( num_Outputs ) ;
-  Xdd_m    = Eigen::VectorXd::Zero( num_Outputs ) ;
-  X        = Eigen::VectorXd::Zero( num_Outputs ) ;
-  Xd       = Eigen::VectorXd::Zero( num_Outputs ) ;
-
-  p_X_m    = Eigen::VectorXd::Zero( num_Outputs ) ;
-  p_Xd_m   = Eigen::VectorXd::Zero( num_Outputs ) ;
-  p_Xdd_m  = Eigen::VectorXd::Zero( num_Outputs ) ;
-
-  X_m(0)   = cartIniX     ;
-  X_m(1)   = cartIniY     ;
-  X_m(2)   = cartIniZ     ;
-  X_m(3)   = cartIniRoll  ;
-  X_m(4)   = cartIniPitch ;
-  X_m(5)   = cartIniYaw   ;
-
-  p_X_m    = X_m   ;
-  p_Xd_m   = Xd_m  ;
-  p_Xdd_m  = Xdd_m ;
-
-  transformed_force = Eigen::Vector3d::Zero();
-  r_acc_data          = Eigen::Vector3d::Zero();
-
-  t_r                  = Eigen::VectorXd::Zero( num_Outputs ) ;
-  task_ref             = Eigen::VectorXd::Zero( num_Outputs ) ;
-  task_refModel_output = Eigen::VectorXd::Zero( num_Outputs ) ;
-  tau                  = Eigen::VectorXd::Zero( num_Outputs ) ;
-  force                = Eigen::VectorXd::Zero( num_Outputs ) ;
-  // FIXME remove this hardcoded 4 value
-  flexiForce           = Eigen::VectorXd::Zero( 4 ) ;
-
-  // Initial Reference
-  task_ref = X_m ;
-
-  Jacobian         = Eigen::MatrixXd::Zero( num_Outputs, kdl_chain_.getNrOfJoints() ) ;
-  JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
-  JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
-  JacobianTransPinv= Eigen::MatrixXd::Zero( num_Outputs, kdl_chain_.getNrOfJoints() ) ;
-  nullSpace        = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints() ) ;
-
-  cartControlForce = Eigen::VectorXd::Zero( num_Outputs ) ;
-  nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
-  controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
-
-  /////////////////////////
-  // Outer Loop Init
-
-  // MRAC
-  outerLoopMRACmodelX.updateDelT( outerLoopTime );
-  outerLoopMRACmodelX.updateAB( task_mA,
-                                task_mB );
-  outerLoopMRACmodelX.updateIni( cartIniX,
-  		  	  	  	  	  	  	 cartIniX );
-  outerLoopMRACmodelX.updateSimHuman( useSimHuman );
-  outerLoopMRACmodelX.updateSimHuman( simHuman_a,
-                                      simHuman_b );
-  outerLoopMRACmodelX.updateGamma( mrac_gamma_1,
-			                       mrac_gamma_2,
-			                       mrac_gamma_3,
-			                       mrac_gamma_4,
-			                       mrac_gamma_5 ) ;
-  outerLoopMRACmodelX.updateCov( mrac_P_m,
-                                 mrac_P_h ) ;
-
-  outerLoopMRACmodelY.updateDelT( outerLoopTime );
-  outerLoopMRACmodelY.updateAB( task_mA,
-                                task_mB );
-  outerLoopMRACmodelY.updateIni( cartIniY,
-		  	  	  	  	  	  	 cartIniY );
-  outerLoopMRACmodelY.updateSimHuman( useSimHuman );
-  outerLoopMRACmodelY.updateSimHuman( simHuman_a,
-                                      simHuman_b );
-  outerLoopMRACmodelY.updateGamma( mrac_gamma_1,
-			                       mrac_gamma_2,
-			                       mrac_gamma_3,
-			                       mrac_gamma_4,
-			                       mrac_gamma_5 ) ;
-  outerLoopMRACmodelY.updateCov( mrac_P_m,
-                                 mrac_P_h ) ;
-
-  // RLS
-
-  outerLoopRLSmodelX.updateDelT( outerLoopTime );
-  outerLoopRLSmodelX.updateAB( task_mA,
-                               task_mB );
-  outerLoopRLSmodelX.initRls( rls_lambda, rls_sigma );
-//  outerLoopRLSmodelX.initPos( cartIniX );
-
-
-  outerLoopRLSmodelY.updateDelT( outerLoopTime );
-  outerLoopRLSmodelY.updateAB( task_mA,
-                               task_mB );
-  outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
-//  outerLoopRLSmodelY.initPos( cartIniY );
-
-  // CT RLS
-  outerLoopCTRLSmodelX.updateDelT( outerLoopTime );
-  outerLoopCTRLSmodelX.updateAB( task_mA,
-                                 task_mB );
-
-  outerLoopCTRLSmodelY.updateDelT( outerLoopTime );
-  outerLoopCTRLSmodelY.updateAB( task_mA,
-                                 task_mB );
-
-  // MSD
-  outerLoopMSDmodelX.updateDelT( outerLoopTime );
-  outerLoopMSDmodelX.updateMsd( m_M,
-                                m_S,
-                                m_D );
-
-  outerLoopMSDmodelY.updateDelT( outerLoopTime );
-  outerLoopMSDmodelY.updateMsd( m_M,
-                                m_S,
-                                m_D );
-
-  // IRL
-  outerLoopIRLmodelX.init( numCartDof, numIrlSamples, numIrlLsIter, irlOneshot );
-  outerLoopIRLmodelX.updateDelT( outerLoopTime );
-  outerLoopIRLmodelX.updateMsd( m_M,
-                                m_S,
-                                m_D );
-  outerLoopIRLmodelX.updateAB( task_mA,
-                               task_mB );
-
-  outerLoopIRLmodelY.init( numCartDof, numIrlSamples, numIrlLsIter, irlOneshot );
-  outerLoopIRLmodelY.updateDelT( outerLoopTime );
-  outerLoopIRLmodelY.updateMsd( m_M,
-                                m_S,
-                                m_D );
-  outerLoopIRLmodelY.updateAB( task_mA,
-                               task_mB );
-
-
-  /////////////////////////
-
-  // System Model END
-  /////////////////////////
-
-
-  /////////////////////////
-  // NN
-
-  nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
-                                  num_Outputs ,   // num_Outputs
-                                  num_Hidden  ,   // num_Hidden
-                                  num_Error   ,   // num_Error
-                                  num_Outputs );  // num_Joints = num_Outputs for cart space
-
-  Eigen::MatrixXd p_Kv     ;
-  Eigen::MatrixXd p_lambda ;
-
-  p_Kv     .resize( num_Outputs, 1 ) ;
-  p_lambda .resize( num_Outputs, 1 ) ;
-
-// Filtered error
-// r = (qd_m - qd) + lambda*(q_m - q);
-// Kv*r
-// Kd*(qd_m - qd) + Kp*(q_m - q) = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
-// Kv = Kd | Kv*lambda = Kp ... lambda = Kp/Kv = Kp/Kd
-
-  p_Kv << cartPos_Kd_x ,
-          cartPos_Kd_y ,
-          cartPos_Kd_z ,
-          cartRot_Kd_x ,
-          cartRot_Kd_y ,
-          cartRot_Kd_z ;
-
-  p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
-              cartPos_Kp_y / cartPos_Kd_y ,
-              cartPos_Kp_z / cartPos_Kd_z ,
-              cartRot_Kp_x / cartRot_Kd_x ,
-              cartRot_Kp_y / cartRot_Kd_y ,
-              cartRot_Kp_z / cartRot_Kd_z ;
-
-  nnController.init( kappa  ,
-                     p_Kv     ,
-                     p_lambda ,
-                     Kz     ,
-                     Zb     ,
-                     fFForce,
-                     nnF    ,
-                     nnG    ,
-                     nn_ON   );
-
-  nnController.updateDelT( delT );
-
-  // NN END
-  /////////////////////////
-
-  /* get a handle to the hardware interface */
-   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
-   if(!hardwareInterface)
-       ROS_ERROR("Something wrong with the hardware interface pointer!");
-
-   if( forceTorqueOn )
-   {
-     l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
-     r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
-
-     if( !l_ft_handle_ )
-         ROS_ERROR("Something wrong with getting l_ft handle");
-     if( !r_ft_handle_ )
-         ROS_ERROR("Something wrong with getting r_ft handle");
-   }
-
-   if(accelerometerOn)
-   {
-     /* get a handle to the left gripper accelerometer */
-     l_accelerometer_handle_ = hardwareInterface->getAccelerometer("l_gripper_motor");
-     if(!l_accelerometer_handle_)
-         ROS_ERROR("Something wrong with getting accelerometer handle");
-
-     // set to 1.5 kHz bandwidth (should be the default)
-     l_accelerometer_handle_->command_.bandwidth_ = pr2_hardware_interface::AccelerometerCommand
-     		                                                              ::BANDWIDTH_1500HZ;
-
-     // set to +/- 8g range (0=2g,1=4g)
-     l_accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand
-                                                                      ::RANGE_8G;
-
-     /* get a handle to the right gripper accelerometer */
-     r_accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
-     if(!r_accelerometer_handle_)
-         ROS_ERROR("Something wrong with getting accelerometer handle");
-
-     // set to 1.5 kHz bandwidth (should be the default)
-     r_accelerometer_handle_->command_.bandwidth_ = pr2_hardware_interface::AccelerometerCommand
-    		                                                              ::BANDWIDTH_1500HZ;
-
-     // set to +/- 8g range (0=2g,1=4g)
-     r_accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand
-                                                                      ::RANGE_4G;
-
-     l_accelerationObserver = new accelerationObserver(l_accelerometer_handle_);
-     r_accelerationObserver = new accelerationObserver(r_accelerometer_handle_);
-   }
+  initSensors(robot,n);
 
 
   /////////////////////////
@@ -883,6 +135,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 
   return true;
 }
+
 
 /// Controller startup in realtime
 void PR2CartneuroControllerClass::starting()
@@ -920,6 +173,7 @@ void PR2CartneuroControllerClass::starting()
   }
 
 }
+
 
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
@@ -2579,6 +1833,806 @@ void PR2CartneuroControllerClass::command(const geometry_msgs::WrenchConstPtr& w
   flexiforce_wrench_desi_.torque(2) = wrench_msg->torque.z;
 }
 
+
+bool PR2CartneuroControllerClass::initOuterLoop(pr2_mechanism_model::RobotState *robot,ros::NodeHandle &n)
+{
+	bool result=true;
+
+	  useCurrentCartPose = false ;
+  std::string para_useCurrentCartPose     = "/useCurrentCartPose";
+  if (!n.getParam( para_useCurrentCartPose, useCurrentCartPose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCurrentCartPose.c_str()) ; return false; }
+
+  useNullspacePose = true ;
+  std::string para_useNullspacePose     = "/useNullspacePose";
+  if (!n.getParam( para_useNullspacePose, useNullspacePose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useNullspacePose.c_str()) ; return false; }
+
+  useFTinput = false ;
+  std::string para_useFTinput   = "/useFTinput";
+  if (!n.getParam( para_useFTinput, useFTinput )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFTinput.c_str()) ; return false; }
+
+  useARMAmodel = false ;
+  std::string para_useARMAmodel = "/useARMAmodel";
+  if (!n.getParam( para_useARMAmodel, useARMAmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useARMAmodel.c_str()) ; return false; }
+
+  useCTARMAmodel = false ;
+  std::string para_useCTARMAmodel = "/useCTARMAmodel";
+  if (!n.getParam( para_useCTARMAmodel, useCTARMAmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCTARMAmodel.c_str()) ; return false; }
+
+  useFIRmodel = false ;
+  std::string para_useFIRmodel = "/useFIRmodel";
+  if (!n.getParam( para_useFIRmodel, useFIRmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFIRmodel.c_str()) ; return false; }
+
+  useMRACmodel = false ;
+  std::string para_useMRACmodel = "/useMRACmodel";
+  if (!n.getParam( para_useMRACmodel, useMRACmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMRACmodel.c_str()) ; return false; }
+
+  useMSDmodel = false ;
+  std::string para_useMSDmodel = "/useMSDmodel";
+  if (!n.getParam( para_useMSDmodel, useMSDmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMSDmodel.c_str()) ; return false; }
+
+  useIRLmodel = false ;
+  std::string para_useIRLmodel = "/useIRLmodel";
+  if (!n.getParam( para_useIRLmodel, useIRLmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useIRLmodel.c_str()) ; return false; }
+
+  useDirectmodel = false ;
+  std::string para_useDirectmodel = "/useDirectmodel";
+  if (!n.getParam( para_useDirectmodel, useDirectmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useDirectmodel.c_str()) ; return false; }
+
+
+  externalRefTraj = true ;
+  std::string para_externalRefTraj = "/externalRefTraj";
+  if (!n.getParam( para_externalRefTraj, externalRefTraj )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_externalRefTraj.c_str()) ; return false; }
+
+  intentEst_delT = 0.1 ;
+  std::string para_intentEst_delT = "/intentEst_delT";
+  if (!n.getParam( para_intentEst_delT, intentEst_delT )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentEst_delT.c_str()) ; return false; }
+
+  intentEst_M = 1.0 ;
+  std::string para_intentEst_M = "/intentEst_M";
+  if (!n.getParam( para_intentEst_M, intentEst_M )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentEst_M.c_str()) ; return false; }
+
+
+
+
+  std::string para_forceCutOffX = "/forceCutOffX";
+  std::string para_forceCutOffY = "/forceCutOffY";
+  std::string para_forceCutOffZ = "/forceCutOffZ";
+
+  if (!n.getParam( para_forceCutOffX , forceCutOffX )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffX.c_str()) ; return false; }
+  if (!n.getParam( para_forceCutOffY , forceCutOffY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffY.c_str()) ; return false; }
+  if (!n.getParam( para_forceCutOffZ , forceCutOffZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffZ.c_str()) ; return false; }
+
+  std::string para_forceTorqueOn = "/forceTorqueOn";
+  if (!n.getParam( para_forceTorqueOn , forceTorqueOn )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceTorqueOn.c_str()) ; return false; }
+
+  std::string para_accelerometerOn = "/accelerometerOn";
+  if (!n.getParam( para_accelerometerOn , accelerometerOn )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_accelerometerOn.c_str()) ; return false; }
+
+  std::string para_useFlexiForce = "/useFlexiForce";
+  if (!n.getParam( para_useFlexiForce , useFlexiForce )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFlexiForce.c_str()) ; return false; }
+
+  std::string para_filtW0        = "/filtW0"        ;
+  std::string para_filtW1        = "/filtW1"        ;
+  std::string para_filtW2        = "/filtW2"        ;
+  std::string para_filtW3        = "/filtW3"        ;
+  std::string para_filtW4        = "/filtW4"        ;
+  std::string para_filtW5        = "/filtW5"        ;
+  std::string para_filtW6        = "/filtW6"        ;
+  std::string para_filtW7        = "/filtW7"        ;
+
+  std::string para_flex_1_filtW0 = "/flex_1_filtW0" ;
+  std::string para_flex_1_filtW1 = "/flex_1_filtW1" ;
+  std::string para_flex_1_filtW2 = "/flex_1_filtW2" ;
+  std::string para_flex_1_filtW3 = "/flex_1_filtW3" ;
+  std::string para_flex_1_filtW4 = "/flex_1_filtW4" ;
+  std::string para_flex_1_filtW5 = "/flex_1_filtW5" ;
+  std::string para_flex_1_filtW6 = "/flex_1_filtW6" ;
+  std::string para_flex_1_filtW7 = "/flex_1_filtW7" ;
+
+  std::string para_flex_2_filtW0 = "/flex_2_filtW0" ;
+  std::string para_flex_2_filtW1 = "/flex_2_filtW1" ;
+  std::string para_flex_2_filtW2 = "/flex_2_filtW2" ;
+  std::string para_flex_2_filtW3 = "/flex_2_filtW3" ;
+  std::string para_flex_2_filtW4 = "/flex_2_filtW4" ;
+  std::string para_flex_2_filtW5 = "/flex_2_filtW5" ;
+  std::string para_flex_2_filtW6 = "/flex_2_filtW6" ;
+  std::string para_flex_2_filtW7 = "/flex_2_filtW7" ;
+
+  std::string para_flex_3_filtW0 = "/flex_3_filtW0" ;
+  std::string para_flex_3_filtW1 = "/flex_3_filtW1" ;
+  std::string para_flex_3_filtW2 = "/flex_3_filtW2" ;
+  std::string para_flex_3_filtW3 = "/flex_3_filtW3" ;
+  std::string para_flex_3_filtW4 = "/flex_3_filtW4" ;
+  std::string para_flex_3_filtW5 = "/flex_3_filtW5" ;
+  std::string para_flex_3_filtW6 = "/flex_3_filtW6" ;
+  std::string para_flex_3_filtW7 = "/flex_3_filtW7" ;
+
+  std::string para_flex_4_filtW0 = "/flex_4_filtW0" ;
+  std::string para_flex_4_filtW1 = "/flex_4_filtW1" ;
+  std::string para_flex_4_filtW2 = "/flex_4_filtW2" ;
+  std::string para_flex_4_filtW3 = "/flex_4_filtW3" ;
+  std::string para_flex_4_filtW4 = "/flex_4_filtW4" ;
+  std::string para_flex_4_filtW5 = "/flex_4_filtW5" ;
+  std::string para_flex_4_filtW6 = "/flex_4_filtW6" ;
+  std::string para_flex_4_filtW7 = "/flex_4_filtW7" ;
+
+  filtW0 = 0.0 ;  flex_1_filtW0 = 0.0 ;  flex_2_filtW0 = 0.0 ;  flex_3_filtW0 = 0.0 ;  flex_4_filtW0 = 0.0 ;
+  filtW1 = 0.0 ;  flex_1_filtW1 = 0.0 ;  flex_2_filtW1 = 0.0 ;  flex_3_filtW1 = 0.0 ;  flex_4_filtW1 = 0.0 ;
+  filtW2 = 0.0 ;  flex_1_filtW2 = 0.0 ;  flex_2_filtW2 = 0.0 ;  flex_3_filtW2 = 0.0 ;  flex_4_filtW2 = 0.0 ;
+  filtW3 = 0.0 ;  flex_1_filtW3 = 0.0 ;  flex_2_filtW3 = 0.0 ;  flex_3_filtW3 = 0.0 ;  flex_4_filtW3 = 0.0 ;
+  filtW4 = 0.0 ;  flex_1_filtW4 = 0.0 ;  flex_2_filtW4 = 0.0 ;  flex_3_filtW4 = 0.0 ;  flex_4_filtW4 = 0.0 ;
+  filtW5 = 0.0 ;  flex_1_filtW5 = 0.0 ;  flex_2_filtW5 = 0.0 ;  flex_3_filtW5 = 0.0 ;  flex_4_filtW5 = 0.0 ;
+  filtW6 = 0.0 ;  flex_1_filtW6 = 0.0 ;  flex_2_filtW6 = 0.0 ;  flex_3_filtW6 = 0.0 ;  flex_4_filtW6 = 0.0 ;
+  filtW7 = 0.0 ;  flex_1_filtW7 = 0.0 ;  flex_2_filtW7 = 0.0 ;  flex_3_filtW7 = 0.0 ;  flex_4_filtW7 = 0.0 ;
+
+  if (!n.getParam( para_filtW0        , filtW0        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW0       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW1        , filtW1        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW1       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW2        , filtW2        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW2       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW3        , filtW3        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW3       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW4        , filtW4        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW4       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW5        , filtW5        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW5       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW6        , filtW6        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW6       .c_str()) ; return false; }
+  if (!n.getParam( para_filtW7        , filtW7        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW7       .c_str()) ; return false; }
+
+  if (!n.getParam( para_flex_1_filtW0 , flex_1_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW0.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW1 , flex_1_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW1.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW2 , flex_1_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW2.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW3 , flex_1_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW3.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW4 , flex_1_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW4.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW5 , flex_1_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW5.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW6 , flex_1_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW6.c_str()) ; return false; }
+  if (!n.getParam( para_flex_1_filtW7 , flex_1_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW7.c_str()) ; return false; }
+
+  if (!n.getParam( para_flex_2_filtW0 , flex_2_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW0.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW1 , flex_2_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW1.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW2 , flex_2_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW2.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW3 , flex_2_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW3.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW4 , flex_2_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW4.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW5 , flex_2_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW5.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW6 , flex_2_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW6.c_str()) ; return false; }
+  if (!n.getParam( para_flex_2_filtW7 , flex_2_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW7.c_str()) ; return false; }
+
+  if (!n.getParam( para_flex_3_filtW0 , flex_3_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW0.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW1 , flex_3_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW1.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW2 , flex_3_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW2.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW3 , flex_3_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW3.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW4 , flex_3_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW4.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW5 , flex_3_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW5.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW6 , flex_3_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW6.c_str()) ; return false; }
+  if (!n.getParam( para_flex_3_filtW7 , flex_3_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW7.c_str()) ; return false; }
+
+  if (!n.getParam( para_flex_4_filtW0 , flex_4_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW0.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW1 , flex_4_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW1.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW2 , flex_4_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW2.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW3 , flex_4_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW3.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW4 , flex_4_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW4.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW5 , flex_4_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW5.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW6 , flex_4_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW6.c_str()) ; return false; }
+  if (!n.getParam( para_flex_4_filtW7 , flex_4_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW7.c_str()) ; return false; }
+
+
+  outerLoopWk.resize(8,1);
+  outerLoopWk_flexi_1.resize(8,1);
+  outerLoopWk_flexi_2.resize(8,1);
+  outerLoopWk_flexi_3.resize(8,1);
+  outerLoopWk_flexi_4.resize(8,1);
+
+
+  if( useFIRmodel || useARMAmodel || useCTARMAmodel)
+  {
+	  outerLoopWk(0,0) = filtW0 ; outerLoopWk_flexi_1(0,0) = flex_1_filtW0 ; outerLoopWk_flexi_2(0,0) = flex_2_filtW0 ; outerLoopWk_flexi_3(0,0) = flex_3_filtW0 ; outerLoopWk_flexi_4(0,0) = flex_4_filtW0 ;
+	  outerLoopWk(1,0) = filtW1 ; outerLoopWk_flexi_1(1,0) = flex_1_filtW1 ; outerLoopWk_flexi_2(1,0) = flex_2_filtW1 ; outerLoopWk_flexi_3(1,0) = flex_3_filtW1 ; outerLoopWk_flexi_4(1,0) = flex_4_filtW1 ;
+	  outerLoopWk(2,0) = filtW2 ; outerLoopWk_flexi_1(2,0) = flex_1_filtW2 ; outerLoopWk_flexi_2(2,0) = flex_2_filtW2 ; outerLoopWk_flexi_3(2,0) = flex_3_filtW2 ; outerLoopWk_flexi_4(2,0) = flex_4_filtW2 ;
+	  outerLoopWk(3,0) = filtW3 ; outerLoopWk_flexi_1(3,0) = flex_1_filtW3 ; outerLoopWk_flexi_2(3,0) = flex_2_filtW3 ; outerLoopWk_flexi_3(3,0) = flex_3_filtW3 ; outerLoopWk_flexi_4(3,0) = flex_4_filtW3 ;
+	  outerLoopWk(4,0) = filtW4 ; outerLoopWk_flexi_1(4,0) = flex_1_filtW4 ; outerLoopWk_flexi_2(4,0) = flex_2_filtW4 ; outerLoopWk_flexi_3(4,0) = flex_3_filtW4 ; outerLoopWk_flexi_4(4,0) = flex_4_filtW4 ;
+	  outerLoopWk(5,0) = filtW5 ; outerLoopWk_flexi_1(5,0) = flex_1_filtW5 ; outerLoopWk_flexi_2(5,0) = flex_2_filtW5 ; outerLoopWk_flexi_3(5,0) = flex_3_filtW5 ; outerLoopWk_flexi_4(5,0) = flex_4_filtW5 ;
+	  outerLoopWk(6,0) = filtW6 ; outerLoopWk_flexi_1(6,0) = flex_1_filtW6 ; outerLoopWk_flexi_2(6,0) = flex_2_filtW6 ; outerLoopWk_flexi_3(6,0) = flex_3_filtW6 ; outerLoopWk_flexi_4(6,0) = flex_4_filtW6 ;
+	  outerLoopWk(7,0) = filtW7 ; outerLoopWk_flexi_1(7,0) = flex_1_filtW7 ; outerLoopWk_flexi_2(7,0) = flex_2_filtW7 ; outerLoopWk_flexi_3(7,0) = flex_3_filtW7 ; outerLoopWk_flexi_4(7,0) = flex_4_filtW7 ;
+  }else
+  {
+	  outerLoopWk(0,0) = 0.0 ; outerLoopWk_flexi_1(0,0) = 0.0 ; outerLoopWk_flexi_2(0,0) = 0.0 ; outerLoopWk_flexi_3(0,0) = 0.0 ; outerLoopWk_flexi_4(0,0) = 0.0 ;
+	  outerLoopWk(1,0) = 0.0 ; outerLoopWk_flexi_1(1,0) = 0.0 ; outerLoopWk_flexi_2(1,0) = 0.0 ; outerLoopWk_flexi_3(1,0) = 0.0 ; outerLoopWk_flexi_4(1,0) = 0.0 ;
+	  outerLoopWk(2,0) = 0.0 ; outerLoopWk_flexi_1(2,0) = 0.0 ; outerLoopWk_flexi_2(2,0) = 0.0 ; outerLoopWk_flexi_3(2,0) = 0.0 ; outerLoopWk_flexi_4(2,0) = 0.0 ;
+	  outerLoopWk(3,0) = 0.0 ; outerLoopWk_flexi_1(3,0) = 0.0 ; outerLoopWk_flexi_2(3,0) = 0.0 ; outerLoopWk_flexi_3(3,0) = 0.0 ; outerLoopWk_flexi_4(3,0) = 0.0 ;
+	  outerLoopWk(4,0) = 0.0 ; outerLoopWk_flexi_1(4,0) = 0.0 ; outerLoopWk_flexi_2(4,0) = 0.0 ; outerLoopWk_flexi_3(4,0) = 0.0 ; outerLoopWk_flexi_4(4,0) = 0.0 ;
+	  outerLoopWk(5,0) = 0.0 ; outerLoopWk_flexi_1(5,0) = 0.0 ; outerLoopWk_flexi_2(5,0) = 0.0 ; outerLoopWk_flexi_3(5,0) = 0.0 ; outerLoopWk_flexi_4(5,0) = 0.0 ;
+	  outerLoopWk(6,0) = 0.0 ; outerLoopWk_flexi_1(6,0) = 0.0 ; outerLoopWk_flexi_2(6,0) = 0.0 ; outerLoopWk_flexi_3(6,0) = 0.0 ; outerLoopWk_flexi_4(6,0) = 0.0 ;
+	  outerLoopWk(7,0) = 0.0 ; outerLoopWk_flexi_1(7,0) = 0.0 ; outerLoopWk_flexi_2(7,0) = 0.0 ; outerLoopWk_flexi_3(7,0) = 0.0 ; outerLoopWk_flexi_4(7,0) = 0.0 ;
+  }
+
+  int numIrlSamples = 100;
+  std::string para_numIrlSamples = "/numIrlSamples";
+  if (!n.getParam( para_numIrlSamples , numIrlSamples )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numIrlSamples.c_str()) ; return false; }
+
+  int numIrlLsIter = 10;
+  std::string para_numIrlLsIter = "/numIrlLsIter";
+  if (!n.getParam( para_numIrlLsIter , numIrlLsIter )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numIrlLsIter.c_str()) ; return false; }
+
+  int numCartDof = 1;
+  std::string para_numCartDof = "/numCartDof";
+  if (!n.getParam( para_numCartDof , numCartDof )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numCartDof.c_str()) ; return false; }
+
+  bool irlOneshot = true;
+  std::string para_irlOneshot = "/irlOneshot";
+  if (!n.getParam( para_irlOneshot , irlOneshot )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_irlOneshot.c_str()) ; return false; }
+
+
+  std::string para_fixedFilterWeights = "/fixedFilterWeights";
+  if (!n.getParam( para_fixedFilterWeights , useFixedWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
+
+  double rls_lambda = 0.98 ;
+  double rls_sigma  = 1000 ;
+
+  std::string para_rls_lambda = "/rls_lambda";
+  std::string para_rls_sigma  = "/rls_sigma";
+
+  if (!n.getParam( para_rls_lambda , rls_lambda )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_rls_lambda.c_str()) ; return false; }
+  if (!n.getParam( para_rls_sigma  , rls_sigma  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_rls_sigma .c_str()) ; return false; }
+
+  double mrac_gamma_1 = 1 ;
+  double mrac_gamma_2 = 1 ;
+  double mrac_gamma_3 = 1 ;
+  double mrac_gamma_4 = 1 ;
+  double mrac_gamma_5 = 1 ;
+
+  std::string para_mrac_gamma_1 = "/mrac_gamma_1";
+  std::string para_mrac_gamma_2 = "/mrac_gamma_2";
+  std::string para_mrac_gamma_3 = "/mrac_gamma_3";
+  std::string para_mrac_gamma_4 = "/mrac_gamma_4";
+  std::string para_mrac_gamma_5 = "/mrac_gamma_5";
+
+  if (!n.getParam( para_mrac_gamma_1 , mrac_gamma_1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_1.c_str()) ; return false; }
+  if (!n.getParam( para_mrac_gamma_2 , mrac_gamma_2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_2.c_str()) ; return false; }
+  if (!n.getParam( para_mrac_gamma_3 , mrac_gamma_3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_3.c_str()) ; return false; }
+  if (!n.getParam( para_mrac_gamma_4 , mrac_gamma_4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_4.c_str()) ; return false; }
+  if (!n.getParam( para_mrac_gamma_5 , mrac_gamma_5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_5.c_str()) ; return false; }
+
+  double mrac_P_m = 1 ;
+  double mrac_P_h = 1 ;
+
+  std::string para_mrac_P_m = "/mrac_P_m";
+  std::string para_mrac_P_h = "/mrac_P_h";
+
+  if (!n.getParam( para_mrac_P_m , mrac_P_m )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_P_m.c_str()) ; return false; }
+  if (!n.getParam( para_mrac_P_h , mrac_P_h )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_P_h.c_str()) ; return false; }
+
+  for (int i = 0; i < num_Joints; ++i)
+      n.param("saturation/" + chain_.getJoint(i)->joint_->name, saturation_[i], 0.0);
+
+  delT = 0.001;
+
+  std::string para_outerLoopTime = "/outerLoop_time";
+  if (!n.getParam( para_outerLoopTime , outerLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_outerLoopTime.c_str()) ; return false; }
+
+  intentLoopTime = outerLoopTime;
+  std::string para_intentLoopTime = "/intentEst_time";
+  if (!n.getParam( para_intentLoopTime , intentLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentLoopTime.c_str()) ; return false; }
+
+  useSimHuman = false ;
+  std::string para_simHuman = "/useSimHuman";
+  if (!n.getParam( para_simHuman , useSimHuman )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman.c_str()) ; return false; }
+
+  std::string para_simHuman_a = "/simHuman_a" ;
+  std::string para_simHuman_b = "/simHuman_b" ;
+
+  if (!n.getParam( para_simHuman_a , simHuman_a )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman_a .c_str()) ; return false; }
+  if (!n.getParam( para_simHuman_b , simHuman_b )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman_b .c_str()) ; return false; }
+
+  // initial conditions
+  ode_init_x[0 ] = 0.0;
+  ode_init_x[1 ] = 0.0;
+  ode_init_x[2 ] = 0.0;
+  ode_init_x[3 ] = 0.0;
+
+  /////////////////////////
+  // System Model
+
+  // FIXME remove below stuff
+  num_Inputs  = 44 ;
+  num_Outputs = 6  ; // 6 for 6 cart dof
+//  num_Hidden  = 100;
+  num_Error   = 6  ;
+  num_Joints  = 7  ;
+
+  kdl_temp_joint_.resize( num_Joints );
+  eigen_temp_joint.resize( num_Joints,1 );
+
+  q       .resize( num_Joints ) ;
+  qd      .resize( num_Joints ) ;
+  qdd     .resize( num_Joints ) ;
+
+  q_m     .resize( num_Outputs ) ;
+  qd_m    .resize( num_Outputs ) ;
+  qdd_m   .resize( num_Outputs ) ;
+
+  // desired Cartesian states
+  X_m     .resize( num_Outputs ) ;
+  Xd_m    .resize( num_Outputs ) ;
+  Xdd_m   .resize( num_Outputs ) ;
+
+  // Prev desired Cartesian states
+  p_X_m     .resize( num_Outputs ) ;
+  p_Xd_m    .resize( num_Outputs ) ;
+  p_Xdd_m   .resize( num_Outputs ) ;
+
+  // Cartesian states
+  X       .resize( num_Outputs ) ;
+  Xd      .resize( num_Outputs ) ;
+
+  t_r     .resize( num_Outputs ) ;
+  task_ref.resize( num_Outputs ) ;
+  task_refModel_output.resize( num_Outputs ) ;
+  tau     .resize( num_Outputs ) ;
+
+  q        = Eigen::VectorXd::Zero( num_Joints ) ;
+  qd       = Eigen::VectorXd::Zero( num_Joints ) ;
+  qdd      = Eigen::VectorXd::Zero( num_Joints ) ;
+  q_m      = Eigen::VectorXd::Zero( num_Joints ) ;
+  qd_m     = Eigen::VectorXd::Zero( num_Joints ) ;
+  qdd_m    = Eigen::VectorXd::Zero( num_Joints ) ;
+
+  X_m      = Eigen::VectorXd::Zero( num_Outputs ) ;
+  Xd_m     = Eigen::VectorXd::Zero( num_Outputs ) ;
+  Xdd_m    = Eigen::VectorXd::Zero( num_Outputs ) ;
+  X        = Eigen::VectorXd::Zero( num_Outputs ) ;
+  Xd       = Eigen::VectorXd::Zero( num_Outputs ) ;
+
+  p_X_m    = Eigen::VectorXd::Zero( num_Outputs ) ;
+  p_Xd_m   = Eigen::VectorXd::Zero( num_Outputs ) ;
+  p_Xdd_m  = Eigen::VectorXd::Zero( num_Outputs ) ;
+
+  X_m(0)   = cartIniX     ;
+  X_m(1)   = cartIniY     ;
+  X_m(2)   = cartIniZ     ;
+  X_m(3)   = cartIniRoll  ;
+  X_m(4)   = cartIniPitch ;
+  X_m(5)   = cartIniYaw   ;
+
+  p_X_m    = X_m   ;
+  p_Xd_m   = Xd_m  ;
+  p_Xdd_m  = Xdd_m ;
+
+  transformed_force = Eigen::Vector3d::Zero();
+  r_acc_data          = Eigen::Vector3d::Zero();
+
+  t_r                  = Eigen::VectorXd::Zero( num_Outputs ) ;
+  task_ref             = Eigen::VectorXd::Zero( num_Outputs ) ;
+  task_refModel_output = Eigen::VectorXd::Zero( num_Outputs ) ;
+  tau                  = Eigen::VectorXd::Zero( num_Outputs ) ;
+  force                = Eigen::VectorXd::Zero( num_Outputs ) ;
+  // FIXME remove this hardcoded 4 value
+  flexiForce           = Eigen::VectorXd::Zero( 4 ) ;
+
+  // Initial Reference
+  task_ref = X_m ;
+
+  Jacobian         = Eigen::MatrixXd::Zero( num_Outputs, kdl_chain_.getNrOfJoints() ) ;
+  JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
+  JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
+  JacobianTransPinv= Eigen::MatrixXd::Zero( num_Outputs, kdl_chain_.getNrOfJoints() ) ;
+  nullSpace        = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints() ) ;
+
+  cartControlForce = Eigen::VectorXd::Zero( num_Outputs ) ;
+  nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+  controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+
+  /////////////////////////
+  // Outer Loop Init
+
+  // MRAC
+  outerLoopMRACmodelX.updateDelT( outerLoopTime );
+  outerLoopMRACmodelX.updateAB( task_mA,
+                                task_mB );
+  outerLoopMRACmodelX.updateIni( cartIniX,
+  		  	  	  	  	  	  	 cartIniX );
+  outerLoopMRACmodelX.updateSimHuman( useSimHuman );
+  outerLoopMRACmodelX.updateSimHuman( simHuman_a,
+                                      simHuman_b );
+  outerLoopMRACmodelX.updateGamma( mrac_gamma_1,
+			                       mrac_gamma_2,
+			                       mrac_gamma_3,
+			                       mrac_gamma_4,
+			                       mrac_gamma_5 ) ;
+  outerLoopMRACmodelX.updateCov( mrac_P_m,
+                                 mrac_P_h ) ;
+
+  outerLoopMRACmodelY.updateDelT( outerLoopTime );
+  outerLoopMRACmodelY.updateAB( task_mA,
+                                task_mB );
+  outerLoopMRACmodelY.updateIni( cartIniY,
+		  	  	  	  	  	  	 cartIniY );
+  outerLoopMRACmodelY.updateSimHuman( useSimHuman );
+  outerLoopMRACmodelY.updateSimHuman( simHuman_a,
+                                      simHuman_b );
+  outerLoopMRACmodelY.updateGamma( mrac_gamma_1,
+			                       mrac_gamma_2,
+			                       mrac_gamma_3,
+			                       mrac_gamma_4,
+			                       mrac_gamma_5 ) ;
+  outerLoopMRACmodelY.updateCov( mrac_P_m,
+                                 mrac_P_h ) ;
+
+  // RLS
+
+  outerLoopRLSmodelX.updateDelT( outerLoopTime );
+  outerLoopRLSmodelX.updateAB( task_mA,
+                               task_mB );
+  outerLoopRLSmodelX.initRls( rls_lambda, rls_sigma );
+//  outerLoopRLSmodelX.initPos( cartIniX );
+
+
+  outerLoopRLSmodelY.updateDelT( outerLoopTime );
+  outerLoopRLSmodelY.updateAB( task_mA,
+                               task_mB );
+  outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
+//  outerLoopRLSmodelY.initPos( cartIniY );
+
+  // CT RLS
+  outerLoopCTRLSmodelX.updateDelT( outerLoopTime );
+  outerLoopCTRLSmodelX.updateAB( task_mA,
+                                 task_mB );
+
+  outerLoopCTRLSmodelY.updateDelT( outerLoopTime );
+  outerLoopCTRLSmodelY.updateAB( task_mA,
+                                 task_mB );
+
+  // MSD
+  outerLoopMSDmodelX.updateDelT( outerLoopTime );
+  outerLoopMSDmodelX.updateMsd( m_M,
+                                m_S,
+                                m_D );
+
+  outerLoopMSDmodelY.updateDelT( outerLoopTime );
+  outerLoopMSDmodelY.updateMsd( m_M,
+                                m_S,
+                                m_D );
+
+  // IRL
+  outerLoopIRLmodelX.init( numCartDof, numIrlSamples, numIrlLsIter, irlOneshot );
+  outerLoopIRLmodelX.updateDelT( outerLoopTime );
+  outerLoopIRLmodelX.updateMsd( m_M,
+                                m_S,
+                                m_D );
+  outerLoopIRLmodelX.updateAB( task_mA,
+                               task_mB );
+
+  outerLoopIRLmodelY.init( numCartDof, numIrlSamples, numIrlLsIter, irlOneshot );
+  outerLoopIRLmodelY.updateDelT( outerLoopTime );
+  outerLoopIRLmodelY.updateMsd( m_M,
+                                m_S,
+                                m_D );
+  outerLoopIRLmodelY.updateAB( task_mA,
+                               task_mB );
+
+
+  /////////////////////////
+
+  // System Model END
+  /////////////////////////
+
+
+	return result;
+}
+bool PR2CartneuroControllerClass::initInnerLoop(pr2_mechanism_model::RobotState *robot,ros::NodeHandle &n)
+{
+	bool result=true;
+
+  std::string nn_kappa            = "/nn_kappa"            ;
+  std::string nn_Kv               = "/nn_Kv"               ;
+  std::string nn_lambda           = "/nn_lambda"           ;
+  std::string nn_Kz               = "/nn_Kz"               ;
+  std::string nn_Zb               = "/nn_Zb"               ;
+  std::string nn_feedForwardForce = "/nn_feedForwardForce" ;
+  std::string nn_nnF              = "/nn_nnF"              ;
+  std::string nn_nnG              = "/nn_nnG"              ;
+  std::string nn_ONparam          = "/nn_ON"               ;
+
+  if (!n.getParam( nn_kappa            , kappa            ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_kappa.c_str())                        ; return false; }
+  if (!n.getParam( nn_Kv               , Kv               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kv.c_str())                           ; return false; }
+  if (!n.getParam( nn_lambda           , lambda           ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_lambda.c_str())                       ; return false; }
+  if (!n.getParam( nn_Kz               , Kz               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kz.c_str())                           ; return false; }
+  if (!n.getParam( nn_Zb               , Zb               ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())                           ; return false; }
+  if (!n.getParam( nn_feedForwardForce , fFForce ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str())             ; return false; }
+  if (!n.getParam( nn_nnF              , nnF              ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())                          ; return false; }
+  if (!n.getParam( nn_nnG              , nnG              ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnG.c_str())                          ; return false; }
+  if (!n.getParam( nn_ONparam          , nn_ON            ))
+  { ROS_ERROR("Value not loaded from parameter: %s !)", nn_ONparam.c_str())                      ; return false; }
+
+  std::string para_nnNum_Inputs  = "/nnNum_Inputs" ;
+  std::string para_nnNum_Outputs = "/nnNum_Outputs" ;
+  std::string para_nnNum_Hidden  = "/nnNum_Hidden" ;
+  std::string para_nnNum_Error   = "/nnNum_Error" ;
+  std::string para_nnNum_Joints  = "/nnNum_Joints" ;
+
+  if (!n.getParam( para_nnNum_Inputs , num_Inputs  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Inputs .c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Outputs, num_Outputs )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Outputs.c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Hidden , num_Hidden  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Hidden .c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Error  , num_Error   )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Error  .c_str()) ; return false; }
+  if (!n.getParam( para_nnNum_Joints , num_Joints  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Joints .c_str()) ; return false; }
+
+
+
+
+	return result;
+}
+bool PR2CartneuroControllerClass::initRobot(pr2_mechanism_model::RobotState *robot,ros::NodeHandle &n)
+{
+	bool result=true;
+
+  // Get the root and tip link names from parameter server.
+  std::string root_name, tip_name;
+  if (!n.getParam("root_name", root_name))
+  {
+    ROS_ERROR("No root name given in namespace: %s)",
+              n.getNamespace().c_str());
+    return false;
+  }
+  if (!n.getParam("tip_name", tip_name))
+  {
+    ROS_ERROR("No tip name given in namespace: %s)",
+              n.getNamespace().c_str());
+    return false;
+  }
+
+  // Construct a chain from the root to the tip and prepare the kinematics.
+  // Note the joints must be calibrated.
+  if (!chain_.init(robot, root_name, tip_name))
+  {
+    ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'",
+              root_name.c_str(), tip_name.c_str());
+    return false;
+  }
+
+
+    std::string gripper_acc_tip = "r_gripper_motor_accelerometer_link";
+
+  if (!chain_acc_link.init(robot, root_name, gripper_acc_tip))
+  {
+    ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'",
+              root_name.c_str(), gripper_acc_tip.c_str());
+    return false;
+  }
+
+  std::string urdf_param_ = "/robot_description";
+  std::string urdf_string;
+
+  if (!n.getParam(urdf_param_, urdf_string))
+  {
+    ROS_ERROR("URDF not loaded from parameter: %s)", urdf_param_.c_str());
+    return false;
+  }
+
+  if (!urdf_model.initString(urdf_string))
+  {
+        ROS_ERROR("Failed to parse URDF file");
+    return -1;
+  }else {
+        ROS_INFO("Successfully parsed URDF file");
+  }
+
+    std::string para_cartPos_Kp_x = "/cartPos_Kp_x";
+  std::string para_cartPos_Kp_y = "/cartPos_Kp_y";
+  std::string para_cartPos_Kp_z = "/cartPos_Kp_z";
+  std::string para_cartPos_Kd_x = "/cartPos_Kd_x";
+  std::string para_cartPos_Kd_y = "/cartPos_Kd_y";
+  std::string para_cartPos_Kd_z = "/cartPos_Kd_z";
+
+  std::string para_cartRot_Kp_x = "/cartRot_Kp_x";
+  std::string para_cartRot_Kp_y = "/cartRot_Kp_y";
+  std::string para_cartRot_Kp_z = "/cartRot_Kp_z";
+  std::string para_cartRot_Kd_x = "/cartRot_Kd_x";
+  std::string para_cartRot_Kd_y = "/cartRot_Kd_y";
+  std::string para_cartRot_Kd_z = "/cartRot_Kd_z";
+
+  cartPos_Kp_x = 0 ; cartRot_Kp_x = 0 ;
+  cartPos_Kp_y = 0 ; cartRot_Kp_y = 0 ;
+  cartPos_Kp_z = 0 ; cartRot_Kp_z = 0 ;
+  cartPos_Kd_x = 0 ; cartRot_Kd_x = 0 ;
+  cartPos_Kd_y = 0 ; cartRot_Kd_y = 0 ;
+  cartPos_Kd_z = 0 ; cartRot_Kd_z = 0 ;
+
+  if (!n.getParam( para_cartPos_Kp_x , cartPos_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_x.c_str()) ; return false; }
+  if (!n.getParam( para_cartPos_Kp_y , cartPos_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_y.c_str()) ; return false; }
+  if (!n.getParam( para_cartPos_Kp_z , cartPos_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_z.c_str()) ; return false; }
+  if (!n.getParam( para_cartPos_Kd_x , cartPos_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_x.c_str()) ; return false; }
+  if (!n.getParam( para_cartPos_Kd_y , cartPos_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_y.c_str()) ; return false; }
+  if (!n.getParam( para_cartPos_Kd_z , cartPos_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_z.c_str()) ; return false; }
+
+  if (!n.getParam( para_cartRot_Kp_x , cartRot_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_x.c_str()) ; return false; }
+  if (!n.getParam( para_cartRot_Kp_y , cartRot_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_y.c_str()) ; return false; }
+  if (!n.getParam( para_cartRot_Kp_z , cartRot_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_z.c_str()) ; return false; }
+  if (!n.getParam( para_cartRot_Kd_x , cartRot_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_x.c_str()) ; return false; }
+  if (!n.getParam( para_cartRot_Kd_y , cartRot_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_y.c_str()) ; return false; }
+  if (!n.getParam( para_cartRot_Kd_z , cartRot_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_z.c_str()) ; return false; }
+
+
+  // Store the robot handle for later use (to get time).
+  robot_state_ = robot;
+
+  // Construct the kdl solvers in non-realtime.
+  chain_.toKDL(kdl_chain_);
+  chain_acc_link.toKDL(kdl_chain_acc_link);
+
+  jnt_to_pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
+  jnt_to_jac_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
+
+  jnt_to_pose_solver_acc_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_acc_link));
+
+
+ // Resize (pre-allocate) the variables in non-realtime.
+  q_.resize(kdl_chain_.getNrOfJoints());
+  q0_.resize(kdl_chain_.getNrOfJoints());
+  qdot_.resize(kdl_chain_.getNrOfJoints());
+  tau_c_.resize(kdl_chain_.getNrOfJoints());
+  J_.resize(kdl_chain_.getNrOfJoints());
+
+  qnom.resize(kdl_chain_.getNrOfJoints());
+  q_lower.resize(kdl_chain_.getNrOfJoints());
+  q_upper.resize(kdl_chain_.getNrOfJoints());
+  qd_limit.resize(kdl_chain_.getNrOfJoints());
+
+  q_lower(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->lower;
+  q_lower(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->lower;
+  q_lower(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->lower;
+  q_lower(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->lower;
+  q_lower(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->lower;
+  q_lower(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->lower;
+  q_lower(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->lower;
+
+  q_upper(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->upper;
+  q_upper(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->upper;
+  q_upper(2) = urdf_model.getJoint("l_upper_arm_roll_joint")->limits->upper;
+  q_upper(3) = urdf_model.getJoint("l_elbow_flex_joint"    )->limits->upper;
+  q_upper(4) = urdf_model.getJoint("l_forearm_roll_joint"  )->limits->upper;
+  q_upper(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->upper;
+  q_upper(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->upper;
+
+  // Since two joints are continuous
+  q_upper(4) =   6.28 ;
+  q_upper(6) =   6.28 ;
+
+  q_lower(4) = - 6.28 ;
+  q_lower(6) = - 6.28 ;
+
+  qnom(0) = ( q_upper(0) - q_lower(0) ) / 2 ;
+  qnom(1) = ( q_upper(1) - q_lower(1) ) / 2 ;
+  qnom(2) = ( q_upper(2) - q_lower(2) ) / 2 ;
+  qnom(3) = ( q_upper(3) - q_lower(3) ) / 2 ;
+  qnom(4) = ( q_upper(4) - q_lower(4) ) / 2 ;
+  qnom(5) = ( q_upper(5) - q_lower(5) ) / 2 ;
+  qnom(6) = ( q_upper(6) - q_lower(6) ) / 2 ;
+
+  Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
+  JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
+  JacobianTransPinv= Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
+  nullSpace        = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints() ) ;
+
+  cartControlForce = Eigen::VectorXd::Zero( 6 ) ;
+  nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+  controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+
+
+	return result;
+}
+bool PR2CartneuroControllerClass::initSensors(pr2_mechanism_model::RobotState *robot,ros::NodeHandle &n)
+{
+	bool result=true;
+
+	 /* get a handle to the hardware interface */
+	   pr2_hardware_interface::HardwareInterface* hardwareInterface = robot->model_->hw_;
+	   if(!hardwareInterface)
+	       ROS_ERROR("Something wrong with the hardware interface pointer!");
+
+	   if( forceTorqueOn )
+	   {
+	     l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
+	     r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+
+	     if( !l_ft_handle_ )
+	         ROS_ERROR("Something wrong with getting l_ft handle");
+	     if( !r_ft_handle_ )
+	         ROS_ERROR("Something wrong with getting r_ft handle");
+	   }
+
+	   if(accelerometerOn)
+	   {
+	     /* get a handle to the left gripper accelerometer */
+	     l_accelerometer_handle_ = hardwareInterface->getAccelerometer("l_gripper_motor");
+	     if(!l_accelerometer_handle_)
+	         ROS_ERROR("Something wrong with getting accelerometer handle");
+
+	     // set to 1.5 kHz bandwidth (should be the default)
+	     l_accelerometer_handle_->command_.bandwidth_ = pr2_hardware_interface::AccelerometerCommand
+	     		                                                              ::BANDWIDTH_1500HZ;
+
+	     // set to +/- 8g range (0=2g,1=4g)
+	     l_accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand
+	                                                                      ::RANGE_8G;
+
+	     /* get a handle to the right gripper accelerometer */
+	     r_accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
+	     if(!r_accelerometer_handle_)
+	         ROS_ERROR("Something wrong with getting accelerometer handle");
+
+	     // set to 1.5 kHz bandwidth (should be the default)
+	     r_accelerometer_handle_->command_.bandwidth_ = pr2_hardware_interface::AccelerometerCommand
+	    		                                                              ::BANDWIDTH_1500HZ;
+
+	     // set to +/- 8g range (0=2g,1=4g)
+	     r_accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand
+	                                                                      ::RANGE_4G;
+
+	     l_accelerationObserver = new accelerationObserver(l_accelerometer_handle_);
+	     r_accelerationObserver = new accelerationObserver(r_accelerometer_handle_);
+	   }
+
+	return result;
+}
+
+bool PR2CartneuroControllerClass::initNN(pr2_mechanism_model::RobotState *robot,ros::NodeHandle &n)
+{
+	bool result=true;
+
+/////////////////////////
+// NN
+
+nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
+                                num_Outputs ,   // num_Outputs
+                                num_Hidden  ,   // num_Hidden
+                                num_Error   ,   // num_Error
+                                num_Outputs );  // num_Joints = num_Outputs for cart space
+
+Eigen::MatrixXd p_Kv     ;
+Eigen::MatrixXd p_lambda ;
+
+p_Kv     .resize( num_Outputs, 1 ) ;
+p_lambda .resize( num_Outputs, 1 ) ;
+
+// Filtered error
+// r = (qd_m - qd) + lambda*(q_m - q);
+// Kv*r
+// Kd*(qd_m - qd) + Kp*(q_m - q) = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
+// Kv = Kd | Kv*lambda = Kp ... lambda = Kp/Kv = Kp/Kd
+
+p_Kv << cartPos_Kd_x ,
+        cartPos_Kd_y ,
+        cartPos_Kd_z ,
+        cartRot_Kd_x ,
+        cartRot_Kd_y ,
+        cartRot_Kd_z ;
+
+p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
+            cartPos_Kp_y / cartPos_Kd_y ,
+            cartPos_Kp_z / cartPos_Kd_z ,
+            cartRot_Kp_x / cartRot_Kd_x ,
+            cartRot_Kp_y / cartRot_Kd_y ,
+            cartRot_Kp_z / cartRot_Kd_z ;
+
+nnController.init( kappa  ,
+                   p_Kv     ,
+                   p_lambda ,
+                   Kz     ,
+                   Zb     ,
+                   fFForce,
+                   nnF    ,
+                   nnG    ,
+                   nn_ON   );
+
+nnController.updateDelT( delT );
+
+// NN END
+/////////////////////////
+return result;
+}
 
 // Register controller to pluginlib
 //PLUGINLIB_REGISTER_CLASS( PR2CartneuroControllerClass,
