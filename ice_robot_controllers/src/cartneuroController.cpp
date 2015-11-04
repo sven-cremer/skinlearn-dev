@@ -20,6 +20,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
 //	  // compatible with the version of the headers we compiled against.
 //	  GOOGLE_PROTOBUF_VERIFY_VERSION;
 
+  /* PR2 solvers */
+
   // Get the root and tip link names from parameter server.
   std::string root_name, tip_name;
   if (!n.getParam("root_name", root_name))
@@ -43,6 +45,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot,
               root_name.c_str(), tip_name.c_str());
     return false;
   }
+
+  /* PR2 hardware */
 
   std::string gripper_acc_tip = "r_gripper_motor_accelerometer_link";
 
