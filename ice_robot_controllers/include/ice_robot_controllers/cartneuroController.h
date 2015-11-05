@@ -52,7 +52,7 @@ public:
 	// See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 private:
-	enum { StoreLen = 60000 };
+	enum { StoreLen = 30000 };
 	enum { Joints = 7 };
 	// Definitions
 	typedef Eigen::Matrix<double, 7, 1> JointVec;
@@ -227,11 +227,11 @@ private:
 	ros::Subscriber sub_command_;
 
 	// ROS messages
-	geometry_msgs::WrenchStamped             msgFTData             [StoreLen];
-	sensor_msgs::JointState                  msgModelStates        [StoreLen];
-	sensor_msgs::JointState                  msgRobotStates        [StoreLen];
-	geometry_msgs::PoseStamped               msgModelCartPos       [StoreLen];
-	geometry_msgs::PoseStamped               msgRobotCartPos       [StoreLen];
+	geometry_msgs::WrenchStamped msgFTData             [StoreLen];
+	sensor_msgs::JointState      msgModelStates        [StoreLen];
+	sensor_msgs::JointState      msgRobotStates        [StoreLen];
+	geometry_msgs::PoseStamped   msgModelCartPos       [StoreLen];
+	geometry_msgs::PoseStamped   msgRobotCartPos       [StoreLen];
 	ice_msgs::controllerParam    msgControllerParam    [StoreLen];
 	ice_msgs::controllerFullData msgControllerFullData [StoreLen];
 
@@ -361,22 +361,22 @@ private:
 	KDL::JntArray kdl_temp_joint_;
 
 	bool setRefTraj( ice_msgs::setCartPose::Request  & req ,
-			ice_msgs::setCartPose::Response & resp );
+			           ice_msgs::setCartPose::Response & resp );
 
 	bool paramUpdate( ice_msgs::controllerParamUpdate::Request  & req ,
-			ice_msgs::controllerParamUpdate::Response & resp );
+			            ice_msgs::controllerParamUpdate::Response & resp );
 
 	bool save( ice_msgs::saveControllerData::Request & req,
-			ice_msgs::saveControllerData::Response& resp );
+			    ice_msgs::saveControllerData::Response& resp );
 
 	bool publish( std_srvs::Empty::Request & req,
-			std_srvs::Empty::Response& resp );
+			        std_srvs::Empty::Response& resp );
 
 	bool capture( std_srvs::Empty::Request& req,
-			std_srvs::Empty::Response& resp );
+			        std_srvs::Empty::Response& resp );
 
 	bool toggleFixedWeights( ice_msgs::fixedWeightToggle::Request & req,
-			ice_msgs::fixedWeightToggle::Response& resp );
+			                    ice_msgs::fixedWeightToggle::Response& resp );
 
 	ros::ServiceServer save_srv_;
 	ros::ServiceServer publish_srv_;
@@ -391,7 +391,7 @@ private:
 	std::fstream saveDataFile;
 	bool accelerometerOn;
 
-
+	bool initParam();
 	bool initRobot();
 	bool initTrajectories();
 	bool initInnerLoop();
