@@ -58,6 +58,8 @@ private:
 	typedef Eigen::Matrix<double, 7, 1> JointVec;
 	typedef boost::array<double, 4> human_state_type;
 
+	ros::NodeHandle nh_;
+
 	// The current robot state (to get the time stamp)
 	pr2_mechanism_model::RobotState* robot_state_;
 
@@ -388,14 +390,15 @@ private:
 	bool accelerometerOn;
 
 
-	bool initRobot(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
-	bool initTrajectories(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
-	bool initInnerLoop(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
-	bool initOuterLoop(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
-	bool initSensors(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
-	bool initNN(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
+	bool initRobot();
+	bool initTrajectories();
+	bool initInnerLoop();
+	bool initOuterLoop();
+	bool initSensors();
+	bool initNN();
 
 public:
+	PR2CartneuroControllerClass();
 	~PR2CartneuroControllerClass();
 	bool init(pr2_mechanism_model::RobotState *robot,
 			ros::NodeHandle &n);
