@@ -48,17 +48,17 @@ namespace pr2_controller_ns{
 class PR2CartneuroControllerClass: public pr2_controller_interface::Controller
 {
 public:
-  // Ensure 128-bit alignment for Eigen
-  // See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+	// Ensure 128-bit alignment for Eigen
+	// See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 private:
-  enum { StoreLen = 60000 };
-  enum { Joints = 7 };
-  // Definitions
-  typedef Eigen::Matrix<double, 7, 1> JointVec;
-  typedef Eigen::Matrix<double, 6, 1> CartVec;
-  //typedef Eigen::Matrix<double, 6, Joints> Jacobian;
-  typedef boost::array<double, 4> human_state_type;
+	enum { StoreLen = 60000 };
+	enum { Joints = 7 };
+	// Definitions
+	typedef Eigen::Matrix<double, 7, 1> JointVec;
+	typedef Eigen::Matrix<double, 6, 1> CartVec;
+	//typedef Eigen::Matrix<double, 6, Joints> Jacobian;
+	typedef boost::array<double, 4> human_state_type;
 
 	ros::NodeHandle nh_;
 
