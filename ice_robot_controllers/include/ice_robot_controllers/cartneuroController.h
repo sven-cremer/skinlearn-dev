@@ -45,18 +45,20 @@
 
 namespace pr2_controller_ns{
 
-enum
+class PR2CartneuroControllerClass: public pr2_controller_interface::Controller
 {
-	StoreLen = 60000
-};
-
-class PR2CartneuroControllerClass: public pr2_controller_interface::Controller //public pr2_controller_ns::PR2CartesianControllerClass
-{
+public:
+  // Ensure 128-bit alignment for Eigen
+  // See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 private:
-
-	// Definitions
-	typedef Eigen::Matrix<double, 7, 1> JointVec;
-	typedef boost::array<double, 4> human_state_type;
+  enum { StoreLen = 60000 };
+  enum { Joints = 7 };
+  // Definitions
+  typedef Eigen::Matrix<double, 7, 1> JointVec;
+  typedef Eigen::Matrix<double, 6, 1> CartVec;
+  //typedef Eigen::Matrix<double, 6, Joints> Jacobian;
+  typedef boost::array<double, 4> human_state_type;
 
 	ros::NodeHandle nh_;
 
@@ -397,6 +399,8 @@ private:
 	bool initSensors();
 	bool initNN();
 
+	void updateOuterLoop();
+
 public:
 	PR2CartneuroControllerClass();
 	~PR2CartneuroControllerClass();
@@ -415,7 +419,5 @@ public:
 	// FIXME change this message type
 	void command(const geometry_msgs::WrenchConstPtr& wrench_msg);
 
-
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 }

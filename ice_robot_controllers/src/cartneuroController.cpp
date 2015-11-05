@@ -16,11 +16,12 @@ PR2CartneuroControllerClass::~PR2CartneuroControllerClass()
 /// Controller initialization in non-realtime
 bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
+	ROS_INFO("Initializing Neuroadpative Controller...");
 
 	// Store node handle
 	nh_ = n;
 	// Test if we got robot pointer
-	assert(robot);
+	// assert(robot); FIXME this fails for some reason
 	// Store the robot handle for later use (to get time).
 	robot_state_ = robot;
 
@@ -33,8 +34,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 		ROS_ERROR("initRobot failed!");
 		return false;
 	}
-
-
+	ROS_ERROR("XXXXXXXXXXXXX");
   initTrajectories();
 
   initInnerLoop();
@@ -116,51 +116,6 @@ void PR2CartneuroControllerClass::starting()
 /// Controller update loop in realtime
 void PR2CartneuroControllerClass::update()
 {
-  // Read flexi force serial data
-//  tacSerial->getDataArrayFromSerialPort( flexiForce );
-  flexiForce(0) = flexiforce_wrench_desi_.force(0) ;
-  flexiForce(1) = flexiforce_wrench_desi_.force(1) ;
-  flexiForce(2) = flexiforce_wrench_desi_.force(2) ;
-  flexiForce(3) = flexiforce_wrench_desi_.torque(0);
-
-//             0
-//
-//     1   >   ^    >   3 y
-//
-//             2
-//             x
-
-  if( forceTorqueOn )
-  {
-    // retrieve right accelerometer data
-    std::vector<geometry_msgs::Vector3> rightGripperAcc = r_accelerometer_handle_->state_.samples_;
-
-    r_acc_data( 0 ) = r_accelerationObserver->aX_lp ; // threeAccs[threeAccs.size()-1].x ;
-    r_acc_data( 1 ) = r_accelerationObserver->aY_lp ; // threeAccs[threeAccs.size()-1].y ;
-    r_acc_data( 2 ) = r_accelerationObserver->aZ_lp ; // threeAccs[threeAccs.size()-1].z ;
-
-//    rightGripperAcc.clear(); // Do we need this?
-
-    std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-    l_ft_samples    = l_ftData_vector.size() - 1;
-//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
-    l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
-    l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
-    l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
-    l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
-    l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
-    l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
-
-    std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-    r_ft_samples    = r_ftData_vector.size() - 1;
-//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-    r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
-    r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
-    r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
-    r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
-    r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
-    r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
-  }
 
   double dt;                    // Servo loop time step
 
@@ -193,28 +148,86 @@ void PR2CartneuroControllerClass::update()
   // Human force input
   // Force error
 
-  /////////////////////////
-  // Flexiforce sensor ////
 
-  // X axis
-  if( flexiForce(0) > flexiForce(2) ){
+
+	/*** Update Sensor data ***/
+
+	if(useFlexiForce)
+	{
+// Read flexi force serial data
+//  tacSerial->getDataArrayFromSerialPort( flexiForce );
+flexiForce(0) = flexiforce_wrench_desi_.force(0) ;
+flexiForce(1) = flexiforce_wrench_desi_.force(1) ;
+flexiForce(2) = flexiforce_wrench_desi_.force(2) ;
+flexiForce(3) = flexiforce_wrench_desi_.torque(0);
+
+//             0
+//
+//     1   >   ^    >   3 y
+//
+//             2
+//             x
+
+
+/////////////////////////
+// Flexiforce sensor ////
+
+// X axis
+if( flexiForce(0) > flexiForce(2) ){
 	  FLEX_force(0) = -flexiForce(0);
-  }else{
+}else{
 	  FLEX_force(0) =  flexiForce(2);
-  }
-  // Y axis
-  if( flexiForce(1) > flexiForce(3) ){
+}
+// Y axis
+if( flexiForce(1) > flexiForce(3) ){
 	  FLEX_force(1) =  flexiForce(1);
-  }else{
+}else{
 	  FLEX_force(1) = -flexiForce(3);
-  }
-  // Z axis
-  FLEX_force(2) = 0 ;
+}
+// Z axis
+FLEX_force(2) = 0 ;
 
-  // Flexiforce sensor END ////
+// Flexiforce sensor END ////
 
-  /////////////////
-  // FT sensor ////
+	}
+
+
+	  /////////////////
+	  // FT sensor ////
+
+if( forceTorqueOn )
+{
+  // retrieve right accelerometer data
+  std::vector<geometry_msgs::Vector3> rightGripperAcc = r_accelerometer_handle_->state_.samples_;
+
+  r_acc_data( 0 ) = r_accelerationObserver->aX_lp ; // threeAccs[threeAccs.size()-1].x ;
+  r_acc_data( 1 ) = r_accelerationObserver->aY_lp ; // threeAccs[threeAccs.size()-1].y ;
+  r_acc_data( 2 ) = r_accelerationObserver->aZ_lp ; // threeAccs[threeAccs.size()-1].z ;
+
+//    rightGripperAcc.clear(); // Do we need this?
+
+  std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+  l_ft_samples    = l_ftData_vector.size() - 1;
+//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
+  l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
+  l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
+  l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  - l_ftBias.wrench.force.z ;
+  l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x - l_ftBias.wrench.torque.x;
+  l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
+  l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
+
+  std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+  r_ft_samples    = r_ftData_vector.size() - 1;
+//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
+  r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
+  r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
+  r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
+  r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
+  r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
+  r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
+}
+
+
 
   if( forceTorqueOn )
   {
@@ -388,303 +401,10 @@ void PR2CartneuroControllerClass::update()
       transformed_force(1) = 0 ;
     }
 
-    // OUTER Loop Update
-
-    // Human Intent Estimation
-    if( !externalRefTraj )
-    {
-    	if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
-    	{
-    		calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
-
-    		// Transform human intent to torso lift link
-    		task_ref.x() = x_gripper_acc_.p.x() + task_ref.x() ;
-    		task_ref.y() = x_gripper_acc_.p.y() + task_ref.y() ;
-    		task_ref.z() = x_gripper_acc_.p.z() + task_ref.z() ;
-
-    		intent_elapsed_ = robot_state_->getTime() ;
-    	}
-    }
 
 
-    if( ( robot_state_->getTime() - outer_elapsed_ ).toSec() >= outerLoopTime )
-    {
-		// RLS ARMA
-		if( useARMAmodel )
-		{
-			if( useFlexiForce )
-			{
-                // Set ARMA parameters
-                // X axis
-                if( flexiForce(0) > flexiForce(2) ){
+    updateOuterLoop();
 
-                    outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_1 ) ;
-                    if( useFixedWeights )
-                    	outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_1 );
-			        else
-			        	outerLoopRLSmodelX.setUpdatedWeights();
-
-                }else{
-                	outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_3 ) ;
-                	if( useFixedWeights )
-                		outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_3 );
-                    else
-                    	outerLoopRLSmodelX.setUpdatedWeights();
-                }
-
-                // Y axis
-                if( flexiForce(1) > flexiForce(3) ){
-                	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_2 ) ;
-                	if( useFixedWeights )
-                		outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_2 );
-                	else
-                		outerLoopRLSmodelY.setUpdatedWeights();
-                }else{
-                	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_4 ) ;
-                	if( useFixedWeights )
-                		outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_4 );
-                	else
-                		outerLoopRLSmodelY.setUpdatedWeights();
-                }
-			}
-
-            // X axis
-	        outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
-	                                       Xd                     (0) ,
-	                                       X_m                    (0) ,
-	                                       X                      (0) ,
-	                                       Xdd_m                  (0) ,
-	                                       transformed_force      (0) ,
-	                                       task_ref               (0) ,
-	                                       task_refModel_output   (0)  );
-
-		    // Y axis
-		    outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
-                                           Xd                     (1) ,
-                                           X_m                    (1) ,
-                                           X                      (1) ,
-                                           Xdd_m                  (1) ,
-                                           transformed_force      (1) ,
-                                           task_ref               (1) ,
-                                           task_refModel_output   (1)  );
-
-            // ROS_ERROR_STREAM("USING RLS ARMA");
-
-            if( useFlexiForce )
-            {
-   	 	        // X axis
-                if( flexiForce(0) > flexiForce(2) )
-                {
-                	outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_1 ) ;
-                }else{
-                	outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_3 ) ;
-                }
-
-                // Y axis
-                if( flexiForce(1) > flexiForce(3) )
-                {
-                	outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_2 ) ;
-                }else{
-                	outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_4 ) ;
-                }
-
-            }else
-            {
-            	outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
-				outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
-            }
-// Delete this
-//		    if( outerLoopWk_flexi_1.norm() == 0 && outerLoopWk_flexi_3.norm() == 0 )
-//		    {
-//		    	X_m(0) =  cartIniX     ;
-//		    }
-//
-//		    if(  outerLoopWk_flexi_2.norm() == 0 && outerLoopWk_flexi_4.norm() == 0  )
-//		    {
-//		    	X_m(1) =  cartIniY     ;
-//		    }
-
-		}
-
-		// CT RLS ARMA
-		if( useCTARMAmodel )
-		{
-	//      outerLoopCTRLSmodelX.updateARMA( Xd_m              (0) ,
-	//                                       Xd                (0) ,
-	//                                       X_m               (0) ,
-	//                                       X                 (0) ,
-	//                                       Xdd_m             (0) ,
-	//                                       transformed_force (0) ,
-	//                                       task_ref          (0) ,
-	//                                       task_refModel     (0)  );
-
-		  // Y axis
-		  outerLoopCTRLSmodelY.updateARMA( Xd_m                   (1) ,
-										   Xd                     (1) ,
-										   X_m                    (1) ,
-										   X                      (1) ,
-										   Xdd_m                  (1) ,
-										   transformed_force      (1) ,
-										   task_ref               (1) ,
-										   task_refModel_output   (1)  );
-
-	//      ROS_ERROR_STREAM("USING CT RLS ARMA");
-
-		    outerLoopCTRLSmodelY.getWeights( outerLoopWk ) ;
-	//		outerLoopCTRLSmodelY.setWeights( outerLoopWk ) ;
-		}
-
-		// RLS FIR
-		if( useFIRmodel )
-		{
-	//      outerLoopRLSmodelX.updateFIR( Xd_m              (0) ,
-	//                                    Xd                (0) ,
-	//                                    X_m               (0) ,
-	//                                    X                 (0) ,
-	//                                    Xdd_m             (0) ,
-	//                                    transformed_force (0) ,
-	//                                    task_ref          (0) ,
-	//                                    task_refModel     (0)  );
-
-		  // Y axis
-		  outerLoopRLSmodelY.updateFIR( Xd_m                   (1) ,
-										Xd                     (1) ,
-										X_m                    (1) ,
-										X                      (1) ,
-										Xdd_m                  (1) ,
-										transformed_force      (1) ,
-										task_ref               (1) ,
-										task_refModel_output   (1)  );
-	//      ROS_ERROR_STREAM("USING RLS FIR");
-
-			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
-	//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
-		}
-/*
-		// MRAC
-		if( useMRACmodel )
-		{
-	//      outerLoopMRACmodelX.update( Xd_m              (0) ,
-	//                                  Xd                (0) ,
-	//                                  X_m               (0) ,
-	//                                  X                 (0) ,
-	//                                  Xdd_m             (0) ,
-	//                                  transformed_force (0) ,
-	//                                  task_ref          (0) ,
-	//                                  task_refModel     (0)  );
-
-		  // Y axis
-		  outerLoopMRACmodelY.update( Xd_m              (1) ,
-									  Xd                (1) ,
-									  X_m               (1) ,
-									  X                 (1) ,
-									  Xdd_m             (1) ,
-									  transformed_force (1) ,
-									  task_ref          (1) ,
-									  task_refModel     (1)  );
-
-	//      ROS_ERROR_STREAM("USING MRAC");
-		}
-*/
-		// MSD
-		if( useMSDmodel )
-		{
-	      // Cartesian space MSD model
-	      outerLoopMSDmodelX.update( Xd_m             (0) ,
-	                                 Xd               (0) ,
-	                                 X_m              (0) ,
-	                                 X                (0) ,
-	                                 Xdd_m            (0) ,
-	                                 transformed_force(0)  );
-
-		  outerLoopMSDmodelY.update( Xd_m             (1) ,
-									 Xd               (1) ,
-									 X_m              (1) ,
-									 X                (1) ,
-									 Xdd_m            (1) ,
-									 transformed_force(1)  );
-	//      ROS_ERROR_STREAM("USING MSD");
-		}
-
-		// IRL
-		if( useIRLmodel )
-		{
-	//    // Cartesian space IRL model
-	//    outerLoopIRLmodelX.updateIRL( Xd_m              (0) ,
-	//   	                            Xd                (0) ,
-	//   	                            X_m               (0) ,
-	//   	                            X                 (0) ,
-	//   	                            Xdd_m             (0) ,
-	//   	                            transformed_force (0) ,
-	//   	                            task_ref          (0) ,
-	//   	                            task_refModel     (0)  );
-
-			outerLoopIRLmodelY.updateIRL( Xd_m                  (1) ,
-					                      Xd                    (1) ,
-					                      X_m                   (1) ,
-					                      X                     (1) ,
-					                      Xdd_m                 (1) ,
-					                      transformed_force     (1) ,
-					                      task_ref              (1) ,
-					                      task_refModel_output  (1)  );
-
-
-			// IRL
-//			outerLoopIRLmodelX.getMsd( m_M,
-//			                           m_S,
-//			                           m_D );
-			outerLoopIRLmodelY.getMsd( m_M,
-			                           m_S,
-									   m_D );
-
-	//      ROS_ERROR_STREAM("USING MSD");
-		}
-
-		// Direct Model
-		if( useDirectmodel )
-		{
-			// q_d
-			X_m(1)= task_refModel_output(1)      ;
-			Xd_m  = (X_m - p_X_m)/outerLoopTime  ;
-			Xdd_m = (Xd_m - p_Xd_m)/outerLoopTime;
-		}
-
-        // MRAC
-        if( useMRACmodel )
-        {
-//      outerLoopMRACmodelX.update( Xd_m              (0) ,
-//                                  Xd                (0) ,
-//                                  X_m               (0) ,
-//                                  X                 (0) ,
-//                                  Xdd_m             (0) ,
-//                                  transformed_force (0) ,
-//                                  task_ref          (0) ,
-//                                  task_refModel     (0)  );
-
-          // Y axis
-          outerLoopMRACmodelY.update( Xd_m                 (1) ,
-                                      Xd                   (1) ,
-                                      X_m                  (1) ,
-                                      X                    (1) ,
-                                      Xdd_m                (1) ,
-                                      transformed_force    (1) ,
-                                      task_ref             (1) ,
-                                      task_refModel_output (1)  );
-
-//      ROS_ERROR_STREAM("USING MRAC");
-        }
-
-		p_X_m    = X_m   ;
-		p_Xd_m   = Xd_m  ;
-		p_Xdd_m  = Xdd_m ;
-
-		outer_elapsed_ = robot_state_->getTime() ;
-
-    }
-
-
-    // System Model END
-    /////////////////////////
 
 //ROS_ERROR_STREAM("Joints: " << q.transpose());
 
@@ -867,7 +587,7 @@ void PR2CartneuroControllerClass::update()
   /////////////////////////
   // DATA COLLECTION
 
-  bufferData( dt );
+  //bufferData( dt );
 
   // DATA COLLECTION END
   /////////////////////////
@@ -880,6 +600,308 @@ void PR2CartneuroControllerClass::update()
 	  r_accelerationObserver->spin();
   }
 
+}
+
+
+void PR2CartneuroControllerClass::updateOuterLoop()
+{
+	   // OUTER Loop Update
+
+	    // Human Intent Estimation
+	    if( !externalRefTraj )
+	    {
+	    	if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
+	    	{
+	    		calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
+
+	    		// Transform human intent to torso lift link
+	    		task_ref.x() = x_gripper_acc_.p.x() + task_ref.x() ;
+	    		task_ref.y() = x_gripper_acc_.p.y() + task_ref.y() ;
+	    		task_ref.z() = x_gripper_acc_.p.z() + task_ref.z() ;
+
+	    		intent_elapsed_ = robot_state_->getTime() ;
+	    	}
+	    }
+
+
+	    if( ( robot_state_->getTime() - outer_elapsed_ ).toSec() >= outerLoopTime )
+	    {
+			// RLS ARMA
+			if( useARMAmodel )
+			{
+				if( useFlexiForce )
+				{
+	                // Set ARMA parameters
+	                // X axis
+	                if( flexiForce(0) > flexiForce(2) ){
+
+	                    outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_1 ) ;
+	                    if( useFixedWeights )
+	                    	outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_1 );
+				        else
+				        	outerLoopRLSmodelX.setUpdatedWeights();
+
+	                }else{
+	                	outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_3 ) ;
+	                	if( useFixedWeights )
+	                		outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_3 );
+	                    else
+	                    	outerLoopRLSmodelX.setUpdatedWeights();
+	                }
+
+	                // Y axis
+	                if( flexiForce(1) > flexiForce(3) ){
+	                	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_2 ) ;
+	                	if( useFixedWeights )
+	                		outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_2 );
+	                	else
+	                		outerLoopRLSmodelY.setUpdatedWeights();
+	                }else{
+	                	outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_4 ) ;
+	                	if( useFixedWeights )
+	                		outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_4 );
+	                	else
+	                		outerLoopRLSmodelY.setUpdatedWeights();
+	                }
+				}
+
+	            // X axis
+		        outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
+		                                       Xd                     (0) ,
+		                                       X_m                    (0) ,
+		                                       X                      (0) ,
+		                                       Xdd_m                  (0) ,
+		                                       transformed_force      (0) ,
+		                                       task_ref               (0) ,
+		                                       task_refModel_output   (0)  );
+
+			    // Y axis
+			    outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
+	                                           Xd                     (1) ,
+	                                           X_m                    (1) ,
+	                                           X                      (1) ,
+	                                           Xdd_m                  (1) ,
+	                                           transformed_force      (1) ,
+	                                           task_ref               (1) ,
+	                                           task_refModel_output   (1)  );
+
+	            // ROS_ERROR_STREAM("USING RLS ARMA");
+
+	            if( useFlexiForce )
+	            {
+	   	 	        // X axis
+	                if( flexiForce(0) > flexiForce(2) )
+	                {
+	                	outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_1 ) ;
+	                }else{
+	                	outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_3 ) ;
+	                }
+
+	                // Y axis
+	                if( flexiForce(1) > flexiForce(3) )
+	                {
+	                	outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_2 ) ;
+	                }else{
+	                	outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_4 ) ;
+	                }
+
+	            }else
+	            {
+	            	outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
+					outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
+	            }
+	// Delete this
+	//		    if( outerLoopWk_flexi_1.norm() == 0 && outerLoopWk_flexi_3.norm() == 0 )
+	//		    {
+	//		    	X_m(0) =  cartIniX     ;
+	//		    }
+	//
+	//		    if(  outerLoopWk_flexi_2.norm() == 0 && outerLoopWk_flexi_4.norm() == 0  )
+	//		    {
+	//		    	X_m(1) =  cartIniY     ;
+	//		    }
+
+			}
+
+			// CT RLS ARMA
+			if( useCTARMAmodel )
+			{
+		//      outerLoopCTRLSmodelX.updateARMA( Xd_m              (0) ,
+		//                                       Xd                (0) ,
+		//                                       X_m               (0) ,
+		//                                       X                 (0) ,
+		//                                       Xdd_m             (0) ,
+		//                                       transformed_force (0) ,
+		//                                       task_ref          (0) ,
+		//                                       task_refModel     (0)  );
+
+			  // Y axis
+			  outerLoopCTRLSmodelY.updateARMA( Xd_m                   (1) ,
+											   Xd                     (1) ,
+											   X_m                    (1) ,
+											   X                      (1) ,
+											   Xdd_m                  (1) ,
+											   transformed_force      (1) ,
+											   task_ref               (1) ,
+											   task_refModel_output   (1)  );
+
+		//      ROS_ERROR_STREAM("USING CT RLS ARMA");
+
+			    outerLoopCTRLSmodelY.getWeights( outerLoopWk ) ;
+		//		outerLoopCTRLSmodelY.setWeights( outerLoopWk ) ;
+			}
+
+			// RLS FIR
+			if( useFIRmodel )
+			{
+		//      outerLoopRLSmodelX.updateFIR( Xd_m              (0) ,
+		//                                    Xd                (0) ,
+		//                                    X_m               (0) ,
+		//                                    X                 (0) ,
+		//                                    Xdd_m             (0) ,
+		//                                    transformed_force (0) ,
+		//                                    task_ref          (0) ,
+		//                                    task_refModel     (0)  );
+
+			  // Y axis
+			  outerLoopRLSmodelY.updateFIR( Xd_m                   (1) ,
+											Xd                     (1) ,
+											X_m                    (1) ,
+											X                      (1) ,
+											Xdd_m                  (1) ,
+											transformed_force      (1) ,
+											task_ref               (1) ,
+											task_refModel_output   (1)  );
+		//      ROS_ERROR_STREAM("USING RLS FIR");
+
+				outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
+		//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
+			}
+	/*
+			// MRAC
+			if( useMRACmodel )
+			{
+		//      outerLoopMRACmodelX.update( Xd_m              (0) ,
+		//                                  Xd                (0) ,
+		//                                  X_m               (0) ,
+		//                                  X                 (0) ,
+		//                                  Xdd_m             (0) ,
+		//                                  transformed_force (0) ,
+		//                                  task_ref          (0) ,
+		//                                  task_refModel     (0)  );
+
+			  // Y axis
+			  outerLoopMRACmodelY.update( Xd_m              (1) ,
+										  Xd                (1) ,
+										  X_m               (1) ,
+										  X                 (1) ,
+										  Xdd_m             (1) ,
+										  transformed_force (1) ,
+										  task_ref          (1) ,
+										  task_refModel     (1)  );
+
+		//      ROS_ERROR_STREAM("USING MRAC");
+			}
+	*/
+			// MSD
+			if( useMSDmodel )
+			{
+		      // Cartesian space MSD model
+		      outerLoopMSDmodelX.update( Xd_m             (0) ,
+		                                 Xd               (0) ,
+		                                 X_m              (0) ,
+		                                 X                (0) ,
+		                                 Xdd_m            (0) ,
+		                                 transformed_force(0)  );
+
+			  outerLoopMSDmodelY.update( Xd_m             (1) ,
+										 Xd               (1) ,
+										 X_m              (1) ,
+										 X                (1) ,
+										 Xdd_m            (1) ,
+										 transformed_force(1)  );
+		//      ROS_ERROR_STREAM("USING MSD");
+			}
+
+			// IRL
+			if( useIRLmodel )
+			{
+		//    // Cartesian space IRL model
+		//    outerLoopIRLmodelX.updateIRL( Xd_m              (0) ,
+		//   	                            Xd                (0) ,
+		//   	                            X_m               (0) ,
+		//   	                            X                 (0) ,
+		//   	                            Xdd_m             (0) ,
+		//   	                            transformed_force (0) ,
+		//   	                            task_ref          (0) ,
+		//   	                            task_refModel     (0)  );
+
+				outerLoopIRLmodelY.updateIRL( Xd_m                  (1) ,
+						                      Xd                    (1) ,
+						                      X_m                   (1) ,
+						                      X                     (1) ,
+						                      Xdd_m                 (1) ,
+						                      transformed_force     (1) ,
+						                      task_ref              (1) ,
+						                      task_refModel_output  (1)  );
+
+
+				// IRL
+	//			outerLoopIRLmodelX.getMsd( m_M,
+	//			                           m_S,
+	//			                           m_D );
+				outerLoopIRLmodelY.getMsd( m_M,
+				                           m_S,
+										   m_D );
+
+		//      ROS_ERROR_STREAM("USING MSD");
+			}
+
+			// Direct Model
+			if( useDirectmodel )
+			{
+				// q_d
+				X_m(1)= task_refModel_output(1)      ;
+				Xd_m  = (X_m - p_X_m)/outerLoopTime  ;
+				Xdd_m = (Xd_m - p_Xd_m)/outerLoopTime;
+			}
+
+	        // MRAC
+	        if( useMRACmodel )
+	        {
+	//      outerLoopMRACmodelX.update( Xd_m              (0) ,
+	//                                  Xd                (0) ,
+	//                                  X_m               (0) ,
+	//                                  X                 (0) ,
+	//                                  Xdd_m             (0) ,
+	//                                  transformed_force (0) ,
+	//                                  task_ref          (0) ,
+	//                                  task_refModel     (0)  );
+
+	          // Y axis
+	          outerLoopMRACmodelY.update( Xd_m                 (1) ,
+	                                      Xd                   (1) ,
+	                                      X_m                  (1) ,
+	                                      X                    (1) ,
+	                                      Xdd_m                (1) ,
+	                                      transformed_force    (1) ,
+	                                      task_ref             (1) ,
+	                                      task_refModel_output (1)  );
+
+	//      ROS_ERROR_STREAM("USING MRAC");
+	        }
+
+			p_X_m    = X_m   ;
+			p_Xd_m   = Xd_m  ;
+			p_Xdd_m  = Xdd_m ;
+
+			outer_elapsed_ = robot_state_->getTime() ;
+
+	    }
+
+
+	    // System Model END
+	    /////////////////////////
 }
 
 void PR2CartneuroControllerClass::bufferData( double & dt )
@@ -2357,8 +2379,7 @@ bool PR2CartneuroControllerClass::initRobot()
     result=false;
   }
 
-  // Load urdf
-  /*
+  // Load urdf model
   std::string urdf_param_ = "/robot_description";
   std::string urdf_string;
 
@@ -2375,45 +2396,6 @@ bool PR2CartneuroControllerClass::initRobot()
   }else {
         ROS_INFO("Successfully parsed URDF file");
   }
-  */
-
-  // Load Cartesian gains
-  std::string para_cartPos_Kp_x = "/cartPos_Kp_x";
-  std::string para_cartPos_Kp_y = "/cartPos_Kp_y";
-  std::string para_cartPos_Kp_z = "/cartPos_Kp_z";
-  std::string para_cartPos_Kd_x = "/cartPos_Kd_x";
-  std::string para_cartPos_Kd_y = "/cartPos_Kd_y";
-  std::string para_cartPos_Kd_z = "/cartPos_Kd_z";
-
-  std::string para_cartRot_Kp_x = "/cartRot_Kp_x";
-  std::string para_cartRot_Kp_y = "/cartRot_Kp_y";
-  std::string para_cartRot_Kp_z = "/cartRot_Kp_z";
-  std::string para_cartRot_Kd_x = "/cartRot_Kd_x";
-  std::string para_cartRot_Kd_y = "/cartRot_Kd_y";
-  std::string para_cartRot_Kd_z = "/cartRot_Kd_z";
-
-  cartPos_Kp_x = 0 ; cartRot_Kp_x = 0 ;
-  cartPos_Kp_y = 0 ; cartRot_Kp_y = 0 ;
-  cartPos_Kp_z = 0 ; cartRot_Kp_z = 0 ;
-  cartPos_Kd_x = 0 ; cartRot_Kd_x = 0 ;
-  cartPos_Kd_y = 0 ; cartRot_Kd_y = 0 ;
-  cartPos_Kd_z = 0 ; cartRot_Kd_z = 0 ;
-
-  if (!nh_.getParam( para_cartPos_Kp_x , cartPos_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_x.c_str()) ; return false; }
-  if (!nh_.getParam( para_cartPos_Kp_y , cartPos_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_y.c_str()) ; return false; }
-  if (!nh_.getParam( para_cartPos_Kp_z , cartPos_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_z.c_str()) ; return false; }
-  if (!nh_.getParam( para_cartPos_Kd_x , cartPos_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_x.c_str()) ; return false; }
-  if (!nh_.getParam( para_cartPos_Kd_y , cartPos_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_y.c_str()) ; return false; }
-  if (!nh_.getParam( para_cartPos_Kd_z , cartPos_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_z.c_str()) ; return false; }
-
-  if (!nh_.getParam( para_cartRot_Kp_x , cartRot_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_x.c_str()) ; return false; }
-  if (!nh_.getParam( para_cartRot_Kp_y , cartRot_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_y.c_str()) ; return false; }
-  if (!nh_.getParam( para_cartRot_Kp_z , cartRot_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_z.c_str()) ; return false; }
-  if (!nh_.getParam( para_cartRot_Kd_x , cartRot_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_x.c_str()) ; return false; }
-  if (!nh_.getParam( para_cartRot_Kd_y , cartRot_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_y.c_str()) ; return false; }
-  if (!nh_.getParam( para_cartRot_Kd_z , cartRot_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_z.c_str()) ; return false; }
-
-
 
   // Construct the kdl solvers in non-realtime.
   chain_.toKDL(kdl_chain_);
@@ -2453,7 +2435,7 @@ bool PR2CartneuroControllerClass::initRobot()
   q_upper(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->upper;
   q_upper(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->upper;
 
-  // Since two joints are continuous
+  // Since two joints are continuous TODO describe why?
   q_upper(4) =   6.28 ;
   q_upper(6) =   6.28 ;
 
@@ -2477,6 +2459,42 @@ bool PR2CartneuroControllerClass::initRobot()
   cartControlForce = Eigen::VectorXd::Zero( 6 ) ;
   nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
   controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+
+  // Load Cartesian gains
+  std::string para_cartPos_Kp_x = "/cartPos_Kp_x";
+  std::string para_cartPos_Kp_y = "/cartPos_Kp_y";
+  std::string para_cartPos_Kp_z = "/cartPos_Kp_z";
+  std::string para_cartPos_Kd_x = "/cartPos_Kd_x";
+  std::string para_cartPos_Kd_y = "/cartPos_Kd_y";
+  std::string para_cartPos_Kd_z = "/cartPos_Kd_z";
+
+  std::string para_cartRot_Kp_x = "/cartRot_Kp_x";
+  std::string para_cartRot_Kp_y = "/cartRot_Kp_y";
+  std::string para_cartRot_Kp_z = "/cartRot_Kp_z";
+  std::string para_cartRot_Kd_x = "/cartRot_Kd_x";
+  std::string para_cartRot_Kd_y = "/cartRot_Kd_y";
+  std::string para_cartRot_Kd_z = "/cartRot_Kd_z";
+
+  cartPos_Kp_x = 0 ; cartRot_Kp_x = 0 ;
+  cartPos_Kp_y = 0 ; cartRot_Kp_y = 0 ;
+  cartPos_Kp_z = 0 ; cartRot_Kp_z = 0 ;
+  cartPos_Kd_x = 0 ; cartRot_Kd_x = 0 ;
+  cartPos_Kd_y = 0 ; cartRot_Kd_y = 0 ;
+  cartPos_Kd_z = 0 ; cartRot_Kd_z = 0 ;
+
+  if (!nh_.getParam( para_cartPos_Kp_x , cartPos_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_x.c_str()) ; return false; }
+  if (!nh_.getParam( para_cartPos_Kp_y , cartPos_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_y.c_str()) ; return false; }
+  if (!nh_.getParam( para_cartPos_Kp_z , cartPos_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_z.c_str()) ; return false; }
+  if (!nh_.getParam( para_cartPos_Kd_x , cartPos_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_x.c_str()) ; return false; }
+  if (!nh_.getParam( para_cartPos_Kd_y , cartPos_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_y.c_str()) ; return false; }
+  if (!nh_.getParam( para_cartPos_Kd_z , cartPos_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_z.c_str()) ; return false; }
+
+  if (!nh_.getParam( para_cartRot_Kp_x , cartRot_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_x.c_str()) ; return false; }
+  if (!nh_.getParam( para_cartRot_Kp_y , cartRot_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_y.c_str()) ; return false; }
+  if (!nh_.getParam( para_cartRot_Kp_z , cartRot_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_z.c_str()) ; return false; }
+  if (!nh_.getParam( para_cartRot_Kd_x , cartRot_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_x.c_str()) ; return false; }
+  if (!nh_.getParam( para_cartRot_Kd_y , cartRot_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_y.c_str()) ; return false; }
+  if (!nh_.getParam( para_cartRot_Kd_z , cartRot_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_z.c_str()) ; return false; }
 
   return result;
 }
