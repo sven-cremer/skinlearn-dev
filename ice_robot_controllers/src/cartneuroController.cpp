@@ -3,6 +3,8 @@
 
 using namespace pr2_controller_ns;
 
+// Register controller to pluginlib
+PLUGINLIB_EXPORT_CLASS( pr2_controller_ns::PR2CartneuroControllerClass, pr2_controller_interface::Controller)
 
 PR2CartneuroControllerClass::PR2CartneuroControllerClass()
 : robot_state_(NULL)			// Initialize variables
@@ -102,6 +104,10 @@ void PR2CartneuroControllerClass::starting()
 	chain_.getPositions(q0_);
 	jnt_to_pose_solver_->JntToCart(q0_, x0_);
 
+	  chain_.getPositions(q0_T);
+	  kin_->fk(q0_T, x0_T);
+
+
 	/////////////////////////
 	// System Model
 
@@ -134,12 +140,21 @@ void PR2CartneuroControllerClass::starting()
 	{
 		// Start from current
 		xd_ = x0_;
+		xd_T = x0_T;
 	}else
 	{
 		// Start from specified
 		xd_.p = KDL::Vector(cartIniX,cartIniY,cartIniZ);
+		xd_.M =  KDL::Rotation::RPY( cartDesRoll, cartDesPitch, cartDesYaw );
+
+		Eigen::Vector3d p_init(cartIniX,cartIniY,cartIniZ);
+		Eigen::Quaterniond q_init = euler2Quaternion( cartDesRoll, cartDesPitch, cartDesYaw );
+		xd_T = Eigen::Translation3d(p_init) * q_init;
 	}
-	xd_.M =  KDL::Rotation::RPY( cartDesRoll, cartDesPitch, cartDesYaw );
+
+
+	qdot_filtered_.setZero();
+	joint_vel_filter_ = 1.0;
 }
 
 
@@ -157,11 +172,28 @@ void PR2CartneuroControllerClass::update()
 	chain_.getPositions(q_);
 	chain_.getVelocities(qdot_);
 
+	chain_.getPositions(q_T);
+	chain_.getVelocities(qdot_T);
+
 	// Compute the forward kinematics and Jacobian (at this location).
 	jnt_to_pose_solver_->JntToCart(q_, x_);
 	jnt_to_jac_solver_->JntToJac(q_, J_);
 
+	  kin_->fk(q_T, x_T);
+	  kin_->jac(q_T, J_T);
+
 	jnt_to_pose_solver_acc_->JntToCart(q_, x_gripper_acc_);
+
+	  kin_acc_->fk(q_T, x_gripper_acc_T);
+
+
+
+	  chain_.getVelocities(qdot_raw_T);
+	  for (int i = 0; i < Joints; ++i)
+	    qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_T[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
+	  qdot_T = qdot_filtered_;
+	  xdot_T = J_T * qdot_T;
+
 
 	for (unsigned int i = 0 ; i < 6 ; i++)
 	{
@@ -283,6 +315,14 @@ void PR2CartneuroControllerClass::update()
 		circle(2) = cartDesZ * sin(circle_phase_)      ;
 
 		xd_.p += circle;
+
+		Eigen::Vector3d p0(xd_T.translation());
+		Eigen::Quaterniond q0(xd_T.linear());
+		q0.normalize();
+		Eigen::Vector3d p1(cartDesY * (cos(circle_phase_) - 1),cartDesZ * sin(circle_phase_),0);
+		Eigen::Vector3d p = p0 + p1;
+		xd_T = Eigen::Translation3d(p) * q0;
+
 	}
 	//double circleAmpl = (circleUlim - circleLlim)/2 ;
 
@@ -291,6 +331,8 @@ void PR2CartneuroControllerClass::update()
 	xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
                        xd_.M.UnitY() * x_.M.UnitY() +
                        xd_.M.UnitZ() * x_.M.UnitZ());
+
+	  computePoseError(x_T, xd_T, xerr_T);
 
 	robotCartPos_.position.x    = x_.p(0);
 	robotCartPos_.position.y    = x_.p(1);
@@ -311,6 +353,10 @@ void PR2CartneuroControllerClass::update()
 	// Current joint positions and velocities
 	q = JointKdl2Eigen( q_ );
 	qd = JointVelKdl2Eigen( qdot_ );
+
+	q = q_T;
+	qd = qdot_T;
+
 
 	{
 		double R, P, Y;
@@ -1859,6 +1905,9 @@ bool PR2CartneuroControllerClass::initRobot()
 	chain_.toKDL(kdl_chain_);
 	chain_acc_link.toKDL(kdl_chain_acc_link);
 
+	  kin_.reset(new Kin<Joints>(kdl_chain_));
+	  kin_acc_.reset(new Kin<Joints>(kdl_chain_acc_link));
+
 	jnt_to_pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
 	jnt_to_jac_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
 
@@ -2679,5 +2728,4 @@ bool PR2CartneuroControllerClass::initInnerLoop()
 	return true;
 }
 
-// Register controller to pluginlib
-PLUGINLIB_EXPORT_CLASS( pr2_controller_ns::PR2CartneuroControllerClass, pr2_controller_interface::Controller)
+
