@@ -21,7 +21,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 	// Store node handle
 	nh_ = n;
 	// Test if we got robot pointer
-	// assert(robot); FIXME this fails for some reason
+	assert(robot);
 	// Store the robot handle for later use (to get time).
 	robot_state_ = robot;
 
@@ -29,47 +29,63 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 	// compatible with the version of the headers we compiled against.
 	// GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-	initParam();
-
+	if( !initParam() )
+	{
+		ROS_ERROR("initParam() failed!");
+		return false;
+	}
 	if( !initRobot() )
 	{
-		ROS_ERROR("initRobot failed!");
+		ROS_ERROR("initRobot() failed!");
+		return false;
+	}
+	if( !initSensors() )
+	{
+		ROS_ERROR("initSensors() failed!");
+		return false;
+	}
+	if( !initTrajectories() )
+	{
+		ROS_ERROR("initTrajectories() failed!");
+		return false;
+	}
+	if( !initInnerLoop() )
+	{
+		ROS_ERROR("initInnerLoop() failed!");
+		return false;
+	}
+	if( !initOuterLoop() )
+	{
+		ROS_ERROR("initOuterLoop() failed!");
+		return false;
+	}
+	if( !initNN() )
+	{
+		ROS_ERROR("initNN() failed!");
 		return false;
 	}
 
-	initTrajectories();
-
-	initInnerLoop();
-
-	initOuterLoop();
-
-	initNN();
-
-	initSensors();
-
-
 	// Subscribe to Flexiforce wrench commands
-	sub_command_ = nh_.subscribe<geometry_msgs::Wrench>("command", 1, &PR2CartneuroControllerClass::command, this);
+	if(useFlexiForce)
+		sub_command_ = nh_.subscribe<geometry_msgs::Wrench>("command", 1, &PR2CartneuroControllerClass::command, this);
 
 	/////////////////////////
 	// DATA COLLECTION
-
 	save_srv_                = nh_.advertiseService("save"               , &PR2CartneuroControllerClass::save                 , this);
 	publish_srv_             = nh_.advertiseService("publish"            , &PR2CartneuroControllerClass::publish              , this);
 	capture_srv_             = nh_.advertiseService("capture"            , &PR2CartneuroControllerClass::capture              , this);
 	setRefTraj_srv_          = nh_.advertiseService("setRefTraj"         , &PR2CartneuroControllerClass::setRefTraj           , this);
 	toggleFixedWeights_srv_  = nh_.advertiseService("toggleFixedWeights" , &PR2CartneuroControllerClass::toggleFixedWeights   , this);
 
-	pubFTData_             = nh_.advertise< geometry_msgs::WrenchStamped             >( "FT_data"              , StoreLen);
-	pubModelStates_        = nh_.advertise< sensor_msgs::JointState                  >( "model_joint_states"   , StoreLen);
-	pubRobotStates_        = nh_.advertise< sensor_msgs::JointState                  >( "robot_joint_states"   , StoreLen);
-	pubModelCartPos_       = nh_.advertise< geometry_msgs::PoseStamped               >( "model_cart_pos"       , StoreLen);
-	pubRobotCartPos_       = nh_.advertise< geometry_msgs::PoseStamped               >( "robot_cart_pos"       , StoreLen);
+	pubFTData_             = nh_.advertise< geometry_msgs::WrenchStamped >( "FT_data"              , StoreLen);
+	pubModelStates_        = nh_.advertise< sensor_msgs::JointState      >( "model_joint_states"   , StoreLen);
+	pubRobotStates_        = nh_.advertise< sensor_msgs::JointState      >( "robot_joint_states"   , StoreLen);
+	pubModelCartPos_       = nh_.advertise< geometry_msgs::PoseStamped   >( "model_cart_pos"       , StoreLen);
+	pubRobotCartPos_       = nh_.advertise< geometry_msgs::PoseStamped   >( "robot_cart_pos"       , StoreLen);
 	pubControllerParam_    = nh_.advertise< ice_msgs::controllerParam    >( "controller_params"    , StoreLen);
 	pubControllerFullData_ = nh_.advertise< ice_msgs::controllerFullData >( "controllerFullData"   , StoreLen);
 
 	storage_index_ = StoreLen;
-
 	// DATA COLLECTION END
 	/////////////////////////
 
@@ -151,9 +167,13 @@ void PR2CartneuroControllerClass::update()
 	// Human force input
 	// Force error
 
-
-
 	/*** Update Sensor data ***/
+
+	if(accelerometerOn)
+	{
+		l_accelerationObserver->spin();
+		r_accelerationObserver->spin();
+	}
 
 	if(useFlexiForce)
 	{
@@ -171,10 +191,6 @@ void PR2CartneuroControllerClass::update()
 		//             2
 		//             x
 
-
-		/////////////////////////
-		// Flexiforce sensor ////
-
 		// X axis
 		if( flexiForce(0) > flexiForce(2) ){
 			FLEX_force(0) = -flexiForce(0);
@@ -188,15 +204,8 @@ void PR2CartneuroControllerClass::update()
 			FLEX_force(1) = -flexiForce(3);
 		}
 		// Z axis
-		FLEX_force(2) = 0 ;
-
-		// Flexiforce sensor END ////
-
+		FLEX_force(2) = 0;
 	}
-
-
-	/////////////////
-	// FT sensor ////
 
 	if( forceTorqueOn )
 	{
@@ -228,12 +237,8 @@ void PR2CartneuroControllerClass::update()
 		r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
 		r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
 		r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
-	}
 
 
-
-	if( forceTorqueOn )
-	{
 		//  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
 		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
 		//                               w       x       y      z
@@ -241,8 +246,6 @@ void PR2CartneuroControllerClass::update()
 		FT_transformed_force = ft_to_acc._transformVector( forceFT );
 		FT_transformed_force(1) = - FT_transformed_force(1);
 	}
-
-	// FT sensor END ////
 
 	if( useFlexiForce )
 	{
@@ -405,7 +408,6 @@ void PR2CartneuroControllerClass::update()
 	}
 
 
-
 	updateOuterLoop();
 
 
@@ -419,14 +421,14 @@ void PR2CartneuroControllerClass::update()
 	/////////////////////////
 	// NN
 	nnController.UpdateCart( X     ,
-			Xd    ,
-			X_m   ,
-			Xd_m  ,
-			Xdd_m ,
-			q     ,
-			qd    ,
-			t_r   ,
-			force  );
+                             Xd    ,
+                             X_m   ,
+                             Xd_m  ,
+                             Xdd_m ,
+                             q     ,
+                             qd    ,
+                             t_r   ,
+                             force  );
 	// NN END
 	/////////////////////////
 
@@ -435,7 +437,7 @@ void PR2CartneuroControllerClass::update()
 
 	JacobianTrans = Jacobian.transpose();
 
-	// ======== J psuedo-inverse and Nullspace computation
+	// ======== J psuedo-inverse and Nullspace computation (from JT Cartesian controller)
 
 	double k_posture = 50.0;
 	double jacobian_inverse_damping = 0.01;
@@ -454,10 +456,11 @@ void PR2CartneuroControllerClass::update()
 	Eigen::Matrix<double,6,6> I6; I6.setIdentity();
 	Eigen::Matrix<double,6,6> JJt_damped = Jacobian * JacobianTrans + jacobian_inverse_damping * I6;
 	Eigen::Matrix<double,6,6> JJt_inv_damped = JJt_damped.inverse();
-	Eigen::Matrix<double,7,6> J_pinv = JacobianTrans * JJt_inv_damped;
+	Eigen::Matrix<double,Joints,6> J_pinv = JacobianTrans * JJt_inv_damped;
 
 	// Computes the nullspace of J
-	Eigen::Matrix<double,7,7> I; I.setIdentity();
+	Eigen::Matrix<double,Joints,Joints> I;
+	I.setIdentity();
 	nullSpace = I - J_pinv * Jacobian;
 
 	// ======== Posture control
@@ -503,7 +506,7 @@ void PR2CartneuroControllerClass::update()
       double qTildeMax = 0;
       double qTildeMin = 0;*/
 
-		for (size_t j = 0; j < 7; ++j)
+		for (size_t j = 0; j < Joints; ++j)
 		{
 			///////////////////
 			// Liegeois
@@ -595,14 +598,6 @@ void PR2CartneuroControllerClass::update()
 	// DATA COLLECTION END
 	/////////////////////////
 
-
-	// Acceleration estimator
-	if(accelerometerOn)
-	{
-		l_accelerationObserver->spin();
-		r_accelerationObserver->spin();
-	}
-
 }
 
 
@@ -670,23 +665,23 @@ void PR2CartneuroControllerClass::updateOuterLoop()
 
 			// X axis
 			outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
-					Xd                     (0) ,
-					X_m                    (0) ,
-					X                      (0) ,
-					Xdd_m                  (0) ,
-					transformed_force      (0) ,
-					task_ref               (0) ,
-					task_refModel_output   (0)  );
+                                           Xd                     (0) ,
+                                           X_m                    (0) ,
+                                           X                      (0) ,
+                                           Xdd_m                  (0) ,
+                                           transformed_force      (0) ,
+                                           task_ref               (0) ,
+                                           task_refModel_output   (0)  );
 
 			// Y axis
 			outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
-					Xd                     (1) ,
-					X_m                    (1) ,
-					X                      (1) ,
-					Xdd_m                  (1) ,
-					transformed_force      (1) ,
-					task_ref               (1) ,
-					task_refModel_output   (1)  );
+                                           Xd                     (1) ,
+                                           X_m                    (1) ,
+                                           X                      (1) ,
+                                           Xdd_m                  (1) ,
+                                           transformed_force      (1) ,
+                                           task_ref               (1) ,
+                                           task_refModel_output   (1)  );
 
 			// ROS_ERROR_STREAM("USING RLS ARMA");
 
@@ -740,13 +735,13 @@ void PR2CartneuroControllerClass::updateOuterLoop()
 
 			// Y axis
 			outerLoopCTRLSmodelY.updateARMA( Xd_m                   (1) ,
-					Xd                     (1) ,
-					X_m                    (1) ,
-					X                      (1) ,
-					Xdd_m                  (1) ,
-					transformed_force      (1) ,
-					task_ref               (1) ,
-					task_refModel_output   (1)  );
+                                             Xd                     (1) ,
+                                             X_m                    (1) ,
+                                             X                      (1) ,
+                                             Xdd_m                  (1) ,
+                                             transformed_force      (1) ,
+                                             task_ref               (1) ,
+                                             task_refModel_output   (1)  );
 
 			//      ROS_ERROR_STREAM("USING CT RLS ARMA");
 
@@ -768,13 +763,13 @@ void PR2CartneuroControllerClass::updateOuterLoop()
 
 			// Y axis
 			outerLoopRLSmodelY.updateFIR( Xd_m                   (1) ,
-					Xd                     (1) ,
-					X_m                    (1) ,
-					X                      (1) ,
-					Xdd_m                  (1) ,
-					transformed_force      (1) ,
-					task_ref               (1) ,
-					task_refModel_output   (1)  );
+                                          Xd                     (1) ,
+                                          X_m                    (1) ,
+                                          X                      (1) ,
+                                          Xdd_m                  (1) ,
+                                          transformed_force      (1) ,
+                                          task_ref               (1) ,
+                                          task_refModel_output   (1)  );
 			//      ROS_ERROR_STREAM("USING RLS FIR");
 
 			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
@@ -811,18 +806,18 @@ void PR2CartneuroControllerClass::updateOuterLoop()
 		{
 			// Cartesian space MSD model
 			outerLoopMSDmodelX.update( Xd_m             (0) ,
-					Xd               (0) ,
-					X_m              (0) ,
-					X                (0) ,
-					Xdd_m            (0) ,
-					transformed_force(0)  );
+                                       Xd               (0) ,
+                                       X_m              (0) ,
+                                       X                (0) ,
+                                       Xdd_m            (0) ,
+                                       transformed_force(0)  );
 
 			outerLoopMSDmodelY.update( Xd_m             (1) ,
-					Xd               (1) ,
-					X_m              (1) ,
-					X                (1) ,
-					Xdd_m            (1) ,
-					transformed_force(1)  );
+                                       Xd               (1) ,
+                                       X_m              (1) ,
+                                       X                (1) ,
+                                       Xdd_m            (1) ,
+                                       transformed_force(1)  );
 			//      ROS_ERROR_STREAM("USING MSD");
 		}
 
@@ -840,13 +835,13 @@ void PR2CartneuroControllerClass::updateOuterLoop()
 			//   	                            task_refModel     (0)  );
 
 			outerLoopIRLmodelY.updateIRL( Xd_m                  (1) ,
-					Xd                    (1) ,
-					X_m                   (1) ,
-					X                     (1) ,
-					Xdd_m                 (1) ,
-					transformed_force     (1) ,
-					task_ref              (1) ,
-					task_refModel_output  (1)  );
+                                          Xd                    (1) ,
+                                          X_m                   (1) ,
+                                          X                     (1) ,
+                                          Xdd_m                 (1) ,
+                                          transformed_force     (1) ,
+                                          task_ref              (1) ,
+                                          task_refModel_output  (1)  );
 
 
 			// IRL
@@ -854,8 +849,8 @@ void PR2CartneuroControllerClass::updateOuterLoop()
 			//			                           m_S,
 			//			                           m_D );
 			outerLoopIRLmodelY.getMsd( m_M,
-					m_S,
-					m_D );
+                                       m_S,
+                                       m_D );
 
 			//      ROS_ERROR_STREAM("USING MSD");
 		}
@@ -883,13 +878,13 @@ void PR2CartneuroControllerClass::updateOuterLoop()
 
 			// Y axis
 			outerLoopMRACmodelY.update( Xd_m                 (1) ,
-					Xd                   (1) ,
-					X_m                  (1) ,
-					X                    (1) ,
-					Xdd_m                (1) ,
-					transformed_force    (1) ,
-					task_ref             (1) ,
-					task_refModel_output (1)  );
+                                        Xd                   (1) ,
+                                        X_m                  (1) ,
+                                        X                    (1) ,
+                                        Xdd_m                (1) ,
+                                        transformed_force    (1) ,
+                                        task_ref             (1) ,
+                                        task_refModel_output (1)  );
 
 			//      ROS_ERROR_STREAM("USING MRAC");
 		}
@@ -901,7 +896,6 @@ void PR2CartneuroControllerClass::updateOuterLoop()
 		outer_elapsed_ = robot_state_->getTime() ;
 
 	}
-
 
 	// System Model END
 	/////////////////////////
@@ -1425,7 +1419,7 @@ void PR2CartneuroControllerClass::setDataPoint(dataPoint::Datum* datum, double &
 
 /// Service call to set reference trajectory
 bool PR2CartneuroControllerClass::setRefTraj( ice_msgs::setCartPose::Request  & req ,
-		ice_msgs::setCartPose::Response & resp )
+                                                    ice_msgs::setCartPose::Response & resp )
 {
 	if( externalRefTraj )
 	{
@@ -1433,15 +1427,13 @@ bool PR2CartneuroControllerClass::setRefTraj( ice_msgs::setCartPose::Request  & 
 		task_ref(1) = req.msg.position.y ;
 		task_ref(2) = req.msg.position.z ;
 	}
-
 	resp.success = true;
-
 	return true;
 }
 
 /// Service call to capture and extract the data
 bool PR2CartneuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate::Request  & req ,
-		ice_msgs::controllerParamUpdate::Response & resp )
+                                                     ice_msgs::controllerParamUpdate::Response & resp )
 {
 
 	num_Inputs  = req.msg.inParams                 ;
@@ -1501,10 +1493,10 @@ bool PR2CartneuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate::
 	cartDesYaw        = req.msg.cartDesYaw         ;
 
 	nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
-			num_Outputs ,   // num_Outputs
-			num_Hidden  ,   // num_Hidden
-			num_Error   ,   // num_Error
-			num_Joints   ); // num_Joints
+                                    num_Outputs ,   // num_Outputs
+                                    num_Hidden  ,   // num_Hidden
+                                    num_Error   ,   // num_Error
+                                    num_Joints   ); // num_Joints
 
 	Eigen::MatrixXd p_Kv     ;
 	Eigen::MatrixXd p_lambda ;
@@ -1538,31 +1530,31 @@ bool PR2CartneuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate::
 
 	// MRAC
 	outerLoopMRACmodelX.updateAB( task_mA,
-			task_mB );
+                                  task_mB );
 	outerLoopMRACmodelY.updateAB( task_mA,
-			task_mB );
+                                  task_mB );
 
 	// RLS
 	outerLoopRLSmodelX.updateAB( task_mA,
-			task_mB );
+                                 task_mB );
 	outerLoopRLSmodelY.updateAB( task_mA,
-			task_mB );
+                                 task_mB );
 
 	// MSD
 	outerLoopMSDmodelX.updateMsd( m_M,
-			m_S,
-			m_D );
+                                  m_S,
+                                  m_D );
 	outerLoopMSDmodelY.updateMsd( m_M,
-			m_S,
-			m_D );
+                                  m_S,
+                                  m_D );
 
 	// IRL
 	outerLoopIRLmodelX.updateMsd( m_M,
-			m_S,
-			m_D );
+                                  m_S,
+                                  m_D );
 	outerLoopIRLmodelY.updateMsd( m_M,
-			m_S,
-			m_D );
+                                  m_S,
+                                  m_D );
 
 	resp.success = true;
 
@@ -1571,7 +1563,7 @@ bool PR2CartneuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate::
 
 /// Service call to save the data
 bool PR2CartneuroControllerClass::save( ice_msgs::saveControllerData::Request & req,
-		ice_msgs::saveControllerData::Response& resp )
+                                             ice_msgs::saveControllerData::Response& resp )
 {
 	/* Record the starting time. */
 	ros::Time started = ros::Time::now();
@@ -1594,7 +1586,7 @@ bool PR2CartneuroControllerClass::save( ice_msgs::saveControllerData::Request & 
 
 /// Service call to publish the saved data
 bool PR2CartneuroControllerClass::publish( std_srvs::Empty::Request & req,
-		std_srvs::Empty::Response& resp )
+                                                std_srvs::Empty::Response& resp )
 {
 	/* Then we can publish the buffer contents. */
 	int  index;
