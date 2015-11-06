@@ -77,13 +77,13 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 	setRefTraj_srv_          = nh_.advertiseService("setRefTraj"         , &PR2CartneuroControllerClass::setRefTraj           , this);
 	toggleFixedWeights_srv_  = nh_.advertiseService("toggleFixedWeights" , &PR2CartneuroControllerClass::toggleFixedWeights   , this);
 
-	pubFTData_             = nh_.advertise< geometry_msgs::WrenchStamped >( "FT_data"              , StoreLen);
-	pubModelStates_        = nh_.advertise< sensor_msgs::JointState      >( "model_joint_states"   , StoreLen);
-	pubRobotStates_        = nh_.advertise< sensor_msgs::JointState      >( "robot_joint_states"   , StoreLen);
-	pubModelCartPos_       = nh_.advertise< geometry_msgs::PoseStamped   >( "model_cart_pos"       , StoreLen);
-	pubRobotCartPos_       = nh_.advertise< geometry_msgs::PoseStamped   >( "robot_cart_pos"       , StoreLen);
-	pubControllerParam_    = nh_.advertise< ice_msgs::controllerParam    >( "controller_params"    , StoreLen);
-	pubControllerFullData_ = nh_.advertise< ice_msgs::controllerFullData >( "controllerFullData"   , StoreLen);
+	pubFTData_               = nh_.advertise< geometry_msgs::WrenchStamped >( "FT_data"              , StoreLen);
+	pubModelStates_          = nh_.advertise< sensor_msgs::JointState      >( "model_joint_states"   , StoreLen);
+	pubRobotStates_          = nh_.advertise< sensor_msgs::JointState      >( "robot_joint_states"   , StoreLen);
+	pubModelCartPos_         = nh_.advertise< geometry_msgs::PoseStamped   >( "model_cart_pos"       , StoreLen);
+	pubRobotCartPos_         = nh_.advertise< geometry_msgs::PoseStamped   >( "robot_cart_pos"       , StoreLen);
+	pubControllerParam_      = nh_.advertise< ice_msgs::controllerParam    >( "controller_params"    , StoreLen);
+	pubControllerFullData_   = nh_.advertise< ice_msgs::controllerFullData >( "controllerFullData"   , StoreLen);
 
 	storage_index_ = StoreLen;
 	// DATA COLLECTION END
@@ -129,6 +129,17 @@ void PR2CartneuroControllerClass::starting()
 		r_ftBias.wrench = r_ftData_vector[r_ft_samples];
 	}
 
+
+	if( useCurrentCartPose ) // TODO this was moved from update() ... is this correct? The controller seems to oscillate now.
+	{
+		// Start from current
+		xd_ = x0_;
+	}else
+	{
+		// Start from specified
+		xd_.p = KDL::Vector(cartIniX,cartIniY,cartIniZ);
+	}
+	xd_.M =  KDL::Rotation::RPY( cartDesRoll, cartDesPitch, cartDesYaw );
 }
 
 
@@ -262,53 +273,44 @@ void PR2CartneuroControllerClass::update()
 	// Human force input END
 	///////////////////////////////
 
-	// Follow a circle of 10cm at 3 rad/sec.
-	circle_phase_ += 3.0 * dt;
-	KDL::Vector  circle(cartDesX,cartDesY,cartDesZ);
-
-	circle(1) = cartDesY * (cos(circle_phase_) - 1);
-	circle(2) = cartDesZ * sin(circle_phase_)      ;
-
-	if( useCurrentCartPose )
+	if(executeCircleTraj)
 	{
-		// Start from current
-		xd_ = x0_;
-	}else
-	{
-		// Start from specified
-		xd_.p = KDL::Vector(cartIniX,cartIniY,cartIniZ);
+		// Follow a circle of 10cm at 3 rad/sec.
+		circle_phase_ += 3.0 * dt;
+		KDL::Vector  circle(cartDesX,cartDesY,cartDesZ);
+
+		circle(1) = cartDesY * (cos(circle_phase_) - 1);
+		circle(2) = cartDesZ * sin(circle_phase_)      ;
+
+		xd_.p += circle;
 	}
-
-	xd_.p += circle;
-	xd_.M =  KDL::Rotation::RPY( cartDesRoll, cartDesPitch, cartDesYaw );
+	//double circleAmpl = (circleUlim - circleLlim)/2 ;
 
 	// Calculate a Cartesian restoring force.
 	xerr_.vel = x_.p - xd_.p;
 	xerr_.rot = 0.5 * (xd_.M.UnitX() * x_.M.UnitX() +
-			xd_.M.UnitY() * x_.M.UnitY() +
-			xd_.M.UnitZ() * x_.M.UnitZ());
+                       xd_.M.UnitY() * x_.M.UnitY() +
+                       xd_.M.UnitZ() * x_.M.UnitZ());
 
 	robotCartPos_.position.x    = x_.p(0);
 	robotCartPos_.position.y    = x_.p(1);
 	robotCartPos_.position.z    = x_.p(2);
 	x_.M.GetQuaternion( robotCartPos_.orientation.x ,
-			robotCartPos_.orientation.y ,
-			robotCartPos_.orientation.z ,
-			robotCartPos_.orientation.w  );
+                          robotCartPos_.orientation.y ,
+                          robotCartPos_.orientation.z ,
+                          robotCartPos_.orientation.w  );
 
 	modelCartPos_.position.x    = xd_.p(0);
 	modelCartPos_.position.y    = xd_.p(1);
 	modelCartPos_.position.z    = xd_.p(2);
 	xd_.M.GetQuaternion( modelCartPos_.orientation.x ,
-			modelCartPos_.orientation.y ,
-			modelCartPos_.orientation.z ,
-			modelCartPos_.orientation.w  );
+                           modelCartPos_.orientation.y ,
+                           modelCartPos_.orientation.z ,
+                           modelCartPos_.orientation.w  );
 
 	// Current joint positions and velocities
 	q = JointKdl2Eigen( q_ );
 	qd = JointVelKdl2Eigen( qdot_ );
-
-	double circleAmpl = (circleUlim - circleLlim)/2 ;
 
 	{
 		double R, P, Y;
@@ -1791,9 +1793,10 @@ void PR2CartneuroControllerClass::command(const geometry_msgs::WrenchConstPtr& w
 bool PR2CartneuroControllerClass::initParam()
 {
 
-	nh_.param("/forceTorqueOn",   forceTorqueOn,   false);
-	nh_.param("/accelerometerOn", accelerometerOn, false);
-	nh_.param("/useFlexiForce",   useFlexiForce,   false);
+	nh_.param("/forceTorqueOn",     forceTorqueOn,     false);
+	nh_.param("/accelerometerOn",   accelerometerOn,   false);
+	nh_.param("/useFlexiForce",     useFlexiForce,     false);
+	nh_.param("/executeCircleTraj", executeCircleTraj, false);
 
 	return true;
 }

@@ -9,6 +9,8 @@ forceTorqueOn      : false
 useFlexiForce      : false
 accelerometerOn    : false
 
+executeCircleTraj  : false
+
 # Specifically for MRAC
 useSimHuman        : true
 

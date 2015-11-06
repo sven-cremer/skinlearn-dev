@@ -391,6 +391,8 @@ private:
 	std::fstream saveDataFile;
 	bool accelerometerOn;
 
+	bool executeCircleTraj;
+
 	bool initParam();
 	bool initRobot();
 	bool initTrajectories();
