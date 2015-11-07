@@ -60,6 +60,31 @@ euler2Quaternion( const double roll,
     return q;
 }
 
+Eigen::Vector3d
+quaternion2Euler( Eigen::Quaterniond q )
+{
+	Eigen::Matrix3d mat = q.matrix();
+    Eigen::Vector3d rpy = mat.eulerAngles(0, 1, 2);
+    return rpy;
+}
+
+Eigen::Matrix<double, 6, 1>
+affine2CartVec( Eigen::Affine3d a )
+{
+	Eigen::Matrix<double, 6, 1> x;
+	Eigen::Vector3d xyz(a.translation());
+	Eigen::Quaterniond q(a.linear());
+	Eigen::Vector3d rpy = quaternion2Euler( q );
+
+	x(0) = xyz(0);
+	x(1) = xyz(1);
+	x(2) = xyz(2);
+	x(3) = rpy(0);
+	x(4) = rpy(1);
+	x(5) = rpy(2);
+
+    return x;
+}
 
 class PR2CartneuroControllerClass: public pr2_controller_interface::Controller
 {
@@ -136,7 +161,7 @@ private:
 	  CartVec xerr_T;
 	KDL::Twist     xdot_;         // Cart velocity
 	  CartVec xdot_T;
-	KDL::Wrench    F_;            // Cart effort
+//	KDL::Wrench    F_;            // Cart effort
 	KDL::Jacobian  J_;            // Jacobian
 	  JacobianMat J_T;
 

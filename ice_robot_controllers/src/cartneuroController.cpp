@@ -334,7 +334,7 @@ void PR2CartneuroControllerClass::update()
 
 	  computePoseError(x_T, xd_T, xerr_T);
 
-	robotCartPos_.position.x    = x_.p(0);
+	robotCartPos_.position.x    = x_.p(0);					// FIXME Variable only used for publishing x_, can be removed
 	robotCartPos_.position.y    = x_.p(1);
 	robotCartPos_.position.z    = x_.p(2);
 	x_.M.GetQuaternion( robotCartPos_.orientation.x ,
@@ -342,7 +342,7 @@ void PR2CartneuroControllerClass::update()
                           robotCartPos_.orientation.z ,
                           robotCartPos_.orientation.w  );
 
-	modelCartPos_.position.x    = xd_.p(0);
+	modelCartPos_.position.x    = xd_.p(0);					// FIXME Variable only used for publishing x_, can be removed
 	modelCartPos_.position.y    = xd_.p(1);
 	modelCartPos_.position.z    = xd_.p(2);
 	xd_.M.GetQuaternion( modelCartPos_.orientation.x ,
@@ -364,7 +364,6 @@ void PR2CartneuroControllerClass::update()
 		//    X_m(0) = xd_.p(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;
 		//    X_m(1) = xd_.p(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
 		//    X_m(2) = xd_.p(2);  Xd_m(2) = 0;  Xdd_m(2) = 0;
-
 		X_m(3) = R       ;  Xd_m(3) = 0;  Xdd_m(3) = 0;
 		X_m(4) = P       ;  Xd_m(4) = 0;  Xdd_m(4) = 0;
 		X_m(5) = Y       ;  Xd_m(5) = 0;  Xdd_m(5) = 0;
@@ -378,6 +377,13 @@ void PR2CartneuroControllerClass::update()
 		X(5)   = Y      ;   Xd(5)   = xdot_(5);
 	}
 
+	CartVec temp = affine2CartVec(xd_T);
+	X_m(3) = temp(3);
+	X_m(4) = temp(4);
+	X_m(5) = temp(5);
+
+	X = affine2CartVec(x_T);
+	Xd = xdot_T;				// FIXME make sure they are of same type
 
 	/////////////////////////
 	// System Model
@@ -476,7 +482,7 @@ void PR2CartneuroControllerClass::update()
                              q     ,
                              qd    ,
                              t_r   ,
-                             force  );
+                             force  );		// TODO where is the force updated/measured ???
 	// NN END
 	/////////////////////////
 
@@ -490,15 +496,15 @@ void PR2CartneuroControllerClass::update()
 	double k_posture = 50.0;
 	double jacobian_inverse_damping = 0.01;
 
-	JointVec joint_dd_ff_;
-
-	joint_dd_ff_(0) = 3.33   ;
-	joint_dd_ff_(1) = 1.16   ;
-	joint_dd_ff_(2) = 0.1    ;
-	joint_dd_ff_(3) = 0.25   ;
-	joint_dd_ff_(4) = 0.133  ;
-	joint_dd_ff_(5) = 0.0727 ;
-	joint_dd_ff_(6) = 0.0727 ;
+//	JointVec joint_dd_ff_;
+//
+//	joint_dd_ff_(0) = 3.33   ;
+//	joint_dd_ff_(1) = 1.16   ;
+//	joint_dd_ff_(2) = 0.1    ;
+//	joint_dd_ff_(3) = 0.25   ;
+//	joint_dd_ff_(4) = 0.133  ;
+//	joint_dd_ff_(5) = 0.0727 ;
+//	joint_dd_ff_(6) = 0.0727 ;
 
 	// Computes pseudo-inverse of J
 	Eigen::Matrix<double,6,6> I6; I6.setIdentity();
@@ -637,6 +643,7 @@ void PR2CartneuroControllerClass::update()
 
 	// And finally send these torques out.
 	chain_.setEfforts( tau_c_ );
+
 
 	/////////////////////////
 	// DATA COLLECTION
