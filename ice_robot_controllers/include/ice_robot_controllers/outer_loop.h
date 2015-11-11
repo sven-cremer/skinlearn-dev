@@ -81,8 +81,6 @@ private:
 	Eigen::VectorXd force;
 	Eigen::VectorXd flexiForce;
 
-	Eigen::MatrixXd Jacobian;
-
 	human_state_type ode_init_x;
 
 	double filtW0 ;   double flex_1_filtW0 ;   double flex_2_filtW0 ;   double flex_3_filtW0 ;   double flex_4_filtW0 ;
