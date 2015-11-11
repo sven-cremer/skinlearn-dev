@@ -4,6 +4,7 @@
 #include <boost/scoped_ptr.hpp>
 #include "objTest.h"
 #include <ice_robot_controllers/KDLcontroller.h>
+#include <ice_robot_controllers/EigenConversions.h>
 
 // PR2
 #include <pr2_controller_interface/controller.h>
@@ -45,46 +46,6 @@
 
 
 namespace pr2_controller_ns{
-
-
-Eigen::Quaterniond
-euler2Quaternion( const double roll,
-                  const double pitch,
-                  const double yaw )
-{
-    Eigen::AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
-    Eigen::AngleAxisd pitchAngle(pitch, Eigen::Vector3d::UnitY());
-    Eigen::AngleAxisd yawAngle(yaw, Eigen::Vector3d::UnitZ());
-
-    Eigen::Quaterniond q = yawAngle * pitchAngle * rollAngle;
-    return q;
-}
-
-Eigen::Vector3d
-quaternion2Euler( Eigen::Quaterniond q )
-{
-	Eigen::Matrix3d mat = q.matrix();
-    Eigen::Vector3d rpy = mat.eulerAngles(0, 1, 2);
-    return rpy;
-}
-
-Eigen::Matrix<double, 6, 1>
-affine2CartVec( Eigen::Affine3d a )
-{
-	Eigen::Matrix<double, 6, 1> x;
-	Eigen::Vector3d xyz(a.translation());
-	Eigen::Quaterniond q(a.linear());
-	Eigen::Vector3d rpy = quaternion2Euler( q );
-
-	x(0) = xyz(0);
-	x(1) = xyz(1);
-	x(2) = xyz(2);
-	x(3) = rpy(0);
-	x(4) = rpy(1);
-	x(5) = rpy(2);
-
-    return x;
-}
 
 class PR2CartneuroControllerClass: public pr2_controller_interface::Controller
 {
