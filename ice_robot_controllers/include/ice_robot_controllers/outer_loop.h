@@ -202,4 +202,9 @@ public:
 	outer_loop();
 	~outer_loop();
 	bool load_parameters();
+	void update();
+	void calcHumanIntentPos( Eigen::Vector3d & force,
+			Eigen::VectorXd & pos,
+			double delT,
+			double m );
 };
