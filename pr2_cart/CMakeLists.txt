@@ -1,31 +1,24 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ice_robot_controllers)
+project(pr2_cart)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
-  control_toolbox
   cmake_modules
-  ice_msgs
   kdl_conversions
   pluginlib
   pr2_controller_interface
-  pr2_gripper_sensor_controller
+  pr2_controllers_msgs
   pr2_hardware_interface
   pr2_mechanism_model
   pr2_mechanism_msgs
-  pr2_msgs
   realtime_tools
   roscpp
   std_srvs
-  tf
-  angles
+  ice_msgs
 )
 
-find_package(Eigen REQUIRED)
-
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
-# find_package(Boost REQUIRED COMPONENTS signals)
+find_package(Boost REQUIRED COMPONENTS thread)
 
 ###################################
 ## catkin specific configuration ##
@@ -38,8 +31,8 @@ find_package(Eigen REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES ice_robot_controllers
-#  CATKIN_DEPENDS control_toolbox cmake_modules ice_msgs kdl_conversions pluginlib pr2_controller_interface pr2_gripper_sensor_controller pr2_hardware_interface pr2_mechanism_model pr2_mechanism_msgs pr2_msgs realtime_tools roscpp std_srvs tf angles
+#  LIBRARIES pr2_cart
+#  CATKIN_DEPENDS cmake_modules kdl_conversions pluginlib pr2_controller_interface pr2_controllers_msgs pr2_hardware_interface pr2_mechanism_model pr2_mechanism_msgs realtime_tools roscpp std_srvs ice_msgs
 #  DEPENDS system_lib
 )
 
@@ -55,43 +48,27 @@ include_directories(
 )
 
 ## Declare a cpp library
-add_library(ice_robot_controllers
-  src/cartneuroController.cpp
-  src/cartesianController.cpp
-)
+add_library(           pr2_cart_lib   src/pr2_cart.cpp)
+target_link_libraries( pr2_cart_lib   ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_dependencies(      pr2_cart_lib   pr2_cart_lib_generate_messages_cpp)
 
-add_library(outer_loop src/outer_loop.cpp)
-target_link_libraries(outer_loop ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
-target_link_libraries(ice_robot_controllers ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-add_dependencies(ice_robot_controllers ice_robot_controllers_generate_messages_cpp)
-
-add_dependencies(ice_robot_controllers 
-   ${ice_robot_controllers_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-pr2_enable_rpath(ice_robot_controllers)
-
-install(TARGETS ice_robot_controllers
-   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
-
-install(DIRECTORY include/${PROJECT_NAME}/
-   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
-
-install(FILES controller_plugins.xml
-   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+add_library(           pr2_cart_manager_lib  src/pr2_cart_manager.cpp )
+target_link_libraries( pr2_cart_manager_lib  pr2_cart_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_dependencies(      pr2_cart_manager_lib  pr2_cart_manager_lib_generate_messages_cpp)
 
 ## Declare a cpp executable
-# add_executable(ice_robot_controllers_node src/ice_robot_controllers_node.cpp)
+#add_executable(        pr2_cart_manager      src/pr2_cart_manager.cpp)
+#target_link_libraries( pr2_cart_manager      pr2_cart_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#add_dependencies(      pr2_cart_manager      pr2_cart_manager_generate_messages_cpp)
+ 
+add_executable(         ft_sim             src/ft_simulation.cpp)     
+target_link_libraries(  ft_sim             ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(ice_robot_controllers_node ice_robot_controllers_generate_messages_cpp)
+# Keyboard interface
+add_executable(        keyboard   src/keyboard.cpp)
+target_link_libraries( keyboard   pr2_cart_manager_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_dependencies(      keyboard   keyboard_generate_messages_cpp)
 
-## Specify libraries to link a library or executable target against
-# target_link_libraries(ice_robot_controllers_node
-#   ${catkin_LIBRARIES}
-# )
 
 #############
 ## Install ##
@@ -108,7 +85,7 @@ install(FILES controller_plugins.xml
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS ice_robot_controllers ice_robot_controllers_node
+# install(TARGETS pr2_cart pr2_cart_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

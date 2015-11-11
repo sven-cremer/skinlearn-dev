@@ -1,0 +1,21 @@
+---
+float64 restPGain
+float64 restDGain
+float64 velPGain
+float64 velDGain
+float64 rotPGain
+float64 rotDGain
+float64 rThresh
+float64 psiThresh
+float64 Kp_vel_x
+float64 Kp_vel_y
+float64 Kp_vel_z
+float64 Kd_vel_x
+float64 Kd_vel_y
+float64 Kd_vel_z
+float64 Kp_rot_x
+float64 Kp_rot_y
+float64 Kp_rot_z
+float64 Kd_rot_x
+float64 Kd_rot_y
+float64 Kd_rot_z

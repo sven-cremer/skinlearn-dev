@@ -1,15 +1,29 @@
-/**
- *
- * cartPush.h: ...
- *
- *
- * @author Isura Ranatunga, University of Texas at Arlington, Copyright (C) 2013.
- * @contact isura.ranatunga@mavs.uta.edu
- * @see ...
- * @created September 21, 2013
- * @modified September 23, 2013
- *
- */
+/***********************************************************************************************************************
+FILENAME:    pr2_cart.h
+AUTHORS:     Sven Cremer 		sven.cremer@mavs.uta.edu
+             Isura Ranatunga	isura.ranatunga@mavs.uta.edu
+			 University of Texas at Arlington, Copyright (C) 2013.
+
+DESCRIPTION:
+Realtime impedance and velocity controller for PR2 cart behavior
+
+REFERENCES:
+-This is a modified version of Isura's uta_pr2_cartpush package.
+-"Writing a realtime Cartesian controller" ROS tutorial:
+http://wiki.ros.org/pr2_mechanism/Tutorials/Writing%20a%20realtime%20Cartesian%20controller
+-"Capturing data from a controller" ROS tutorial:
+http://wiki.ros.org/pr2_mechanism/Tutorials/Capturing%20data%20from%20a%20controller
+
+PUBLISHES:  NA
+SUBSCRIBES: NA
+SERVICES:   NA
+
+REVISION HISTORY:
+2014.02.07  SC     original file creation
+2014.02.14  SC     code cleanup
+2014.02.17  SC     capturing data from a controller
+2015.10.26  SC     ported to hydro
+***********************************************************************************************************************/
 
 #include <pr2_controller_interface/controller.h>
 #include <pr2_hardware_interface/hardware_interface.h>
@@ -41,11 +55,77 @@
 #include "ros/ros.h"
 #include <urdf/model.h>
 
+// Service messages for chaining gains
+#include <ice_msgs/setValue.h>
+#include <ice_msgs/setGains.h>
+#include <ice_msgs/getState.h>
+
+#include <ice_msgs/controllerState.h>
+#include <ice_msgs/combinedTwistError.h>
+#include <ice_msgs/combinedError.h>
+
+
 namespace pr2_controller_ns{
 
-class PR2CartPushClass: public pr2_controller_interface::Controller
+enum
+{
+  StoreLen = 10000
+};
+
+
+class PR2CartClass: public pr2_controller_interface::Controller
 {
 private:
+	// Proportional gains for base velocity controller
+	double velPGain;
+	double rotPGain;
+	// Derivative gains for base velocity controller
+	double velDGain;
+	double rotDGain;
+	// Thresholds for base velocity controller
+	double rThresh;
+	double psiThresh;
+
+	// Gains for torque controller
+	double restPGain;
+	double restDGain;
+
+	// Method that will get called when the service is called.
+	bool set_velPGain	(ice_msgs::setValue::Request& req, ice_msgs::setValue::Response& resp);
+	bool set_velDGain	(ice_msgs::setValue::Request& req, ice_msgs::setValue::Response& resp);
+	bool set_rotPGain	(ice_msgs::setValue::Request& req, ice_msgs::setValue::Response& resp);
+	bool set_rotDGain	(ice_msgs::setValue::Request& req, ice_msgs::setValue::Response& resp);
+	bool set_rThresh	(ice_msgs::setValue::Request& req, ice_msgs::setValue::Response& resp);
+	bool set_psiThresh	(ice_msgs::setValue::Request& req, ice_msgs::setValue::Response& resp);
+
+	bool set_restPGain	(ice_msgs::setValue::Request& req, ice_msgs::setValue::Response& resp);
+	bool set_restDGain	(ice_msgs::setValue::Request& req, ice_msgs::setValue::Response& resp);
+
+	bool set_Kp_vel	(ice_msgs::setGains::Request& req, ice_msgs::setGains::Response& resp);
+	bool set_Kd_vel	(ice_msgs::setGains::Request& req, ice_msgs::setGains::Response& resp);
+	bool set_Kp_rot	(ice_msgs::setGains::Request& req, ice_msgs::setGains::Response& resp);
+	bool set_Kd_rot	(ice_msgs::setGains::Request& req, ice_msgs::setGains::Response& resp);
+
+
+	ros::ServiceServer srv_velPGain;
+	ros::ServiceServer srv_velDGain;
+	ros::ServiceServer srv_rotPGain;
+	ros::ServiceServer srv_rotDGain;
+	ros::ServiceServer srv_rThresh;
+	ros::ServiceServer srv_psiThresh;
+
+	ros::ServiceServer srv_restPGain;
+	ros::ServiceServer srv_restDGain;
+
+	ros::ServiceServer srv_Kp_vel;
+	ros::ServiceServer srv_Kd_vel;
+	ros::ServiceServer srv_Kp_rot;
+	ros::ServiceServer srv_Kd_rot;
+
+
+	ros::ServiceServer srv_getState;
+	bool get_State(ice_msgs::getState::Request& req, ice_msgs::getState::Response& resp);
+
   // The current robot state (to get the time stamp)
   pr2_mechanism_model::RobotState* robot_state_;
 
@@ -95,10 +175,11 @@ private:
   KDL::Frame        r_xd_;      // Tip desired pose
   KDL::Frame        r_x0_;      // Tip initial pose
 
-  KDL::Twist        r_xerr_;    // Cart error
+  KDL::Twist        r_xerr_;    // Cart error			TODO: use KDL::Frame instead
   KDL::Twist        r_xdot_;    // Cart velocity
   KDL::Wrench       r_F_;       // Cart effort
-  KDL::Twist        ferr_;		// Cart effort error
+  KDL::Twist        r_ferr_;	// Cart effort error
+  KDL::Twist        l_ferr_;	// Cart effort error
   KDL::Jacobian     r_J_;       // Jacobian
 
   KDL::JntArray     l_q_;       // Joint positions
@@ -122,8 +203,11 @@ private:
   KDL::Twist        l_xerr_;    // Cart error
   KDL::Twist        l_xdot_;    // Cart velocity
   KDL::Wrench       l_F_;       // Cart effort
-//  KDL::Twist      ferr_;	// Cart effort error
+//  KDL::Twist      ferr_;		// Cart effort error
   KDL::Jacobian     l_J_;       // Jacobian
+
+  KDL::Twist		combinedPoseError  ; // pose error of both arms
+  KDL::Twist		combinedTwistError ; // twist error of both arms
 
   // Note the gains are incorrectly typed as a twist,
   // as there is no appropriate type!
@@ -149,19 +233,31 @@ private:
 
   bool controller_on;
 
+  bool forceTorque_on;
+  
+  double l_force_buffer[10];
+  double r_force_buffer[10];
+  int l_buffer_indx;
+  int r_buffer_indx;
+
+  double dt;                    // Servo loop time step
+
   bool start( std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp );
   bool stop(  std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp );
 
-  ros::ServiceServer start_srv_;
-  ros::ServiceServer stop_srv_;
 
-  ros::ServiceClient arm_controller_client_;
 
-  pr2_mechanism_msgs::SwitchController arm_controllerStart_;
-  pr2_mechanism_msgs::SwitchController arm_controllerStop_;
+	// Capturing data from controller
+	  bool capture(std_srvs::Empty::Request& req, std_srvs::Empty::Response& resp);
+	  ros::ServiceServer capture_srv_;
+	  ros::Publisher     capture_pub_;
+	  ice_msgs::combinedTwistError  storage_[StoreLen];
+	  volatile int storage_index_;
 
-  double velGain;
-  double rotGain;
+	  //Realtime publisher
+	  realtime_tools::RealtimePublisher<ice_msgs::combinedError> realtime_pub_pose_error;
+	  realtime_tools::RealtimePublisher<ice_msgs::combinedError> realtime_pub_twist_error;
+
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+
+   <rosparam file="$(find pr2_cart)/config/pr2_cart.yaml"
+             command="load" />
+
+  <node name="unspawn_arms"
+        pkg="pr2_controller_manager"
+        type="unspawner"
+        args="l_arm_controller r_arm_controller" />
+
+   <node name="pr2_cart_spawner"
+        pkg="pr2_controller_manager"
+        type="spawner"
+        args="pr2_cart" />
+
+</launch>
