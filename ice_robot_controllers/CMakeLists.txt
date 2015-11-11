@@ -21,6 +21,8 @@ find_package(catkin REQUIRED COMPONENTS
   angles
 )
 
+find_package(Eigen REQUIRED)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 # find_package(Boost REQUIRED COMPONENTS signals)
@@ -57,6 +59,9 @@ add_library(ice_robot_controllers
   src/cartneuroController.cpp
   src/cartesianController.cpp
 )
+
+add_library(outer_loop src/outer_loop.cpp)
+target_link_libraries(outer_loop ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 target_link_libraries(ice_robot_controllers ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(ice_robot_controllers ice_robot_controllers_generate_messages_cpp)
