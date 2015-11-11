@@ -60,6 +60,9 @@ add_library(ice_robot_controllers
   src/cartesianController.cpp
 )
 
+add_library(outer_loop src/outer_loop.cpp)
+target_link_libraries(outer_loop ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
 target_link_libraries(ice_robot_controllers ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(ice_robot_controllers ice_robot_controllers_generate_messages_cpp)
 
