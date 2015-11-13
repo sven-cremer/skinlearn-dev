@@ -198,6 +198,16 @@ private:
 	Eigen::Vector3d r_acc_data           ;
 
 	KDL::Chain kdl_chain_;
+
+
+	//Added new members. Not sure if we should initialize them in this class or initialize them outside them and use a setter to use them in this class
+	// The current robot state (to get the time stamp)
+	pr2_mechanism_model::RobotState* robot_state_;	// The current robot state (to get the time stamp)
+	ros::Time outer_elapsed_;     					// Time elapsed since outer loop call
+	ros::Time intent_elapsed_;    					// Time elapsed since intent loop call
+	KDL::Frame     x_gripper_acc_;					// Gripper accelerometer frame
+	bool useFlexiForce;
+
 public:
 	outer_loop();
 	~outer_loop();
