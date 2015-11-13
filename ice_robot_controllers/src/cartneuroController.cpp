@@ -91,6 +91,31 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 	// DATA COLLECTION END
 	/////////////////////////
 
+
+
+	  StateMsg state_template;
+	  state_template.header.frame_id = root_name;
+	  state_template.x.header.frame_id = root_name;
+	  state_template.x_desi.header.frame_id = root_name;
+	  state_template.x_desi_filtered.header.frame_id = root_name;
+	  state_template.tau_pose.resize(Joints);
+	  state_template.tau_posture.resize(Joints);
+	  state_template.tau.resize(Joints);
+	  state_template.J.layout.dim.resize(2);
+	  state_template.J.data.resize(6*Joints);
+	  state_template.N.layout.dim.resize(2);
+	  state_template.N.data.resize(Joints*Joints);
+	  pub_state_.init(nh_, "state", 10);
+	  pub_state_.lock();
+	  pub_state_.msg_ = state_template;
+	  pub_state_.unlock();
+
+	  pub_x_desi_.init(nh_, "state/x_desi", 10);
+	  pub_x_desi_.lock();
+	  pub_x_desi_.msg_.header.frame_id = root_name;
+	  pub_x_desi_.unlock();
+
+
 	ROS_INFO("Neuroadpative Controller is initialized!");
 	return true;
 }
@@ -155,6 +180,8 @@ void PR2CartneuroControllerClass::starting()
 
 	qdot_filtered_.setZero();
 	joint_vel_filter_ = 1.0;
+
+	  loop_count_ = 0;
 }
 
 
@@ -163,6 +190,7 @@ void PR2CartneuroControllerClass::update()
 {
 
 	double dt;                    // Servo loop time step
+	++loop_count_;
 
 	// Calculate the dt between servo cycles.
 	dt = (robot_state_->getTime() - last_time_).toSec();
@@ -652,6 +680,39 @@ void PR2CartneuroControllerClass::update()
 
 	// DATA COLLECTION END
 	/////////////////////////
+
+
+	  if (loop_count_ % 10 == 0)
+	  {
+	    if (pub_x_desi_.trylock()) {
+	      pub_x_desi_.msg_.header.stamp = last_time_;
+	      //tf::poseEigenToMsg(xm_T, pub_x_desi_.msg_.pose);
+	      pub_x_desi_.unlockAndPublish();
+	    }
+
+	    if (pub_state_.trylock()) {
+	      pub_state_.msg_.header.stamp = last_time_;
+	      pub_state_.msg_.x.header.stamp = last_time_;
+	      tf::poseEigenToMsg(x_T, pub_state_.msg_.x.pose);
+	      pub_state_.msg_.x_desi.header.stamp = last_time_;
+	      //tf::poseEigenToMsg(X_m, pub_state_.msg_.x_desi.pose);
+	      pub_state_.msg_.x_desi_filtered.header.stamp = last_time_;
+	      //tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
+	      //tf::twistEigenToMsg(x_err, pub_state_.msg_.x_err);
+	      tf::twistEigenToMsg(affine2CartVec(xd_T), pub_state_.msg_.xd);
+	      //tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
+	      //tf::wrenchEigenToMsg(F, pub_state_.msg_.F);
+	      tf::matrixEigenToMsg(J_T, pub_state_.msg_.J);
+	      tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
+	      for (size_t j = 0; j < Joints; ++j) {
+	        //pub_state_.msg_.tau_pose[j] = tau_pose[j];
+	        pub_state_.msg_.tau_posture[j] = nullspaceTorque[j];
+	        pub_state_.msg_.tau[j] = tau[j];
+	      }
+	      pub_state_.unlockAndPublish();
+	    }
+	  }
+
 
 }
 
@@ -1857,7 +1918,6 @@ bool PR2CartneuroControllerClass::initParam()
 bool PR2CartneuroControllerClass::initRobot()
 {
 	// Get the root and tip link names from parameter server.
-	std::string root_name, tip_name;
 	if (!nh_.getParam("root_name", root_name))
 	{
 		ROS_ERROR("No root name given in namespace: %s)",nh_.getNamespace().c_str());

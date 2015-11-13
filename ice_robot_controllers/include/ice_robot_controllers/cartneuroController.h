@@ -5,6 +5,7 @@
 #include "objTest.h"
 #include <ice_robot_controllers/KDLcontroller.h>
 #include <ice_robot_controllers/EigenConversions.h>
+#include <realtime_tools/realtime_publisher.h>
 
 // PR2
 #include <pr2_controller_interface/controller.h>
@@ -14,7 +15,7 @@
 
 #include "pr2_gripper_sensor_controller/acceleration_observer.h"
 
-// Match
+// Math
 #include <Eigen/Geometry>
 #include <angles/angles.h>
 
@@ -30,6 +31,7 @@
 #include "csl/outer_loop.h"
 
 // ROS messages
+#include <ice_msgs/neuroControllerState.h>
 #include <ice_msgs/controllerParam.h>
 #include <ice_msgs/controllerFullData.h>
 #include <ice_msgs/controllerParamUpdate.h>
@@ -62,6 +64,7 @@ private:
 	//typedef Eigen::Matrix<double, 6, Joints> Jacobian;
 	  typedef Eigen::Matrix<double, 6, Joints> JacobianMat;
 	typedef boost::array<double, 4> human_state_type;
+	typedef ice_msgs::neuroControllerState StateMsg;
 
 	ros::NodeHandle nh_;
 
@@ -69,6 +72,8 @@ private:
 	pr2_mechanism_model::RobotState* robot_state_;
 
 	// The chain of links and joints
+	std::string root_name;
+	std::string tip_name;
 	pr2_mechanism_model::Chain chain_;
 	pr2_mechanism_model::Chain chain_acc_link;
 
@@ -423,6 +428,11 @@ private:
 	bool initNN();
 
 	void updateOuterLoop();
+
+	  realtime_tools::RealtimePublisher<StateMsg> pub_state_;
+	  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pub_x_desi_;
+
+	  int loop_count_;
 
 public:
 	PR2CartneuroControllerClass();

@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(DIRECTORY msg FILES
   # ice_robot_controllers
+  neuroControllerState.msg
   controllerFullData.msg
   controllerParam.msg
   # pr2_cart
