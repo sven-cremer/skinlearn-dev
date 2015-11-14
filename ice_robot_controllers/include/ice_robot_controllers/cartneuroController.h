@@ -2,7 +2,7 @@
 // Utilities
 #include <fstream>
 #include <boost/scoped_ptr.hpp>
-#include "objTest.h"
+//#include "objTest.h"
 #include <ice_robot_controllers/KDLcontroller.h>
 #include <ice_robot_controllers/EigenConversions.h>
 #include <realtime_tools/realtime_publisher.h>
@@ -20,10 +20,10 @@
 #include <angles/angles.h>
 
 #include <kdl/chain.hpp>
-#include <kdl/chainjnttojacsolver.hpp>
-#include <kdl/chainfksolverpos_recursive.hpp>
-#include <kdl/frames.hpp>
-#include <kdl/jacobian.hpp>
+//#include <kdl/chainjnttojacsolver.hpp>
+//#include <kdl/chainfksolverpos_recursive.hpp>
+//#include <kdl/frames.hpp>
+//#include <kdl/jacobian.hpp>
 #include <kdl/jntarray.hpp>
 
 // Inner and outer loops
@@ -77,39 +77,29 @@ private:
 	pr2_mechanism_model::Chain chain_;
 	pr2_mechanism_model::Chain chain_acc_link;
 
+	// KDL Solvers
 	boost::scoped_ptr<Kin<Joints> > kin_;
 	boost::scoped_ptr<Kin<Joints> > kin_acc_;
 
 	KDL::Chain kdl_chain_;
 	KDL::Chain kdl_chain_acc_link;
 
-	// KDL Solvers performing the actual computations
-	boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_;
-	boost::scoped_ptr<KDL::ChainFkSolverPos>    jnt_to_pose_solver_acc_;
-	boost::scoped_ptr<KDL::ChainJntToJacSolver> jnt_to_jac_solver_;
-
 	// The variables (which need to be pre-allocated).
-	KDL::JntArray  q_;            // Joint positions
-	  JointVec q_T;
-	KDL::JntArray  q0_;           // Joint initial positions
-	  JointVec q0_T;
-	KDL::JntArrayVel  qdot_;      // Joint velocities
-	  JointVec qdot_T;
-	  JointVec qdot_raw_T;
-	  JointVec qdot_filtered_;
-	  double joint_vel_filter_;
-	KDL::JntArray  tau_c_;          // Joint torques
-	  JointVec tau_c_T;
+	JointVec q_T;				// Joint positions
+	JointVec q0_T;				// Joint initial positions
+	JointVec qdot_T;			// Joint velocities
+	JointVec qdot_raw_T;
+	JointVec qdot_filtered_;
+	double joint_vel_filter_;
 
-	KDL::Frame     x_;            // Tip pose
-	  Eigen::Affine3d x_T;
-	KDL::Frame     xd_;           // Tip desired pose
-	  Eigen::Affine3d xd_T;
-	KDL::Frame     x0_;           // Tip initial pose
-	  Eigen::Affine3d x0_T;
+	KDL::JntArray  tau_c_;      // Joint torques
+	JointVec tau_c_T;			// Joint torques
 
-	KDL::Frame     x_gripper_acc_;// Gripper accelerometer frame
-	  Eigen::Affine3d x_gripper_acc_T;
+	Eigen::Affine3d x_T;        // Tip pose
+	Eigen::Affine3d xd_T;		// Tip desired pose
+	Eigen::Affine3d x0_T;			// Tip initial pose
+
+	Eigen::Affine3d x_gripper_acc_T;	// Gripper accelerometer frame
 
 //	KDL::Frame     x_m_;          // Model Tip pose
 //	KDL::Frame     xd_m_;         // Model Tip desired pose
@@ -123,13 +113,10 @@ private:
 
 	urdf::Model urdf_model;
 
-	KDL::Twist     xerr_;         // Cart error
-	  CartVec xerr_T;
-	KDL::Twist     xdot_;         // Cart velocity
-	  CartVec xdot_T;
-//	KDL::Wrench    F_;            // Cart effort
-	KDL::Jacobian  J_;            // Jacobian
-	  JacobianMat J_T;
+	CartVec xerr_T;         	// Cartesian error
+	CartVec xdot_T;				// Cartesian velocity
+//	KDL::Wrench    F_;          // Cart effort
+	JacobianMat J_T;			// Jacobian
 
 	JointVec saturation_;         // Saturation torques
 
@@ -314,7 +301,7 @@ private:
 	Eigen::VectorXd task_ref;
 	Eigen::VectorXd task_refModel_output;
 	Eigen::VectorXd tau;
-	Eigen::VectorXd force;
+	Eigen::VectorXd force_c;
 	Eigen::VectorXd flexiForce;
 
 	Eigen::MatrixXd Jacobian;
