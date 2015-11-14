@@ -197,8 +197,6 @@ void PR2CartneuroControllerClass::update()
 	kin_->fk(q_, x_);
 	kin_->jac(q_, J_);
 
-	Jacobian = J_;
-
 	chain_.getVelocities(qdot_raw_);
 	for (int i = 0; i < Joints; ++i)
 		qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
@@ -452,7 +450,7 @@ void PR2CartneuroControllerClass::update()
 	//    for (unsigned int i = 0 ; i < 6 ; i++)
 	//      cartControlForce(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
 
-	JacobianTrans = Jacobian.transpose();
+	JacobianTrans = J_.transpose();
 
 	// ======== J psuedo-inverse and Nullspace computation (from JT Cartesian controller)
 
@@ -471,14 +469,14 @@ void PR2CartneuroControllerClass::update()
 
 	// Computes pseudo-inverse of J
 	Eigen::Matrix<double,6,6> I6; I6.setIdentity();
-	Eigen::Matrix<double,6,6> JJt_damped = Jacobian * JacobianTrans + jacobian_inverse_damping * I6;
+	Eigen::Matrix<double,6,6> JJt_damped = J_ * JacobianTrans + jacobian_inverse_damping * I6;
 	Eigen::Matrix<double,6,6> JJt_inv_damped = JJt_damped.inverse();
 	Eigen::Matrix<double,Joints,6> J_pinv = JacobianTrans * JJt_inv_damped;
 
 	// Computes the nullspace of J
 	Eigen::Matrix<double,Joints,Joints> I;
 	I.setIdentity();
-	nullSpace = I - J_pinv * Jacobian;
+	nullSpace = I - J_pinv * J_;
 
 	// ======== Posture control
 
@@ -644,7 +642,7 @@ void PR2CartneuroControllerClass::update()
 	      tf::twistEigenToMsg(xdot_, pub_state_.msg_.xd);
 	      //tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
 	      tf::wrenchEigenToMsg(force_c, pub_state_.msg_.F);
-	      tf::matrixEigenToMsg(JacobianTrans, pub_state_.msg_.J);
+	      tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
 	      tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
 	      for (int j = 0; j < Joints; ++j) {
 	        //pub_state_.msg_.tau_pose[j] = tau_pose[j];
@@ -1957,16 +1955,6 @@ bool PR2CartneuroControllerClass::initRobot()
 	qnom(5) = ( q_upper(5) - q_lower(5) ) / 2 ;
 	qnom(6) = ( q_upper(6) - q_lower(6) ) / 2 ;
 
-	Jacobian         = Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
-	JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
-	JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
-	JacobianTransPinv= Eigen::MatrixXd::Zero( 6, kdl_chain_.getNrOfJoints() ) ;
-	nullSpace        = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints() ) ;
-
-	cartControlForce = Eigen::VectorXd::Zero( 6 ) ;
-	nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
-	controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
-
 	// Load Cartesian gains
 	std::string para_cartPos_Kp_x = "/cartPos_Kp_x";
 	std::string para_cartPos_Kp_y = "/cartPos_Kp_y";
@@ -2574,7 +2562,6 @@ bool PR2CartneuroControllerClass::initOuterLoop()
 	// Initial Reference
 	task_ref = X_m ;
 
-	Jacobian         = Eigen::MatrixXd::Zero( num_Outputs, kdl_chain_.getNrOfJoints() ) ;
 	JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
 	JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
 	JacobianTransPinv= Eigen::MatrixXd::Zero( num_Outputs, kdl_chain_.getNrOfJoints() ) ;
