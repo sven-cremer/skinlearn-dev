@@ -126,8 +126,8 @@ void PR2CartneuroControllerClass::starting()
 {
 
 	// Get the current joint values to compute the initial tip location.
-	chain_.getPositions(q0_T);
-	kin_->fk(q0_T, x0_T);
+	chain_.getPositions(q0_);
+	kin_->fk(q0_, x0_);
 
 
 	/////////////////////////
@@ -161,13 +161,13 @@ void PR2CartneuroControllerClass::starting()
 	if( useCurrentCartPose ) // TODO this was moved from update() ... is this correct? The controller seems to oscillate now.
 	{
 		// Start from current
-		xd_T = x0_T;
+		x_d_ = x0_;
 	}else
 	{
 		// Start from specified
 		Eigen::Vector3d p_init(cartIniX,cartIniY,cartIniZ);
 		Eigen::Quaterniond q_init = euler2Quaternion( cartDesRoll, cartDesPitch, cartDesYaw );
-		xd_T = Eigen::Translation3d(p_init) * q_init;
+		x_d_ = Eigen::Translation3d(p_init) * q_init;
 	}
 
 
@@ -190,25 +190,25 @@ void PR2CartneuroControllerClass::update()
 	last_time_ = robot_state_->getTime();
 
 	// Get the current joint positions and velocities.
-	chain_.getPositions(q_T);
-	chain_.getVelocities(qdot_T);
+	chain_.getPositions(q_);
+	chain_.getVelocities(qdot_);
 
 	// Compute the forward kinematics and Jacobian (at this location).
-	kin_->fk(q_T, x_T);
-	kin_->jac(q_T, J_T);
+	kin_->fk(q_, x_);
+	kin_->jac(q_, J_);
 
-	Jacobian = J_T;
+	Jacobian = J_;
 
-	chain_.getVelocities(qdot_raw_T);
+	chain_.getVelocities(qdot_raw_);
 	for (int i = 0; i < Joints; ++i)
-		qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_T[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
-	qdot_T = qdot_filtered_;
-	xdot_T = J_T * qdot_T;
+		qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
+	qdot_ = qdot_filtered_;
+	xdot_ = J_ * qdot_;
 
-	xdot_T = J_T * qdot_raw_T;		// FIXME remove
+	xdot_ = J_ * qdot_raw_;		// FIXME remove
 
 	// Get accelerometer forward kinematics
-	kin_acc_->fk(q_T, x_gripper_acc_T);
+	kin_acc_->fk(q_, x_gripper_acc_);
 
 	///////////////////////////////
 	// Human force input
@@ -318,24 +318,24 @@ void PR2CartneuroControllerClass::update()
 		circle.y() = 0.15 * sin(circle_phase_);
 		circle.z() = 0.15 * (1 - cos(circle_phase_));
 
-		xd_T = x0_T;
-		xd_T.translation() += circle;
+		x_d_ = x0_;
+		x_d_.translation() += circle;
 	}
 	//double circleAmpl = (circleUlim - circleLlim)/2 ;
 
 
 	// Calculate a Cartesian restoring force.
-	computePoseError(x_T, xd_T, xerr_T);			// TODO: Use xd_filtered_ instead
+	computePoseError(x_, x_d_, xerr_);			// TODO: Use xd_filtered_ instead
 
 
 	// Current joint positions and velocities
-	q = q_T;
-	qd = qdot_T;
+	q = q_;
+	qd = qdot_;
 
-	X = affine2CartVec(x_T);
-	Xd = xdot_T;				// FIXME make sure they are of same type
+	X = affine2CartVec(x_);
+	Xd = xdot_;				// FIXME make sure they are of same type
 
-	X_m = affine2CartVec(xd_T);
+	X_m = affine2CartVec(x_d_);
 	//	CartVec xyzrpy = affine2CartVec(xd_T);
 	//  X_m(0) = xd_.p(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;		// FIXME should X_m be updated?
 	//  X_m(1) = xd_.p(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
@@ -635,13 +635,13 @@ void PR2CartneuroControllerClass::update()
 	    if (pub_state_.trylock()) {
 	      pub_state_.msg_.header.stamp = last_time_;
 	      pub_state_.msg_.x.header.stamp = last_time_;
-	      tf::poseEigenToMsg(x_T, pub_state_.msg_.x.pose);
+	      tf::poseEigenToMsg(x_, pub_state_.msg_.x.pose);
 	      pub_state_.msg_.x_desi.header.stamp = last_time_;
 	      tf::poseEigenToMsg(CartVec2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
 	      pub_state_.msg_.x_desi_filtered.header.stamp = last_time_;
 	      //tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
-	      tf::twistEigenToMsg(xerr_T, pub_state_.msg_.x_err);
-	      tf::twistEigenToMsg(xdot_T, pub_state_.msg_.xd);
+	      tf::twistEigenToMsg(xerr_, pub_state_.msg_.x_err);
+	      tf::twistEigenToMsg(xdot_, pub_state_.msg_.xd);
 	      //tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
 	      tf::wrenchEigenToMsg(force_c, pub_state_.msg_.F);
 	      tf::matrixEigenToMsg(JacobianTrans, pub_state_.msg_.J);
@@ -671,7 +671,7 @@ void PR2CartneuroControllerClass::updateOuterLoop()
 			calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
 
 			// Transform human intent to torso lift link
-			CartVec xyz = affine2CartVec(x_gripper_acc_T);
+			CartVec xyz = affine2CartVec(x_gripper_acc_);
 			task_ref.x() = xyz(1) + task_ref.x() ;
 			task_ref.y() = xyz(2) + task_ref.y() ;
 			task_ref.z() = xyz(3) + task_ref.z() ;

@@ -85,21 +85,21 @@ private:
 	KDL::Chain kdl_chain_acc_link;
 
 	// The variables (which need to be pre-allocated).
-	JointVec q_T;				// Joint positions
-	JointVec q0_T;				// Joint initial positions
-	JointVec qdot_T;			// Joint velocities
-	JointVec qdot_raw_T;
+	JointVec q_;				// Joint positions
+	JointVec q0_;				// Joint initial positions
+	JointVec qdot_;			// Joint velocities
+	JointVec qdot_raw_;
 	JointVec qdot_filtered_;
 	double joint_vel_filter_;
 
 	KDL::JntArray  tau_c_;      // Joint torques
 	JointVec tau_c_T;			// Joint torques
 
-	Eigen::Affine3d x_T;        // Tip pose
-	Eigen::Affine3d xd_T;		// Tip desired pose
-	Eigen::Affine3d x0_T;			// Tip initial pose
+	Eigen::Affine3d x_;        // Tip pose
+	Eigen::Affine3d x_d_;		// Tip desired pose
+	Eigen::Affine3d x0_;			// Tip initial pose
 
-	Eigen::Affine3d x_gripper_acc_T;	// Gripper accelerometer frame
+	Eigen::Affine3d x_gripper_acc_;	// Gripper accelerometer frame
 
 //	KDL::Frame     x_m_;          // Model Tip pose
 //	KDL::Frame     xd_m_;         // Model Tip desired pose
@@ -113,10 +113,10 @@ private:
 
 	urdf::Model urdf_model;
 
-	CartVec xerr_T;         	// Cartesian error
-	CartVec xdot_T;				// Cartesian velocity
+	CartVec xerr_;         	// Cartesian error
+	CartVec xdot_;				// Cartesian velocity
 //	KDL::Wrench    F_;          // Cart effort
-	JacobianMat J_T;			// Jacobian
+	JacobianMat J_;			// Jacobian
 
 	JointVec saturation_;         // Saturation torques
 
