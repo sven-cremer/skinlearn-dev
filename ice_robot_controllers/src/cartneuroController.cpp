@@ -98,6 +98,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 	  state_template.x.header.frame_id = root_name;
 	  state_template.x_desi.header.frame_id = root_name;
 	  state_template.x_desi_filtered.header.frame_id = root_name;
+	  state_template.q.resize(Joints);
 	  state_template.tau_c.resize(Joints);
 	  state_template.tau_posture.resize(Joints);
 	  state_template.J.layout.dim.resize(2);
@@ -157,18 +158,16 @@ void PR2CartneuroControllerClass::starting()
 	}
 
 
-	if( useCurrentCartPose ) // TODO this was moved from update() ... is this correct? The controller seems to oscillate now.
-	{
-		// Start from current
-		x_d_ = x0_;
-	}else
+	if( !useCurrentCartPose ) // TODO this was moved from update() ... is this correct? The controller seems to oscillate now.
 	{
 		// Start from specified
 		Eigen::Vector3d p_init(cartIniX,cartIniY,cartIniZ);
 		Eigen::Quaterniond q_init = euler2Quaternion( cartDesRoll, cartDesPitch, cartDesYaw );
-		x_d_ = Eigen::Translation3d(p_init) * q_init;
+		x0_ = Eigen::Translation3d(p_init) * q_init;
 	}
+	x_d_ = x0_;
 
+	ROS_INFO("Starting pose: [%f,%f,%f]",x_d_.translation().x(),x_d_.translation().y(),x_d_.translation().z());
 
 	qdot_filtered_.setZero();
 	joint_vel_filter_ = 1.0;
@@ -313,12 +312,12 @@ void PR2CartneuroControllerClass::update()
 
 	if(executeCircleTraj)
 	{
-		// Follow a circle of 10cm at 3 rad/sec.
-		circle_phase_ += 3.0 * dt;
+		// Follow a circle of 10cm at 0.4 rad/sec.
+		circle_phase_ += 0.4 * dt;
 
 		Eigen::Matrix<double, 3, 1> circle(0,0,0);
-		circle.y() = 0.15 * sin(circle_phase_);
-		circle.z() = 0.15 * (1 - cos(circle_phase_));
+		circle.y() = 0.10 * sin(circle_phase_);
+		circle.z() = 0.10 * (1 - cos(circle_phase_));
 
 		x_d_ = x0_;
 		x_d_.translation() += circle;
@@ -427,11 +426,15 @@ void PR2CartneuroControllerClass::update()
 
 	t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 9
 
+
+	/***************** OUTER LOOP *****************/
+
+
 	//updateOuterLoop();
 
+	/***************** INNER LOOP *****************/
 
-	/////////////////////////
-	// NN
+	// Neural Network
 	nnController.UpdateCart( X     ,
                              Xd    ,
                              X_m   ,
@@ -441,28 +444,22 @@ void PR2CartneuroControllerClass::update()
                              qd    ,
                              t_r   ,			// Human force
                              force_c  );		// Output
-	// NN END
-	/////////////////////////
 
-	//    for (unsigned int i = 0 ; i < 6 ; i++)
-	//      cartControlForce(i) = - Kp_(i) * xerr_(i) - Kd_(i) * xdot_(i);
+
+	// PD controller
+	CartVec kp, kd;
+	kp << 100.0,100.0,100.0,100.0,100.0,100.0;
+	kd << 1.0,1.0,1.0,1.0,1.0,1.0;
+	// F    = -(       Kp * (x-x_dis)   +     Kd * (xdot - 0)    )
+	force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// FIXME remove
 
 	JacobianTrans = J_.transpose();
 
-	// ======== J psuedo-inverse and Nullspace computation (from JT Cartesian controller)
+	tau = JacobianTrans*force_c;
 
-	double k_posture = 50.0;
-	double jacobian_inverse_damping = 0.01;
+	/***************** NULLSPACE *****************/
 
-//	JointVec joint_dd_ff_;
-//
-//	joint_dd_ff_(0) = 3.33   ;
-//	joint_dd_ff_(1) = 1.16   ;
-//	joint_dd_ff_(2) = 0.1    ;
-//	joint_dd_ff_(3) = 0.25   ;
-//	joint_dd_ff_(4) = 0.133  ;
-//	joint_dd_ff_(5) = 0.0727 ;
-//	joint_dd_ff_(6) = 0.0727 ;
+	// Code taken from JT Cartesian controller
 
 	// Computes pseudo-inverse of J
 	Eigen::Matrix<double,6,6> I6; I6.setIdentity();
@@ -475,156 +472,78 @@ void PR2CartneuroControllerClass::update()
 	I.setIdentity();
 	nullSpace = I - J_pinv * J_;
 
-	// ======== Posture control
-
-	// Computes the desired joint torques for achieving the posture
+	  // Computes the desired joint torques for achieving the posture
 	nullspaceTorque.setZero();
-
-	qnom(0) = -0.5   ;
-	qnom(1) =  0 ;
-	qnom(2) = -1.50   ;
-	qnom(3) = -1.7   ;
-	qnom(4) =  1.50   ;
-	qnom(5) =  0 ;
-	qnom(6) =  0 ;
-
+	if (useNullspacePose)
 	{
-		/*
-      JointVec posture_err ;
-
-      posture_err(0) = qnom(0) - q_(0) ;
-      posture_err(1) = qnom(1) - q_(1) ;
-      posture_err(2) = qnom(2) - q_(2) ;
-      posture_err(3) = qnom(3) - q_(3) ;
-      posture_err(4) = qnom(4) - q_(4) ;
-      posture_err(5) = qnom(5) - q_(5) ;
-      posture_err(6) = qnom(6) - q_(6) ;
-
-      for (size_t j = 0; j < 7; ++j)
-      {
-        if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
-          posture_err[j] = angles::normalize_angle(posture_err[j]);
-      }
-
-      for (size_t j = 0; j < 7; ++j)
-      {
-        if (fabs(qnom(j) - 9999) < 1e-5)
-          posture_err[j] = 0.0;
-      }
-
-      JointVec qdd_posture = k_posture * posture_err;
-
-      // Add nullspace velocity
-      qd_m = nullSpace*qdd_posture ;
-		 */
-
-		JointVec q_jointLimit ;
-		JointVec q_manipAbility ;
-
-		/*      double delQ;
-      double rho = 0.1;
-      double qTildeMax = 0;
-      double qTildeMin = 0;*/
-
-		for (size_t j = 0; j < Joints; ++j)
+		if(true)
 		{
-			///////////////////
-			// Liegeois
-			// This is the Liegeois cost function from 1977
-			q_jointLimit(j) = - (q(j) - qnom(j) )/( q.rows() * ( q_upper(j) - q_lower(j))) ;
-			// END Liegeois
-			///////////////////
-			/*
-        ///////////////////
-        // Chaumette
-        // This is the Chaumette cost function from 1996??
-        // http://www.irisa.fr/lagadic/pdf/2001_itra_chaumette.pdf
-        // Marchand, E.; Chaumette, F.; Rizzo, A.,
-        // "Using the task function approach to avoid robot joint limits and kinematic singularities in visual servoing,"
-        // Intelligent Robots and Systems '96, IROS 96, Proceedings of the 1996 IEEE/RSJ International Conference on ,
-        // vol.3, no., pp.1083,1090 vol.3, 4-8 Nov 1996
+			JointVec posture_err = q_posture_ - q_;
+			for (int j = 0; j < Joints; ++j)
+			{
+				if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
+					posture_err[j] = angles::normalize_angle(posture_err[j]);		// -PI to +PI
+			}
 
-        delQ = ( q_upper(j) - q_lower(j));
-        qTildeMin = qTildeMin + rho*delQ;
-        qTildeMax = qTildeMax - rho*delQ;
+			for (int j = 0; j < Joints; ++j) {
+				if (fabs(q_posture_[j] - 9999) < 1e-5)
+					posture_err[j] = 0.0;
+			}
 
-        if( q_(j) > qTildeMax )
-        {
-          q_jointLimit(j) = ( q_(j) - qTildeMax )/delQ ;
-        }else
-        if( q_(j) < qTildeMin )
-        {
-          q_jointLimit(j) = ( q_(j) - qTildeMin )/delQ ;
-        }else
-        {
-          q_jointLimit(j) = 0 ;
-        }
-        // END Chaumette
-        ///////////////////
-			 */
+			JointVec qdd_posture = k_posture* posture_err;
+			nullspaceTorque = joint_dd_ff_.array() * (nullSpace * qdd_posture).array();
+		}
+		else
+		{
 
-			///////////////////
-			// Manip modified Siciliano
-			// Pg. 145
-			//        q_manipAbility = 0;
-			// END Manip
-			///////////////////
+			//		qnom(0) = -0.5   ;
+			//		qnom(1) =  0 ;
+			//		qnom(2) = -1.50   ;
+			//		qnom(3) = -1.7   ;
+			//		qnom(4) =  1.50   ;
+			//		qnom(5) =  0 ;
+			//		qnom(6) =  0 ;
 
+			JointVec q_jointLimit ;
+			for (int j = 0; j < Joints; ++j)
+			{
+				///////////////////
+				// Liegeois
+				// This is the Liegeois cost function from 1977
+				q_jointLimit(j) = - (q(j) - qnom(j) )/( q.rows() * ( q_upper(j) - q_lower(j))) ;
+				// END Liegeois
+				///////////////////
+			}
+			nullspaceTorque = nullSpace*50*( q_jointLimit - 0.0*qd );
 		}
 
-		nullspaceTorque = nullSpace*50*( q_jointLimit - 0.0*qd );
-
+		tau = tau + nullspaceTorque;
 	}
 
-	/*
-	CartVec kp, kd;
-	kp << 100.0,100.0,100.0,100.0,100.0,100.0;
-	kd << 1.0,1.0,1.0,1.0,1.0,1.0;
-	force_c = -(kp.asDiagonal() * xerr_T + kd.asDiagonal() * xdot_T);			// FIXME remove
-	*/
 
-	// dynamically consistent generalized inverse is defined to
-	// J^T# = (J M^−1 J^T)^-1 JM^−1
-	if ( useNullspacePose )
-	{
-		tau = JacobianTrans*force_c + nullspaceTorque;
-	}else
-	{
-		tau = JacobianTrans*force_c;
+
+   /***************** TORQUE *****************/
+
+	// Torque Saturation							(if a torque command is larger than the saturation value, then scale all torque values such that torque_i=saturation_i)
+	double sat_scaling = 1.0;
+	for (int i = 0; i < num_Joints; ++i) {
+		if (saturation_[i] > 0.0)
+			sat_scaling = std::min(sat_scaling, fabs(saturation_[i] / tau[i]));
 	}
+	Eigen::VectorXd tau_sat = sat_scaling * tau;
 
-	/*    // ======== Torque Saturation
-      double sat_scaling = 1.0;
-      for (int i = 0; i < num_Joints; ++i) {
-        if (saturation_[i] > 0.0)
-          sat_scaling = std::min(sat_scaling, fabs(saturation_[i] / tau[i]));
-      }
-      JointVec tau_sat = sat_scaling * tau;
+	tau_c_ = JointEigen2Kdl( tau_sat );
 
-  // Convert from Eigen to KDL
-//      tau_c_ = JointEigen2Kdl( tau );
-
-  tau_c_(0) = tau_sat(0);
-  tau_c_(1) = tau_sat(1);
-  tau_c_(2) = tau_sat(2);
-  tau_c_(3) = tau_sat(3);
-  tau_c_(4) = tau_sat(4);
-  tau_c_(5) = tau_sat(5);
-  tau_c_(6) = tau_sat(6);*/
-
-	tau_c_ = JointEigen2Kdl( tau );
-
-	// And finally send these torques out.
+	// Send torque command
 	chain_.setEfforts( tau_c_ );
 
 
-	/////////////////////////
-	// DATA COLLECTION
+   /***************** DATA COLLECTION *****************/
 
 	//bufferData( dt );
 
-	// DATA COLLECTION END
-	/////////////////////////
+
+   /***************** DATA PUBLISHING *****************/
 
 
 	  if (loop_count_ % 10 == 0)
@@ -660,6 +579,7 @@ void PR2CartneuroControllerClass::update()
 	      for (int j = 0; j < Joints; ++j) {
 	        pub_state_.msg_.tau_posture[j] = nullspaceTorque[j];
 	        pub_state_.msg_.tau_c[j] = tau[j];
+	        pub_state_.msg_.q[j] = q_[j];
 	      }
 	      pub_state_.unlockAndPublish();
 	    }
@@ -2004,6 +1924,20 @@ bool PR2CartneuroControllerClass::initRobot()
 	if (!nh_.getParam( para_cartRot_Kd_y , cartRot_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_y.c_str()) ; return false; }
 	if (!nh_.getParam( para_cartRot_Kd_z , cartRot_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_z.c_str()) ; return false; }
 
+
+	// Posture control
+	if (!nh_.getParam( "/k_posture", k_posture)){ ROS_ERROR("Failed to load parameter: %s !)", "/k_posture" ) ;  k_posture = 1.0; }
+	if (!nh_.getParam( "/jacobian_inverse_damping", k_posture)){ ROS_ERROR("Failed to load parameter: %s !)", "/jacobian_inverse_damping" ) ;  jacobian_inverse_damping = 0.0; }
+
+	for (int i = 0; i < Joints; ++i)
+	{
+		std::string tmp = chain_.getJoint(i)->joint_->name;
+
+		if (!nh_.getParam( "/joint_feedforward/" + tmp, joint_dd_ff_[i] )){ ROS_ERROR("Failed to load /joint_feedforward!"); joint_dd_ff_[i]=0.0; }
+		if (!nh_.getParam( "/posture/" + tmp, 			q_posture_[i]   )){ ROS_ERROR("Failed to load /posture!");           q_posture_[i]=0.0; }
+		if (!nh_.getParam( "/saturation/" + tmp, 		saturation_[i]  )){ ROS_ERROR("Failed to load /saturation!"); 		 saturation_[i]=0.0; }
+	}
+
 	return true;
 }
 
@@ -2464,9 +2398,6 @@ bool PR2CartneuroControllerClass::initOuterLoop()
 
 	if (!nh_.getParam( para_mrac_P_m , mrac_P_m )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_P_m.c_str()) ; return false; }
 	if (!nh_.getParam( para_mrac_P_h , mrac_P_h )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_P_h.c_str()) ; return false; }
-
-	for (int i = 0; i < num_Joints; ++i)
-		nh_.param("saturation/" + chain_.getJoint(i)->joint_->name, saturation_[i], 0.0);
 
 	delT = 0.001;
 

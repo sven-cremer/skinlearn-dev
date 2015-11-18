@@ -3,7 +3,7 @@ port               : /dev/ttyACM0
 baud               : 2000000
 
 useCurrentCartPose : false
-useNullspacePose   : false
+useNullspacePose   : true
 useFTinput         : false
 forceTorqueOn      : false
 useFlexiForce      : false
@@ -122,26 +122,12 @@ task_mB               : 6.0
 simHuman_a            : 0.1
 simHuman_b            : 2.6
 
-# cartIniX            :  0.7
-# cartIniY            :  0.0
-# cartIniZ            :  0.1
-# cartIniRoll         :  0.0
-# cartIniPitch        :  0.0
-# cartIniYaw          :  0.0
-
 cartIniX              :  0.7
-cartIniY              :  0.0
+cartIniY              :  0.15
 cartIniZ              : -0.1
 cartIniRoll           :  0.0
 cartIniPitch          :  0.0
 cartIniYaw            :  0.0
-
-# cartDesX            :  0.7
-# cartDesY            : -0.3
-# cartDesZ            :  0.1
-# cartDesRoll         :  0.0
-# cartDesPitch        :  0.0
-# cartDesYaw          :  0.0
 
 cartDesX              :  0.7
 cartDesY              :  0.3
@@ -240,41 +226,12 @@ nom_joint_6  :  0.0    # 0.1114     # -0.0436174
 gripper_acc_tip: r_gripper_motor_accelerometer_link
 #gripper_acc_tip: l_gripper_motor_accelerometer_link
 
-pr2_cartesianController:
-  type: PR2CartesianControllerClass
-  root_name: torso_lift_link
-  tip_name: r_gripper_tool_frame
-
 pr2_cartneuroController:
   type: ice_robot_controllers/PR2CartneuroControllerClass
   root_name: torso_lift_link
   tip_name: l_gripper_tool_frame
 
-pr2_cartresnnController:
-  type: PR2CartresnnControllerClass
-  root_name: torso_lift_link
-  tip_name: r_gripper_tool_frame
-
-pr2_explforceController:
-  type: PR2ExplforceControllerClass
-  root_name: torso_lift_link
-  tip_name: r_gripper_tool_frame
-
-pr2_impedanceController:
-  type: PR2ImpedanceControllerClass
-  root_name: torso_lift_link
-  tip_name: r_gripper_tool_frame 
-
-pr2_neuroadptController:
-  type: PR2NeuroadptControllerClass
-  root_name: torso_lift_link
-  tip_name: l_gripper_tool_frame
-
-pr2_pidController:
-  type: PR2PidControllerClass
-  root_name: torso_lift_link
-  tip_name: l_gripper_tool_frame
-
+# Torque saturation
 saturation:
   l_shoulder_pan_joint: 11.88
   l_shoulder_lift_joint: 11.64
@@ -291,3 +248,37 @@ saturation:
   r_wrist_flex_joint: 5.568
   r_wrist_roll_joint: 5.568
 
+# Posture control
+k_posture: 50.0
+jacobian_inverse_damping: 0.01
+joint_feedforward:
+  l_shoulder_pan_joint: 3.33
+  l_shoulder_lift_joint: 1.16
+  l_upper_arm_roll_joint: 0.1
+  l_elbow_flex_joint: 0.25
+  l_forearm_roll_joint: 0.133
+  l_wrist_flex_joint: 0.0727
+  l_wrist_roll_joint: 0.0727
+  r_shoulder_pan_joint: 3.33
+  r_shoulder_lift_joint: 1.16
+  r_upper_arm_roll_joint: 0.1
+  r_elbow_flex_joint: 0.25
+  r_forearm_roll_joint: 0.133
+  r_wrist_flex_joint: 0.0727
+  r_wrist_roll_joint: 0.0727
+#[0.467279,0.38766,0.850325,-1.88652,3.09594,-1.28368,-3.89919];
+posture:
+  l_shoulder_pan_joint: 0.4
+  l_shoulder_lift_joint: 0.4
+  l_upper_arm_roll_joint: 0.8
+  l_elbow_flex_joint: -1.8
+  l_forearm_roll_joint: 3.14
+  l_wrist_flex_joint: -1.3
+  l_wrist_roll_joint: -3.9
+  r_shoulder_pan_joint: -0.5
+  r_shoulder_lift_joint: 0.0
+  r_upper_arm_roll_joint: -1.5
+  r_elbow_flex_joint: -1.7
+  r_forearm_roll_joint: 1.50
+  r_wrist_flex_joint: 0.0
+  r_wrist_roll_joint: 0.0

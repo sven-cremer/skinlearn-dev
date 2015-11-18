@@ -97,6 +97,8 @@ private:
 
 	KDL::JntArray  tau_c_;      // Joint torques
 	JointVec tau_c_T;			// Joint torques
+	//JointVec tau_posture;		// Joint posture torques
+	JointVec q_posture_;
 
 	Eigen::Affine3d x_;        // Tip pose
 	Eigen::Affine3d x_d_;		// Tip desired pose
@@ -190,10 +192,16 @@ private:
 	double cartIniPitch ;
 	double cartIniYaw   ;
 
+	// Nullspace
 	Eigen::MatrixXd JacobianPinv;
 	Eigen::MatrixXd JacobianTrans;
 	Eigen::MatrixXd JacobianTransPinv;
 	Eigen::MatrixXd nullSpace;
+
+	// Posture control
+	double k_posture;
+	double jacobian_inverse_damping;
+	JointVec joint_dd_ff_;
 
 	Eigen::VectorXd cartControlForce;
 	Eigen::VectorXd nullspaceTorque;

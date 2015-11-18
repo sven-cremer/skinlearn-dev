@@ -33,6 +33,7 @@
  *********************************************************************/
 
 // Original Author: Stuart Glaser
+// Original file:   JT Cartesian controller
 
 /*
  * KDLcontroller.h
@@ -103,7 +104,31 @@ static void computePoseError(const Eigen::Affine3d &xact, const Eigen::Affine3d 
 }
 
 
+
+void computeNullspace(Eigen::Matrix<double, 6, 7> J_,
+		                 Eigen::Matrix<double, 7, 7> N_)
+
+{
+	// ======== J psuedo-inverse and Nullspace computation
+	const int Joints = 7;
+	double k_posture = 25.0;
+	double jacobian_inverse_damping = 0.01;
+
+	// Computes pseudo-inverse of J
+	Eigen::Matrix<double,6,6> I6; I6.setIdentity();
+	Eigen::Matrix<double,6,6> JJt_damped = J_ * J_.transpose() + jacobian_inverse_damping * I6;
+	Eigen::Matrix<double,6,6> JJt_inv_damped = JJt_damped.inverse();
+	Eigen::Matrix<double,Joints,6> J_pinv = J_.transpose() * JJt_inv_damped;
+
+	// Computes the nullspace of J
+	Eigen::Matrix<double,Joints,Joints> I;
+	I.setIdentity();
+	N_ = I - J_pinv * J_;
+
 }
+
+
+} // end namespace
 
 
 #endif /* KDLCONTROLLER_H_ */

@@ -9,5 +9,6 @@ geometry_msgs/Wrench force_measured
 geometry_msgs/Wrench force_c
 float64[] tau_posture
 float64[] tau_c
+float64[] q
 std_msgs/Float64MultiArray J
 std_msgs/Float64MultiArray N
