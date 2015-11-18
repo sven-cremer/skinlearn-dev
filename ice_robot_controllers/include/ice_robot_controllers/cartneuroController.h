@@ -92,6 +92,9 @@ private:
 	JointVec qdot_filtered_;
 	double joint_vel_filter_;
 
+	KDL::JntArray tau_measured_;
+	CartVec force_measured_;
+
 	KDL::JntArray  tau_c_;      // Joint torques
 	JointVec tau_c_T;			// Joint torques
 

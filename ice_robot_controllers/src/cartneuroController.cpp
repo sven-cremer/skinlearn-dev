@@ -98,9 +98,8 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 	  state_template.x.header.frame_id = root_name;
 	  state_template.x_desi.header.frame_id = root_name;
 	  state_template.x_desi_filtered.header.frame_id = root_name;
-	  state_template.tau_pose.resize(Joints);
+	  state_template.tau_c.resize(Joints);
 	  state_template.tau_posture.resize(Joints);
-	  state_template.tau.resize(Joints);
 	  state_template.J.layout.dim.resize(2);
 	  state_template.J.data.resize(6*Joints);
 	  state_template.N.layout.dim.resize(2);
@@ -208,6 +207,15 @@ void PR2CartneuroControllerClass::update()
 	// Get accelerometer forward kinematics
 	kin_acc_->fk(q_, x_gripper_acc_);
 
+	// Estimate force at gripper tip
+	chain_.getEfforts(tau_measured_);
+	for (unsigned int i = 0 ; i < 6 ; i++)
+	{
+		force_measured_(i) = 0;
+		for (unsigned int j = 0 ; j < Joints ; j++)
+			force_measured_(i) += J_(i,j) * tau_measured_(j);
+	}
+
 	///////////////////////////////
 	// Human force input
 	// Force error
@@ -218,6 +226,15 @@ void PR2CartneuroControllerClass::update()
 	{
 		l_accelerationObserver->spin();
 		r_accelerationObserver->spin();
+
+		// retrieve right accelerometer data
+		std::vector<geometry_msgs::Vector3> rightGripperAcc = r_accelerometer_handle_->state_.samples_;
+
+		r_acc_data( 0 ) = r_accelerationObserver->aX_lp ; // threeAccs[threeAccs.size()-1].x ;
+		r_acc_data( 1 ) = r_accelerationObserver->aY_lp ; // threeAccs[threeAccs.size()-1].y ;
+		r_acc_data( 2 ) = r_accelerationObserver->aZ_lp ; // threeAccs[threeAccs.size()-1].z ;
+
+		//    rightGripperAcc.clear(); // Do we need this?
 	}
 
 	if(useFlexiForce)
@@ -250,19 +267,12 @@ void PR2CartneuroControllerClass::update()
 		}
 		// Z axis
 		FLEX_force(2) = 0;
+
+		transformed_force = FLEX_force;
 	}
 
 	if( forceTorqueOn )
 	{
-		// retrieve right accelerometer data
-		std::vector<geometry_msgs::Vector3> rightGripperAcc = r_accelerometer_handle_->state_.samples_;
-
-		r_acc_data( 0 ) = r_accelerationObserver->aX_lp ; // threeAccs[threeAccs.size()-1].x ;
-		r_acc_data( 1 ) = r_accelerationObserver->aY_lp ; // threeAccs[threeAccs.size()-1].y ;
-		r_acc_data( 2 ) = r_accelerationObserver->aZ_lp ; // threeAccs[threeAccs.size()-1].z ;
-
-		//    rightGripperAcc.clear(); // Do we need this?
-
 		std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 		l_ft_samples    = l_ftData_vector.size() - 1;
 		//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
@@ -283,23 +293,17 @@ void PR2CartneuroControllerClass::update()
 		r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
 		r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
 
-
 		//  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
 		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
 		//                               w       x       y      z
-		Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);
-		FT_transformed_force = ft_to_acc._transformVector( forceFT );
-		FT_transformed_force(1) = - FT_transformed_force(1);
-	}
+		Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);					// FIXME is this correct? right vs left?
+		FT_transformed_force = ft_to_acc._transformVector( forceFT );				// TODO add wrench
+		FT_transformed_force(1) = - FT_transformed_force(1);						// This should be in torso_lift_link (root_name)
 
-	if( useFlexiForce )
-	{
-		transformed_force = FLEX_force;
-	}else{
 		transformed_force = FT_transformed_force;
 	}
 
-	// Force threshold
+	// Force threshold (makes force zero bellow threshold)
 	if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
 	if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
 	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
@@ -349,13 +353,6 @@ void PR2CartneuroControllerClass::update()
 	/////////////////////////
 	// System Model
 
-	qnom(0) = -0.5   ;
-	qnom(1) =  0 ;
-	qnom(2) = -1.50   ;
-	qnom(3) = -1.7   ;
-	qnom(4) =  1.50   ;
-	qnom(5) =  0 ;
-	qnom(6) =  0 ;
 
 	// USed to auto set cart pose
 	/*    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 3 == 0 )
@@ -415,23 +412,23 @@ void PR2CartneuroControllerClass::update()
 		/////////////////////////
 	}
 
-
-	if( !useFTinput )
+	if(forceTorqueOn)
 	{
-		transformed_force(0) = 0 ;
-		transformed_force(1) = 0 ;
+		t_r(0) = transformed_force(0) ;			// FIXME make sure orientation is correct
+		t_r(1) = transformed_force(1) ;
+//	    t_r(2) = transformed_force(2) ;
+//	    t_r(3) = r_ftData.wrench.torque.x;		// FIXME transform wrenches
+//	    t_r(4) = r_ftData.wrench.torque.y;
+//	    t_r(5) = r_ftData.wrench.torque.z;
+	}else
+	{
+		t_r = force_measured_;					// Computed from joint efforts
 	}
 
+	t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 9
 
 	//updateOuterLoop();
 
-
-	//ROS_ERROR_STREAM("Joints: " << q.transpose());
-
-	// FIXME only care about Y for now, need to check the orientation of other forces
-	//	t_r(0) = transformed_force(0) ;
-	//	t_r(1) = transformed_force(1) ;
-	//    t_r(2) = transformed_force(2) ;
 
 	/////////////////////////
 	// NN
@@ -482,6 +479,14 @@ void PR2CartneuroControllerClass::update()
 
 	// Computes the desired joint torques for achieving the posture
 	nullspaceTorque.setZero();
+
+	qnom(0) = -0.5   ;
+	qnom(1) =  0 ;
+	qnom(2) = -1.50   ;
+	qnom(3) = -1.7   ;
+	qnom(4) =  1.50   ;
+	qnom(5) =  0 ;
+	qnom(6) =  0 ;
 
 	{
 		/*
@@ -631,23 +636,30 @@ void PR2CartneuroControllerClass::update()
 	    }
 
 	    if (pub_state_.trylock()) {
+	      // Headers
 	      pub_state_.msg_.header.stamp = last_time_;
 	      pub_state_.msg_.x.header.stamp = last_time_;
-	      tf::poseEigenToMsg(x_, pub_state_.msg_.x.pose);
-	      pub_state_.msg_.x_desi.header.stamp = last_time_;
-	      tf::poseEigenToMsg(CartVec2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
 	      pub_state_.msg_.x_desi_filtered.header.stamp = last_time_;
-	      //tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
+	      pub_state_.msg_.x_desi.header.stamp = last_time_;
+	      // Pose
+	      tf::poseEigenToMsg(x_, pub_state_.msg_.x.pose);
+	      tf::poseEigenToMsg(CartVec2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
+//	      tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
+	      // Error
 	      tf::twistEigenToMsg(xerr_, pub_state_.msg_.x_err);
+	      // Twist
 	      tf::twistEigenToMsg(xdot_, pub_state_.msg_.xd);
-	      //tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
-	      tf::wrenchEigenToMsg(force_c, pub_state_.msg_.F);
+//	      tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
+	      // Force
+	      tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured
+	      tf::wrenchEigenToMsg(force_c, pub_state_.msg_.force_c);
+
 	      tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
 	      tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
+
 	      for (int j = 0; j < Joints; ++j) {
-	        //pub_state_.msg_.tau_pose[j] = tau_pose[j];
 	        pub_state_.msg_.tau_posture[j] = nullspaceTorque[j];
-	        pub_state_.msg_.tau[j] = tau[j];
+	        pub_state_.msg_.tau_c[j] = tau[j];
 	      }
 	      pub_state_.unlockAndPublish();
 	    }
@@ -1918,6 +1930,7 @@ bool PR2CartneuroControllerClass::initRobot()
 
 	// Resize (pre-allocate) the variables in non-realtime.
 	tau_c_.resize(kdl_chain_.getNrOfJoints());						// TODO relpace kdl_chain_.getNrOfJoints() with Joints
+	tau_measured_.resize(kdl_chain_.getNrOfJoints());
 
 	qnom.resize(kdl_chain_.getNrOfJoints());
 	q_lower.resize(kdl_chain_.getNrOfJoints());
