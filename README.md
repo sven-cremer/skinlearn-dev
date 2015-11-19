@@ -76,8 +76,8 @@ rosservice call /gazebo/apply_body_wrench "body_name: 'l_gripper_l_finger_tip_li
 reference_frame: 'l_gripper_l_finger_tip_link'
 reference_point: {x: 0.0, y: 0.0, z: 0.0}
 wrench:
-  force: {x: 10.0, y: 15.0, z: 0.0}
+  force: {x: 1.0, y: 4.0, z: 0.0}
   torque: {x: 0.0, y: 0.0, z: 0.0}
 start_time: {secs: 0, nsecs: 0}
-duration: {secs: 3, nsecs: 0}" 
+duration: {secs: 60, nsecs: 0}" 
 ```

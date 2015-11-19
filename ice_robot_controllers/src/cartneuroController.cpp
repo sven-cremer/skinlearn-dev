@@ -447,11 +447,13 @@ void PR2CartneuroControllerClass::update()
 
 
 	// PD controller
+	/*
 	CartVec kp, kd;
 	kp << 100.0,100.0,100.0,100.0,100.0,100.0;
 	kd << 1.0,1.0,1.0,1.0,1.0,1.0;
 	// F    = -(       Kp * (x-x_dis)   +     Kd * (xdot - 0)    )
-	force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// FIXME remove
+	force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
+	*/
 
 	JacobianTrans = J_.transpose();
 

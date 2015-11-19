@@ -249,7 +249,7 @@ saturation:
   r_wrist_roll_joint: 5.568
 
 # Posture control
-k_posture: 50.0
+k_posture: 500.0
 jacobian_inverse_damping: 0.01
 joint_feedforward:
   l_shoulder_pan_joint: 3.33
