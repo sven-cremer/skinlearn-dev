@@ -53,19 +53,21 @@ include_directories(
 )
 
 ## Declare a cpp library
+add_library(oelLIB
+  src/least_squares.cpp
+  src/kalman_estimate.cpp
+)
 add_library(ice_robot_controllers
   src/cartneuroController.cpp
-  src/cartesianController.cpp
 )
 
 #add_library(outer_loop src/outer_loop.cpp)
 #target_link_libraries(outer_loop ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-target_link_libraries(ice_robot_controllers ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(ice_robot_controllers oelLIB ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(ice_robot_controllers ice_robot_controllers_generate_messages_cpp)
 
-add_dependencies(ice_robot_controllers 
-   ${ice_robot_controllers_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(ice_robot_controllers ${ice_robot_controllers_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 pr2_enable_rpath(ice_robot_controllers)
 
 install(TARGETS ice_robot_controllers

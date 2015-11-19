@@ -219,7 +219,7 @@ void PR2CartneuroControllerClass::update()
 	// Human force input
 	// Force error
 
-	/*** Update Sensor data ***/
+	/***************** SENSOR UPDATE *****************/
 
 	if(accelerometerOn)
 	{
@@ -310,6 +310,8 @@ void PR2CartneuroControllerClass::update()
 	// Human force input END
 	///////////////////////////////
 
+	/***************** UPDATE *****************/
+
 	if(executeCircleTraj)
 	{
 		// Follow a circle of 10cm at 0.4 rad/sec.
@@ -349,9 +351,7 @@ void PR2CartneuroControllerClass::update()
 	Xd_m  = Eigen::VectorXd::Zero(6);
 	Xdd_m = Eigen::VectorXd::Zero(6);
 
-	/////////////////////////
-	// System Model
-
+	/***************** SYSTEM MODEL *****************/
 
 	// USed to auto set cart pose
 	/*    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 3 == 0 )
@@ -411,6 +411,8 @@ void PR2CartneuroControllerClass::update()
 		/////////////////////////
 	}
 
+	/***************** REFERENCE TRAJECTORY *****************/
+
 	if(forceTorqueOn)
 	{
 		t_r(0) = transformed_force(0) ;			// FIXME make sure orientation is correct
@@ -429,8 +431,7 @@ void PR2CartneuroControllerClass::update()
 
 	/***************** OUTER LOOP *****************/
 
-
-	//updateOuterLoop();
+	updateOuterLoop();
 
 	/***************** INNER LOOP *****************/
 
@@ -699,16 +700,6 @@ void PR2CartneuroControllerClass::updateOuterLoop()
 				outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
 				outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
 			}
-			// Delete this
-			//		    if( outerLoopWk_flexi_1.norm() == 0 && outerLoopWk_flexi_3.norm() == 0 )
-			//		    {
-			//		    	X_m(0) =  cartIniX     ;
-			//		    }
-			//
-			//		    if(  outerLoopWk_flexi_2.norm() == 0 && outerLoopWk_flexi_4.norm() == 0  )
-			//		    {
-			//		    	X_m(1) =  cartIniY     ;
-			//		    }
 
 		}
 
