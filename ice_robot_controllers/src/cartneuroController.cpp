@@ -194,6 +194,7 @@ void PR2CartneuroControllerClass::update()
 	// Compute the forward kinematics and Jacobian (at this location).
 	kin_->fk(q_, x_);
 	kin_->jac(q_, J_);
+	kin_acc_->jac(q_, J_acc_);
 
 	chain_.getVelocities(qdot_raw_);
 	for (int i = 0; i < Joints; ++i)
@@ -429,6 +430,16 @@ void PR2CartneuroControllerClass::update()
 	t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 9
 
 
+	CartVec tmp;
+	tmp(0) = l_ftData.wrench.force.x  ;
+	tmp(1) = l_ftData.wrench.force.y  ;
+	tmp(2) = l_ftData.wrench.force.z  ;
+	tmp(3) = l_ftData.wrench.torque.x ;
+	tmp(4) = l_ftData.wrench.torque.y ;
+	tmp(5) = l_ftData.wrench.torque.z ;
+
+	t_r = J_acc_.transpose() * tmp;
+
 	/***************** OUTER LOOP *****************/
 
 	updateOuterLoop();
@@ -479,8 +490,9 @@ void PR2CartneuroControllerClass::update()
 	nullspaceTorque.setZero();
 	if (useNullspacePose)
 	{
-		if(true)
+		if(false)
 		{
+			// This doesn't seem to work
 			JointVec posture_err = q_posture_ - q_;
 			for (int j = 0; j < Joints; ++j)
 			{
@@ -573,7 +585,7 @@ void PR2CartneuroControllerClass::update()
 	      tf::twistEigenToMsg(xdot_, pub_state_.msg_.xd);
 //	      tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
 	      // Force
-	      tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured
+	      tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured, t_r
 	      tf::wrenchEigenToMsg(force_c, pub_state_.msg_.force_c);
 
 	      tf::matrixEigenToMsg(J_, pub_state_.msg_.J);

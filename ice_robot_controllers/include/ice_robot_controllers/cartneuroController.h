@@ -122,6 +122,7 @@ private:
 	CartVec xdot_;				// Cartesian velocity
 //	KDL::Wrench    F_;          // Cart effort
 	JacobianMat J_;			// Jacobian
+	JacobianMat J_acc_;			// Jacobian
 
 	JointVec saturation_;         // Saturation torques
 
