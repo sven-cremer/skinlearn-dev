@@ -50,11 +50,11 @@ include_directories(
 ## Declare a cpp library
 add_library(           pr2_cart_lib   src/pr2_cart.cpp)
 target_link_libraries( pr2_cart_lib   ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-add_dependencies(      pr2_cart_lib   pr2_cart_lib_generate_messages_cpp)
+add_dependencies(      pr2_cart_lib   ice_msgs_generate_messages_cpp)
 
 add_library(           pr2_cart_manager_lib  src/pr2_cart_manager.cpp )
 target_link_libraries( pr2_cart_manager_lib  pr2_cart_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-add_dependencies(      pr2_cart_manager_lib  pr2_cart_manager_lib_generate_messages_cpp)
+add_dependencies(      pr2_cart_manager_lib  ice_msgs_generate_messages_cpp)
 
 ## Declare a cpp executable
 #add_executable(        pr2_cart_manager      src/pr2_cart_manager.cpp)
@@ -67,7 +67,7 @@ target_link_libraries(  ft_sim             ${catkin_LIBRARIES} ${Boost_LIBRARIES
 # Keyboard interface
 add_executable(        keyboard   src/keyboard.cpp)
 target_link_libraries( keyboard   pr2_cart_manager_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-add_dependencies(      keyboard   keyboard_generate_messages_cpp)
+add_dependencies(      keyboard   ice_msgs_generate_messages_cpp)
 
 
 #############
