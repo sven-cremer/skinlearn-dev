@@ -227,6 +227,7 @@ private:
 	bool useFlexiForce;
 	std::string ft_frame_id;
 	CartVec wrench_;
+	bool biasMeasured;
 
 	double forceCutOffX ;
 	double forceCutOffY ;

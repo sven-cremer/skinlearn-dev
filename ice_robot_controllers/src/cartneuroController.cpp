@@ -162,26 +162,11 @@ void PR2CartneuroControllerClass::starting()
 
 	ROS_INFO("Starting pose: [%f,%f,%f]",x_d_.translation().x(),x_d_.translation().y(),x_d_.translation().z());
 
-	// Measure bias
-	if( forceTorqueOn )
-	{
-		ros::Duration(1.0).sleep();
-		// set FT sensor bias due to gravity	// FIXME this will change as the gripper moves
 
-		std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-		l_ft_samples    = l_ftData_vector.size() - 1;
-		l_ftBias.wrench = l_ftData_vector[l_ft_samples];
-
-		std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-		r_ft_samples    = r_ftData_vector.size() - 1;
-		r_ftBias.wrench = r_ftData_vector[r_ft_samples];
-
-//		geometry_msgs::Wrench tmp;	// Initialize with zero
-//		l_ftBias.wrench = tmp;
-//		r_ftBias.wrench = tmp;
-
-		std::cout<<"Left bias: "<<l_ftBias.wrench<<"\n";
-	}
+	biasMeasured = false;
+	geometry_msgs::Wrench tmp;	// Initialize with zero
+	l_ftBias.wrench = tmp;
+	r_ftBias.wrench = tmp;
 
 
 	qdot_filtered_.setZero();
@@ -290,6 +275,20 @@ void PR2CartneuroControllerClass::update()
 	{
 		std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 		l_ft_samples    = l_ftData_vector.size() - 1;
+
+		std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+		r_ft_samples    = r_ftData_vector.size() - 1;
+
+		// Measure bias after the arm is in position
+		if( !biasMeasured &&  loop_count_> 2000)
+		{
+			// set FT sensor bias due to gravity	// FIXME this will change as the gripper moves
+			l_ftBias.wrench = l_ftData_vector[l_ft_samples];	// FIXME use a moving average
+			r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+
+			biasMeasured = true;
+		}
+
 		//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
 		l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  - l_ftBias.wrench.force.x ;
 		l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  - l_ftBias.wrench.force.y ;
@@ -298,8 +297,6 @@ void PR2CartneuroControllerClass::update()
 		l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y - l_ftBias.wrench.torque.y;
 		l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
 
-		std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-		r_ft_samples    = r_ftData_vector.size() - 1;
 		//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
 		r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
 		r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
