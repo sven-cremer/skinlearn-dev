@@ -1806,12 +1806,6 @@ bool PR2CartneuroControllerClass::initParam()
 
 bool PR2CartneuroControllerClass::initRobot()
 {
-	// Get FT frame ID
-	if (!nh_.getParam("ft_frame_id", ft_frame_id))
-	{
-		ROS_ERROR("No ft_frame_id name given in namespace: %s)",nh_.getNamespace().c_str());
-		return false;
-	}
 	// Get the root and tip link names from parameter server.
 	if (!nh_.getParam("root_name", root_name))
 	{
@@ -1958,6 +1952,14 @@ bool PR2CartneuroControllerClass::initRobot()
 		if (!nh_.getParam( "/joint_feedforward/" + tmp, joint_dd_ff_[i] )){ ROS_ERROR("Failed to load /joint_feedforward!"); joint_dd_ff_[i]=0.0; }
 		if (!nh_.getParam( "/posture/" + tmp, 			q_posture_[i]   )){ ROS_ERROR("Failed to load /posture!");           q_posture_[i]=0.0; }
 		if (!nh_.getParam( "/saturation/" + tmp, 		saturation_[i]  )){ ROS_ERROR("Failed to load /saturation!"); 		 saturation_[i]=0.0; }
+	}
+
+	// Get FT frame ID
+	ft_frame_id = root_name;
+	if (!nh_.getParam("/ft_frame_id", ft_frame_id))
+	{
+		ROS_ERROR("No ft_frame_id name given in namespace: %s)",nh_.getNamespace().c_str());
+		return false;
 	}
 
 	return true;
