@@ -224,7 +224,7 @@ nom_joint_6  :  0.0    # 0.1114     # -0.0436174
 
 #gripper_acc_tip: r_gripper_motor_accelerometer_link
 gripper_acc_tip: l_gripper_motor_accelerometer_link
-ft_frame_id: l_force_torque_link
+ft_frame_id: l_gripper_tool_frame
 
 pr2_cartneuroController:
   type: ice_robot_controllers/PR2CartneuroControllerClass

@@ -304,12 +304,26 @@ void PR2CartneuroControllerClass::update()
 		r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
 
 		//  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
+
+//		rosrun tf tf_echo l_force_torque_link l_gripper_tool_frame
+//		- Translation: [-0.000, 0.000, -0.180]
+//		- Rotation: in Quaternion [0.406, 0.579, -0.406, 0.579]
+//		            in RPY [3.142, 1.571, 1.919]
+		CartVec tf_tool;
+		tf_tool(0) = 0;
+		tf_tool(1) = 0;
+		tf_tool(2) = 0;
+		tf_tool(3) = 3.142;
+		tf_tool(4) = 1.571;
+		tf_tool(5) = 1.919;
+		tf::wrenchMsgToEigen(l_ftData.wrench, wrench_);
+		wrench_ = affine2CartVec(CartVec2Affine(tf_tool)*CartVec2Affine(wrench_));
+
 		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
 		//                               w       x       y      z
 		Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);					// FIXME is this correct? right vs left?
 		FT_transformed_force = ft_to_acc._transformVector( forceFT );				// TODO add wrench
 		FT_transformed_force(1) = - FT_transformed_force(1);						// This should be in torso_lift_link (root_name)
-
 		transformed_force = FT_transformed_force;
 	}
 
@@ -611,7 +625,8 @@ void PR2CartneuroControllerClass::update()
 
 	    if (pub_ft_.trylock()) {
 	    	pub_ft_.msg_.header.stamp = last_time_;
-	    	pub_ft_.msg_.wrench = l_ftData.wrench;
+	    	tf::wrenchEigenToMsg(wrench_, pub_ft_.msg_.wrench);
+	    	//pub_ft_.msg_.wrench = l_ftData.wrench;
 	    	pub_ft_.unlockAndPublish();
 	    }
 	  }

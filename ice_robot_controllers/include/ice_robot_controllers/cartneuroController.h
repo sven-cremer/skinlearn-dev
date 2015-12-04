@@ -226,6 +226,7 @@ private:
 	bool forceTorqueOn;
 	bool useFlexiForce;
 	std::string ft_frame_id;
+	CartVec wrench_;
 
 	double forceCutOffX ;
 	double forceCutOffY ;
