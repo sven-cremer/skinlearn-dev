@@ -152,7 +152,8 @@ void PR2CartneuroControllerClass::starting()
 
 	if( forceTorqueOn )
 	{
-		// set FT sensor bias due to gravity
+		// set FT sensor bias due to gravity	// FIXME this will change as the gripper moves
+		/*
 		std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 		l_ft_samples    = l_ftData_vector.size() - 1;
 		l_ftBias.wrench = l_ftData_vector[l_ft_samples];
@@ -160,6 +161,10 @@ void PR2CartneuroControllerClass::starting()
 		std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
 		r_ft_samples    = r_ftData_vector.size() - 1;
 		r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+		*/
+		geometry_msgs::Wrench tmp;	// Initialize with zero
+		l_ftBias.wrench = tmp;
+		r_ftBias.wrench = tmp;
 	}
 
 
