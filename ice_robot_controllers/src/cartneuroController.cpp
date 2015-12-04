@@ -427,7 +427,7 @@ void PR2CartneuroControllerClass::update()
 		t_r = force_measured_;					// Computed from joint efforts
 	}
 
-	t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 9
+	t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
 
 
 	CartVec tmp;
@@ -438,7 +438,7 @@ void PR2CartneuroControllerClass::update()
 	tmp(4) = l_ftData.wrench.torque.y ;
 	tmp(5) = l_ftData.wrench.torque.z ;
 
-	t_r = J_acc_.transpose() * tmp;
+	//t_r = J_acc_.transpose() * tmp;
 
 	/***************** OUTER LOOP *****************/
 
