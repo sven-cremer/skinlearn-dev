@@ -428,6 +428,7 @@ private:
 
 	  realtime_tools::RealtimePublisher<StateMsg> pub_state_;
 	  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pub_x_desi_;
+	  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_ft_;
 
 	  int loop_count_;
 

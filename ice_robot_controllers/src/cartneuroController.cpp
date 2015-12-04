@@ -115,6 +115,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 	  pub_x_desi_.msg_.header.frame_id = root_name;
 	  pub_x_desi_.unlock();
 
+	  pub_ft_.init(nh_, "ft/l_gripper",10);
+	  pub_ft_.lock();
+	  pub_ft_.msg_.header.frame_id = root_name;
+	  pub_ft_.unlock();
+
 
 	ROS_INFO("Neuroadpative Controller is initialized!");
 	return true;
@@ -597,6 +602,12 @@ void PR2CartneuroControllerClass::update()
 	        pub_state_.msg_.q[j] = q_[j];
 	      }
 	      pub_state_.unlockAndPublish();
+	    }
+
+	    if (pub_ft_.trylock()) {
+	    	pub_ft_.msg_.header.stamp = last_time_;
+	    	pub_ft_.msg_.wrench = l_ftData.wrench;
+	    	pub_ft_.unlockAndPublish();
 	    }
 	  }
 
