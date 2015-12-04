@@ -150,24 +150,7 @@ void PR2CartneuroControllerClass::starting()
 	start_time_    = robot_state_->getTime() ;
 	outer_elapsed_ = robot_state_->getTime() ;
 
-	if( forceTorqueOn )
-	{
-		// set FT sensor bias due to gravity	// FIXME this will change as the gripper moves
-		/*
-		std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-		l_ft_samples    = l_ftData_vector.size() - 1;
-		l_ftBias.wrench = l_ftData_vector[l_ft_samples];
-
-		std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-		r_ft_samples    = r_ftData_vector.size() - 1;
-		r_ftBias.wrench = r_ftData_vector[r_ft_samples];
-		*/
-		geometry_msgs::Wrench tmp;	// Initialize with zero
-		l_ftBias.wrench = tmp;
-		r_ftBias.wrench = tmp;
-	}
-
-
+	// Move arm into position
 	if( !useCurrentCartPose ) // TODO this was moved from update() ... is this correct? The controller seems to oscillate now.
 	{
 		// Start from specified
@@ -178,6 +161,28 @@ void PR2CartneuroControllerClass::starting()
 	x_d_ = x0_;
 
 	ROS_INFO("Starting pose: [%f,%f,%f]",x_d_.translation().x(),x_d_.translation().y(),x_d_.translation().z());
+
+	// Measure bias
+	if( forceTorqueOn )
+	{
+		ros::Duration(1.0).sleep();
+		// set FT sensor bias due to gravity	// FIXME this will change as the gripper moves
+
+		std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
+		l_ft_samples    = l_ftData_vector.size() - 1;
+		l_ftBias.wrench = l_ftData_vector[l_ft_samples];
+
+		std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+		r_ft_samples    = r_ftData_vector.size() - 1;
+		r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+
+//		geometry_msgs::Wrench tmp;	// Initialize with zero
+//		l_ftBias.wrench = tmp;
+//		r_ftBias.wrench = tmp;
+
+		std::cout<<"Left bias: "<<l_ftBias.wrench<<"\n";
+	}
+
 
 	qdot_filtered_.setZero();
 	joint_vel_filter_ = 1.0;
@@ -317,7 +322,7 @@ void PR2CartneuroControllerClass::update()
 		tf_tool(4) = 1.571;
 		tf_tool(5) = 1.919;
 		tf::wrenchMsgToEigen(l_ftData.wrench, wrench_);
-		wrench_ = affine2CartVec(CartVec2Affine(tf_tool)*CartVec2Affine(wrench_));
+		//wrench_ = affine2CartVec(CartVec2Affine(tf_tool)*CartVec2Affine(wrench_));
 
 		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
 		//                               w       x       y      z
