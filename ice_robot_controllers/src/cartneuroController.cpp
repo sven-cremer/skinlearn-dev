@@ -117,7 +117,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 
 	  pub_ft_.init(nh_, "ft/l_gripper",10);
 	  pub_ft_.lock();
-	  pub_ft_.msg_.header.frame_id = root_name;
+	  pub_ft_.msg_.header.frame_id = ft_frame_id;
 	  pub_ft_.unlock();
 
 
@@ -1806,6 +1806,12 @@ bool PR2CartneuroControllerClass::initParam()
 
 bool PR2CartneuroControllerClass::initRobot()
 {
+	// Get FT frame ID
+	if (!nh_.getParam("ft_frame_id", ft_frame_id))
+	{
+		ROS_ERROR("No ft_frame_id name given in namespace: %s)",nh_.getNamespace().c_str());
+		return false;
+	}
 	// Get the root and tip link names from parameter server.
 	if (!nh_.getParam("root_name", root_name))
 	{
@@ -2171,10 +2177,6 @@ bool PR2CartneuroControllerClass::initOuterLoop()
 	useNullspacePose = true ;
 	std::string para_useNullspacePose     = "/useNullspacePose";
 	if (!nh_.getParam( para_useNullspacePose, useNullspacePose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useNullspacePose.c_str()) ; return false; }
-
-	useFTinput = false ;
-	std::string para_useFTinput   = "/useFTinput";
-	if (!nh_.getParam( para_useFTinput, useFTinput )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFTinput.c_str()) ; return false; }
 
 	useARMAmodel = false ;
 	std::string para_useARMAmodel = "/useARMAmodel";

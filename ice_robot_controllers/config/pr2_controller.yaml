@@ -4,12 +4,11 @@ baud               : 2000000
 
 useCurrentCartPose : false
 useNullspacePose   : true
-useFTinput         : false
-forceTorqueOn      : false
+forceTorqueOn      : true
 useFlexiForce      : false
 accelerometerOn    : false
 
-executeCircleTraj  : true
+executeCircleTraj  : false
 
 # Specifically for MRAC
 useSimHuman        : true
@@ -183,7 +182,7 @@ nn_lambda             : 20
 nn_kappa              : 0.3
 nn_Kz                 : 0.001 
 nn_Zb                 : 100 
-nn_feedForwardForce   : 1   
+nn_feedForwardForce   : 1
 nn_nnF                : 100 
 nn_nnG                : 200
 nn_ON                 : 1
@@ -223,8 +222,9 @@ nom_joint_5  :  0.0    #-0.0947     #  0.046854
 nom_joint_6  :  0.0    # 0.1114     # -0.0436174
 
 
-gripper_acc_tip: r_gripper_motor_accelerometer_link
-#gripper_acc_tip: l_gripper_motor_accelerometer_link
+#gripper_acc_tip: r_gripper_motor_accelerometer_link
+gripper_acc_tip: l_gripper_motor_accelerometer_link
+ft_frame_id: l_force_torque_link
 
 pr2_cartneuroController:
   type: ice_robot_controllers/PR2CartneuroControllerClass

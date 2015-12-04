@@ -210,7 +210,6 @@ private:
 
 	bool useCurrentCartPose ;		// Use current cart pose or use specified cart pose
 	bool useNullspacePose ;		// Use nullspace stuff
-	bool useFTinput ;				// Use FT info or not
 
 	// Outer loop
 	bool useARMAmodel ;			// Use ARMA
@@ -226,6 +225,7 @@ private:
 	// Use FT sensors or not
 	bool forceTorqueOn;
 	bool useFlexiForce;
+	std::string ft_frame_id;
 
 	double forceCutOffX ;
 	double forceCutOffY ;
