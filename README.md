@@ -86,3 +86,10 @@ wrench:
 start_time: {secs: 0, nsecs: 0}
 duration: {secs: 60, nsecs: 0}" 
 ```
+
+# Collecting data
+```
+rostopic echo -p /pr2_cartneuroController/state/W > datafile.rtp
+```
+
+

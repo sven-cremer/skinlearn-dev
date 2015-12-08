@@ -222,6 +222,23 @@ public:
 	Eigen::MatrixXd
 	sigmoid( Eigen::MatrixXd & z ) const;
 
+	double getInnerWeightsNorm()
+	{
+		return V_trans.norm();
+	}
+	double getOuterWeightsNorm()
+	{
+		return W_trans.norm();
+	}
+	Eigen::MatrixXd	getInnerWeights()
+	{
+		return V_trans;
+	}
+	Eigen::MatrixXd	getOuterWeights()
+	{
+		return W_trans;
+	}
+
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 

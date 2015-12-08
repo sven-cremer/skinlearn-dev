@@ -105,6 +105,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 	  state_template.J.data.resize(6*Joints);
 	  state_template.N.layout.dim.resize(2);
 	  state_template.N.data.resize(Joints*Joints);
+	  // NN weights
+	  state_template.W.layout.dim.resize(2);
+	  state_template.W.data.resize(num_Outputs*num_Hidden);
+	  state_template.V.layout.dim.resize(2);
+	  state_template.V.data.resize(num_Hidden*(num_Inputs+1));
 	  pub_state_.init(nh_, "state", 10);
 	  pub_state_.lock();
 	  pub_state_.msg_ = state_template;
@@ -617,11 +622,17 @@ void PR2CartneuroControllerClass::update()
 	      tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
 	      tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
 
+	      tf::matrixEigenToMsg(nnController.getInnerWeights(), pub_state_.msg_.V);
+	      tf::matrixEigenToMsg(nnController.getOuterWeights(), pub_state_.msg_.W);
+
 	      for (int j = 0; j < Joints; ++j) {
 	        pub_state_.msg_.tau_posture[j] = nullspaceTorque[j];
 	        pub_state_.msg_.tau_c[j] = tau[j];
 	        pub_state_.msg_.q[j] = q_[j];
 	      }
+	      pub_state_.msg_.W_norm = nnController.getInnerWeightsNorm();
+	      pub_state_.msg_.V_norm = nnController.getOuterWeightsNorm();
+
 	      pub_state_.unlockAndPublish();
 	    }
 

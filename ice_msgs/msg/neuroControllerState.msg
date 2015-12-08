@@ -12,3 +12,7 @@ float64[] tau_c
 float64[] q
 std_msgs/Float64MultiArray J
 std_msgs/Float64MultiArray N
+float64 W_norm
+float64 V_norm
+std_msgs/Float64MultiArray W
+std_msgs/Float64MultiArray V
