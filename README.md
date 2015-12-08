@@ -57,6 +57,11 @@ If the build fails due to the pr2 gripper sensor package, try compiling it from 
 
 
 # Running in Simulation
+Add the following settings to bashrc:  
+```
+export ROBOT=sim
+export ROS_MASTER_URI=http://localhost:11311
+```
 Make sure the following parameters in *ice_robot_controllers/config/pr2_controller.yaml* are set to false:  
 ```
 useFTinput         : false
