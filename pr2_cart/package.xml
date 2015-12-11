@@ -37,6 +37,9 @@
   <run_depend>roscpp</run_depend>
   <run_depend>std_srvs</run_depend>
   <run_depend>ice_msgs</run_depend>
+  
+  <build_depend>apc_robot</build_depend>
+  <run_depend>apc_robot</run_depend>
 
 
   <export>

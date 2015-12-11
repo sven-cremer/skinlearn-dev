@@ -40,6 +40,7 @@ Download repository and build:
 
     cd ~/ice_ws/src
     git clone https://<USER>@bitbucket.org/<USER>/uta_pr2-dev2.git -b catkin-devel
+    git clone https://<USER>@bitbucket.org/nextgensystems/robot_utilities.git
     cd ..
     catkin_make
 

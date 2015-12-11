@@ -154,6 +154,28 @@ void PR2CartManager::robotInit(bool open_grippers)
 //		ROS_INFO("Waiting for arm and/or gripper motions to complete ...");
 //		sleep(2);
 //	}
+
+	std::vector<double> l_joints;
+	l_joints.push_back(0.149233);
+	l_joints.push_back(1.16291);
+	l_joints.push_back(0.159471);
+	l_joints.push_back(-1.71565);
+	l_joints.push_back(-3.1908);
+	l_joints.push_back(-0.521468);
+	l_joints.push_back(-1.52892);
+
+	std::vector<double> r_joints;
+	r_joints.push_back(0.0063641);
+	r_joints.push_back(1.1557);
+	r_joints.push_back(-0.00750675);
+	r_joints.push_back(-1.73534);
+	r_joints.push_back(3.09916);
+	r_joints.push_back(-0.607375);
+	r_joints.push_back(-1.5531);
+
+	arms.sendGoal(l_joints, ArmsJoint::LEFT);
+	arms.sendGoal(r_joints, ArmsJoint::RIGHT);
+
 	ROS_INFO("PR2 in position!");
 
 	//Re-initialize controller

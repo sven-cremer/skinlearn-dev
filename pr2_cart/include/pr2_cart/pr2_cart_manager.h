@@ -39,6 +39,7 @@ REVISION HISTORY:
 #include <ice_msgs/setGains.h>
 #include <ice_msgs/getState.h>
 
+#include <apc_robot/apc_arms_joint.h>
 
 class PR2CartManager
 {
@@ -99,6 +100,7 @@ private:
 //	TorsoJointSpaceController torso;		// TODO: use apc_robot instead
 //	ArmJointSpaceController arm;
 //	Gripper grippers;
+	ArmsJoint arms;
 
 	pr2_controllers_msgs::JointTrajectoryGoal leftArmStartPosition();
 	pr2_controllers_msgs::JointTrajectoryGoal rightArmStartPosition();

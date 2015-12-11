@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_srvs
   ice_msgs
+  apc_robot
 )
 
 ## System dependencies are found with CMake's conventions
@@ -32,7 +33,7 @@ find_package(Boost REQUIRED COMPONENTS thread)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES pr2_cart
-#  CATKIN_DEPENDS cmake_modules kdl_conversions pluginlib pr2_controller_interface pr2_controllers_msgs pr2_hardware_interface pr2_mechanism_model pr2_mechanism_msgs realtime_tools roscpp std_srvs ice_msgs
+#  CATKIN_DEPENDS cmake_modules kdl_conversions pluginlib pr2_controller_interface pr2_controllers_msgs pr2_hardware_interface pr2_mechanism_model pr2_mechanism_msgs realtime_tools roscpp std_srvs ice_msgs apc_robot
 #  DEPENDS system_lib
 )
 
