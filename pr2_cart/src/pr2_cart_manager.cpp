@@ -155,6 +155,9 @@ void PR2CartManager::robotInit(bool open_grippers)
 //		sleep(2);
 //	}
 
+	torso.sendGoal(0.2);
+
+
 	std::vector<double> l_joints;
 	l_joints.push_back(0.149233);
 	l_joints.push_back(1.16291);
