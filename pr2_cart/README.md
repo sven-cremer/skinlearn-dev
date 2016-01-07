@@ -10,12 +10,11 @@ robot hydro
 source ~/ice_ws/devel/setup.bash
 robot start
 ```
-Step 1. Initialize PR2 cart manager on the PR2
+1. Initialize PR2 cart manager on the PR2
    ```
    roslaunch pr2_cart pr2_cart.launch
    ```
-   
-Step 2. Initialize PR2 keyboard on a separate computer terminal
+2. Initialize PR2 keyboard on a separate computer terminal
    ```
    rosrun pr2_cart keyboard
    ```
