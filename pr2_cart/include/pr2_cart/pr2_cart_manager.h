@@ -41,6 +41,7 @@ REVISION HISTORY:
 
 #include <apc_robot/apc_arms_joint.h>
 #include <apc_robot/pr2_torso.h>
+#include <apc_robot/apc_robot_grippers.h>
 
 class PR2CartManager
 {
@@ -100,7 +101,7 @@ private:
 
 //	TorsoJointSpaceController torso;		// TODO: use apc_robot instead
 //	ArmJointSpaceController arm;
-//	Gripper grippers;
+	Gripper grippers;
 	ArmsJoint arms;
 	Torso torso;
 

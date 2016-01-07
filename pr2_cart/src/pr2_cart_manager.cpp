@@ -208,21 +208,21 @@ Open/close grippers
 ***********************************************************************************************************************/
 void PR2CartManager::openGrippers()
 {
-//	grippers.open();
-//	while(!grippers.motionComplete())
-//	{
-//		ROS_INFO("Waiting for gripper motions to complete ...");
-//		sleep(2);
-//	}
+	grippers.open();
+	while(!grippers.motionComplete())
+	{
+		ROS_INFO("Waiting for gripper motions to complete ...");
+		sleep(2);
+	}
 }
 void PR2CartManager::closeGrippers()
 {
-//	grippers.close();
-//	while(!grippers.motionComplete())
-//	{
-//		ROS_INFO("Waiting for gripper motions to complete ...");
-//		sleep(2);
-//	}
+	grippers.close();
+	while(!grippers.motionComplete())
+	{
+		ROS_INFO("Waiting for gripper motions to complete ...");
+		sleep(2);
+	}
 }
 /***********************************************************************************************************************
 Set gain values
