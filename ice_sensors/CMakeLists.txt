@@ -47,8 +47,9 @@ include_directories(
 )
 
 ## Declare a C++ executable
-#add_executable(        bluetac_serial   src/bluetac_serial.cpp)
-#target_link_libraries( bluetac_serial   ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-#add_dependencies(      bluetac_serial   ice_msgs_generate_messages_cpp)
+add_executable(        bluetac_serial   src/bluetac_serial.cpp)
+target_link_libraries( bluetac_serial   ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries( bluetac_serial   pr2_gripper_sensor_controller_lib)
+add_dependencies(      bluetac_serial   ice_msgs_generate_messages_cpp)
 
 
