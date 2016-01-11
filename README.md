@@ -16,15 +16,8 @@ Ported packages:
   * pr2_cart
 
 
-# Install Dependencies
-The following needs to be installed:
-
-    sudo apt-get install ros-hydro-pr2-desktop
-    sudo apt-get install ros-hydro-pr2-gripper-sensor*
-    sudo apt-get install ros-hydro-cmake-modules
-
-# Install Library
-Workspace setup:  
+# Workspace setup
+Use the following steps to setup a ROS hydro workspace:
 
     source /opt/ros/hydro/setup.bash
     mkdir ~/ice_ws/src -p
@@ -36,6 +29,21 @@ Workspace setup:
     echo "source ~/ice_ws/devel/setup.bash" >> ~/.bashrc
     source ~/.bashrc
 
+# Install Dependencies
+The following needs to be installed:
+
+    sudo apt-get install ros-hydro-pr2-desktop
+    sudo apt-get install ros-hydro-pr2-gripper-sensor*
+    sudo apt-get install ros-hydro-cmake-modules
+
+The ice_sensor package requires a Serial Communication Library: 
+
+   cd ~/ice_ws/src
+   git clone https://github.com/wjwwood/serial.git
+   cd ..
+   catkin_make
+
+# Install ICE Library
 Download repository and build:  
 
     cd ~/ice_ws/src
@@ -43,6 +51,11 @@ Download repository and build:
     git clone https://<USER>@bitbucket.org/nextgensystems/robot_utilities.git
     cd ..
     catkin_make
+
+To import the workspace into Eclipse IDE, do this once:
+
+    cd ~/ice_ws
+    catkin_make --force-cmake -G"Eclipse CDT4 - Unix Makefiles"
 
 The branch can also be changed using the following command:  
 
