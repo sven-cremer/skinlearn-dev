@@ -69,7 +69,7 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 
 	// Subscribe to Flexiforce wrench commands
 	if(useFlexiForce)
-		sub_command_ = nh_.subscribe<geometry_msgs::Wrench>("command", 1, &PR2CartneuroControllerClass::command, this);
+		sub_command_ = nh_.subscribe<geometry_msgs::Wrench>("command", 1, &PR2CartneuroControllerClass::readForceValuesCB, this);
 
 	/////////////////////////
 	// DATA COLLECTION
@@ -246,8 +246,8 @@ void PR2CartneuroControllerClass::update()
 	{
 		// Read flexi force serial data
 		//  tacSerial->getDataArrayFromSerialPort( flexiForce );
-		flexiForce(0) = flexiforce_wrench_desi_.force(0) ;
-		flexiForce(1) = flexiforce_wrench_desi_.force(1) ;
+		flexiForce(0) = flexiforce_wrench_desi_.force(0) ;			// TODO change message type
+		flexiForce(1) = flexiforce_wrench_desi_.force(1) ;			// note: this variable is being updated by the readForceValuesCB
 		flexiForce(2) = flexiforce_wrench_desi_.force(2) ;
 		flexiForce(3) = flexiforce_wrench_desi_.torque(0);
 
@@ -1815,7 +1815,7 @@ PR2CartneuroControllerClass::calcHumanIntentPos( Eigen::Vector3d & force,
 	pos = intentPos;
 }
 
-void PR2CartneuroControllerClass::command(const geometry_msgs::WrenchConstPtr& wrench_msg)
+void PR2CartneuroControllerClass::readForceValuesCB(const geometry_msgs::WrenchConstPtr& wrench_msg)
 {
 	// convert to wrench command
 	flexiforce_wrench_desi_.force(0) = wrench_msg->force.x;
