@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package>
+  <name>ice_sensors</name>
+  <version>0.0.0</version>
+  <description>The ice_sensors package</description>
+  <maintainer email="sven.cremer@mavs.uta.edu">Sven Cremer</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <build_depend>cmake_modules</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>ice_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>serial</build_depend>
+  <build_depend>pr2_gripper_sensor_controller</build_depend>
+  
+  <run_depend>cmake_modules</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>ice_msgs</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>visualization_msgs</run_depend>
+  <run_depend>pr2_gripper_sensor_controller</run_depend>
+  <run_depend>serial</run_depend>
+
+</package>
