@@ -202,7 +202,8 @@ void PR2CartneuroControllerClass::update()
 	chain_.getVelocities(qdot_);
 
 	// Get the pose of the F/T sensor
-	kin_ft_->fk(q_,x_ft_);
+	if(forceTorqueOn)
+		kin_ft_->fk(q_,x_ft_);
 
 	// Compute the forward kinematics and Jacobian (at this location).
 	kin_->fk(q_, x_);
@@ -352,9 +353,9 @@ void PR2CartneuroControllerClass::update()
 		wrench_transformed_(0) = forceTorso(0);
 		wrench_transformed_(1) = forceTorso(1);
 		wrench_transformed_(2) = forceTorso(2);
-		wrench_transformed_(3) = forceTorso(3);
-		wrench_transformed_(4) = forceTorso(4);
-		wrench_transformed_(5) = forceTorso(5);
+		wrench_transformed_(3) = tauTorso(0);
+		wrench_transformed_(4) = tauTorso(1);
+		wrench_transformed_(5) = tauTorso(2);
 
 		//                               w       x       y      z
 		Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);					// FIXME is this correct? right vs left?
