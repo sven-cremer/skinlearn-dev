@@ -36,12 +36,12 @@ The following needs to be installed:
     sudo apt-get install ros-hydro-pr2-gripper-sensor*
     sudo apt-get install ros-hydro-cmake-modules
 
-The ice_sensor package requires a Serial Communication Library: 
+The ice_sensor package requires a Serial Communication Library:  
 
-   cd ~/ice_ws/src
-   git clone https://github.com/wjwwood/serial.git
-   cd ..
-   catkin_make
+    cd ~/ice_ws/src
+    git clone https://github.com/wjwwood/serial.git
+    cd ..
+    catkin_make
 
 # Install ICE Library
 Download repository and build:  
@@ -105,5 +105,3 @@ duration: {secs: 60, nsecs: 0}"
 ```
 rostopic echo -p /pr2_cartneuroController/state/W > datafile.rtp
 ```
-
-
