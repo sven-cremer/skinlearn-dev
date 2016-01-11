@@ -76,13 +76,16 @@ private:
 	std::string tip_name;
 	pr2_mechanism_model::Chain chain_;
 	pr2_mechanism_model::Chain chain_acc_link;
+	pr2_mechanism_model::Chain chain_ft_link;
 
 	// KDL Solvers
 	boost::scoped_ptr<Kin<Joints> > kin_;
 	boost::scoped_ptr<Kin<Joints> > kin_acc_;
+	boost::scoped_ptr<Kin<Joints> > kin_ft_;
 
 	KDL::Chain kdl_chain_;
 	KDL::Chain kdl_chain_acc_link;
+	KDL::Chain kdl_chain_ft_link;
 
 	// The variables (which need to be pre-allocated).
 	JointVec q_;				// Joint positions
@@ -105,6 +108,7 @@ private:
 	Eigen::Affine3d x0_;			// Tip initial pose
 
 	Eigen::Affine3d x_gripper_acc_;	// Gripper accelerometer frame
+	Eigen::Affine3d x_ft_;        // FT pose
 
 //	KDL::Frame     x_m_;          // Model Tip pose
 //	KDL::Frame     xd_m_;         // Model Tip desired pose
@@ -227,6 +231,7 @@ private:
 	bool useFlexiForce;
 	std::string ft_frame_id;
 	CartVec wrench_;
+	CartVec wrench_transformed_;
 	bool biasMeasured;
 
 	double forceCutOffX ;
@@ -431,6 +436,7 @@ private:
 	  realtime_tools::RealtimePublisher<StateMsg> pub_state_;
 	  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pub_x_desi_;
 	  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_ft_;
+	  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_ft_transformed_;
 
 	  int loop_count_;
 

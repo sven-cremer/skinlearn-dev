@@ -125,6 +125,11 @@ bool PR2CartneuroControllerClass::init(pr2_mechanism_model::RobotState *robot, r
 	  pub_ft_.msg_.header.frame_id = ft_frame_id;
 	  pub_ft_.unlock();
 
+	  pub_ft_transformed_.init(nh_, "ft/l_gripper_transformed",10);
+	  pub_ft_transformed_.lock();
+	  pub_ft_transformed_.msg_.header.frame_id = root_name;
+	  pub_ft_transformed_.unlock();
+
 
 	ROS_INFO("Neuroadpative Controller is initialized!");
 	return true;
@@ -195,6 +200,9 @@ void PR2CartneuroControllerClass::update()
 	// Get the current joint positions and velocities.
 	chain_.getPositions(q_);
 	chain_.getVelocities(qdot_);
+
+	// Get the pose of the F/T sensor
+	kin_ft_->fk(q_,x_ft_);
 
 	// Compute the forward kinematics and Jacobian (at this location).
 	kin_->fk(q_, x_);
@@ -324,9 +332,30 @@ void PR2CartneuroControllerClass::update()
 		tf_tool(4) = 1.571;
 		tf_tool(5) = 1.919;
 		tf::wrenchMsgToEigen(l_ftData.wrench, wrench_);
+
 		//wrench_ = affine2CartVec(CartVec2Affine(tf_tool)*CartVec2Affine(wrench_));
 
 		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
+		Eigen::Vector3d tauFT( l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z );
+
+		// Force transformation
+		double px = x_ft_.translation().x();
+		double py = x_ft_.translation().y();
+		double pz = x_ft_.translation().z();
+		Eigen::Matrix3d W;
+		W << 0,-pz,py,
+			 pz,0,-px,
+			 -py,px,0;
+		Eigen::Vector3d tauTorso = W*x_ft_.rotation()*forceFT + x_ft_.rotation()*tauFT;
+		Eigen::Vector3d forceTorso = x_ft_.rotation()*forceFT;
+
+		wrench_transformed_(0) = forceTorso(0);
+		wrench_transformed_(1) = forceTorso(1);
+		wrench_transformed_(2) = forceTorso(2);
+		wrench_transformed_(3) = forceTorso(3);
+		wrench_transformed_(4) = forceTorso(4);
+		wrench_transformed_(5) = forceTorso(5);
+
 		//                               w       x       y      z
 		Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);					// FIXME is this correct? right vs left?
 		FT_transformed_force = ft_to_acc._transformVector( forceFT );				// TODO add wrench
@@ -400,8 +429,8 @@ void PR2CartneuroControllerClass::update()
       task_ref(2) = cartIniZ ;
     }*/
 
-	if( !forceTorqueOn )
-	{
+//	if( !forceTorqueOn )
+//	{
 		/////////////////////////
 		// Simulated human model
 
@@ -441,7 +470,7 @@ void PR2CartneuroControllerClass::update()
 
 		// END Simulated human model
 		/////////////////////////
-	}
+//	}
 
 	/***************** REFERENCE TRAJECTORY *****************/
 
@@ -461,15 +490,15 @@ void PR2CartneuroControllerClass::update()
 	t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
 
 
-	CartVec tmp;
-	tmp(0) = l_ftData.wrench.force.x  ;
-	tmp(1) = l_ftData.wrench.force.y  ;
-	tmp(2) = l_ftData.wrench.force.z  ;
-	tmp(3) = l_ftData.wrench.torque.x ;
-	tmp(4) = l_ftData.wrench.torque.y ;
-	tmp(5) = l_ftData.wrench.torque.z ;
+//	CartVec tmp;
+//	tmp(0) = l_ftData.wrench.force.x  ;
+//	tmp(1) = l_ftData.wrench.force.y  ;
+//	tmp(2) = l_ftData.wrench.force.z  ;
+//	tmp(3) = l_ftData.wrench.torque.x ;
+//	tmp(4) = l_ftData.wrench.torque.y ;
+//	tmp(5) = l_ftData.wrench.torque.z ;
 
-	//t_r = J_acc_.transpose() * tmp;
+//	t_r = J_acc_.transpose() * tmp;
 
 	/***************** OUTER LOOP *****************/
 
@@ -642,6 +671,13 @@ void PR2CartneuroControllerClass::update()
 	    	//pub_ft_.msg_.wrench = l_ftData.wrench;
 	    	pub_ft_.unlockAndPublish();
 	    }
+
+	    if (pub_ft_transformed_.trylock()) {
+	    	pub_ft_transformed_.msg_.header.stamp = last_time_;
+	    	tf::wrenchEigenToMsg(wrench_transformed_, pub_ft_transformed_.msg_.wrench);
+	    	pub_ft_transformed_.unlockAndPublish();
+	    }
+
 	  }
 
 
@@ -1993,6 +2029,18 @@ bool PR2CartneuroControllerClass::initRobot()
 	{
 		ROS_ERROR("No ft_frame_id name given in namespace: %s)",nh_.getNamespace().c_str());
 		return false;
+	}
+
+	// Construct kdl solvers for F/T frames
+	if(forceTorqueOn)
+	{
+		if (!chain_ft_link.init(robot_state_, root_name, ft_frame_id))
+		{
+			ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'", root_name.c_str(), ft_frame_id.c_str());
+			return false;
+		}
+		chain_ft_link.toKDL(kdl_chain_ft_link);
+		kin_ft_.reset(new Kin<Joints>(kdl_chain_ft_link));
 	}
 
 	return true;
