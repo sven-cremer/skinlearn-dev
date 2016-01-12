@@ -339,7 +339,9 @@ void PR2CartneuroControllerClass::update()
 		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
 		Eigen::Vector3d tauFT( l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z );
 
+		// **************************************
 		// Force transformation
+		// FIXME this code produces the correct results but crashes the RT loop
 		double px = x_ft_.translation().x();
 		double py = x_ft_.translation().y();
 		double pz = x_ft_.translation().z();
@@ -356,6 +358,7 @@ void PR2CartneuroControllerClass::update()
 		wrench_transformed_(3) = tauTorso(0);
 		wrench_transformed_(4) = tauTorso(1);
 		wrench_transformed_(5) = tauTorso(2);
+		// **************************************
 
 		//                               w       x       y      z
 		Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);					// FIXME is this correct? right vs left?
