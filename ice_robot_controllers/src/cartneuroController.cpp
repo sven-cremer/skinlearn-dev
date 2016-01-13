@@ -339,8 +339,16 @@ void PR2CartneuroControllerClass::update()
 //		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
 //		Eigen::Vector3d tauFT( l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z );
 
-		forceFT << l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z;
-		tauFT << l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z;
+//		forceFT << l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z;
+//		tauFT << l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z;
+
+		forceFT(0) = l_ftData.wrench.force.x;
+		forceFT(1) = l_ftData.wrench.force.y;
+		forceFT(2) = l_ftData.wrench.force.z;
+
+		tauFT(0) = l_ftData.wrench.torque.x;
+		tauFT(1) = l_ftData.wrench.torque.y;
+		tauFT(2) = l_ftData.wrench.torque.z;
 
 		// **************************************
 		// Force transformation
@@ -351,10 +359,22 @@ void PR2CartneuroControllerClass::update()
 //		W_mat_ << 0,-pz,py,
 //			      pz,0,-px,
 //			      -py,px,0;
-		W_mat_ << 0, -x_ft_.translation().z(), x_ft_.translation().y(),
-				  x_ft_.translation().z(), 0, -x_ft_.translation().x(),
-			      -x_ft_.translation().y(), x_ft_.translation().x(), 0;
 
+//		W_mat_ << 0, -x_ft_.translation().z(), x_ft_.translation().y(),
+//				  x_ft_.translation().z(), 0, -x_ft_.translation().x(),
+//			      -x_ft_.translation().y(), x_ft_.translation().x(), 0;
+
+		W_mat_(0,0) = 0;
+		W_mat_(0,1) = -x_ft_.translation().z();
+		W_mat_(0,2) = x_ft_.translation().y();
+
+		W_mat_(1,0) = x_ft_.translation().z();
+		W_mat_(1,1) = 0;
+		W_mat_(1,2) = -x_ft_.translation().x();
+
+		W_mat_(2,0) = -x_ft_.translation().y();
+		W_mat_(2,1) = x_ft_.translation().x();
+		W_mat_(2,2) = 0;
 
 		tauTorso = W_mat_*x_ft_.rotation()*forceFT + x_ft_.rotation()*tauFT;
 		forceTorso = x_ft_.rotation()*forceFT;
