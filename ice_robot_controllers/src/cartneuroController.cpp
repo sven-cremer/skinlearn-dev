@@ -376,16 +376,8 @@ void PR2CartneuroControllerClass::update()
 		W_mat_(2,1) = x_ft_.translation().x();
 		W_mat_(2,2) = 0;
 
-		if(loop_count_ > 10000)
-		{
-			tauTorso = W_mat_*x_ft_.rotation()*forceFT + x_ft_.rotation()*tauFT;
-			forceTorso = x_ft_.rotation()*forceFT;
-		}
-		else
-		{
-			tauTorso   =  Eigen::Vector3d::Zero();
-			forceTorso = Eigen::Vector3d::Zero();
-		}
+		tauTorso = W_mat_*x_ft_.linear()*forceFT + x_ft_.linear()*tauFT;
+		forceTorso = x_ft_.linear()*forceFT;
 
 		wrench_transformed_(0) = forceTorso(0);
 		wrench_transformed_(1) = forceTorso(1);
