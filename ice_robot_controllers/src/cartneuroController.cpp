@@ -294,9 +294,9 @@ void PR2CartneuroControllerClass::update()
 		r_ft_samples    = r_ftData_vector.size() - 1;
 
 		// Measure bias after the arm is in position
-		if( !biasMeasured &&  loop_count_> 2000)
+		if( !biasMeasured &&  loop_count_> 3000)
 		{
-			// set FT sensor bias due to gravity	// FIXME this will change as the gripper moves
+			// set FT sensor bias due to gravity				// FIXME this will change as the gripper moves
 			l_ftBias.wrench = l_ftData_vector[l_ft_samples];	// FIXME use a moving average
 			r_ftBias.wrench = r_ftData_vector[r_ft_samples];
 
@@ -376,8 +376,16 @@ void PR2CartneuroControllerClass::update()
 		W_mat_(2,1) = x_ft_.translation().x();
 		W_mat_(2,2) = 0;
 
-		tauTorso = W_mat_*x_ft_.rotation()*forceFT + x_ft_.rotation()*tauFT;
-		forceTorso = x_ft_.rotation()*forceFT;
+		if(loop_count_ > 10000)
+		{
+			tauTorso = W_mat_*x_ft_.rotation()*forceFT + x_ft_.rotation()*tauFT;
+			forceTorso = x_ft_.rotation()*forceFT;
+		}
+		else
+		{
+			tauTorso   =  Eigen::Vector3d::Zero();
+			forceTorso = Eigen::Vector3d::Zero();
+		}
 
 		wrench_transformed_(0) = forceTorso(0);
 		wrench_transformed_(1) = forceTorso(1);
@@ -385,6 +393,7 @@ void PR2CartneuroControllerClass::update()
 		wrench_transformed_(3) = tauTorso(0);
 		wrench_transformed_(4) = tauTorso(1);
 		wrench_transformed_(5) = tauTorso(2);
+
 		// **************************************
 
 		//                               w       x       y      z
@@ -392,7 +401,9 @@ void PR2CartneuroControllerClass::update()
 //		FT_transformed_force = ft_to_acc._transformVector( forceFT );				// TODO add wrench
 //		FT_transformed_force(1) = - FT_transformed_force(1);						// This should be in torso_lift_link (root_name)
 //		transformed_force = FT_transformed_force;
-		transformed_force = forceTorso;
+
+		//transformed_force = forceTorso;
+		transformed_force = Eigen::Vector3d::Zero();
 	}
 
 	// Force threshold (makes force zero bellow threshold)
@@ -657,7 +668,8 @@ void PR2CartneuroControllerClass::update()
 	  {
 	    if (pub_x_desi_.trylock()) {
 	      pub_x_desi_.msg_.header.stamp = last_time_;
-	      tf::poseEigenToMsg(CartVec2Affine(X_m), pub_x_desi_.msg_.pose);
+	      //tf::poseEigenToMsg(CartVec2Affine(X_m), pub_x_desi_.msg_.pose);
+	      tf::poseEigenToMsg(x_ft_, pub_x_desi_.msg_.pose);
 	      pub_x_desi_.unlockAndPublish();
 	    }
 
