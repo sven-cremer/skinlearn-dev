@@ -325,32 +325,39 @@ void PR2CartneuroControllerClass::update()
 //		- Translation: [-0.000, 0.000, -0.180]
 //		- Rotation: in Quaternion [0.406, 0.579, -0.406, 0.579]
 //		            in RPY [3.142, 1.571, 1.919]
-		CartVec tf_tool;
-		tf_tool(0) = 0;
-		tf_tool(1) = 0;
-		tf_tool(2) = 0;
-		tf_tool(3) = 3.142;
-		tf_tool(4) = 1.571;
-		tf_tool(5) = 1.919;
+//		CartVec tf_tool;
+//		tf_tool(0) = 0;
+//		tf_tool(1) = 0;
+//		tf_tool(2) = 0;
+//		tf_tool(3) = 3.142;
+//		tf_tool(4) = 1.571;
+//		tf_tool(5) = 1.919;
 		tf::wrenchMsgToEigen(l_ftData.wrench, wrench_);
 
 		//wrench_ = affine2CartVec(CartVec2Affine(tf_tool)*CartVec2Affine(wrench_));
 
-		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
-		Eigen::Vector3d tauFT( l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z );
+//		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
+//		Eigen::Vector3d tauFT( l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z );
+
+		forceFT << l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z;
+		tauFT << l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z;
 
 		// **************************************
 		// Force transformation
 		// FIXME this code produces the correct results but crashes the RT loop
-		double px = x_ft_.translation().x();
-		double py = x_ft_.translation().y();
-		double pz = x_ft_.translation().z();
-		Eigen::Matrix3d W;
-		W << 0,-pz,py,
-			 pz,0,-px,
-			 -py,px,0;
-		Eigen::Vector3d tauTorso = W*x_ft_.rotation()*forceFT + x_ft_.rotation()*tauFT;
-		Eigen::Vector3d forceTorso = x_ft_.rotation()*forceFT;
+//		double px = x_ft_.translation().x();
+//		double py = x_ft_.translation().y();
+//		double pz = x_ft_.translation().z();
+//		W_mat_ << 0,-pz,py,
+//			      pz,0,-px,
+//			      -py,px,0;
+		W_mat_ << 0, -x_ft_.translation().z(), x_ft_.translation().y(),
+				  x_ft_.translation().z(), 0, -x_ft_.translation().x(),
+			      -x_ft_.translation().y(), x_ft_.translation().x(), 0;
+
+
+		tauTorso = W_mat_*x_ft_.rotation()*forceFT + x_ft_.rotation()*tauFT;
+		forceTorso = x_ft_.rotation()*forceFT;
 
 		wrench_transformed_(0) = forceTorso(0);
 		wrench_transformed_(1) = forceTorso(1);
@@ -361,10 +368,11 @@ void PR2CartneuroControllerClass::update()
 		// **************************************
 
 		//                               w       x       y      z
-		Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);					// FIXME is this correct? right vs left?
-		FT_transformed_force = ft_to_acc._transformVector( forceFT );				// TODO add wrench
-		FT_transformed_force(1) = - FT_transformed_force(1);						// This should be in torso_lift_link (root_name)
-		transformed_force = FT_transformed_force;
+//		Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);					// FIXME is this correct? right vs left?
+//		FT_transformed_force = ft_to_acc._transformVector( forceFT );				// TODO add wrench
+//		FT_transformed_force(1) = - FT_transformed_force(1);						// This should be in torso_lift_link (root_name)
+//		transformed_force = FT_transformed_force;
+		transformed_force = forceTorso;
 	}
 
 	// Force threshold (makes force zero bellow threshold)
@@ -633,6 +641,7 @@ void PR2CartneuroControllerClass::update()
 	      pub_x_desi_.unlockAndPublish();
 	    }
 
+	    /*
 	    if (pub_state_.trylock()) {
 	      // Headers
 	      pub_state_.msg_.header.stamp = last_time_;
@@ -668,6 +677,7 @@ void PR2CartneuroControllerClass::update()
 
 	      pub_state_.unlockAndPublish();
 	    }
+	    */
 
 	    if (pub_ft_.trylock()) {
 	    	pub_ft_.msg_.header.stamp = last_time_;

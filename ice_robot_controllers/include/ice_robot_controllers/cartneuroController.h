@@ -110,6 +110,12 @@ private:
 	Eigen::Affine3d x_gripper_acc_;	// Gripper accelerometer frame
 	Eigen::Affine3d x_ft_;        // FT pose
 
+	Eigen::Matrix3d W_mat_;		  // Force transformation matrix
+	Eigen::Vector3d tauTorso;	  // F/T measurements in torso frame
+	Eigen::Vector3d forceTorso;
+	Eigen::Vector3d forceFT;
+	Eigen::Vector3d tauFT;
+
 //	KDL::Frame     x_m_;          // Model Tip pose
 //	KDL::Frame     xd_m_;         // Model Tip desired pose
 //	KDL::Frame     x0_m_;         // Model Tip initial pose

@@ -4,7 +4,7 @@ baud               : 2000000
 
 useCurrentCartPose : false
 useNullspacePose   : true
-forceTorqueOn      : false
+forceTorqueOn      : true
 useFlexiForce      : false
 accelerometerOn    : false
 
