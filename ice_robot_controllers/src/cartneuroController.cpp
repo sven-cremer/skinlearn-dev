@@ -222,13 +222,13 @@ void PR2CartneuroControllerClass::update()
 	kin_acc_->fk(q_, x_gripper_acc_);
 
 	// Estimate force at gripper tip
-	chain_.getEfforts(tau_measured_);
-	for (unsigned int i = 0 ; i < 6 ; i++)
-	{
-		force_measured_(i) = 0;
-		for (unsigned int j = 0 ; j < Joints ; j++)
-			force_measured_(i) += J_(i,j) * tau_measured_(j);
-	}
+//	chain_.getEfforts(tau_measured_);
+//	for (unsigned int i = 0 ; i < 6 ; i++)
+//	{
+//		force_measured_(i) = 0;
+//		for (unsigned int j = 0 ; j < Joints ; j++)
+//			force_measured_(i) += J_(i,j) * tau_measured_(j);
+//	}
 
 	///////////////////////////////
 	// Human force input
@@ -285,7 +285,7 @@ void PR2CartneuroControllerClass::update()
 		transformed_force = FLEX_force;
 	}
 
-	if( forceTorqueOn )
+	if( forceTorqueOn )		// TODO only use left or right arm
 	{
 		std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 		l_ft_samples    = l_ftData_vector.size() - 1;
@@ -394,8 +394,8 @@ void PR2CartneuroControllerClass::update()
 //		FT_transformed_force(1) = - FT_transformed_force(1);						// This should be in torso_lift_link (root_name)
 //		transformed_force = FT_transformed_force;
 
-		//transformed_force = forceTorso;
-		transformed_force = Eigen::Vector3d::Zero();
+		transformed_force = forceTorso;
+		//transformed_force = Eigen::Vector3d::Zero();
 	}
 
 	// Force threshold (makes force zero bellow threshold)
@@ -517,10 +517,11 @@ void PR2CartneuroControllerClass::update()
 //	    t_r(3) = r_ftData.wrench.torque.x;		// FIXME transform wrenches
 //	    t_r(4) = r_ftData.wrench.torque.y;
 //	    t_r(5) = r_ftData.wrench.torque.z;
-	}else
-	{
-		t_r = force_measured_;					// Computed from joint efforts
 	}
+//	else
+//	{
+//		t_r = force_measured_;					// Computed from joint efforts
+//	}
 
 	t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
 
@@ -537,7 +538,7 @@ void PR2CartneuroControllerClass::update()
 
 	/***************** OUTER LOOP *****************/
 
-	updateOuterLoop();
+	//updateOuterLoop();
 
 	/***************** INNER LOOP *****************/
 
@@ -656,7 +657,7 @@ void PR2CartneuroControllerClass::update()
    /***************** DATA PUBLISHING *****************/
 
 
-	  if (loop_count_ % 10 == 0)
+	  if (loop_count_ % 10 == 0 && publishRTtopics)
 	  {
 	    if (pub_x_desi_.trylock()) {
 	      pub_x_desi_.msg_.header.stamp = last_time_;
@@ -1907,6 +1908,7 @@ bool PR2CartneuroControllerClass::initParam()
 	nh_.param("/accelerometerOn",   accelerometerOn,   false);
 	nh_.param("/useFlexiForce",     useFlexiForce,     false);
 	nh_.param("/executeCircleTraj", executeCircleTraj, false);
+	nh_.param("/publishRTtopics",   publishRTtopics, false);
 
 	return true;
 }

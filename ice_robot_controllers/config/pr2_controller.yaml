@@ -4,11 +4,12 @@ baud               : 2000000
 
 useCurrentCartPose : false
 useNullspacePose   : true
-forceTorqueOn      : true
+forceTorqueOn      : false
 useFlexiForce      : false
 accelerometerOn    : false
 
 executeCircleTraj  : true
+publishRTtopics    : false
 
 # Specifically for MRAC
 useSimHuman        : true

@@ -232,6 +232,8 @@ private:
 
 	bool useSimHuman;
 
+	bool publishRTtopics;
+
 	// Use FT sensors or not
 	bool forceTorqueOn;
 	bool useFlexiForce;
