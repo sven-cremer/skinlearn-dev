@@ -380,7 +380,8 @@ private:
 
 	double fFForce;
 
-	csl::neural_network::OneLayerNeuralNetworkController nnController;
+	//csl::neural_network::OneLayerNeuralNetworkController nnController;			// TODO make easier to change
+	csl::neural_network::TwoLayerNeuralNetworkController nnController;
 
 	// NN END
 	/////////////////////////

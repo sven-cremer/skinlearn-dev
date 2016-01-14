@@ -27,10 +27,6 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	// Store the robot handle for later use (to get time).
 	robot_state_ = robot;
 
-	// Verify that the version of the library that we linked against is
-	// compatible with the version of the headers we compiled against.
-	// GOOGLE_PROTOBUF_VERIFY_VERSION;
-
 	if( !initParam() )
 	{
 		ROS_ERROR("initParam() failed!");
@@ -91,44 +87,42 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	// DATA COLLECTION END
 	/////////////////////////
 
+	StateMsg state_template;
+	state_template.header.frame_id = root_name;
+	state_template.x.header.frame_id = root_name;
+	state_template.x_desi.header.frame_id = root_name;
+	state_template.x_desi_filtered.header.frame_id = root_name;
+	state_template.q.resize(Joints);
+	state_template.tau_c.resize(Joints);
+	state_template.tau_posture.resize(Joints);
+	state_template.J.layout.dim.resize(2);
+	state_template.J.data.resize(6*Joints);
+	state_template.N.layout.dim.resize(2);
+	state_template.N.data.resize(Joints*Joints);
+	// NN weights
+	state_template.W.layout.dim.resize(2);
+	state_template.W.data.resize(num_Outputs*num_Hidden);
+	state_template.V.layout.dim.resize(2);
+	state_template.V.data.resize(num_Hidden*(num_Inputs+1));
+	pub_state_.init(nh_, "state", 10);
+	pub_state_.lock();
+	pub_state_.msg_ = state_template;
+	pub_state_.unlock();
 
+	pub_x_desi_.init(nh_, "state/x_desi", 10);
+	pub_x_desi_.lock();
+	pub_x_desi_.msg_.header.frame_id = root_name;
+	pub_x_desi_.unlock();
 
-	  StateMsg state_template;
-	  state_template.header.frame_id = root_name;
-	  state_template.x.header.frame_id = root_name;
-	  state_template.x_desi.header.frame_id = root_name;
-	  state_template.x_desi_filtered.header.frame_id = root_name;
-	  state_template.q.resize(Joints);
-	  state_template.tau_c.resize(Joints);
-	  state_template.tau_posture.resize(Joints);
-	  state_template.J.layout.dim.resize(2);
-	  state_template.J.data.resize(6*Joints);
-	  state_template.N.layout.dim.resize(2);
-	  state_template.N.data.resize(Joints*Joints);
-	  // NN weights
-	  state_template.W.layout.dim.resize(2);
-	  state_template.W.data.resize(num_Outputs*num_Hidden);
-	  state_template.V.layout.dim.resize(2);
-	  state_template.V.data.resize(num_Hidden*(num_Inputs+1));
-	  pub_state_.init(nh_, "state", 10);
-	  pub_state_.lock();
-	  pub_state_.msg_ = state_template;
-	  pub_state_.unlock();
+	pub_ft_.init(nh_, "ft/l_gripper",10);
+	pub_ft_.lock();
+	pub_ft_.msg_.header.frame_id = ft_frame_id;
+	pub_ft_.unlock();
 
-	  pub_x_desi_.init(nh_, "state/x_desi", 10);
-	  pub_x_desi_.lock();
-	  pub_x_desi_.msg_.header.frame_id = root_name;
-	  pub_x_desi_.unlock();
-
-	  pub_ft_.init(nh_, "ft/l_gripper",10);
-	  pub_ft_.lock();
-	  pub_ft_.msg_.header.frame_id = ft_frame_id;
-	  pub_ft_.unlock();
-
-	  pub_ft_transformed_.init(nh_, "ft/l_gripper_transformed",10);
-	  pub_ft_transformed_.lock();
-	  pub_ft_transformed_.msg_.header.frame_id = root_name;
-	  pub_ft_transformed_.unlock();
+	pub_ft_transformed_.init(nh_, "ft/l_gripper_transformed",10);
+	pub_ft_transformed_.lock();
+	pub_ft_transformed_.msg_.header.frame_id = root_name;
+	pub_ft_transformed_.unlock();
 
 
 	ROS_INFO("Neuroadpative Controller is initialized!");
@@ -230,9 +224,6 @@ void PR2adaptNeuroControllerClass::update()
 //			force_measured_(i) += J_(i,j) * tau_measured_(j);
 //	}
 
-	///////////////////////////////
-	// Human force input
-	// Force error
 
 	/***************** SENSOR UPDATE *****************/
 
@@ -290,15 +281,15 @@ void PR2adaptNeuroControllerClass::update()
 		std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
 		l_ft_samples    = l_ftData_vector.size() - 1;
 
-		std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-		r_ft_samples    = r_ftData_vector.size() - 1;
+//		std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
+//		r_ft_samples    = r_ftData_vector.size() - 1;
 
 		// Measure bias after the arm is in position
 		if( !biasMeasured &&  loop_count_> 3000)
 		{
 			// set FT sensor bias due to gravity				// FIXME this will change as the gripper moves
 			l_ftBias.wrench = l_ftData_vector[l_ft_samples];	// FIXME use a moving average
-			r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+//			r_ftBias.wrench = r_ftData_vector[r_ft_samples];
 
 			biasMeasured = true;
 		}
@@ -312,35 +303,24 @@ void PR2adaptNeuroControllerClass::update()
 		l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z - l_ftBias.wrench.torque.z;
 
 		//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-		r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
-		r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
-		r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
-		r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
-		r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
-		r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
+//		r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
+//		r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
+//		r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
+//		r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
+//		r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
+//		r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
 
 		//  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
 
-//		rosrun tf tf_echo l_force_torque_link l_gripper_tool_frame
-//		- Translation: [-0.000, 0.000, -0.180]
-//		- Rotation: in Quaternion [0.406, 0.579, -0.406, 0.579]
-//		            in RPY [3.142, 1.571, 1.919]
-//		CartVec tf_tool;
-//		tf_tool(0) = 0;
-//		tf_tool(1) = 0;
-//		tf_tool(2) = 0;
-//		tf_tool(3) = 3.142;
-//		tf_tool(4) = 1.571;
-//		tf_tool(5) = 1.919;
 		tf::wrenchMsgToEigen(l_ftData.wrench, wrench_);
 
 		//wrench_ = affine2CartVec(CartVec2Affine(tf_tool)*CartVec2Affine(wrench_));
 
-//		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
-//		Eigen::Vector3d tauFT( l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z );
+		//		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
+		//		Eigen::Vector3d tauFT( l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z );
 
-//		forceFT << l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z;
-//		tauFT << l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z;
+		//		forceFT << l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z;
+		//		tauFT << l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z;
 
 		forceFT(0) = l_ftData.wrench.force.x;
 		forceFT(1) = l_ftData.wrench.force.y;
@@ -353,16 +333,16 @@ void PR2adaptNeuroControllerClass::update()
 		// **************************************
 		// Force transformation
 		// FIXME this code produces the correct results but crashes the RT loop
-//		double px = x_ft_.translation().x();
-//		double py = x_ft_.translation().y();
-//		double pz = x_ft_.translation().z();
-//		W_mat_ << 0,-pz,py,
-//			      pz,0,-px,
-//			      -py,px,0;
+		//		double px = x_ft_.translation().x();
+		//		double py = x_ft_.translation().y();
+		//		double pz = x_ft_.translation().z();
+		//		W_mat_ << 0,-pz,py,
+		//			      pz,0,-px,
+		//			      -py,px,0;
 
-//		W_mat_ << 0, -x_ft_.translation().z(), x_ft_.translation().y(),
-//				  x_ft_.translation().z(), 0, -x_ft_.translation().x(),
-//			      -x_ft_.translation().y(), x_ft_.translation().x(), 0;
+		//		W_mat_ << 0, -x_ft_.translation().z(), x_ft_.translation().y(),
+		//				  x_ft_.translation().z(), 0, -x_ft_.translation().x(),
+		//			      -x_ft_.translation().y(), x_ft_.translation().x(), 0;
 
 		W_mat_(0,0) = 0;
 		W_mat_(0,1) = -x_ft_.translation().z();
@@ -388,12 +368,6 @@ void PR2adaptNeuroControllerClass::update()
 
 		// **************************************
 
-		//                               w       x       y      z
-//		Eigen::Quaterniond ft_to_acc(0.579, -0.406, -0.579, 0.406);					// FIXME is this correct? right vs left?
-//		FT_transformed_force = ft_to_acc._transformVector( forceFT );				// TODO add wrench
-//		FT_transformed_force(1) = - FT_transformed_force(1);						// This should be in torso_lift_link (root_name)
-//		transformed_force = FT_transformed_force;
-
 		transformed_force = forceTorso;
 		//transformed_force = Eigen::Vector3d::Zero();
 	}
@@ -403,8 +377,8 @@ void PR2adaptNeuroControllerClass::update()
 	if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
 	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
 
-	// Human force input END
-	///////////////////////////////
+
+
 
 	/***************** UPDATE *****************/
 
@@ -423,8 +397,7 @@ void PR2adaptNeuroControllerClass::update()
 	//double circleAmpl = (circleUlim - circleLlim)/2 ;
 
 
-	// Calculate a Cartesian restoring force.
-	computePoseError(x_, x_d_, xerr_);			// TODO: Use xd_filtered_ instead
+
 
 
 	// Current joint positions and velocities
@@ -464,12 +437,12 @@ void PR2adaptNeuroControllerClass::update()
       task_ref(2) = cartIniZ ;
     }*/
 
-//	if( !forceTorqueOn )
-//	{
-		/////////////////////////
-		// Simulated human model
+	//	if( !forceTorqueOn )
+	//	{
+	/////////////////////////
+	// Simulated human model
 
-		/*
+	/*
       // Open loop version
       ode_init_x[2] = task_ref(1); // q_r
       ode_init_x[3] = 0          ; // qd_r
@@ -501,11 +474,11 @@ void PR2adaptNeuroControllerClass::update()
 
 
       ROS_ERROR_STREAM("USING Simulated human model");
-		 */
+	 */
 
-		// END Simulated human model
-		/////////////////////////
-//	}
+	// END Simulated human model
+	/////////////////////////
+	//	}
 
 	/***************** REFERENCE TRAJECTORY *****************/
 
@@ -513,15 +486,15 @@ void PR2adaptNeuroControllerClass::update()
 	{
 		t_r(0) = transformed_force(0) ;			// FIXME make sure orientation is correct
 		t_r(1) = transformed_force(1) ;
-//	    t_r(2) = transformed_force(2) ;
-//	    t_r(3) = r_ftData.wrench.torque.x;		// FIXME transform wrenches
-//	    t_r(4) = r_ftData.wrench.torque.y;
-//	    t_r(5) = r_ftData.wrench.torque.z;
+		//	    t_r(2) = transformed_force(2) ;
+		//	    t_r(3) = r_ftData.wrench.torque.x;		// FIXME transform wrenches
+		//	    t_r(4) = r_ftData.wrench.torque.y;
+		//	    t_r(5) = r_ftData.wrench.torque.z;
 	}
-//	else
-//	{
-//		t_r = force_measured_;					// Computed from joint efforts
-//	}
+	//	else
+	//	{
+	//		t_r = force_measured_;					// Computed from joint efforts
+	//	}
 
 	t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
 
@@ -534,7 +507,7 @@ void PR2adaptNeuroControllerClass::update()
 //	tmp(4) = l_ftData.wrench.torque.y ;
 //	tmp(5) = l_ftData.wrench.torque.z ;
 
-//	t_r = J_acc_.transpose() * tmp;
+	//	t_r = J_acc_.transpose() * tmp;
 
 	/***************** OUTER LOOP *****************/
 
@@ -555,13 +528,16 @@ void PR2adaptNeuroControllerClass::update()
 
 
 	// PD controller
-	/*
+/*
+	// Calculate a Cartesian restoring force.
+	computePoseError(x_, x_d_, xerr_);			// TODO: Use xd_filtered_ instead
+
 	CartVec kp, kd;
 	kp << 100.0,100.0,100.0,100.0,100.0,100.0;
 	kd << 1.0,1.0,1.0,1.0,1.0,1.0;
 	// F    = -(       Kp * (x-x_dis)   +     Kd * (xdot - 0)    )
 	force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
-	*/
+*/
 
 	JacobianTrans = J_.transpose();
 
@@ -582,7 +558,7 @@ void PR2adaptNeuroControllerClass::update()
 	I.setIdentity();
 	nullSpace = I - J_pinv * J_;
 
-	  // Computes the desired joint torques for achieving the posture
+	// Computes the desired joint torques for achieving the posture
 	nullspaceTorque.setZero();
 	if (useNullspacePose)
 	{
@@ -633,7 +609,7 @@ void PR2adaptNeuroControllerClass::update()
 
 
 
-   /***************** TORQUE *****************/
+	/***************** TORQUE *****************/
 
 	// Torque Saturation							(if a torque command is larger than the saturation value, then scale all torque values such that torque_i=saturation_i)
 	double sat_scaling = 1.0;
@@ -649,24 +625,24 @@ void PR2adaptNeuroControllerClass::update()
 	chain_.setEfforts( tau_c_ );
 
 
-   /***************** DATA COLLECTION *****************/
+	/***************** DATA COLLECTION *****************/
 
 	//bufferData( dt );
 
 
-   /***************** DATA PUBLISHING *****************/
+	/***************** DATA PUBLISHING *****************/
 
 
-	  if (loop_count_ % 10 == 0 && publishRTtopics)
-	  {
-	    if (pub_x_desi_.trylock()) {
-	      pub_x_desi_.msg_.header.stamp = last_time_;
-	      //tf::poseEigenToMsg(CartVec2Affine(X_m), pub_x_desi_.msg_.pose);
-	      tf::poseEigenToMsg(x_ft_, pub_x_desi_.msg_.pose);
-	      pub_x_desi_.unlockAndPublish();
-	    }
+	if (loop_count_ % 10 == 0 && publishRTtopics)
+	{
+		if (pub_x_desi_.trylock()) {
+			pub_x_desi_.msg_.header.stamp = last_time_;
+			//tf::poseEigenToMsg(CartVec2Affine(X_m), pub_x_desi_.msg_.pose);
+			tf::poseEigenToMsg(x_ft_, pub_x_desi_.msg_.pose);
+			pub_x_desi_.unlockAndPublish();
+		}
 
-	    /*
+		/*
 	    if (pub_state_.trylock()) {
 	      // Headers
 	      pub_state_.msg_.header.stamp = last_time_;
@@ -702,22 +678,22 @@ void PR2adaptNeuroControllerClass::update()
 
 	      pub_state_.unlockAndPublish();
 	    }
-	    */
+		 */
 
-	    if (pub_ft_.trylock()) {
-	    	pub_ft_.msg_.header.stamp = last_time_;
-	    	tf::wrenchEigenToMsg(wrench_, pub_ft_.msg_.wrench);
-	    	//pub_ft_.msg_.wrench = l_ftData.wrench;
-	    	pub_ft_.unlockAndPublish();
-	    }
+		if (pub_ft_.trylock()) {
+			pub_ft_.msg_.header.stamp = last_time_;
+			tf::wrenchEigenToMsg(wrench_, pub_ft_.msg_.wrench);
+			//pub_ft_.msg_.wrench = l_ftData.wrench;
+			pub_ft_.unlockAndPublish();
+		}
 
-	    if (pub_ft_transformed_.trylock()) {
-	    	pub_ft_transformed_.msg_.header.stamp = last_time_;
-	    	tf::wrenchEigenToMsg(wrench_transformed_, pub_ft_transformed_.msg_.wrench);
-	    	pub_ft_transformed_.unlockAndPublish();
-	    }
+		if (pub_ft_transformed_.trylock()) {
+			pub_ft_transformed_.msg_.header.stamp = last_time_;
+			tf::wrenchEigenToMsg(wrench_transformed_, pub_ft_transformed_.msg_.wrench);
+			pub_ft_transformed_.unlockAndPublish();
+		}
 
-	  }
+	}
 
 
 }

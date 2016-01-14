@@ -3,7 +3,7 @@ port               : /dev/ttyACM0
 baud               : 2000000
 
 useCurrentCartPose : false
-useNullspacePose   : false
+useNullspacePose   : true
 forceTorqueOn      : false
 useFlexiForce      : false
 accelerometerOn    : false
@@ -170,7 +170,7 @@ circleUlim            : 1.5
 
 nnNum_Inputs          : 35 
 nnNum_Outputs         : 7
-nnNum_Hidden          : 10
+nnNum_Hidden          : 5
 nnNum_Error           : 7  
 nnNum_Joints          : 7  
 
