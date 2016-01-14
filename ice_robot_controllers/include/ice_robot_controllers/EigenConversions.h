@@ -15,7 +15,7 @@ namespace pr2_controller_ns{
 
 typedef Eigen::Matrix<double, 6, 1> CartVec;
 
-Eigen::Quaterniond
+inline Eigen::Quaterniond
 euler2Quaternion( const double roll,
                   const double pitch,
                   const double yaw )
@@ -28,7 +28,7 @@ euler2Quaternion( const double roll,
     return q;
 }
 
-Eigen::Vector3d
+inline Eigen::Vector3d
 quaternion2Euler( Eigen::Quaterniond q )
 {
 	Eigen::Matrix3d mat = q.matrix();
@@ -36,7 +36,7 @@ quaternion2Euler( Eigen::Quaterniond q )
     return rpy;
 }
 
-CartVec
+inline CartVec
 affine2CartVec( Eigen::Affine3d a )
 {
 	CartVec x;
@@ -54,7 +54,7 @@ affine2CartVec( Eigen::Affine3d a )
     return x;
 }
 
-Eigen::Affine3d
+inline Eigen::Affine3d
 CartVec2Affine( CartVec a )
 {
 	Eigen::Affine3d x;
