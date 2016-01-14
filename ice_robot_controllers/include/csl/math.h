@@ -17,7 +17,7 @@ namespace math
 {
 
 // FIXME test this
-Eigen::MatrixXd upperTriangularVector( Eigen::MatrixXd & A )
+inline Eigen::MatrixXd upperTriangularVector( Eigen::MatrixXd & A )
 {
 	  Eigen::MatrixXd upperTriVec(A.rows()*(A.rows()+1)/2, 1);
 

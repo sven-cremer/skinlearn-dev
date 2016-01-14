@@ -105,7 +105,7 @@ static void computePoseError(const Eigen::Affine3d &xact, const Eigen::Affine3d 
 
 
 
-void computeNullspace(Eigen::Matrix<double, 6, 7> J_,
+inline void computeNullspace(Eigen::Matrix<double, 6, 7> J_,
 		                 Eigen::Matrix<double, 7, 7> N_)
 
 {

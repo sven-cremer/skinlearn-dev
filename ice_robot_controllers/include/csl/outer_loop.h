@@ -19,7 +19,7 @@ typedef boost::array<double, 21> state_type;
 typedef boost::array<double, 3> fir_state_type;
 typedef boost::array<double, 6> oneDmsd_state_type;
 
-void mass_spring_damper_model( const state_type &x , state_type &dxdt , double t )
+inline void mass_spring_damper_model( const state_type &x , state_type &dxdt , double t )
 {
 //      double a = 10  ;
       double m = 1  ; // double m = a*a ;
@@ -52,7 +52,7 @@ void mass_spring_damper_model( const state_type &x , state_type &dxdt , double t
       dxdt[20] = 0 ;
 }
 
-void oneDmsd_model( const oneDmsd_state_type &x , oneDmsd_state_type &dxdt , double t )
+inline void oneDmsd_model( const oneDmsd_state_type &x , oneDmsd_state_type &dxdt , double t )
 {
       double  m = x[3 ]  ; // mass
       double  k = x[4 ]  ; // spring
@@ -71,7 +71,7 @@ void oneDmsd_model( const oneDmsd_state_type &x , oneDmsd_state_type &dxdt , dou
 
 }
 
-void task_model( const fir_state_type &x , fir_state_type &dxdt , double t )
+inline void task_model( const fir_state_type &x , fir_state_type &dxdt , double t )
 {
       double a = 10; //0.004988;
       double b = 10; //0.995;
