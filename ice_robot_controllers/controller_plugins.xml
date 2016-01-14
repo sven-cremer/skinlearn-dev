@@ -2,4 +2,7 @@
   <class name="ice_robot_controllers/PR2CartneuroControllerClass"
   		 type="pr2_controller_ns::PR2CartneuroControllerClass"
   		 base_class_type="pr2_controller_interface::Controller" />
+  <class name="ice_robot_controllers/PR2adaptNeuroControllerClass"
+  		 type="pr2_controller_ns::PR2adaptNeuroControllerClass"
+  		 base_class_type="pr2_controller_interface::Controller" />
 </library>

@@ -59,6 +59,7 @@ add_library(oelLIB
 )
 add_library(ice_robot_controllers
   src/cartneuroController.cpp
+  src/adaptNeuroController.cpp
 )
 
 #add_library(outer_loop src/outer_loop.cpp)
@@ -71,6 +72,11 @@ add_dependencies(ice_robot_controllers pr2_gripper_sensor_msgs_generate_messages
 add_dependencies(ice_robot_controllers ${ice_robot_controllers_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 pr2_enable_rpath(ice_robot_controllers)
 
+
+#############
+## Install ##
+#############
+
 install(TARGETS ice_robot_controllers
    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
@@ -82,49 +88,3 @@ install(DIRECTORY include/${PROJECT_NAME}/
 install(FILES controller_plugins.xml
    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-## Declare a cpp executable
-# add_executable(ice_robot_controllers_node src/ice_robot_controllers_node.cpp)
-
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(ice_robot_controllers_node ice_robot_controllers_generate_messages_cpp)
-
-## Specify libraries to link a library or executable target against
-# target_link_libraries(ice_robot_controllers_node
-#   ${catkin_LIBRARIES}
-# )
-
-#############
-## Install ##
-#############
-
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
-
-## Mark executable scripts (Python etc.) for installation
-## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark executables and/or libraries for installation
-# install(TARGETS ice_robot_controllers ice_robot_controllers_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
-
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
