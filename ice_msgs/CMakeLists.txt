@@ -31,6 +31,9 @@ add_service_files(DIRECTORY srv FILES
   setCarteDofMatrix.srv
   setGains.srv
   setValue.srv
+  setBool.srv
+  setNNweights.srv
+  getNNweights.srv
 )
 
 generate_messages(DEPENDENCIES
