@@ -27,6 +27,8 @@ namespace neural_network {
  */
 class OneLayerNeuralNetworkController {
 
+	bool updateWeights;
+
         double num_Inputs  ; // n Size of the inputs
         double num_Outputs ; // m Size of the outputs
         double num_Hidden  ; // l Size of the hidden layer
@@ -70,6 +72,8 @@ public:
 
 	OneLayerNeuralNetworkController()
 	{
+		updateWeights = true;
+
           changeNNstructure( 35 ,   // num_Inputs
                              7  ,   // num_Outputs
                              10 ,   // num_Hidden
@@ -238,6 +242,18 @@ public:
 	{
 		return W_trans;
 	}
+	void setInnerWeights(Eigen::MatrixXd V_trans_)	// TODO check size
+	{
+		V_trans = V_trans_;
+	}
+	void setOuterWeights(Eigen::MatrixXd W_trans_)
+	{
+		W_trans = W_trans_;
+	}
+	void setUpdateWeights(bool updateWeights_)
+	{
+		updateWeights = updateWeights_;
+	}
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
@@ -317,6 +333,9 @@ void OneLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
 
 	// control torques
 	tau = Kv.asDiagonal()*r + nn_ON*y - feedForwardForce*t_r ;
+
+	if(!updateWeights)
+		return;
 
 	//
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
