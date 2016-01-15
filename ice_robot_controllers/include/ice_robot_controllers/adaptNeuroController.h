@@ -399,9 +399,6 @@ private:
 	double intentEst_delT      ;
 	double intentEst_M         ;
 
-	Eigen::MatrixXd eigen_temp_joint;
-	KDL::JntArray kdl_temp_joint_;
-
 	bool setRefTraj( ice_msgs::setCartPose::Request  & req ,
 			           ice_msgs::setCartPose::Response & resp );
 
@@ -471,10 +468,6 @@ public:
 	void starting();
 	void update();
 	void stopping();
-
-	Eigen::MatrixXd JointKdl2Eigen( KDL::JntArray & joint_ );
-	Eigen::MatrixXd JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
-	KDL::JntArray JointEigen2Kdl( Eigen::VectorXd & joint );
 
 	void calcHumanIntentPos( Eigen::Vector3d & force, Eigen::VectorXd & pos, double delT, double m );
 

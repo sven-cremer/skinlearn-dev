@@ -457,10 +457,6 @@ public:
 	void update();
 	void stopping();
 
-	Eigen::MatrixXd JointKdl2Eigen( KDL::JntArray & joint_ );
-	Eigen::MatrixXd JointVelKdl2Eigen( KDL::JntArrayVel & joint_ );
-	KDL::JntArray JointEigen2Kdl( Eigen::VectorXd & joint );
-
 	void calcHumanIntentPos( Eigen::Vector3d & force, Eigen::VectorXd & pos, double delT, double m );
 
 	void readForceValuesCB(const geometry_msgs::WrenchConstPtr& wrench_msg);	// TODO change this message type to a vector

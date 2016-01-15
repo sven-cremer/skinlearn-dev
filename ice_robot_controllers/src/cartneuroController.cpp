@@ -1828,48 +1828,6 @@ bool PR2CartneuroControllerClass::toggleFixedWeights( ice_msgs::fixedWeightToggl
 void PR2CartneuroControllerClass::stopping()
 {}
 
-Eigen::MatrixXd
-PR2CartneuroControllerClass::JointKdl2Eigen( KDL::JntArray & joint_ )
-{
-	eigen_temp_joint(0) = joint_(0);
-	eigen_temp_joint(1) = joint_(1);
-	eigen_temp_joint(2) = joint_(2);
-	eigen_temp_joint(3) = joint_(3);
-	eigen_temp_joint(4) = joint_(4);
-	eigen_temp_joint(5) = joint_(5);
-	eigen_temp_joint(6) = joint_(6);
-
-	return eigen_temp_joint;
-}
-
-Eigen::MatrixXd
-PR2CartneuroControllerClass::JointVelKdl2Eigen( KDL::JntArrayVel & joint_ )
-{
-	eigen_temp_joint(0) = joint_.qdot(0);
-	eigen_temp_joint(1) = joint_.qdot(1);
-	eigen_temp_joint(2) = joint_.qdot(2);
-	eigen_temp_joint(3) = joint_.qdot(3);
-	eigen_temp_joint(4) = joint_.qdot(4);
-	eigen_temp_joint(5) = joint_.qdot(5);
-	eigen_temp_joint(6) = joint_.qdot(6);
-
-	return eigen_temp_joint;
-}
-
-KDL::JntArray
-PR2CartneuroControllerClass::JointEigen2Kdl( Eigen::VectorXd & joint )
-{
-	kdl_temp_joint_(0) = joint(0);
-	kdl_temp_joint_(1) = joint(1);
-	kdl_temp_joint_(2) = joint(2);
-	kdl_temp_joint_(3) = joint(3);
-	kdl_temp_joint_(4) = joint(4);
-	kdl_temp_joint_(5) = joint(5);
-	kdl_temp_joint_(6) = joint(6);
-
-	return kdl_temp_joint_;
-}
-
 void
 PR2CartneuroControllerClass::calcHumanIntentPos( Eigen::Vector3d & force,
 		Eigen::VectorXd & pos,
