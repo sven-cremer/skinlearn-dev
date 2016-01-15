@@ -67,6 +67,11 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	if(useFlexiForce)
 		sub_command_ = nh_.subscribe<geometry_msgs::Wrench>("command", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
 
+	// NN weights
+	updateNNweights_srv_  = nh_.advertiseService("updateNNweights" , &PR2adaptNeuroControllerClass::updateNNweights   , this);
+	setNNweights_srv_  = nh_.advertiseService("setNNweights" , &PR2adaptNeuroControllerClass::setNNweights   , this);
+	getNNweights_srv_  = nh_.advertiseService("getNNweights" , &PR2adaptNeuroControllerClass::getNNweights   , this);
+
 	/////////////////////////
 	// DATA COLLECTION
 	save_srv_                = nh_.advertiseService("save"               , &PR2adaptNeuroControllerClass::save                 , this);
@@ -623,7 +628,6 @@ void PR2adaptNeuroControllerClass::update()
 
 	// Send torque command
 	chain_.setEfforts( tau_c_ );
-
 
 	/***************** DATA COLLECTION *****************/
 
@@ -1803,6 +1807,29 @@ bool PR2adaptNeuroControllerClass::toggleFixedWeights( ice_msgs::fixedWeightTogg
 /// Controller stopping in realtime
 void PR2adaptNeuroControllerClass::stopping()
 {}
+
+
+bool PR2adaptNeuroControllerClass::updateNNweights( ice_msgs::setBool::Request& req,
+		                                            ice_msgs::setBool::Response& resp )
+{
+
+	nnController.setUpdateWeights(req.variable);
+	resp.success = true;
+
+	return true;
+}
+bool PR2adaptNeuroControllerClass::setNNweights( ice_msgs::setNNweights::Request& req,
+		                                         ice_msgs::setNNweights::Response& resp )
+{
+
+	return true;
+}
+bool PR2adaptNeuroControllerClass::getNNweights( ice_msgs::getNNweights::Request& req,
+		                                         ice_msgs::getNNweights::Response& resp )
+{
+
+	return true;
+}
 
 Eigen::MatrixXd
 PR2adaptNeuroControllerClass::JointKdl2Eigen( KDL::JntArray & joint_ )

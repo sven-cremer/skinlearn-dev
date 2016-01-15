@@ -38,6 +38,9 @@
 #include <ice_msgs/saveControllerData.h>
 #include <ice_msgs/setCartPose.h>
 #include <ice_msgs/fixedWeightToggle.h>
+#include <ice_msgs/setBool.h>
+#include <ice_msgs/getNNweights.h>
+#include <ice_msgs/setNNweights.h>
 
 #include "geometry_msgs/WrenchStamped.h"
 #include "geometry_msgs/Pose.h"
@@ -416,6 +419,17 @@ private:
 
 	bool toggleFixedWeights( ice_msgs::fixedWeightToggle::Request & req,
 			                    ice_msgs::fixedWeightToggle::Response& resp );
+
+	bool updateNNweights( ice_msgs::setBool::Request& req,
+			              ice_msgs::setBool::Response& resp );
+	bool setNNweights(    ice_msgs::setNNweights::Request& req,
+			              ice_msgs::setNNweights::Response& resp );
+	bool getNNweights(    ice_msgs::getNNweights::Request& req,
+			              ice_msgs::getNNweights::Response& resp );
+
+	ros::ServiceServer updateNNweights_srv_;
+	ros::ServiceServer setNNweights_srv_;
+	ros::ServiceServer getNNweights_srv_;
 
 	ros::ServiceServer save_srv_;
 	ros::ServiceServer publish_srv_;
