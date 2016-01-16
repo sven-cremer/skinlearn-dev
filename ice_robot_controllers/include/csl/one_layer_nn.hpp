@@ -245,10 +245,12 @@ public:
 	void setInnerWeights(Eigen::MatrixXd V_trans_)	// TODO check size
 	{
 		V_trans_next = V_trans_;
+		V_trans = V_trans_;
 	}
 	void setOuterWeights(Eigen::MatrixXd W_trans_)
 	{
 		W_trans_next = W_trans_;
+		W_trans = W_trans_;
 	}
 	void setUpdateWeights(bool updateWeights_)
 	{

@@ -52,7 +52,7 @@ void displayMainMenu()
 
 void displayNNweightsMenu()
 {
-	string tmp1 = "Updating: " + (string)(controller_active ?  "YES" : "NO");
+	string tmp1 = "Updating: " + (string)(updating_weights ?  "YES" : "NO");
 	puts("---------------------------");
 	puts("MENU:   NN weights     ");
 	puts(tmp1.c_str());
@@ -112,11 +112,7 @@ int main(int argc, char** argv)
   ros::ServiceClient getNNWeights_srv_ = nh.serviceClient<ice_msgs::getNNweights>("/pr2_adaptNeuroController/getNNweights");
 
   // ROS messages
-  ice_msgs::setNNweights setNNWeights_msg_;
-  ice_msgs::getNNweights getNNWeights_msg_;
   ice_msgs::setBool setBool_msgs_;
-
-  rosbag::Bag bag;
 
 
   signal(SIGINT,quit);
@@ -205,6 +201,7 @@ int main(int argc, char** argv)
 		  case 's':
 		  {
 			  // Get weights
+			  ice_msgs::getNNweights getNNWeights_msg_;
 			  if (getNNWeights_srv_.call(getNNWeights_msg_))
 			  {
 				  // Save message to file
@@ -215,6 +212,8 @@ int main(int argc, char** argv)
 				  tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
 
 				  fname = string(cmd)+".bag";				// TODO: add package path
+
+				  rosbag::Bag bag;
 
 				  bag.open(fname.c_str(), rosbag::bagmode::Write);
 
@@ -235,17 +234,20 @@ int main(int argc, char** argv)
 			  // Ask for file name
 			  tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
 			  char cmd[100];
-			  puts("*** Enter full name of rosbag file ***");
+			  puts("*** Enter name of rosbag file ***");
 			  cin.getline(cmd,100);
 			  tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
 
-			  fname = string(cmd);						// TODO: add package path
+			  fname = string(cmd)+".bag";				// TODO: add package path
 
 			  // Load NN from file
+			  rosbag::Bag bag;
 			  bag.open(fname.c_str(), rosbag::bagmode::Read);
 
 			  std::vector<std::string> topics;
 			  topics.push_back(std::string("network"));
+
+			  ice_msgs::setNNweights setNNWeights_msg_;
 
 			  rosbag::View view(bag, rosbag::TopicQuery(topics));
 
@@ -254,18 +256,28 @@ int main(int argc, char** argv)
 				  ice_msgs::twoLayerNN::ConstPtr w = m.instantiate<ice_msgs::twoLayerNN>();
 				  if (w != NULL)
 				  {
-					  std::cout<<"num_Inputs: "<<w->num_Inputs<<"\n";
-					  std::cout<<"num_Hidden: "<<w->num_Hidden<<"\n";
-					  std::cout<<"num_Outputs: "<<w->num_Outputs<<"\n";
-					  std::cout<<"V: "<<w->V<<"\n";
-					  std::cout<<"-------------\n";
-					  std::cout<<"W: "<<w->W<<"\n";
+//					  std::cout<<"num_Inputs:  "<<w->num_Inputs<<"\n";
+//					  std::cout<<"num_Hidden:  "<<w->num_Hidden<<"\n";
+//					  std::cout<<"num_Outputs: "<<w->num_Outputs<<"\n";
+//					  std::cout<<"V: "<<w->V<<"\n";
+//					  std::cout<<"-------------\n";
+//					  std::cout<<"W: "<<w->W<<"\n";
+					  setNNWeights_msg_.request.net = *w;
 				  }
 			  }
 
 			  bag.close();
 
-			  // TODO: Call service
+			  // Call service
+			  if (!setNNWeights_srv_.call(setNNWeights_msg_))
+			  {
+				  ROS_ERROR("Failed to call service!");
+			  }
+
+			  if(!setNNWeights_msg_.response.success)
+			  {
+				  ROS_ERROR("Failed to set weights!");
+			  }
 
 		  }
 			  break;
