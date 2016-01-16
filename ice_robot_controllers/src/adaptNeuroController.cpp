@@ -67,6 +67,8 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	if(useFlexiForce)
 		sub_command_ = nh_.subscribe<geometry_msgs::Wrench>("command", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
 
+	runExperiment_srv_ = nh_.advertiseService("runExperiment" , &PR2adaptNeuroControllerClass::runExperiment   , this);
+	learnWeights_srv_ = nh_.advertiseService("learnWeights" , &PR2adaptNeuroControllerClass::learnWeights   , this);
 	// NN weights
 	updateNNweights_srv_  = nh_.advertiseService("updateNNweights" , &PR2adaptNeuroControllerClass::updateNNweights   , this);
 	setNNweights_srv_  = nh_.advertiseService("setNNweights" , &PR2adaptNeuroControllerClass::setNNweights   , this);
@@ -152,7 +154,7 @@ void PR2adaptNeuroControllerClass::starting()
 
 	// Initialize the phase of the circle as zero.
 	circle_phase_ = 0.0;
-	startCircleTraj = true;
+	startCircleTraj = false;
 
 	// Also reset the time-of-last-servo-cycle.
 	last_time_     = robot_state_->getTime() ;
@@ -390,7 +392,7 @@ void PR2adaptNeuroControllerClass::update()
 	if(executeCircleTraj)
 	{
 		// Follow a circle of 10cm at 0.4 rad/sec.
-		circle_phase_ += 0.4 * dt;
+		circle_phase_ += circle_rate * dt;
 
 		Eigen::Matrix<double, 3, 1> circle(0,0,0);
 		circle.y() = 0.10 * sin(circle_phase_);
@@ -398,6 +400,12 @@ void PR2adaptNeuroControllerClass::update()
 
 		x_d_ = x0_;
 		x_d_.translation() += circle;
+
+//		if( x_d_.translation() == x0_.translation() )
+//			loopsCircleTraj++;
+
+		if(circle_phase_ > (2*3.14159)*3)
+			executeCircleTraj = false;
 	}
 	//double circleAmpl = (circleUlim - circleLlim)/2 ;
 
@@ -1503,6 +1511,58 @@ bool PR2adaptNeuroControllerClass::publish( std_srvs::Empty::Request & req,
 }
 
 
+/// Service call to run an experiment
+bool PR2adaptNeuroControllerClass::learnWeights(	ice_msgs::setValue::Request & req,
+														ice_msgs::setValue::Response& resp )
+{
+	/* Record the starting time. */
+	ros::Time started = ros::Time::now();
+
+	// Re-set NN
+	nnController.setUpdateWeights(false);
+	Eigen::MatrixXd V_trans;
+	Eigen::MatrixXd W_trans;
+	V_trans.setOnes( num_Hidden , num_Inputs + 1 ) ;
+	W_trans.setZero( num_Outputs, num_Hidden     ) ;
+	nnController.setInnerWeights(V_trans);
+	nnController.setOuterWeights(W_trans);
+	nnController.setUpdateWeights(true);
+
+	// Start trajectory
+	if(req.value > 0)
+	{
+		// Start circle traj
+		executeCircleTraj = true;
+
+		circle_rate = req.value;
+		circle_phase_=0;
+		loopsCircleTraj = 0;
+
+	}
+
+	return true;
+}
+
+bool PR2adaptNeuroControllerClass::runExperiment(	ice_msgs::setValue::Request & req,
+														ice_msgs::setValue::Response& resp )
+{
+	/* Record the starting time. */
+	ros::Time started = ros::Time::now();
+
+	// Start trajectory
+	if(req.value > 0)
+	{
+		// Start circle traj
+		executeCircleTraj = true;
+
+		circle_rate = req.value;
+		circle_phase_=0;
+		loopsCircleTraj = 0;
+	}
+
+	return true;
+}
+
 /// Service call to capture and extract the data
 bool PR2adaptNeuroControllerClass::capture(	std_srvs::Empty::Request & req,
                                                 std_srvs::Empty::Response& resp )
@@ -1909,6 +1969,7 @@ bool PR2adaptNeuroControllerClass::initTrajectories()
 	if (!nh_.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; return false; }
 	if (!nh_.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
 
+	loopsCircleTraj = 0;
 
 	// Desired cartesian pose
 	cartDesX     = 0.0 ;

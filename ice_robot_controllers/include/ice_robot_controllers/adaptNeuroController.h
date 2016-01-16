@@ -41,6 +41,7 @@
 #include <ice_msgs/setBool.h>
 #include <ice_msgs/getNNweights.h>
 #include <ice_msgs/setNNweights.h>
+#include <ice_msgs/setValue.h>
 
 #include "geometry_msgs/WrenchStamped.h"
 #include "geometry_msgs/Pose.h"
@@ -393,6 +394,7 @@ private:
 	double circleUlim          ;
 	double circleLlim          ;
 	bool   startCircleTraj     ;
+	int loopsCircleTraj;
 
 	bool   externalRefTraj     ;
 	bool   directlyUseTaskModel;
@@ -433,6 +435,14 @@ private:
 	ros::ServiceServer capture_srv_;
 	ros::ServiceServer setRefTraj_srv_;
 	ros::ServiceServer toggleFixedWeights_srv_;
+
+	ros::ServiceServer learnWeights_srv_;
+	ros::ServiceServer runExperiment_srv_;
+
+	bool learnWeights(	ice_msgs::setValue::Request & req,
+						    ice_msgs::setValue::Response& resp );
+	bool runExperiment(	ice_msgs::setValue::Request & req,
+						    ice_msgs::setValue::Response& resp );
 
 	void bufferData( double & dt );
 	//  void setDataPoint(dataPoint::Datum* datum, double & dt);

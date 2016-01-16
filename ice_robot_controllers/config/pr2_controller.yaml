@@ -8,7 +8,7 @@ forceTorqueOn      : false
 useFlexiForce      : false
 accelerometerOn    : false
 
-executeCircleTraj  : true
+executeCircleTraj  : false
 publishRTtopics    : false
 
 # Specifically for MRAC
@@ -164,7 +164,7 @@ lCartIniRoll          :  1.57079633
 lCartIniPitch         :  0.0
 lCartIniYaw           :  1.57079633
 
-circleRate            : 1
+circleRate            : 0.5
 circleLlim            : 0.5
 circleUlim            : 1.5
 
