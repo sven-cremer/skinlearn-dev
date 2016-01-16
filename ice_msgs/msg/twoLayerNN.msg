@@ -1,0 +1,5 @@
+int64 num_Inputs
+int64 num_Hidden
+int64 num_Outputs
+std_msgs/Float64MultiArray W
+std_msgs/Float64MultiArray V

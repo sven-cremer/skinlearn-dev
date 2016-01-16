@@ -13,6 +13,7 @@ add_message_files(DIRECTORY msg FILES
   neuroControllerState.msg
   controllerFullData.msg
   controllerParam.msg
+  twoLayerNN.msg
   # pr2_cart
   combinedError.msg
   combinedTwistError.msg

@@ -23,6 +23,7 @@
 #include <ice_msgs/getNNweights.h>
 #include <ice_msgs/setNNweights.h>
 #include <ice_msgs/getState.h>
+#include <ice_msgs/twoLayerNN.h>
 
 
 using namespace std;
@@ -116,8 +117,6 @@ int main(int argc, char** argv)
   ice_msgs::setBool setBool_msgs_;
 
   rosbag::Bag bag;
-  std::vector<std::string> topics;
-  topics.push_back(std::string("weights"));
 
 
   signal(SIGINT,quit);
@@ -190,7 +189,7 @@ int main(int argc, char** argv)
           switch(c)
           {
 		  case 't':
-
+		  {
 			  setBool_msgs_.request.variable = !updating_weights;
 
 			  if (toggle_updateWeights_srv_.call(setBool_msgs_))
@@ -201,10 +200,10 @@ int main(int argc, char** argv)
 			  {
 				  ROS_ERROR("Failed to call service!");
 			  }
-
+		  }
 			  break;
 		  case 's':
-
+		  {
 			  // Get weights
 			  if (getNNWeights_srv_.call(getNNWeights_msg_))
 			  {
@@ -220,7 +219,7 @@ int main(int argc, char** argv)
 				  bag.open(fname.c_str(), rosbag::bagmode::Write);
 
 				  //TODO:
-				  bag.write("weights", ros::Time::now(), getNNWeights_msg_.response);
+				  bag.write("network", ros::Time::now(), getNNWeights_msg_.response.net);
 
 				  bag.close();
 
@@ -229,10 +228,11 @@ int main(int argc, char** argv)
 			  {
 				  ROS_ERROR("Failed to call service!");
 			  }
+		  }
 			  break;
 		  case 'l':
-
-			  // Load weights from file
+		  {
+			  // Ask for file name
 			  tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
 			  char cmd[100];
 			  puts("*** Enter full name of rosbag file ***");
@@ -241,34 +241,33 @@ int main(int argc, char** argv)
 
 			  fname = string(cmd);						// TODO: add package path
 
-			  //TODO
+			  // Load NN from file
 			  bag.open(fname.c_str(), rosbag::bagmode::Read);
 
-//			    std::vector<std::string> topics;
-//			    topics.push_back(std::string("weights"));
-			  if(true)
-			  {
-			    rosbag::View view(bag, rosbag::TopicQuery(topics));
+			  std::vector<std::string> topics;
+			  topics.push_back(std::string("network"));
 
-			    foreach(rosbag::MessageInstance const m, view)
-			    {
-			        ice_msgs::getNNweights::Response::ConstPtr w = m.instantiate<ice_msgs::getNNweights::Response>();
-			        if (w != NULL)
-			        {
-			            std::cout<<"num_Inputs: "<<w->num_Inputs<<"\n";
-			            std::cout<<"num_Hidden: "<<w->num_Hidden<<"\n";
-			            std::cout<<"num_Outputs: "<<w->num_Outputs<<"\n";
-			            std::cout<<"V: "<<w->V<<"\n";
-			            std::cout<<"-------------\n";
-			            std::cout<<"W: "<<w->W<<"\n";
-			        }
-			    }
+			  rosbag::View view(bag, rosbag::TopicQuery(topics));
+
+			  foreach(rosbag::MessageInstance const m, view)
+			  {
+				  ice_msgs::twoLayerNN::ConstPtr w = m.instantiate<ice_msgs::twoLayerNN>();
+				  if (w != NULL)
+				  {
+					  std::cout<<"num_Inputs: "<<w->num_Inputs<<"\n";
+					  std::cout<<"num_Hidden: "<<w->num_Hidden<<"\n";
+					  std::cout<<"num_Outputs: "<<w->num_Outputs<<"\n";
+					  std::cout<<"V: "<<w->V<<"\n";
+					  std::cout<<"-------------\n";
+					  std::cout<<"W: "<<w->W<<"\n";
+				  }
+			  }
 
 			  bag.close();
-			  }
 
 			  // TODO: Call service
 
+		  }
 			  break;
 		  case 'q':
 			  stop_menu2 = true;

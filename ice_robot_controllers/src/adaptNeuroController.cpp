@@ -1627,7 +1627,7 @@ bool PR2adaptNeuroControllerClass::setNNweights( ice_msgs::setNNweights::Request
 		                                         ice_msgs::setNNweights::Response& resp )
 {
 
-    if( req.num_Inputs != num_Inputs || req.num_Hidden != num_Hidden || req.num_Outputs != num_Outputs )
+    if( req.net.num_Inputs != num_Inputs || req.net.num_Hidden != num_Hidden || req.net.num_Outputs != num_Outputs )
     {
     	resp.success = false;
     }
@@ -1635,25 +1635,25 @@ bool PR2adaptNeuroControllerClass::setNNweights( ice_msgs::setNNweights::Request
     {
     	Eigen::MatrixXd V_trans;
     	Eigen::MatrixXd W_trans;
-		V_trans.resize( req.num_Hidden , req.num_Inputs + 1 ) ;
-		W_trans.resize( req.num_Outputs, req.num_Hidden     ) ;
+		V_trans.resize( num_Hidden , num_Inputs + 1 ) ;
+		W_trans.resize( num_Outputs, num_Hidden     ) ;
 
 		int i = 0;
-		for(int r=0;r<req.num_Hidden;r++)
+		for(int r=0;r<num_Hidden;r++)
 		{
-			for(int c=0;c<req.num_Inputs + 1;c++)
+			for(int c=0;c<num_Inputs + 1;c++)
 			{
-				V_trans(r,c) = req.V.data[i];
+				V_trans(r,c) = req.net.V.data[i];
 				i++;
 			}
 		}
 
 		i=0;
-		for(int r=0;r<req.num_Outputs;r++)
+		for(int r=0;r<num_Outputs;r++)
 		{
-			for(int c=0;c<req.num_Hidden;c++)
+			for(int c=0;c<num_Hidden;c++)
 			{
-				W_trans(r,c) = req.W.data[i];
+				W_trans(r,c) = req.net.W.data[i];
 				i++;
 			}
 		}
@@ -1668,11 +1668,11 @@ bool PR2adaptNeuroControllerClass::setNNweights( ice_msgs::setNNweights::Request
 bool PR2adaptNeuroControllerClass::getNNweights( ice_msgs::getNNweights::Request& req,
 		                                         ice_msgs::getNNweights::Response& resp )
 {
-    tf::matrixEigenToMsg(nnController.getInnerWeights(), resp.V);
-    tf::matrixEigenToMsg(nnController.getOuterWeights(), resp.W);
-    resp.num_Inputs = num_Inputs;
-    resp.num_Hidden = num_Hidden;
-    resp.num_Outputs = num_Outputs;
+    tf::matrixEigenToMsg(nnController.getInnerWeights(), resp.net.V);
+    tf::matrixEigenToMsg(nnController.getOuterWeights(), resp.net.W);
+    resp.net.num_Inputs = num_Inputs;
+    resp.net.num_Hidden = num_Hidden;
+    resp.net.num_Outputs = num_Outputs;
 
 	return true;
 }
