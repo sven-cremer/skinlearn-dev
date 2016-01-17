@@ -9,6 +9,7 @@ useFlexiForce      : false
 accelerometerOn    : false
 
 executeCircleTraj  : false
+numCircleTraj      : 3
 publishRTtopics    : false
 
 # Specifically for MRAC

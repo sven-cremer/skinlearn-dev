@@ -452,6 +452,7 @@ private:
 	bool accelerometerOn;
 
 	bool executeCircleTraj;
+	int numCircleTraj;
 
 	bool initParam();
 	bool initRobot();

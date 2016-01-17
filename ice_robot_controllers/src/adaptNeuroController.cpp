@@ -404,7 +404,7 @@ void PR2adaptNeuroControllerClass::update()
 //		if( x_d_.translation() == x0_.translation() )
 //			loopsCircleTraj++;
 
-		if(circle_phase_ > (2*3.14159)*2)
+		if(circle_phase_ > (2*3.14159)*numCircleTraj)
 		{
 			executeCircleTraj = false;
 		}
@@ -1427,6 +1427,7 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/accelerometerOn",   accelerometerOn,   false);
 	nh_.param("/useFlexiForce",     useFlexiForce,     false);
 	nh_.param("/executeCircleTraj", executeCircleTraj, false);
+	nh_.param("/numCircleTraj",     numCircleTraj,     2);
 	nh_.param("/publishRTtopics",   publishRTtopics,   false);
 
 	return true;
