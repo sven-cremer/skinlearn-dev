@@ -956,7 +956,7 @@ void PR2adaptNeuroControllerClass::bufferData( double & dt )
 
 		// Neural network
 //		tf::matrixEigenToMsg(nnController.getInnerWeights(),experimentDataA_msg_[index].net.V);
-		tf::matrixEigenToMsg(nnController.getOuterWeights(),experimentDataA_msg_[index].net.W);
+//		tf::matrixEigenToMsg(nnController.getOuterWeights(),experimentDataA_msg_[index].net.W);
 //	    experimentDataA_msg_[index].net.num_Inputs = num_Inputs;
 //		experimentDataA_msg_[index].net.num_Hidden = num_Hidden;
 //		experimentDataA_msg_[index].net.num_Outputs = num_Outputs;

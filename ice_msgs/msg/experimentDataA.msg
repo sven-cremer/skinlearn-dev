@@ -2,7 +2,7 @@
 float64 dt
 
 # Neural network
-twoLayerNN net
+# twoLayerNN net
 
 # Actual trajectory
 float64 x_x
