@@ -27,6 +27,8 @@ namespace neural_network {
  */
 class TwoLayerNeuralNetworkController {
 
+	bool updateWeights;
+
         double num_Inputs  ; // n Size of the inputs
         double num_Outputs ; // m Size of the outputs
         double num_Hidden  ; // l Size of the hidden layer
@@ -70,6 +72,8 @@ public:
 
 	TwoLayerNeuralNetworkController()
 	{
+		updateWeights = true;
+
           changeNNstructure( 35 ,   // num_Inputs
                              7  ,   // num_Outputs
                              10 ,   // num_Hidden
@@ -174,8 +178,10 @@ public:
 			W_trans_next.setZero();
 
 			// Input weights should be randomly initialized
-			V_trans.setRandom();
-			V_trans_next.setRandom();
+//			V_trans.setRandom();
+//			V_trans_next.setRandom();
+			V_trans.setOnes();
+			V_trans_next.setOnes();
 
 			F.setIdentity();
 			G.setIdentity();
@@ -221,6 +227,37 @@ public:
 
 	inline Eigen::MatrixXd
 	sigmoid( Eigen::MatrixXd & z ) const;
+
+	double getInnerWeightsNorm()
+	{
+		return V_trans.norm();
+	}
+	double getOuterWeightsNorm()
+	{
+		return W_trans.norm();
+	}
+	Eigen::MatrixXd	getInnerWeights()
+	{
+		return V_trans;
+	}
+	Eigen::MatrixXd	getOuterWeights()
+	{
+		return W_trans;
+	}
+	void setInnerWeights(Eigen::MatrixXd V_trans_)	// TODO check size
+	{
+		V_trans_next = V_trans_;
+		V_trans = V_trans_;
+	}
+	void setOuterWeights(Eigen::MatrixXd W_trans_)
+	{
+		W_trans_next = W_trans_;
+		W_trans = W_trans_;
+	}
+	void setUpdateWeights(bool updateWeights_)
+	{
+		updateWeights = updateWeights_;
+	}
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
@@ -285,7 +322,7 @@ void TwoLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
                                               Eigen::VectorXd & t_r  ,
                                               Eigen::VectorXd & tau   )
 {
-	W_trans = W_trans_next;
+    W_trans = W_trans_next;
 	V_trans = V_trans_next;
 
 	// Filtered error
@@ -305,6 +342,9 @@ void TwoLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
 	// control torques
 	tau = Kv.asDiagonal()*r + nn_ON*( y - vRobust ) - feedForwardForce*t_r ;
 //	tau = (qd_m - qd) + 100*(q_m - q);
+
+	if(!updateWeights)
+		return;
 
 	//
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
