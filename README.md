@@ -102,6 +102,13 @@ duration: {secs: 60, nsecs: 0}"
 ```
 
 # Collecting data
+Starting Experiment A after modifying *pr2_controller.yaml*:
 ```
-rostopic echo -p /pr2_cartneuroController/state/W > datafile.rtp
+roslaunch ice_robot_controllers adaptNeuroController.launch
+rosservice call /pr2_adaptNeuroController/runExperimentA "value: 0.5"
+```
+Saving data:
+```
+rostopic echo -p /pr2_adaptNeuroController/experimentDataA > datafile.rtp
+rosservice call /pr2_adaptNeuroController/publishExpData "{}"
 ```
