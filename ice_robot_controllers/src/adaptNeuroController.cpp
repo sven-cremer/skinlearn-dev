@@ -955,11 +955,11 @@ void PR2adaptNeuroControllerClass::bufferData( double & dt )
 		experimentDataA_msg_[index].dt                = dt                          ;
 
 		// Neural network
-		tf::matrixEigenToMsg(nnController.getInnerWeights(),experimentDataA_msg_[index].net.V);
+//		tf::matrixEigenToMsg(nnController.getInnerWeights(),experimentDataA_msg_[index].net.V);
 		tf::matrixEigenToMsg(nnController.getOuterWeights(),experimentDataA_msg_[index].net.W);
-	    experimentDataA_msg_[index].net.num_Inputs = num_Inputs;
-		experimentDataA_msg_[index].net.num_Hidden = num_Hidden;
-		experimentDataA_msg_[index].net.num_Outputs = num_Outputs;
+//	    experimentDataA_msg_[index].net.num_Inputs = num_Inputs;
+//		experimentDataA_msg_[index].net.num_Hidden = num_Hidden;
+//		experimentDataA_msg_[index].net.num_Outputs = num_Outputs;
 
 		// Actual trajectory
 		experimentDataA_msg_[index].x_x     = X(0);
@@ -1164,7 +1164,7 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 {
 	/* Then we can publish the buffer contents. */
 	int  index;
-	for (index = 0 ; index < StoreLen ; index++)
+	for (index = 0 ; index < storage_index_ ; index++)
 	{
 		//    pubFTData_         .publish(msgFTData         [index]);
 		//    pubModelStates_    .publish(msgModelStates    [index]);
