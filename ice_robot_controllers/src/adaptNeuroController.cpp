@@ -1427,7 +1427,7 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/accelerometerOn",   accelerometerOn,   false);
 	nh_.param("/useFlexiForce",     useFlexiForce,     false);
 	nh_.param("/executeCircleTraj", executeCircleTraj, false);
-	nh_.param("/publishRTtopics",   publishRTtopics, false);
+	nh_.param("/publishRTtopics",   publishRTtopics,   false);
 
 	return true;
 }
@@ -1608,6 +1608,7 @@ bool PR2adaptNeuroControllerClass::initRobot()
 bool PR2adaptNeuroControllerClass::initTrajectories()
 {
 
+	bool success = true;
 	// Rate for circle trajectory
 	circle_rate = 3  ;
 	circleLlim  = 0  ;
@@ -1617,9 +1618,9 @@ bool PR2adaptNeuroControllerClass::initTrajectories()
 	std::string para_circleLlim  = "/circleLlim" ;
 	std::string para_circleUlim  = "/circleUlim" ;
 
-	if (!nh_.getParam( para_circleRate , circle_rate )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleRate .c_str()) ; return false; }
-	if (!nh_.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; return false; }
-	if (!nh_.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; return false; }
+	if (!nh_.getParam( para_circleRate , circle_rate )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleRate .c_str()) ; success = false; }
+	if (!nh_.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; success = false; }
+	if (!nh_.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; success = false; }
 
 	loopsCircleTraj = 0;
 
@@ -1638,12 +1639,12 @@ bool PR2adaptNeuroControllerClass::initTrajectories()
 	std::string para_cartDesPitch = "/cartDesPitch";
 	std::string para_cartDesYaw   = "/cartDesYaw";
 
-	if (!nh_.getParam( para_cartDesX     , cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX    .c_str()) ; return false; }
-	if (!nh_.getParam( para_cartDesY     , cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY    .c_str()) ; return false; }
-	if (!nh_.getParam( para_cartDesZ     , cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ    .c_str()) ; return false; }
-	if (!nh_.getParam( para_cartDesRoll  , cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; return false; }
-	if (!nh_.getParam( para_cartDesPitch , cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; return false; }
+	if (!nh_.getParam( para_cartDesX     , cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX    .c_str()) ; success = false; }
+	if (!nh_.getParam( para_cartDesY     , cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY    .c_str()) ; success = false; }
+	if (!nh_.getParam( para_cartDesZ     , cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ    .c_str()) ; success = false; }
+	if (!nh_.getParam( para_cartDesRoll  , cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; success = false; }
+	if (!nh_.getParam( para_cartDesPitch , cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; success = false; }
+	if (!nh_.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; success = false; }
 
 
 	// Initial cartesian pose
@@ -1661,15 +1662,15 @@ bool PR2adaptNeuroControllerClass::initTrajectories()
 	std::string para_cartIniPitch = "/cartIniPitch";
 	std::string para_cartIniYaw   = "/cartIniYaw";
 
-	if (!nh_.getParam( para_cartIniX     , cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartIniY     , cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartIniZ     , cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartIniRoll  , cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; return false; }
-	if (!nh_.getParam( para_cartIniPitch , cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartIniYaw   , cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; return false; }
+	if (!nh_.getParam( para_cartIniX     , cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; success = false; }
+	if (!nh_.getParam( para_cartIniY     , cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; success = false; }
+	if (!nh_.getParam( para_cartIniZ     , cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; success = false; }
+	if (!nh_.getParam( para_cartIniRoll  , cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; success = false; }
+	if (!nh_.getParam( para_cartIniPitch , cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; success = false; }
+	if (!nh_.getParam( para_cartIniYaw   , cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; success = false; }
 
 
-	return true;
+	return success;
 }
 
 bool PR2adaptNeuroControllerClass::initSensors()
