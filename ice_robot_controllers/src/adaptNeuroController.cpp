@@ -67,8 +67,8 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	if(useFlexiForce)
 		sub_command_ = nh_.subscribe<geometry_msgs::Wrench>("command", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
 
-	runExperiment_srv_ = nh_.advertiseService("runExperiment" , &PR2adaptNeuroControllerClass::runExperiment   , this);
-	learnWeights_srv_ = nh_.advertiseService("learnWeights" , &PR2adaptNeuroControllerClass::learnWeights   , this);
+	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
+
 	// NN weights
 	updateNNweights_srv_  = nh_.advertiseService("updateNNweights" , &PR2adaptNeuroControllerClass::updateNNweights   , this);
 	setNNweights_srv_  = nh_.advertiseService("setNNweights" , &PR2adaptNeuroControllerClass::setNNweights   , this);
@@ -77,7 +77,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	/////////////////////////
 	// DATA COLLECTION
 	save_srv_                = nh_.advertiseService("save"               , &PR2adaptNeuroControllerClass::save                 , this);
-	publish_srv_             = nh_.advertiseService("publish"            , &PR2adaptNeuroControllerClass::publish              , this);
+	publish_srv_             = nh_.advertiseService("publishExpData"     , &PR2adaptNeuroControllerClass::publishExperimentData              , this);
 	capture_srv_             = nh_.advertiseService("capture"            , &PR2adaptNeuroControllerClass::capture              , this);
 	setRefTraj_srv_          = nh_.advertiseService("setRefTraj"         , &PR2adaptNeuroControllerClass::setRefTraj           , this);
 	toggleFixedWeights_srv_  = nh_.advertiseService("toggleFixedWeights" , &PR2adaptNeuroControllerClass::toggleFixedWeights   , this);
@@ -89,6 +89,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	pubRobotCartPos_         = nh_.advertise< geometry_msgs::PoseStamped   >( "robot_cart_pos"       , StoreLen);
 	pubControllerParam_      = nh_.advertise< ice_msgs::controllerParam    >( "controller_params"    , StoreLen);
 	pubControllerFullData_   = nh_.advertise< ice_msgs::controllerFullData >( "controllerFullData"   , StoreLen);
+	pubExperimentDataA_	     = nh_.advertise< ice_msgs::experimentDataA    >( "experimentDataA"   , StoreLen);
 
 	storage_index_ = StoreLen;
 	// DATA COLLECTION END
@@ -403,8 +404,10 @@ void PR2adaptNeuroControllerClass::update()
 //		if( x_d_.translation() == x0_.translation() )
 //			loopsCircleTraj++;
 
-		if(circle_phase_ > (2*3.14159)*3)
+		if(circle_phase_ > (2*3.14159)*2)
+		{
 			executeCircleTraj = false;
+		}
 	}
 	//double circleAmpl = (circleUlim - circleLlim)/2 ;
 
@@ -511,25 +514,25 @@ void PR2adaptNeuroControllerClass::update()
 	nullspaceTorque.setZero();
 	if (useNullspacePose)
 	{
-		if(false)
-		{
-			// This doesn't seem to work
-			JointVec posture_err = q_posture_ - q_;
-			for (int j = 0; j < Joints; ++j)
-			{
-				if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
-					posture_err[j] = angles::normalize_angle(posture_err[j]);		// -PI to +PI
-			}
-
-			for (int j = 0; j < Joints; ++j) {
-				if (fabs(q_posture_[j] - 9999) < 1e-5)
-					posture_err[j] = 0.0;
-			}
-
-			JointVec qdd_posture = k_posture* posture_err;
-			nullspaceTorque = joint_dd_ff_.array() * (nullSpace * qdd_posture).array();
-		}
-		else
+//		if(false)
+//		{
+//			// This doesn't seem to work
+//			JointVec posture_err = q_posture_ - q_;
+//			for (int j = 0; j < Joints; ++j)
+//			{
+//				if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
+//					posture_err[j] = angles::normalize_angle(posture_err[j]);		// -PI to +PI
+//			}
+//
+//			for (int j = 0; j < Joints; ++j) {
+//				if (fabs(q_posture_[j] - 9999) < 1e-5)
+//					posture_err[j] = 0.0;
+//			}
+//
+//			JointVec qdd_posture = k_posture* posture_err;
+//			nullspaceTorque = joint_dd_ff_.array() * (nullSpace * qdd_posture).array();
+//		}
+//		else
 		{
 
 			//		qnom(0) = -0.5   ;
@@ -575,7 +578,10 @@ void PR2adaptNeuroControllerClass::update()
 
 	/***************** DATA COLLECTION *****************/
 
-	//bufferData( dt );
+	if (loop_count_ % 10 && executeCircleTraj)
+	{
+		bufferData( dt );
+	}
 
 
 	/***************** DATA PUBLISHING *****************/
@@ -946,316 +952,42 @@ void PR2adaptNeuroControllerClass::bufferData( double & dt )
 		//                tf::PoseKDLToMsg(x_m_, modelCartPos_);
 		//                tf::PoseKDLToMsg(x_  , robotCartPos_);
 
-		msgControllerFullData[index].dt                = dt                          ;
+		experimentDataA_msg_[index].dt                = dt                          ;
 
-		// Force Data
-		msgControllerFullData[index].force_x           = transformed_force(0)        ; // r_ftData.wrench.force.x     ;
-		msgControllerFullData[index].force_y           = transformed_force(1)        ; // r_ftData.wrench.force.y     ;
-		msgControllerFullData[index].force_z           = transformed_force(2)        ; // r_ftData.wrench.force.z     ;
-		msgControllerFullData[index].torque_x          = 0                           ; // r_ftData.wrench.torque.x    ;
-		msgControllerFullData[index].torque_y          = 0                           ; // r_ftData.wrench.torque.y    ;
-		msgControllerFullData[index].torque_z          = 0                           ; // r_ftData.wrench.torque.z    ;
+		// Neural network
+		tf::matrixEigenToMsg(nnController.getInnerWeights(),experimentDataA_msg_[index].net.V);
+		tf::matrixEigenToMsg(nnController.getOuterWeights(),experimentDataA_msg_[index].net.W);
+	    experimentDataA_msg_[index].net.num_Inputs = num_Inputs;
+		experimentDataA_msg_[index].net.num_Hidden = num_Hidden;
+		experimentDataA_msg_[index].net.num_Outputs = num_Outputs;
 
-		msgControllerFullData[index].flexiforce_1      = flexiForce(0)               ;
-		msgControllerFullData[index].flexiforce_2      = flexiForce(1)               ;
-		msgControllerFullData[index].flexiforce_3      = flexiForce(2)               ;
-		msgControllerFullData[index].flexiforce_4      = flexiForce(3)               ;
+		// Actual trajectory
+		experimentDataA_msg_[index].x_x     = X(0);
+		experimentDataA_msg_[index].x_y     = X(1);
+		experimentDataA_msg_[index].x_z     = X(2);
+		experimentDataA_msg_[index].x_phi   = X(3);
+		experimentDataA_msg_[index].x_theta = X(4);
+		experimentDataA_msg_[index].x_psi   = X(5);
 
-		msgControllerFullData[index].FT_force_x        = FT_transformed_force(0)     ;
-		msgControllerFullData[index].FT_force_y        = FT_transformed_force(1)     ;
-		msgControllerFullData[index].FT_force_z        = FT_transformed_force(2)     ;
+		experimentDataA_msg_[index].xdot_x     = Xd(0);
+		experimentDataA_msg_[index].xdot_y     = Xd(1);
+		experimentDataA_msg_[index].xdot_z     = Xd(2);
+		experimentDataA_msg_[index].xdot_phi   = Xd(3);
+		experimentDataA_msg_[index].xdot_theta = Xd(4);
+		experimentDataA_msg_[index].xdot_psi   = Xd(5);
 
-		msgControllerFullData[index].acc_x             = r_acc_data(0)               ;
-		msgControllerFullData[index].acc_y             = r_acc_data(1)               ;
-		msgControllerFullData[index].acc_z             = r_acc_data(2)               ;
+		// Desired trajectory
 
-		// Input reference efforts(torques)
-		msgControllerFullData[index].reference_eff_j0  = 0                           ; //t_r(0) ;
-		msgControllerFullData[index].reference_eff_j1  = 0                           ; //t_r(1) ;
-		msgControllerFullData[index].reference_eff_j2  = 0                           ; //t_r(2) ;
-		msgControllerFullData[index].reference_eff_j3  = 0                           ; //t_r(3) ;
-		msgControllerFullData[index].reference_eff_j4  = 0                           ; //t_r(4) ;
-		msgControllerFullData[index].reference_eff_j5  = 0                           ; //t_r(5) ;
-		msgControllerFullData[index].reference_eff_j6  = 0                           ; //t_r(6) ;
-
-		// Cartesian task reference
-		msgControllerFullData[index].taskRef_x         = task_ref(0)                 ;
-		msgControllerFullData[index].taskRef_y         = task_ref(1)                 ;
-		msgControllerFullData[index].taskRef_z         = task_ref(2)                 ;
-		msgControllerFullData[index].taskRef_phi       = 0                           ;
-		msgControllerFullData[index].taskRef_theta     = 0                           ;
-		msgControllerFullData[index].taskRef_psi       = 0                           ;
-
-		// Cartesian task reference
-		msgControllerFullData[index].taskRefModel_x    = task_refModel_output(0)            ;
-		msgControllerFullData[index].taskRefModel_y    = task_refModel_output(1)            ;
-		msgControllerFullData[index].taskRefModel_z    = task_refModel_output(2)            ;
-		msgControllerFullData[index].taskRefModel_phi  = 0                           ;
-		msgControllerFullData[index].taskRefModel_theta= 0                           ;
-		msgControllerFullData[index].taskRefModel_psi  = 0                           ;
-
-		// Model States
-		msgControllerFullData[index].m_cartPos_x       = modelCartPos_.position.x    ;
-		msgControllerFullData[index].m_cartPos_y       = modelCartPos_.position.y    ;
-		msgControllerFullData[index].m_cartPos_z       = modelCartPos_.position.z    ;
-		msgControllerFullData[index].m_cartPos_Qx      = modelCartPos_.orientation.x ;
-		msgControllerFullData[index].m_cartPos_Qy      = modelCartPos_.orientation.y ;
-		msgControllerFullData[index].m_cartPos_Qz      = modelCartPos_.orientation.z ;
-		msgControllerFullData[index].m_cartPos_QW      = modelCartPos_.orientation.w ;
-
-		msgControllerFullData[index].m_pos_x           = X_m(0)                      ;
-		msgControllerFullData[index].m_pos_y           = X_m(1)                      ;
-		msgControllerFullData[index].m_pos_z           = X_m(2)                      ;
-
-		msgControllerFullData[index].m_vel_x           = Xd_m(0)                     ;
-		msgControllerFullData[index].m_vel_y           = Xd_m(1)                     ;
-		msgControllerFullData[index].m_vel_z           = Xd_m(2)                     ;
-
-		msgControllerFullData[index].m_acc_x           = Xdd_m(0)                    ;
-		msgControllerFullData[index].m_acc_y           = Xdd_m(1)                    ;
-		msgControllerFullData[index].m_acc_z           = Xdd_m(2)                    ;
-
-		msgControllerFullData[index].m_pos_j0          = q_m(0)                      ;
-		msgControllerFullData[index].m_pos_j1          = q_m(1)                      ;
-		msgControllerFullData[index].m_pos_j2          = q_m(2)                      ;
-		msgControllerFullData[index].m_pos_j3          = q_m(3)                      ;
-		msgControllerFullData[index].m_pos_j4          = q_m(4)                      ;
-		msgControllerFullData[index].m_pos_j5          = q_m(5)                      ;
-		msgControllerFullData[index].m_pos_j6          = q_m(6)                      ;
-
-		msgControllerFullData[index].m_vel_j0          = qd_m(0)                     ;
-		msgControllerFullData[index].m_vel_j1          = qd_m(1)                     ;
-		msgControllerFullData[index].m_vel_j2          = qd_m(2)                     ;
-		msgControllerFullData[index].m_vel_j3          = qd_m(3)                     ;
-		msgControllerFullData[index].m_vel_j4          = qd_m(4)                     ;
-		msgControllerFullData[index].m_vel_j5          = qd_m(5)                     ;
-		msgControllerFullData[index].m_vel_j6          = qd_m(6)                     ;
-
-		msgControllerFullData[index].m_acc_j0          = qdd_m(0)                    ;
-		msgControllerFullData[index].m_acc_j1          = qdd_m(1)                    ;
-		msgControllerFullData[index].m_acc_j2          = qdd_m(2)                    ;
-		msgControllerFullData[index].m_acc_j3          = qdd_m(3)                    ;
-		msgControllerFullData[index].m_acc_j4          = qdd_m(4)                    ;
-		msgControllerFullData[index].m_acc_j5          = qdd_m(5)                    ;
-		msgControllerFullData[index].m_acc_j6          = qdd_m(6)                    ;
-
-		msgControllerFullData[index].m_eff_j0          = 0                           ;
-		msgControllerFullData[index].m_eff_j1          = 0                           ;
-		msgControllerFullData[index].m_eff_j2          = 0                           ;
-		msgControllerFullData[index].m_eff_j3          = 0                           ;
-		msgControllerFullData[index].m_eff_j4          = 0                           ;
-		msgControllerFullData[index].m_eff_j5          = 0                           ;
-		msgControllerFullData[index].m_eff_j6          = 0                           ;
-
-		// Control Output
-		msgControllerFullData[index].control_eff_j0    = tau(0)                      ;
-		msgControllerFullData[index].control_eff_j1    = tau(1)                      ;
-		msgControllerFullData[index].control_eff_j2    = tau(2)                      ;
-		msgControllerFullData[index].control_eff_j3    = tau(3)                      ;
-		msgControllerFullData[index].control_eff_j4    = tau(4)                      ;
-		msgControllerFullData[index].control_eff_j5    = tau(5)                      ;
-		msgControllerFullData[index].control_eff_j6    = tau(6)                      ;
-
-		// Robot States
-		msgControllerFullData[index].r_cartPos_x       = robotCartPos_.position.x    ;
-		msgControllerFullData[index].r_cartPos_y       = robotCartPos_.position.y    ;
-		msgControllerFullData[index].r_cartPos_z       = robotCartPos_.position.z    ;
-		msgControllerFullData[index].r_cartPos_Qx      = robotCartPos_.orientation.x ;
-		msgControllerFullData[index].r_cartPos_Qy      = robotCartPos_.orientation.y ;
-		msgControllerFullData[index].r_cartPos_Qz      = robotCartPos_.orientation.z ;
-		msgControllerFullData[index].r_cartPos_QW      = robotCartPos_.orientation.w ;
-
-		msgControllerFullData[index].r_pos_j0          = q(0)                        ;
-		msgControllerFullData[index].r_pos_j1          = q(1)                        ;
-		msgControllerFullData[index].r_pos_j2          = q(2)                        ;
-		msgControllerFullData[index].r_pos_j3          = q(3)                        ;
-		msgControllerFullData[index].r_pos_j4          = q(4)                        ;
-		msgControllerFullData[index].r_pos_j5          = q(5)                        ;
-		msgControllerFullData[index].r_pos_j6          = q(6)                        ;
-
-		msgControllerFullData[index].r_vel_j0          = qd(0)                       ;
-		msgControllerFullData[index].r_vel_j1          = qd(1)                       ;
-		msgControllerFullData[index].r_vel_j2          = qd(2)                       ;
-		msgControllerFullData[index].r_vel_j3          = qd(3)                       ;
-		msgControllerFullData[index].r_vel_j4          = qd(4)                       ;
-		msgControllerFullData[index].r_vel_j5          = qd(5)                       ;
-		msgControllerFullData[index].r_vel_j6          = qd(6)                       ;
-
-		msgControllerFullData[index].r_acc_j0          = 0                           ;
-		msgControllerFullData[index].r_acc_j1          = 0                           ;
-		msgControllerFullData[index].r_acc_j2          = 0                           ;
-		msgControllerFullData[index].r_acc_j3          = 0                           ;
-		msgControllerFullData[index].r_acc_j4          = 0                           ;
-		msgControllerFullData[index].r_acc_j5          = 0                           ;
-		msgControllerFullData[index].r_acc_j6          = 0                           ;
-		/*
-          msgControllerFullData[index].r_eff_x           = ferr_(0)                    ;
-          msgControllerFullData[index].r_eff_y           = ferr_(1)                    ;
-          msgControllerFullData[index].r_eff_z           = ferr_(2)                    ;
-          msgControllerFullData[index].r_trq_x           = ferr_(3)                    ;
-          msgControllerFullData[index].r_trq_y           = ferr_(4)                    ;
-          msgControllerFullData[index].r_trq_z           = ferr_(5)                    ;
-
-          msgControllerFullData[index].r_eff_j0          = tau_f_(0)                   ;
-          msgControllerFullData[index].r_eff_j1          = tau_f_(1)                   ;
-          msgControllerFullData[index].r_eff_j2          = tau_f_(2)                   ;
-          msgControllerFullData[index].r_eff_j3          = tau_f_(3)                   ;
-          msgControllerFullData[index].r_eff_j4          = tau_f_(4)                   ;
-          msgControllerFullData[index].r_eff_j5          = tau_f_(5)                   ;
-          msgControllerFullData[index].r_eff_j6          = tau_f_(6)                   ;
-		 */
-		msgControllerFullData[index].l_limit_0         = q_lower(0)                  ;
-		msgControllerFullData[index].l_limit_1         = q_lower(1)                  ;
-		msgControllerFullData[index].l_limit_2         = q_lower(2)                  ;
-		msgControllerFullData[index].l_limit_3         = q_lower(3)                  ;
-		msgControllerFullData[index].l_limit_4         = q_lower(4)                  ;
-		msgControllerFullData[index].l_limit_5         = q_lower(5)                  ;
-		msgControllerFullData[index].l_limit_6         = q_lower(6)                  ;
-
-		msgControllerFullData[index].u_limit_0         = q_upper(0)                  ;
-		msgControllerFullData[index].u_limit_1         = q_upper(1)                  ;
-		msgControllerFullData[index].u_limit_2         = q_upper(2)                  ;
-		msgControllerFullData[index].u_limit_3         = q_upper(3)                  ;
-		msgControllerFullData[index].u_limit_4         = q_upper(4)                  ;
-		msgControllerFullData[index].u_limit_5         = q_upper(5)                  ;
-		msgControllerFullData[index].u_limit_6         = q_upper(6)                  ;
-
-		// NN Params
-		msgControllerFullData[index].kappa             = kappa                       ;
-		msgControllerFullData[index].Kv                = Kv                          ;
-		msgControllerFullData[index].lambda            = lambda                      ;
-		msgControllerFullData[index].Kz                = Kz                          ;
-		msgControllerFullData[index].Zb                = Zb                          ;
-		msgControllerFullData[index].F                 = nnF                         ;
-		msgControllerFullData[index].G                 = nnG                         ;
-		msgControllerFullData[index].inParams          = num_Inputs                  ;
-		msgControllerFullData[index].outParams         = num_Outputs                 ;
-		msgControllerFullData[index].hiddenNodes       = num_Hidden                  ;
-		msgControllerFullData[index].errorParams       = num_Error                   ;
-		msgControllerFullData[index].feedForwardForce  = num_Joints                  ;
-		msgControllerFullData[index].nn_ON             = nn_ON                       ;
-
-		// Cart params
-		msgControllerFullData[index].cartPos_Kp_x      = cartPos_Kp_x                ;
-		msgControllerFullData[index].cartPos_Kp_y      = cartPos_Kp_y                ;
-		msgControllerFullData[index].cartPos_Kp_z      = cartPos_Kp_z                ;
-		msgControllerFullData[index].cartPos_Kd_x      = cartPos_Kd_x                ;
-		msgControllerFullData[index].cartPos_Kd_y      = cartPos_Kd_y                ;
-		msgControllerFullData[index].cartPos_Kd_z      = cartPos_Kd_z                ;
-
-		msgControllerFullData[index].cartRot_Kp_x      = cartRot_Kp_x                ;
-		msgControllerFullData[index].cartRot_Kp_y      = cartRot_Kp_y                ;
-		msgControllerFullData[index].cartRot_Kp_z      = cartRot_Kp_z                ;
-		msgControllerFullData[index].cartRot_Kd_x      = cartRot_Kd_x                ;
-		msgControllerFullData[index].cartRot_Kd_y      = cartRot_Kd_y                ;
-		msgControllerFullData[index].cartRot_Kd_z      = cartRot_Kd_z                ;
-
-		msgControllerFullData[index].useCurrentCartPose= useCurrentCartPose          ;
-		msgControllerFullData[index].useNullspacePose  = useNullspacePose            ;
-
-		msgControllerFullData[index].cartIniX          = cartIniX                    ;
-		msgControllerFullData[index].cartIniY          = cartIniY                    ;
-		msgControllerFullData[index].cartIniZ          = cartIniZ                    ;
-		msgControllerFullData[index].cartIniRoll       = cartIniRoll                 ;
-		msgControllerFullData[index].cartIniPitch      = cartIniPitch                ;
-		msgControllerFullData[index].cartIniYaw        = cartIniYaw                  ;
-
-		msgControllerFullData[index].cartDesX          = cartDesX                    ;
-		msgControllerFullData[index].cartDesY          = cartDesY                    ;
-		msgControllerFullData[index].cartDesZ          = cartDesZ                    ;
-		msgControllerFullData[index].cartDesRoll       = cartDesRoll                 ;
-		msgControllerFullData[index].cartDesPitch      = cartDesPitch                ;
-		msgControllerFullData[index].cartDesYaw        = cartDesYaw                  ;
-
-		// TODO fix this
-		// Model Params
-		// 2nd degree ref model
-		msgControllerFullData[index].m                 = m_M                         ; // outerLoopMSDmodel.getMass(  )(0,0) ;
-		msgControllerFullData[index].d                 = m_D                         ; // outerLoopMSDmodel.getSpring()(0,0) ;
-		msgControllerFullData[index].k                 = m_S                         ; // outerLoopMSDmodel.getDamper()(0,0) ;
-		// 1st degree ref model
-		msgControllerFullData[index].task_mA           = task_mA                     ;
-		msgControllerFullData[index].task_mB           = task_mB                     ;
-
-		msgControllerFullData[index].fixedFilterWeights= useFixedWeights             ;
-
-		msgControllerFullData[index].w0                = outerLoopWk(0,0)            ;
-		msgControllerFullData[index].w1                = outerLoopWk(1,0)            ;
-		msgControllerFullData[index].w2                = outerLoopWk(2,0)            ;
-		msgControllerFullData[index].w3                = outerLoopWk(3,0)            ;
-		msgControllerFullData[index].w4                = outerLoopWk(4,0)            ;
-		msgControllerFullData[index].w5                = outerLoopWk(5,0)            ;
-		msgControllerFullData[index].w6                = outerLoopWk(6,0)            ;
-		msgControllerFullData[index].w7                = outerLoopWk(7,0)            ;
-
-		msgControllerFullData[index].f1_w0             = outerLoopWk_flexi_1(0,0)    ;
-		msgControllerFullData[index].f1_w1             = outerLoopWk_flexi_1(1,0)    ;
-		msgControllerFullData[index].f1_w2             = outerLoopWk_flexi_1(2,0)    ;
-		msgControllerFullData[index].f1_w3             = outerLoopWk_flexi_1(3,0)    ;
-		msgControllerFullData[index].f1_w4             = outerLoopWk_flexi_1(4,0)    ;
-		msgControllerFullData[index].f1_w5             = outerLoopWk_flexi_1(5,0)    ;
-		msgControllerFullData[index].f1_w6             = outerLoopWk_flexi_1(6,0)    ;
-		msgControllerFullData[index].f1_w7             = outerLoopWk_flexi_1(7,0)    ;
-
-		msgControllerFullData[index].f2_w0             = outerLoopWk_flexi_2(0,0)    ;
-		msgControllerFullData[index].f2_w1             = outerLoopWk_flexi_2(1,0)    ;
-		msgControllerFullData[index].f2_w2             = outerLoopWk_flexi_2(2,0)    ;
-		msgControllerFullData[index].f2_w3             = outerLoopWk_flexi_2(3,0)    ;
-		msgControllerFullData[index].f2_w4             = outerLoopWk_flexi_2(4,0)    ;
-		msgControllerFullData[index].f2_w5             = outerLoopWk_flexi_2(5,0)    ;
-		msgControllerFullData[index].f2_w6             = outerLoopWk_flexi_2(6,0)    ;
-		msgControllerFullData[index].f2_w7             = outerLoopWk_flexi_2(7,0)    ;
-
-		msgControllerFullData[index].f3_w0             = outerLoopWk_flexi_3(0,0)    ;
-		msgControllerFullData[index].f3_w1             = outerLoopWk_flexi_3(1,0)    ;
-		msgControllerFullData[index].f3_w2             = outerLoopWk_flexi_3(2,0)    ;
-		msgControllerFullData[index].f3_w3             = outerLoopWk_flexi_3(3,0)    ;
-		msgControllerFullData[index].f3_w4             = outerLoopWk_flexi_3(4,0)    ;
-		msgControllerFullData[index].f3_w5             = outerLoopWk_flexi_3(5,0)    ;
-		msgControllerFullData[index].f3_w6             = outerLoopWk_flexi_3(6,0)    ;
-		msgControllerFullData[index].f3_w7             = outerLoopWk_flexi_3(7,0)    ;
-
-		msgControllerFullData[index].f4_w0             = outerLoopWk_flexi_4(0,0)    ;
-		msgControllerFullData[index].f4_w1             = outerLoopWk_flexi_4(1,0)    ;
-		msgControllerFullData[index].f4_w2             = outerLoopWk_flexi_4(2,0)    ;
-		msgControllerFullData[index].f4_w3             = outerLoopWk_flexi_4(3,0)    ;
-		msgControllerFullData[index].f4_w4             = outerLoopWk_flexi_4(4,0)    ;
-		msgControllerFullData[index].f4_w5             = outerLoopWk_flexi_4(5,0)    ;
-		msgControllerFullData[index].f4_w6             = outerLoopWk_flexi_4(6,0)    ;
-		msgControllerFullData[index].f4_w7             = outerLoopWk_flexi_4(7,0)    ;
-
-		// MRAC Params
-		outerLoopMRACmodelY.getGamma( msgControllerFullData[index].gamma_1,
-				msgControllerFullData[index].gamma_2,
-				msgControllerFullData[index].gamma_3,
-				msgControllerFullData[index].gamma_4,
-				msgControllerFullData[index].gamma_5 );
-
-		outerLoopMRACmodelY.getEstimatedParams( msgControllerFullData[index].y_hat  ,
-				msgControllerFullData[index].theta_1,
-				msgControllerFullData[index].theta_2,
-				msgControllerFullData[index].theta_3,
-				msgControllerFullData[index].theta_4,
-				msgControllerFullData[index].ahat   ,
-				msgControllerFullData[index].bhat    );
+		experimentDataA_msg_[index].xdes_x     = X_m(0);
+		experimentDataA_msg_[index].xdes_y     = X_m(1);
+		experimentDataA_msg_[index].xdes_z     = X_m(2);
+		experimentDataA_msg_[index].xdes_phi   = X_m(3);
+		experimentDataA_msg_[index].xdes_theta = X_m(4);
+		experimentDataA_msg_[index].xdes_psi   = X_m(5);
 
 		// Increment for the next cycle.
 		storage_index_ = index+1;
-
-		/*          // Add a data point
-          setDataPoint(controllerData.add_datum(), dt);*/
 	}
-
-	/*        // Save to file
-        {
-              if (!controllerData.SerializeToOstream(&saveDataFile))
-              {
-                    ROS_ERROR_STREAM( "Failed to write data." );
-              }
-        }
-
-            // Optional:  Delete all global objects allocated by libprotobuf.
-            google::protobuf::ShutdownProtobufLibrary();*/
 }
 
 
@@ -1427,7 +1159,7 @@ bool PR2adaptNeuroControllerClass::save( ice_msgs::saveControllerData::Request &
 }
 
 /// Service call to publish the saved data
-bool PR2adaptNeuroControllerClass::publish( std_srvs::Empty::Request & req,
+bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Request & req,
                                                 std_srvs::Empty::Response& resp )
 {
 	/* Then we can publish the buffer contents. */
@@ -1440,7 +1172,8 @@ bool PR2adaptNeuroControllerClass::publish( std_srvs::Empty::Request & req,
 		//    pubModelCartPos_   .publish(msgModelCartPos   [index]);
 		//    pubRobotCartPos_   .publish(msgRobotCartPos   [index]);
 		//    pubControllerParam_.publish(msgControllerParam[index]);
-		pubControllerFullData_.publish(msgControllerFullData[index]);
+		//    pubControllerFullData_.publish(msgControllerFullData[index]);
+		pubExperimentDataA_.publish(experimentDataA_msg_[index]);
 	}
 
 	return true;
@@ -1448,7 +1181,7 @@ bool PR2adaptNeuroControllerClass::publish( std_srvs::Empty::Request & req,
 
 
 /// Service call to run an experiment
-bool PR2adaptNeuroControllerClass::learnWeights(	ice_msgs::setValue::Request & req,
+bool PR2adaptNeuroControllerClass::runExperimentA(	ice_msgs::setValue::Request & req,
 														ice_msgs::setValue::Response& resp )
 {
 	/* Record the starting time. */
@@ -1471,29 +1204,10 @@ bool PR2adaptNeuroControllerClass::learnWeights(	ice_msgs::setValue::Request & r
 		executeCircleTraj = true;
 
 		circle_rate = req.value;
-		circle_phase_=0;
+		circle_phase_ = 0;
 		loopsCircleTraj = 0;
 
-	}
-
-	return true;
-}
-
-bool PR2adaptNeuroControllerClass::runExperiment(	ice_msgs::setValue::Request & req,
-														ice_msgs::setValue::Response& resp )
-{
-	/* Record the starting time. */
-	ros::Time started = ros::Time::now();
-
-	// Start trajectory
-	if(req.value > 0)
-	{
-		// Start circle traj
-		executeCircleTraj = true;
-
-		circle_rate = req.value;
-		circle_phase_=0;
-		loopsCircleTraj = 0;
+		storage_index_ = 0;
 	}
 
 	return true;
@@ -1539,7 +1253,9 @@ bool PR2adaptNeuroControllerClass::capture(	std_srvs::Empty::Request & req,
 		//    pubModelCartPos_   .publish(msgModelCartPos   [index]);
 		//    pubRobotCartPos_   .publish(msgRobotCartPos   [index]);
 		//    pubControllerParam_.publish(msgControllerParam[index]);
-		pubControllerFullData_.publish(msgControllerFullData[index]);
+		//    pubControllerFullData_.publish(msgControllerFullData[index]);
+
+		pubExperimentDataA_.publish(experimentDataA_msg_[index]);
 	}
 
 	return true;

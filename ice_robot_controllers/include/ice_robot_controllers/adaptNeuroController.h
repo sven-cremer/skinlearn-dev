@@ -42,6 +42,7 @@
 #include <ice_msgs/getNNweights.h>
 #include <ice_msgs/setNNweights.h>
 #include <ice_msgs/setValue.h>
+#include <ice_msgs/experimentDataA.h>
 
 #include "geometry_msgs/WrenchStamped.h"
 #include "geometry_msgs/Pose.h"
@@ -266,6 +267,7 @@ private:
 	ros::Publisher pubRobotCartPos_        ;
 	ros::Publisher pubControllerParam_     ;
 	ros::Publisher pubControllerFullData_  ;
+	ros::Publisher pubExperimentDataA_     ;
 
 	// ROS subscribers
 	ros::Subscriber sub_command_;
@@ -278,6 +280,7 @@ private:
 	geometry_msgs::PoseStamped   msgRobotCartPos       [StoreLen];
 	ice_msgs::controllerParam    msgControllerParam    [StoreLen];
 	ice_msgs::controllerFullData msgControllerFullData [StoreLen];
+	ice_msgs::experimentDataA    experimentDataA_msg_  [StoreLen];
 
 	volatile int storage_index_;
 
@@ -410,7 +413,7 @@ private:
 	bool save( ice_msgs::saveControllerData::Request & req,
 			    ice_msgs::saveControllerData::Response& resp );
 
-	bool publish( std_srvs::Empty::Request & req,
+	bool publishExperimentData( std_srvs::Empty::Request & req,
 			        std_srvs::Empty::Response& resp );
 
 	bool capture( std_srvs::Empty::Request& req,
@@ -436,12 +439,9 @@ private:
 	ros::ServiceServer setRefTraj_srv_;
 	ros::ServiceServer toggleFixedWeights_srv_;
 
-	ros::ServiceServer learnWeights_srv_;
-	ros::ServiceServer runExperiment_srv_;
+	ros::ServiceServer runExperimentA_srv_;
 
-	bool learnWeights(	ice_msgs::setValue::Request & req,
-						    ice_msgs::setValue::Response& resp );
-	bool runExperiment(	ice_msgs::setValue::Request & req,
+	bool runExperimentA(	ice_msgs::setValue::Request & req,
 						    ice_msgs::setValue::Response& resp );
 
 	void bufferData( double & dt );
