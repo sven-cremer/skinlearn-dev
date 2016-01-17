@@ -167,7 +167,7 @@ void PR2adaptNeuroControllerClass::starting()
 	{
 		// Start from specified
 		Eigen::Vector3d p_init(cartIniX,cartIniY,cartIniZ);
-		Eigen::Quaterniond q_init = euler2Quaternion( cartDesRoll, cartDesPitch, cartDesYaw );
+		Eigen::Quaterniond q_init = euler2Quaternion( cartIniRoll, cartIniPitch, cartIniYaw );
 		x0_ = Eigen::Translation3d(p_init) * q_init;
 	}
 	x_d_ = x0_;
@@ -395,6 +395,7 @@ void PR2adaptNeuroControllerClass::update()
 		circle_phase_ += circle_rate * dt;
 
 		Eigen::Matrix<double, 3, 1> circle(0,0,0);
+		circle.x() = 0.0;
 		circle.y() = 0.10 * sin(circle_phase_);
 		circle.z() = 0.10 * (1 - cos(circle_phase_));
 
@@ -1651,7 +1652,7 @@ bool PR2adaptNeuroControllerClass::initTrajectories()
 	// Initial cartesian pose
 	cartIniX     = 0.7 ;
 	cartIniY     = 0.3 ;
-	cartIniZ     = 0.1 ;
+	cartIniZ     = 0.5 ;
 	cartIniRoll  = 0.0 ;
 	cartIniPitch = 0.0 ;
 	cartIniYaw   = 0.0 ;
