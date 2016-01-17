@@ -209,18 +209,19 @@ void PR2adaptNeuroControllerClass::update()
 	// Compute the forward kinematics and Jacobian (at this location).
 	kin_->fk(q_, x_);
 	kin_->jac(q_, J_);
-	kin_acc_->jac(q_, J_acc_);
 
-	chain_.getVelocities(qdot_raw_);
-	for (int i = 0; i < Joints; ++i)
-		qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
-	qdot_ = qdot_filtered_;
+	// Get accelerometer forward kinematics and Jacobian
+//	kin_acc_->fk(q_, x_gripper_acc_);				TODO update value for outloop
+//	kin_acc_->jac(q_, J_acc_);
+
+	// TODO Filter velocity values
+//	chain_.getVelocities(qdot_raw_);
+//	for (int i = 0; i < Joints; ++i)
+//		qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
+//	qdot_ = qdot_filtered_;
+
 	xdot_ = J_ * qdot_;
 
-	xdot_ = J_ * qdot_raw_;		// FIXME remove
-
-	// Get accelerometer forward kinematics
-	kin_acc_->fk(q_, x_gripper_acc_);
 
 	// Estimate force at gripper tip
 //	chain_.getEfforts(tau_measured_);
@@ -385,9 +386,7 @@ void PR2adaptNeuroControllerClass::update()
 	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
 
 
-
-
-	/***************** UPDATE *****************/
+	/***************** REFERENCE TRAJECTORY *****************/
 
 	if(executeCircleTraj)
 	{
@@ -411,7 +410,7 @@ void PR2adaptNeuroControllerClass::update()
 
 
 
-
+	/***************** UPDATE LOOP VARIABLES *****************/
 
 	// Current joint positions and velocities
 	q = q_;
@@ -433,68 +432,6 @@ void PR2adaptNeuroControllerClass::update()
 	Xd_m  = Eigen::VectorXd::Zero(6);
 	Xdd_m = Eigen::VectorXd::Zero(6);
 
-	/***************** SYSTEM MODEL *****************/
-
-	// USed to auto set cart pose
-	/*    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 3 == 0 )
-    {
-      task_ref(0) = cartDesX ;
-      task_ref(1) = cartDesY ;
-      task_ref(2) = cartDesZ ;
-    }
-
-    if( (int) ceil( (robot_state_->getTime() - start_time_).toSec() ) % 6 == 0 )
-    {
-      task_ref(0) = cartIniX ;
-      task_ref(1) = cartIniY ;
-      task_ref(2) = cartIniZ ;
-    }*/
-
-	//	if( !forceTorqueOn )
-	//	{
-	/////////////////////////
-	// Simulated human model
-
-	/*
-      // Open loop version
-      ode_init_x[2] = task_ref(1); // q_r
-      ode_init_x[3] = 0          ; // qd_r
-
-      // Closed loop version
-      // ode_init_x[2] = ( task_ref(1) - X_m(1) ); // q_r
-      // ode_init_x[3] = 0                       ; // - Xd (1)                ; // qd_r
-
-  //    boost::numeric::odeint::integrate( human_model , ode_init_x , 0.0 , delT , delT );
-  //    transformed_force(1) = ode_init_x[0];
-
-//      double T  = 0.18;
-//      double Kp = 779 ;
-//      double Kd = 288 ;
-//       Bakur's values ?
-      double T  = 1;
-      double Kp = 1 ;
-      double Kd = 0 ;
-
-      double a_h = 10000;
-      double b_h = a_h;
-
-      // Reduced human model
-      transformed_force (1) = transformed_force (1) + ode_init_x[1] * delT;
-
-      //               ( Kp q_r           + Kd qd_r          - hf                    ) / T
-      // ode_init_x[1] = ( Kp*ode_init_x[2] + Kd*ode_init_x[3] - transformed_force (1) ) / T ;
-      ode_init_x[1] = b_h*task_ref(1) - a_h*transformed_force (1);
-
-
-      ROS_ERROR_STREAM("USING Simulated human model");
-	 */
-
-	// END Simulated human model
-	/////////////////////////
-	//	}
-
-	/***************** REFERENCE TRAJECTORY *****************/
-
 	if(forceTorqueOn)
 	{
 		t_r(0) = transformed_force(0) ;			// FIXME make sure orientation is correct
@@ -510,7 +447,6 @@ void PR2adaptNeuroControllerClass::update()
 	//	}
 
 	t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
-
 
 //	CartVec tmp;
 //	tmp(0) = l_ftData.wrench.force.x  ;
