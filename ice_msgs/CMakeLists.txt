@@ -14,6 +14,7 @@ add_message_files(DIRECTORY msg FILES
   controllerFullData.msg
   controllerParam.msg
   twoLayerNN.msg
+  experimentDataA.msg
   # pr2_cart
   combinedError.msg
   combinedTwistError.msg
