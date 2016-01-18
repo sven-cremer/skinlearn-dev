@@ -1652,7 +1652,7 @@ bool PR2adaptNeuroControllerClass::initTrajectories()
 	// Initial cartesian pose
 	cartIniX     = 0.7 ;
 	cartIniY     = 0.3 ;
-	cartIniZ     = 0.5 ;
+	cartIniZ     = 0.1 ;
 	cartIniRoll  = 0.0 ;
 	cartIniPitch = 0.0 ;
 	cartIniYaw   = 0.0 ;

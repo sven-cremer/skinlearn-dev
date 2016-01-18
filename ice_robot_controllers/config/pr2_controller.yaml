@@ -158,12 +158,12 @@ cartDes3Yaw           :  0.0
 # lCartIniPitch       :  0.0
 # lCartIniYaw         : -1.57079633
 
-lCartIniX             :  0.6
-lCartIniY             : -0.3
-lCartIniZ             :  0.0
-lCartIniRoll          :  0.0
-lCartIniPitch         :  0.0
-lCartIniYaw           :  0.0
+cartIniX             :  0.6
+cartIniY             :  0.25
+cartIniZ             :  0.0
+cartIniRoll          :  0.0
+cartIniPitch         :  0.0
+cartIniYaw           :  0.0
 
 circleRate            : 0.5
 circleLlim            : 0.5
