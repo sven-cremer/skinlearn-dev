@@ -9,7 +9,7 @@ useFlexiForce      : false
 accelerometerOn    : false
 
 executeCircleTraj  : false
-numCircleTraj      : 3
+numCircleTraj      : 4
 publishRTtopics    : false
 
 # Specifically for MRAC
@@ -158,9 +158,9 @@ cartDes3Yaw           :  0.0
 # lCartIniPitch       :  0.0
 # lCartIniYaw         : -1.57079633
 
-cartIniX             :  0.6
-cartIniY             :  0.25
-cartIniZ             :  0.0
+cartIniX             :  0.70
+cartIniY             :  0.35
+cartIniZ             : -0.10
 cartIniRoll          :  0.0
 cartIniPitch         :  0.0
 cartIniYaw           :  0.0
@@ -171,7 +171,7 @@ circleUlim            : 1.5
 
 nnNum_Inputs          : 35 
 nnNum_Outputs         : 7
-nnNum_Hidden          : 5
+nnNum_Hidden          : 10
 nnNum_Error           : 7  
 nnNum_Joints          : 7  
 
