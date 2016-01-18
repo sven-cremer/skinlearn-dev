@@ -961,6 +961,8 @@ void PR2adaptNeuroControllerClass::bufferData( double & dt )
 //	    experimentDataA_msg_[index].net.num_Inputs = num_Inputs;
 //		experimentDataA_msg_[index].net.num_Hidden = num_Hidden;
 //		experimentDataA_msg_[index].net.num_Outputs = num_Outputs;
+		experimentDataA_msg_[index].Wnorm = nnController.getOuterWeightsNorm();
+		experimentDataA_msg_[index].Vnorm = nnController.getInnerWeightsNorm();
 
 		// Actual trajectory
 		experimentDataA_msg_[index].x_x     = X(0);

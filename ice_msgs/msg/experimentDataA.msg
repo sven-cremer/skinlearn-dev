@@ -3,6 +3,8 @@ float64 dt
 
 # Neural network
 # twoLayerNN net
+float64 Vnorm
+float64 Wnorm
 
 # Actual trajectory
 float64 x_x

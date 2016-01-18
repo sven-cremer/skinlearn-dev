@@ -171,7 +171,7 @@ circleUlim            : 1.5
 
 nnNum_Inputs          : 35 
 nnNum_Outputs         : 7
-nnNum_Hidden          : 10
+nnNum_Hidden          : 7
 nnNum_Error           : 7  
 nnNum_Joints          : 7  
 
