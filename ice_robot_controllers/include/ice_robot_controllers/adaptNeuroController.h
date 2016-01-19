@@ -394,7 +394,8 @@ private:
 	/////////////////////////
 
 	bool mannequinMode;
-	int mannequinThreshold;
+	double mannequinThresPos;
+	double mannequinThresRot;
 
 	double circle_rate         ;
 	double circleUlim          ;

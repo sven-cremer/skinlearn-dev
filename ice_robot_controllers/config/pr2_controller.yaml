@@ -12,7 +12,8 @@ executeCircleTraj  : false
 numCircleTraj      : 4
 
 mannequinMode      : true
-mannequinThreshold : 0.05
+mannequinThresPos  : 0.05
+mannequinThresRot  : 0.05 # not used
 
 publishRTtopics    : false
 

@@ -417,11 +417,21 @@ void PR2adaptNeuroControllerClass::update()
 
 		// Compute error
 		computePoseError(x_, x_d_, xerr_);
-
-		if(xerr_.norm() > mannequinThreshold)
+//		Eigen::Vector3d tmp1; tmp1 << xerr_.(0),xerr_.(1),xerr_.(2);
+//		Eigen::Vector3d tmp2; tmp2 << xerr_.(3),xerr_.(4),xerr_.(5);
+//		if(tmp1.norm() > mannequinThresPos)
+//		{
+//			x_d_ = x_;
+//		}
+//		if(tmp2.norm() > mannequinThresRot)
+//		{
+//			x_d_ = x_;
+//		}
+		if(xerr_.norm() > mannequinThresPos)	// TODO: implement two threshold
 		{
 			x_d_ = x_;
 		}
+
 
 	}
 
@@ -1446,8 +1456,9 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/numCircleTraj",     numCircleTraj,     2);
 	nh_.param("/publishRTtopics",   publishRTtopics,   false);
 
-	nh_.param("/mannequinThreshold", mannequinThreshold, 2);
-	nh_.param("/mannequinMode",      mannequinMode,   false);
+	nh_.param("/mannequinThresPos", mannequinThresPos, 0.05);
+	nh_.param("/mannequinThresPos", mannequinThresRot, 0.05);
+	nh_.param("/mannequinMode",     mannequinMode,     false);
 	return true;
 }
 
