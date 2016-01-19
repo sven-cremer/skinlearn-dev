@@ -412,7 +412,7 @@ void PR2adaptNeuroControllerClass::update()
 	}
 	//double circleAmpl = (circleUlim - circleLlim)/2 ;
 
-	if(mannequinMode)
+	if(mannequinMode && loop_count_ > 3000) // Check if initialized
 	{
 
 		// Compute error
