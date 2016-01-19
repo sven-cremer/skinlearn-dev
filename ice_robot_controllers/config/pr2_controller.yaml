@@ -10,6 +10,10 @@ accelerometerOn    : false
 
 executeCircleTraj  : false
 numCircleTraj      : 4
+
+mannequinMode      : true
+mannequinThreshold : 0.05
+
 publishRTtopics    : false
 
 # Specifically for MRAC

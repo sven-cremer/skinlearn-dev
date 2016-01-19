@@ -412,6 +412,19 @@ void PR2adaptNeuroControllerClass::update()
 	}
 	//double circleAmpl = (circleUlim - circleLlim)/2 ;
 
+	if(mannequinMode)
+	{
+
+		// Compute error
+		computePoseError(x_, x_d_, xerr_);
+
+		if(xerr_.norm() > mannequinThreshold)
+		{
+			x_d_ = x_;
+		}
+
+	}
+
 
 
 	/***************** UPDATE LOOP VARIABLES *****************/
@@ -1433,6 +1446,8 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/numCircleTraj",     numCircleTraj,     2);
 	nh_.param("/publishRTtopics",   publishRTtopics,   false);
 
+	nh_.param("/mannequinThreshold", mannequinThreshold, 2);
+	nh_.param("/mannequinMode",      mannequinMode,   false);
 	return true;
 }
 

@@ -393,6 +393,9 @@ private:
 	// NN END
 	/////////////////////////
 
+	bool mannequinMode;
+	int mannequinThreshold;
+
 	double circle_rate         ;
 	double circleUlim          ;
 	double circleLlim          ;
