@@ -35,10 +35,14 @@ class TwoLayerNeuralNetworkController {
         double num_Error   ; // filtered error
         double num_Joints  ; // number of joints.
 
+    
+    Eigen::MatrixXd V_;
+    Eigen::MatrixXd W_;
+    Eigen::MatrixXd V_next_;
+    Eigen::MatrixXd W_next_;
+    
         Eigen::MatrixXd V_trans;
         Eigen::MatrixXd W_trans;
-        Eigen::MatrixXd V_trans_next;
-        Eigen::MatrixXd W_trans_next;
         Eigen::MatrixXd G;
         Eigen::MatrixXd F;
         Eigen::MatrixXd L;
@@ -52,6 +56,7 @@ class TwoLayerNeuralNetworkController {
         Eigen::MatrixXd outputLayer_out;
         Eigen::MatrixXd sigmaPrime;
         Eigen::MatrixXd r;
+        Eigen::MatrixXd r_trans;
         Eigen::MatrixXd vRobust;
         Eigen::MatrixXd sigmaPrimeTrans_W_r;
 
@@ -147,11 +152,14 @@ public:
 			nnF              = p_nnF     ;
 			nnG              = p_nnG     ;
 			nn_ON		 = p_nn_ON   ;
+            
+            V_        .resize( num_Inputs + 1             , num_Hidden           ) ;
+            W_        .resize( num_Hidden                 , num_Outputs          ) ;
+            V_next_   .resize( num_Inputs + 1             , num_Hidden           ) ;
+            W_next_   .resize( num_Hidden                 , num_Outputs          ) ;
 
 			V_trans       .resize( num_Hidden                  , num_Inputs + 1           ) ;
 			W_trans       .resize( num_Outputs                 , num_Hidden               ) ;
-			V_trans_next  .resize( num_Hidden                  , num_Inputs + 1           ) ;
-			W_trans_next  .resize( num_Outputs                 , num_Hidden               ) ;
 			G             .resize( num_Inputs + 1              , num_Inputs + 1           ) ;
 			F             .resize( num_Hidden                  , num_Hidden               ) ;
 			L             .resize( num_Outputs                 , num_Outputs              ) ;
@@ -165,6 +173,7 @@ public:
 			outputLayer_out     .resize( num_Outputs   , 1              ) ;
 			sigmaPrime          .resize( num_Hidden    , num_Hidden     ) ;
 			r                   .resize( num_Error     , 1              ) ;
+            r_trans             .resize( 1             , num_Error      ) ;
 			vRobust             .resize( num_Outputs   , 1              ) ;
 			sigmaPrimeTrans_W_r .resize( num_Hidden    , 1              ) ;
 
@@ -174,15 +183,15 @@ public:
 
 			hiddenLayerIdentity.setIdentity();
 
-			W_trans.setZero();
-			W_trans_next.setZero();
+			W_.setZero();
+			W_next_.setZero();
 
 			// Input weights should be randomly initialized
-//			V_trans.setRandom();
-//			V_trans_next.setRandom();
-			V_trans.setOnes();
-			V_trans_next.setOnes();
-
+//			V_.setRandom();
+//			V_next.setRandom();
+            V_.setOnes();
+            V_next.setOnes();
+            
 			F.setIdentity();
 			G.setIdentity();
 			L.setIdentity();
@@ -230,29 +239,29 @@ public:
 
 	double getInnerWeightsNorm()
 	{
-		return V_trans.norm();
+		return V_.norm();
 	}
 	double getOuterWeightsNorm()
 	{
-		return W_trans.norm();
+		return W_.norm();
 	}
-	Eigen::MatrixXd	getInnerWeights()
+	Eigen::MatrixXd	getInnerWeights()   // TODO return V_ instead
 	{
 		return V_trans;
 	}
-	Eigen::MatrixXd	getOuterWeights()
+	Eigen::MatrixXd	getOuterWeights()   // TODO return W_ instead
 	{
 		return W_trans;
 	}
 	void setInnerWeights(Eigen::MatrixXd V_trans_)	// TODO check size
 	{
-		V_trans_next = V_trans_;
-		V_trans = V_trans_;
+		V_next = V_trans_.transpose();
+		V_ = V_trans_.transpose();
 	}
 	void setOuterWeights(Eigen::MatrixXd W_trans_)
 	{
-		W_trans_next = W_trans_;
-		W_trans = W_trans_;
+		W_next = W_trans_.transpose();
+		W_ = W_trans_.transpose();
 	}
 	void setUpdateWeights(bool updateWeights_)
 	{
@@ -322,15 +331,19 @@ void TwoLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
                                               Eigen::VectorXd & t_r  ,
                                               Eigen::VectorXd & tau   )
 {
-    W_trans = W_trans_next;
-	V_trans = V_trans_next;
+    W_ = W_next_;
+	V_ = V_next_;
+    
+    W_trans = W_.transpose();
+    V_trans = V_.transpose();
 
 	// Filtered error
 	r = (qd_m - qd) + lambda.asDiagonal()*(q_m - q);
+    r_tran = r.transpose();
 
 	// Robust term
-	Z.block(0,0,num_Hidden,num_Outputs) = W_trans.transpose();
-	Z.block(num_Hidden,num_Outputs,num_Inputs+1,num_Hidden) = V_trans.transpose();
+	Z.block(0,0,num_Hidden,num_Outputs) = W_;
+	Z.block(num_Hidden,num_Outputs,num_Inputs+1,num_Hidden) = V_;
 	vRobust = - Kz*(Z.norm() + Zb)*r;
 
 	hiddenLayer_in = V_trans*x;
@@ -350,12 +363,12 @@ void TwoLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
 
 	// Wk+1                  = Wk                  +  Wkdot                                                                                                          * dt
-	W_trans_next.transpose() = W_trans.transpose() + (F*hiddenLayer_out*r.transpose() - F*sigmaPrime*V_trans*x*r.transpose() - kappa*F*r.norm()*W_trans.transpose()) * delT;
+	W_next = W_ + (F*hiddenLayer_out*r_trans - F*sigmaPrime*V_trans*x*r_trans - kappa*F*r.norm()*W_) * delT;
 
-	sigmaPrimeTrans_W_r = sigmaPrime.transpose()*W_trans.transpose()*r;
+	sigmaPrimeTrans_W_r = sigmaPrime.transpose()*W_*r;      // make sigmaPrimeTrans_W_r_trans = r_trans*sigmaPrime*W_trans
 
 	// Vk+1                  = Vk                  +  Vkdot                                                                                      			 * dt
-	V_trans_next.transpose() = V_trans.transpose() + (G*x*sigmaPrimeTrans_W_r.transpose() - kappa*G*r.norm()*V_trans.transpose()) * delT;
+	V_next = V_ + (G*x*sigmaPrimeTrans_W_r.transpose() - kappa*G*r.norm()*V_) * delT;
 
 }
 
