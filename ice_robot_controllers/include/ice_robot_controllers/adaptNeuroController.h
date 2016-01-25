@@ -82,15 +82,18 @@ private:
 	pr2_mechanism_model::Chain chain_;
 	pr2_mechanism_model::Chain chain_acc_link;
 	pr2_mechanism_model::Chain chain_ft_link;
+	pr2_mechanism_model::Chain chain_acc_to_ft_link;
 
 	// KDL Solvers
 	boost::scoped_ptr<Kin<Joints> > kin_;
 	boost::scoped_ptr<Kin<Joints> > kin_acc_;
 	boost::scoped_ptr<Kin<Joints> > kin_ft_;
+	boost::scoped_ptr<Kin<Joints> > kin_acc_to_ft_;
 
 	KDL::Chain kdl_chain_;
 	KDL::Chain kdl_chain_acc_link;
 	KDL::Chain kdl_chain_ft_link;
+	KDL::Chain kdl_chain_acc_to_ft_link;
 
 	// The variables (which need to be pre-allocated).
 	JointVec q_;				// Joint positions
@@ -114,6 +117,7 @@ private:
 
 	Eigen::Affine3d x_gripper_acc_;	// Gripper accelerometer frame
 	Eigen::Affine3d x_ft_;        // FT pose
+	Eigen::Affine3d x_acc_to_ft_;  // FT pose
 
 	Eigen::Matrix3d W_mat_;		  // Force transformation matrix
 	Eigen::Vector3d tauTorso;	  // F/T measurements in torso frame

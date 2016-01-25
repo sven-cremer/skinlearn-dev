@@ -205,7 +205,10 @@ void PR2adaptNeuroControllerClass::update()
 
 	// Get the pose of the F/T sensor
 	if(forceTorqueOn)
+	{
 		kin_ft_->fk(q_,x_ft_);
+		kin_acc_to_ft_->fk(q_,x_acc_to_ft_);
+	}
 
 	// Compute the forward kinematics and Jacobian (at this location).
 	kin_->fk(q_, x_);
@@ -1623,6 +1626,7 @@ bool PR2adaptNeuroControllerClass::initRobot()
 	// Construct kdl solvers for F/T frames
 	if(forceTorqueOn)
 	{
+		// Torso to FT frame
 		if (!chain_ft_link.init(robot_state_, root_name, ft_frame_id))
 		{
 			ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'", root_name.c_str(), ft_frame_id.c_str());
@@ -1630,6 +1634,15 @@ bool PR2adaptNeuroControllerClass::initRobot()
 		}
 		chain_ft_link.toKDL(kdl_chain_ft_link);
 		kin_ft_.reset(new Kin<Joints>(kdl_chain_ft_link));
+
+		// Accel to FT frame
+		if (!chain_acc_to_ft_link.init(robot_state_, gripper_acc_tip, ft_frame_id))
+		{
+			ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'", gripper_acc_tip.c_str(), ft_frame_id.c_str());
+			return false;
+		}
+		chain_acc_to_ft_link.toKDL(kdl_chain_acc_to_ft_link);
+		kin_acc_to_ft_.reset(new Kin<Joints>(kdl_chain_acc_to_ft_link));
 	}
 
 	return true;
