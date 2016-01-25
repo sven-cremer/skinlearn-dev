@@ -56,7 +56,7 @@ class TwoLayerNeuralNetworkController {
         Eigen::MatrixXd outputLayer_out;
         Eigen::MatrixXd sigmaPrime;
         Eigen::MatrixXd r;
-        Eigen::MatrixXd r_trans;
+        Eigen::MatrixXd r_tran;
         Eigen::MatrixXd vRobust;
         Eigen::MatrixXd sigmaPrimeTrans_W_r;
 
@@ -173,7 +173,7 @@ public:
 			outputLayer_out     .resize( num_Outputs   , 1              ) ;
 			sigmaPrime          .resize( num_Hidden    , num_Hidden     ) ;
 			r                   .resize( num_Error     , 1              ) ;
-            r_trans             .resize( 1             , num_Error      ) ;
+            r_tran              .resize( 1             , num_Error      ) ;
 			vRobust             .resize( num_Outputs   , 1              ) ;
 			sigmaPrimeTrans_W_r .resize( num_Hidden    , 1              ) ;
 
@@ -190,7 +190,7 @@ public:
 //			V_.setRandom();
 //			V_next.setRandom();
             V_.setOnes();
-            V_next.setOnes();
+            V_next_.setOnes();
             
 			F.setIdentity();
 			G.setIdentity();
@@ -255,12 +255,12 @@ public:
 	}
 	void setInnerWeights(Eigen::MatrixXd V_trans_)	// TODO check size
 	{
-		V_next = V_trans_.transpose();
+		V_next_ = V_trans_.transpose();
 		V_ = V_trans_.transpose();
 	}
 	void setOuterWeights(Eigen::MatrixXd W_trans_)
 	{
-		W_next = W_trans_.transpose();
+		W_next_ = W_trans_.transpose();
 		W_ = W_trans_.transpose();
 	}
 	void setUpdateWeights(bool updateWeights_)
@@ -363,12 +363,12 @@ void TwoLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
 	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
 
 	// Wk+1                  = Wk                  +  Wkdot                                                                                                          * dt
-	W_next = W_ + (F*hiddenLayer_out*r_trans - F*sigmaPrime*V_trans*x*r_trans - kappa*F*r.norm()*W_) * delT;
+	W_next_ = W_ + (F*hiddenLayer_out*r_tran - F*sigmaPrime*V_trans*x*r_tran - kappa*F*r.norm()*W_) * delT;
 
-	sigmaPrimeTrans_W_r = sigmaPrime.transpose()*W_*r;      // make sigmaPrimeTrans_W_r_trans = r_trans*sigmaPrime*W_trans
+	sigmaPrimeTrans_W_r = sigmaPrime.transpose()*W_*r;      // make sigmaPrimeTrans_W_r_tran = r_tran*sigmaPrime*W_trans
 
 	// Vk+1                  = Vk                  +  Vkdot                                                                                      			 * dt
-	V_next = V_ + (G*x*sigmaPrimeTrans_W_r.transpose() - kappa*G*r.norm()*V_) * delT;
+	V_next_ = V_ + (G*x*sigmaPrimeTrans_W_r.transpose() - kappa*G*r.norm()*V_) * delT;
 
 }
 
