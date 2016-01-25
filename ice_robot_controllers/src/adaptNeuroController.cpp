@@ -328,19 +328,19 @@ void PR2adaptNeuroControllerClass::update()
 
 		//wrench_ = affine2CartVec(CartVec2Affine(tf_tool)*CartVec2Affine(wrench_));
 
-		//		Eigen::Vector3d forceFT( l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z );
-		//		Eigen::Vector3d tauFT( l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z );
+		// **************************************
+		// FT compensation
 
-		//		forceFT << l_ftData.wrench.force.x, l_ftData.wrench.force.y, l_ftData.wrench.force.z;
-		//		tauFT << l_ftData.wrench.torque.x, l_ftData.wrench.torque.y, l_ftData.wrench.torque.z;
+		W_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_*r_acc_data);	// Force vector TODO check dimensions, make sure r_acc_data has been updated
 
-		forceFT(0) = l_ftData.wrench.force.x;
-		forceFT(1) = l_ftData.wrench.force.y;
-		forceFT(2) = l_ftData.wrench.force.z;
+		forceFT =  W_gripper_.topRows(3); // Temporary store values due to eigen limitations
 
-		tauFT(0) = l_ftData.wrench.torque.x;
-		tauFT(1) = l_ftData.wrench.torque.y;
-		tauFT(2) = l_ftData.wrench.torque.z;
+		W_gripper_.bottomRows(3) = r_gripper_com.cross(forceFT); // Torque vector
+
+		wrench_compensated_ = wrench_ - ft_bias - W_gripper_;
+
+		forceFT = wrench_compensated_.topRows(3);
+		tauFT	= wrench_compensated_.bottomRows(3);
 
 		// **************************************
 		// Force transformation
@@ -368,19 +368,12 @@ void PR2adaptNeuroControllerClass::update()
 		W_mat_(2,1) = x_ft_.translation().x();
 		W_mat_(2,2) = 0;
 
-		tauTorso = W_mat_*x_ft_.linear()*forceFT + x_ft_.linear()*tauFT;
-		forceTorso = x_ft_.linear()*forceFT;
-
-		wrench_transformed_(0) = forceTorso(0);
-		wrench_transformed_(1) = forceTorso(1);
-		wrench_transformed_(2) = forceTorso(2);
-		wrench_transformed_(3) = tauTorso(0);
-		wrench_transformed_(4) = tauTorso(1);
-		wrench_transformed_(5) = tauTorso(2);
+		wrench_transformed_.bottomRows(3) = W_mat_*x_ft_.linear()*forceFT + x_ft_.linear()*tauFT;
+		wrench_transformed_.topRows(3)    = x_ft_.linear()*forceFT;
 
 		// **************************************
 
-		transformed_force = forceTorso;
+		transformed_force = wrench_transformed_.topRows(3);
 		//transformed_force = Eigen::Vector3d::Zero();
 	}
 
@@ -663,7 +656,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		if (pub_ft_.trylock()) {
 			pub_ft_.msg_.header.stamp = last_time_;
-			tf::wrenchEigenToMsg(wrench_, pub_ft_.msg_.wrench);
+			tf::wrenchEigenToMsg(wrench_compensated_, pub_ft_.msg_.wrench);
 			//pub_ft_.msg_.wrench = l_ftData.wrench;
 			pub_ft_.unlockAndPublish();
 		}

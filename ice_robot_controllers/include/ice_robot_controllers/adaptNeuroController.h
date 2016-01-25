@@ -120,8 +120,6 @@ private:
 	Eigen::Affine3d x_acc_to_ft_;  // FT pose
 
 	Eigen::Matrix3d W_mat_;		  // Force transformation matrix
-	Eigen::Vector3d tauTorso;	  // F/T measurements in torso frame
-	Eigen::Vector3d forceTorso;
 	Eigen::Vector3d forceFT;
 	Eigen::Vector3d tauFT;
 
@@ -252,8 +250,10 @@ private:
 	bool useFlexiForce;
 	std::string ft_frame_id;
 	CartVec wrench_;
+	CartVec wrench_compensated_;
 	CartVec wrench_transformed_;
 	bool biasMeasured;
+	CartVec W_gripper_;			// Gripper wrench
 
 	double forceCutOffX ;
 	double forceCutOffY ;
