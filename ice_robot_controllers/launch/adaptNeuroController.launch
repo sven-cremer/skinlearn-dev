@@ -2,6 +2,9 @@
 
    <rosparam file="$(find ice_robot_controllers)/config/pr2_controller.yaml"
              command="load" />
+  
+   <rosparam file="$(find ice_robot_controllers)/config/l_ft_calib_data.yaml"
+             command="load" />
 
   <node name="unspawn_arms"
         pkg="pr2_controller_manager"

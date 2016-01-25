@@ -619,7 +619,7 @@ void PR2adaptNeuroControllerClass::update()
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
 			//tf::poseEigenToMsg(CartVec2Affine(X_m), pub_x_desi_.msg_.pose);
-			tf::poseEigenToMsg(x_ft_, pub_x_desi_.msg_.pose);
+			tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
 			pub_x_desi_.unlockAndPublish();
 		}
 
@@ -1725,9 +1725,10 @@ bool PR2adaptNeuroControllerClass::initSensors()
 	if(!hardwareInterface)
 		ROS_ERROR("Something wrong with the hardware interface pointer!");
 
-	// Get F/T handles
+
 	if( forceTorqueOn )
 	{
+		// Get F/T handles
 		l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
 		r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
 
@@ -1739,6 +1740,61 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		if( !r_ft_handle_ )
 		{
 			ROS_ERROR("Something wrong with getting r_ft handle");
+			result=false;
+		}
+		// Load FT bias
+		std::vector<double> bias_list;
+		if(!nh_.getParam("/bias", bias_list))
+		{
+			ROS_ERROR("Value not loaded from parameter: /bias !)");
+			ft_bias.setZero();
+			result=false;
+		}
+		else
+		{
+			if( bias_list.size() != 6)
+			{
+				ROS_ERROR("Bias vector has wrong size");
+				ft_bias.setZero();
+				result=false;
+			}
+			else
+			{
+				for(unsigned i=0; i < bias_list.size(); i++)
+				{
+					ft_bias(i) = bias_list[i];
+				}
+			}
+		}
+		// Load gripper COM pose
+		std::vector<double> gripper_com_list;
+		if(!nh_.getParam("/gripper_com_pose", gripper_com_list))
+		{
+			ROS_ERROR("Value not loaded from parameter: /gripper_com_pose !)");
+			r_gripper_com.setZero();
+			result=false;
+		}
+		else
+		{
+			if( gripper_com_list.size() != 6)
+			{
+				ROS_ERROR("Gripper vector has wrong size");
+				r_gripper_com.setZero();
+				result=false;
+			}
+			else
+			{
+				for(unsigned i=0; i < 3; i++)
+				{
+					r_gripper_com(i) = gripper_com_list[i];
+				}
+			}
+		}
+		// Load gripper mass
+		if (!nh_.getParam( "/gripper_mass", gripper_mass))
+		{
+			ROS_ERROR("Value not loaded from parameter: /gripper_mass !)") ;
+			gripper_mass = 1.0;
 			result=false;
 		}
 	}

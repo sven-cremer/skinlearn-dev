@@ -125,6 +125,10 @@ private:
 	Eigen::Vector3d forceFT;
 	Eigen::Vector3d tauFT;
 
+	CartVec ft_bias;
+	double gripper_mass;
+	Eigen::Vector3d r_gripper_com;
+
 //	KDL::Frame     x_m_;          // Model Tip pose
 //	KDL::Frame     xd_m_;         // Model Tip desired pose
 //	KDL::Frame     x0_m_;         // Model Tip initial pose
