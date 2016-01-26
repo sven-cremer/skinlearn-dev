@@ -215,7 +215,7 @@ void PR2adaptNeuroControllerClass::update()
 	kin_->jac(q_, J_);
 
 	// Get accelerometer forward kinematics and Jacobian
-//	kin_acc_->fk(q_, x_gripper_acc_);				TODO update value for outloop
+//	kin_acc_->fk(q_, x_acc_);				TODO update value for outloop
 //	kin_acc_->jac(q_, J_acc_);
 
 	// TODO Filter velocity values
@@ -685,7 +685,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 			calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
 
 			// Transform human intent to torso lift link
-			CartVec xyz = affine2CartVec(x_gripper_acc_);
+			CartVec xyz = affine2CartVec(x_acc_);
 			task_ref.x() = xyz(1) + task_ref.x() ;
 			task_ref.y() = xyz(2) + task_ref.y() ;
 			task_ref.z() = xyz(3) + task_ref.z() ;

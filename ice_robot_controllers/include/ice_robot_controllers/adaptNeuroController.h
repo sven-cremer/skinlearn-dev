@@ -63,11 +63,11 @@ public:
 private:
 	enum { StoreLen = 30000 };
 	enum { Joints = 7 };
+
 	// Definitions
 	typedef Eigen::Matrix<double, 7, 1> JointVec;
 	typedef Eigen::Matrix<double, 6, 1> CartVec;
-	//typedef Eigen::Matrix<double, 6, Joints> Jacobian;
-	  typedef Eigen::Matrix<double, 6, Joints> JacobianMat;
+	typedef Eigen::Matrix<double, 6, Joints> JacobianMat;
 	typedef boost::array<double, 4> human_state_type;
 	typedef ice_msgs::neuroControllerState StateMsg;
 
@@ -75,6 +75,8 @@ private:
 
 	// The current robot state (to get the time stamp)
 	pr2_mechanism_model::RobotState* robot_state_;
+
+	urdf::Model urdf_model;
 
 	// The chain of links and joints
 	std::string root_name;
@@ -84,21 +86,21 @@ private:
 	pr2_mechanism_model::Chain chain_ft_link;
 	pr2_mechanism_model::Chain chain_acc_to_ft_link;
 
+	KDL::Chain kdl_chain_;
+	KDL::Chain kdl_chain_acc_link;
+	KDL::Chain kdl_chain_ft_link;
+	KDL::Chain kdl_chain_acc_to_ft_link;
+
 	// KDL Solvers
 	boost::scoped_ptr<Kin<Joints> > kin_;
 	boost::scoped_ptr<Kin<Joints> > kin_acc_;
 	boost::scoped_ptr<Kin<Joints> > kin_ft_;
 	boost::scoped_ptr<Kin<Joints> > kin_acc_to_ft_;
 
-	KDL::Chain kdl_chain_;
-	KDL::Chain kdl_chain_acc_link;
-	KDL::Chain kdl_chain_ft_link;
-	KDL::Chain kdl_chain_acc_to_ft_link;
-
 	// The variables (which need to be pre-allocated).
-	JointVec q_;				// Joint positions
-	JointVec q0_;				// Joint initial positions
-	JointVec qdot_;			// Joint velocities
+	JointVec q_;					// Joint positions
+	JointVec q0_;					// Joint initial positions
+	JointVec qdot_;					// Joint velocities
 	JointVec qdot_raw_;
 	JointVec qdot_filtered_;
 	double joint_vel_filter_;
@@ -106,26 +108,26 @@ private:
 	KDL::JntArray tau_measured_;
 	CartVec force_measured_;
 
-	KDL::JntArray  tau_c_;      // Joint torques
-	JointVec tau_c_T;			// Joint torques
-	//JointVec tau_posture;		// Joint posture torques
+	KDL::JntArray  tau_c_;      	// Joint torques
+	JointVec tau_c_T;				// Joint torques
+	//JointVec tau_posture;			// Joint posture torques
 	JointVec q_posture_;
 
-	Eigen::Affine3d x_;        // Tip pose
-	Eigen::Affine3d x_d_;		// Tip desired pose
+	Eigen::Affine3d x_;				// Tip pose
+	Eigen::Affine3d x_d_;			// Tip desired pose
 	Eigen::Affine3d x0_;			// Tip initial pose
 
-	Eigen::Affine3d x_gripper_acc_;	// Gripper accelerometer frame
-	Eigen::Affine3d x_ft_;        // FT pose
-	Eigen::Affine3d x_acc_to_ft_;  // FT pose
+	Eigen::Affine3d x_acc_;			// Gripper accelerometer pose
+	Eigen::Affine3d x_ft_;			// FT pose
+	Eigen::Affine3d x_acc_to_ft_;	// Acc to FT transform
 
-	Eigen::Matrix3d W_mat_;		  // Force transformation matrix
-	Eigen::Vector3d forceFT;
-	Eigen::Vector3d tauFT;
+	Eigen::Matrix3d W_mat_;			// Force transformation matrix
+	Eigen::Vector3d forceFT;		// FT force vector
+	Eigen::Vector3d tauFT;			// FT torque vector
 
-	CartVec ft_bias;
-	double gripper_mass;
-	Eigen::Vector3d r_gripper_com;
+	CartVec ft_bias;				// FT bias
+	double gripper_mass;			// Gripper mass
+	Eigen::Vector3d r_gripper_com;	// Gripper Center Of Mass pose in FT frame
 
 //	KDL::Frame     x_m_;          // Model Tip pose
 //	KDL::Frame     xd_m_;         // Model Tip desired pose
@@ -137,21 +139,19 @@ private:
 	KDL::JntArray  qd_limit;      // Joint velocity limits
 	KDL::JntArray  q_nominal;     // Nominal joint angles
 
-	urdf::Model urdf_model;
 
-	CartVec xerr_;         	// Cartesian error
-	CartVec xdot_;				// Cartesian velocity
-//	KDL::Wrench    F_;          // Cart effort
-	JacobianMat J_;			// Jacobian
-	JacobianMat J_acc_;			// Jacobian
 
-	JointVec saturation_;         // Saturation torques
+	CartVec xerr_;					// Cartesian error
+	CartVec xdot_;					// Cartesian velocity
+	JacobianMat J_;					// Jacobian
+	JacobianMat J_acc_;				// Jacobian
+
+	JointVec saturation_;			// Saturation torques
 
 	// Note the gains are incorrectly typed as a twist,
 	// as there is no appropriate type!
 	Eigen::VectorXd     Kp_;           // Proportional gains
 	Eigen::VectorXd     Kd_;           // Derivative gains
-
 
 	// PR2 hardware
 	pr2_hardware_interface::Accelerometer* l_accelerometer_handle_;
