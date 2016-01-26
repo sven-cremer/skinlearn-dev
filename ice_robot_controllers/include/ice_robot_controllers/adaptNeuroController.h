@@ -71,6 +71,7 @@ private:
 	typedef boost::array<double, 4> human_state_type;
 	typedef ice_msgs::neuroControllerState StateMsg;
 
+
 	ros::NodeHandle nh_;
 
 	// The current robot state (to get the time stamp)
@@ -81,6 +82,7 @@ private:
 	// The chain of links and joints
 	std::string root_name;
 	std::string tip_name;
+	std::string arm_prefix;			// Either l (left) or r (right)
 	pr2_mechanism_model::Chain chain_;
 	pr2_mechanism_model::Chain chain_acc_link;
 	pr2_mechanism_model::Chain chain_ft_link;
@@ -154,34 +156,34 @@ private:
 	Eigen::VectorXd     Kd_;           // Derivative gains
 
 	// PR2 hardware
-	pr2_hardware_interface::Accelerometer* l_accelerometer_handle_;
-	pr2_hardware_interface::Accelerometer* r_accelerometer_handle_;
+	pr2_hardware_interface::ForceTorque* ft_handle_;
+	pr2_hardware_interface::Accelerometer* accelerometer_handle_;
 
-	pr2_hardware_interface::ForceTorque* l_ft_handle_;
-	pr2_hardware_interface::ForceTorque* r_ft_handle_;
+	accelerationObserver* accObserver;
+	Eigen::Vector3d accData;
 
-	accelerationObserver* l_accelerationObserver;
-	accelerationObserver* r_accelerationObserver;
-
-	int l_ft_samples;
-	int r_ft_samples;
-
-	geometry_msgs::WrenchStamped l_ftBias;
-	geometry_msgs::WrenchStamped r_ftBias;
-
-	geometry_msgs::WrenchStamped l_ftData;
-	geometry_msgs::WrenchStamped r_ftData;
+	int ft_samples;
+	geometry_msgs::WrenchStamped ftData;
 
 	Eigen::Vector3d FT_transformed_force ;
 	Eigen::Vector3d FLEX_force          ;
 	Eigen::Vector3d transformed_force    ;
-	Eigen::Vector3d l_acc_data           ;
-	Eigen::Vector3d r_acc_data           ;
 
+	// Use FT sensors or not
+	bool forceTorqueOn;
+	bool useFlexiForce;
+	std::string ft_frame_id;
+	CartVec wrench_;
+	CartVec wrench_compensated_;
+	CartVec wrench_transformed_;
+	CartVec wrench_gripper_;			// Gripper wrench
+
+	double forceCutOffX ;
+	double forceCutOffY ;
+	double forceCutOffZ ;
 
 	// Flexiforce data (input of the controller)
 	KDL::Wrench flexiforce_wrench_desi_;
-
 
 	// Cartesian paramters
 	double cartPos_Kp_x ; double cartPos_Kd_x ; // Translation x
@@ -233,39 +235,22 @@ private:
 	bool useNullspacePose ;		// Use nullspace stuff
 
 	// Outer loop
-	bool useARMAmodel ;			// Use ARMA
-	bool useCTARMAmodel ;	  // Use CT ARMA
-	bool useFIRmodel ;	  // Use FIR
-	bool useMRACmodel ;	  // Use MRAC
-	bool useMSDmodel ;	  // Use MSD
-	bool useIRLmodel ;	  // Use IRL
-	bool useDirectmodel;	  // Use Direct model x_d = x_m
+	bool useARMAmodel ;		// Use ARMA
+	bool useCTARMAmodel ;	// Use CT ARMA
+	bool useFIRmodel ;		// Use FIR
+	bool useMRACmodel ;		// Use MRAC
+	bool useMSDmodel ;		// Use MSD
+	bool useIRLmodel ;		// Use IRL
+	bool useDirectmodel;	// Use Direct model x_d = x_m
 
 	bool useSimHuman;
 
-	bool publishRTtopics;
-
-	// Use FT sensors or not
-	bool forceTorqueOn;
-	bool useFlexiForce;
-	std::string ft_frame_id;
-	CartVec wrench_;
-	CartVec wrench_compensated_;
-	CartVec wrench_transformed_;
-	bool biasMeasured;
-	CartVec W_gripper_;			// Gripper wrench
-
-	double forceCutOffX ;
-	double forceCutOffY ;
-	double forceCutOffZ ;
-
 	// The trajectory variables
-	double    circle_phase_;      // Phase along the circle
-	ros::Time last_time_;         // Time of the last servo cycle
-	ros::Time start_time_;        // Time of the first servo cycle
-	ros::Time outer_elapsed_;     // Time elapsed since outer loop call
-	ros::Time intent_elapsed_;    // Time elapsed since intent loop call
-
+	double circle_phase_;			// Phase along the circle
+	ros::Time last_time_;			// Time of the last servo cycle
+	ros::Time start_time_;			// Time of the first servo cycle
+	ros::Time outer_elapsed_;		// Time elapsed since outer loop call
+	ros::Time intent_elapsed_;		// Time elapsed since intent loop call
 
 	// ROS publishers
 	ros::Publisher pubFTData_              ;
@@ -276,6 +261,8 @@ private:
 	ros::Publisher pubControllerParam_     ;
 	ros::Publisher pubControllerFullData_  ;
 	ros::Publisher pubExperimentDataA_     ;
+
+	bool publishRTtopics;
 
 	// ROS subscribers
 	ros::Subscriber sub_command_;

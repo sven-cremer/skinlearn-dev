@@ -146,7 +146,6 @@ void PR2adaptNeuroControllerClass::starting()
 	chain_.getPositions(q0_);
 	kin_->fk(q0_, x0_);
 
-
 	/////////////////////////
 	// System Model
 
@@ -172,13 +171,8 @@ void PR2adaptNeuroControllerClass::starting()
 	}
 	x_d_ = x0_;
 
-	ROS_INFO("Starting pose: [%f,%f,%f]",x_d_.translation().x(),x_d_.translation().y(),x_d_.translation().z());
-
-
-	biasMeasured = false;
-	geometry_msgs::Wrench tmp;	// Initialize with zero
-	l_ftBias.wrench = tmp;
-	r_ftBias.wrench = tmp;
+	CartVec p = affine2CartVec(x_d_);
+	ROS_INFO("Starting pose: pos=[%f,%f,%f], rot=[%f,%f,%f]",p(0),p(1),p(2),p(3),p(4),p(5));
 
 
 	qdot_filtered_.setZero();
@@ -238,22 +232,6 @@ void PR2adaptNeuroControllerClass::update()
 
 
 	/***************** SENSOR UPDATE *****************/
-
-	if(accelerometerOn)
-	{
-		l_accelerationObserver->spin();
-		r_accelerationObserver->spin();
-
-		// retrieve right accelerometer data
-		std::vector<geometry_msgs::Vector3> rightGripperAcc = r_accelerometer_handle_->state_.samples_;
-
-		r_acc_data( 0 ) = r_accelerationObserver->aX_lp ; // threeAccs[threeAccs.size()-1].x ;
-		r_acc_data( 1 ) = r_accelerationObserver->aY_lp ; // threeAccs[threeAccs.size()-1].y ;
-		r_acc_data( 2 ) = r_accelerationObserver->aZ_lp ; // threeAccs[threeAccs.size()-1].z ;
-
-		//    rightGripperAcc.clear(); // Do we need this?
-	}
-
 	if(useFlexiForce)
 	{
 		// Read flexi force serial data
@@ -288,56 +266,40 @@ void PR2adaptNeuroControllerClass::update()
 		transformed_force = FLEX_force;
 	}
 
+	if( accelerometerOn || forceTorqueOn )
+	{
+		accObserver->spin();
+
+		// Retrieve right accelerometer data
+//		std::vector<geometry_msgs::Vector3> rightGripperAcc = accelerometer_handle_->state_.samples_;	// TODO accelerometer_handle_ is not used?
+
+		accData(0) = accObserver->aX_lp ; // threeAccs[threeAccs.size()-1].x ;
+		accData(1) = accObserver->aY_lp ; // threeAccs[threeAccs.size()-1].y ;
+		accData(2) = accObserver->aZ_lp ; // threeAccs[threeAccs.size()-1].z ;
+
+//		rightGripperAcc.clear(); // Do we need this?
+	}
+
 	if( forceTorqueOn )		// TODO only use left or right arm
 	{
-		std::vector<geometry_msgs::Wrench> l_ftData_vector = l_ft_handle_->state_.samples_;
-		l_ft_samples    = l_ftData_vector.size() - 1;
+		std::vector<geometry_msgs::Wrench> ftData_vector = ft_handle_->state_.samples_;
+		ft_samples    = ftData_vector.size() - 1;
 
-//		std::vector<geometry_msgs::Wrench> r_ftData_vector = r_ft_handle_->state_.samples_;
-//		r_ft_samples    = r_ftData_vector.size() - 1;
+		ftData.wrench = ftData_vector[ft_samples];
 
-		// Measure bias after the arm is in position
-		if( !biasMeasured &&  loop_count_> 3000)
-		{
-			// set FT sensor bias due to gravity				// FIXME this will change as the gripper moves
-			l_ftBias.wrench = l_ftData_vector[l_ft_samples];	// FIXME use a moving average
-//			r_ftBias.wrench = r_ftData_vector[r_ft_samples];
+		tf::wrenchMsgToEigen(ftData.wrench, wrench_);
 
-			biasMeasured = true;
-		}
-
-		//      l_ftData.wrench = l_ftData_vector[l_ft_samples];
-		l_ftData.wrench.force.x  = l_ftData_vector[l_ft_samples].force.x  ;//- l_ftBias.wrench.force.x ;
-		l_ftData.wrench.force.y  = l_ftData_vector[l_ft_samples].force.y  ;//- l_ftBias.wrench.force.y ;
-		l_ftData.wrench.force.z  = l_ftData_vector[l_ft_samples].force.z  ;//- l_ftBias.wrench.force.z ;
-		l_ftData.wrench.torque.x = l_ftData_vector[l_ft_samples].torque.x ;//- l_ftBias.wrench.torque.x;
-		l_ftData.wrench.torque.y = l_ftData_vector[l_ft_samples].torque.y ;//- l_ftBias.wrench.torque.y;
-		l_ftData.wrench.torque.z = l_ftData_vector[l_ft_samples].torque.z ;//- l_ftBias.wrench.torque.z;
-
-		//      r_ftData.wrench = r_ftData_vector[r_ft_samples];
-//		r_ftData.wrench.force.x  =   ( r_ftData_vector[r_ft_samples].force.x  - r_ftBias.wrench.force.x  ) ;
-//		r_ftData.wrench.force.y  =   ( r_ftData_vector[r_ft_samples].force.y  - r_ftBias.wrench.force.y  ) ;
-//		r_ftData.wrench.force.z  =   ( r_ftData_vector[r_ft_samples].force.z  - r_ftBias.wrench.force.z  ) ;
-//		r_ftData.wrench.torque.x =   ( r_ftData_vector[r_ft_samples].torque.x - r_ftBias.wrench.torque.x ) ;
-//		r_ftData.wrench.torque.y =   ( r_ftData_vector[r_ft_samples].torque.y - r_ftBias.wrench.torque.y ) ;
-//		r_ftData.wrench.torque.z =   ( r_ftData_vector[r_ft_samples].torque.z - r_ftBias.wrench.torque.z ) ;
-
-		//  Eigen::Vector3d forceFT( r_ftData.wrench.force.x, r_ftData.wrench.force.y, r_ftData.wrench.force.z );
-
-		tf::wrenchMsgToEigen(l_ftData.wrench, wrench_);
-
-		//wrench_ = affine2CartVec(CartVec2Affine(tf_tool)*CartVec2Affine(wrench_));
 
 		// **************************************
 		// FT compensation
 
-		W_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_*r_acc_data);	// Force vector TODO check dimensions, make sure r_acc_data has been updated
+		wrench_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_*accData);	// Force vector TODO check dimensions, make sure r_acc_data has been updated
 
-		forceFT =  W_gripper_.topRows(3); // Temporary store values due to eigen limitations
+		forceFT =  wrench_gripper_.topRows(3); // Temporary store values due to eigen limitations
 
-		W_gripper_.bottomRows(3) = r_gripper_com.cross(forceFT); // Torque vector
+		wrench_gripper_.bottomRows(3) = r_gripper_com.cross(forceFT); // Torque vector
 
-		wrench_compensated_ = wrench_ - ft_bias - W_gripper_;
+		wrench_compensated_ = wrench_ - ft_bias - wrench_gripper_;
 
 		forceFT = wrench_compensated_.topRows(3);
 		tauFT	= wrench_compensated_.bottomRows(3);
@@ -1472,24 +1434,24 @@ bool PR2adaptNeuroControllerClass::initRobot()
 		return false;
 	}
 
+	// Determine arm from tip_name
+	arm_prefix = tip_name[0];
+	if( arm_prefix != "r" || arm_prefix != "l")
+	{
+		ROS_ERROR("Unknown arm (l or r) from tip name: %s)",arm_prefix.c_str());
+	}
+
 	// Construct a chain from the root to the tip and prepare the kinematics.
-	// Note the joints must be calibrated.
 	if (!chain_.init(robot_state_, root_name, tip_name))
 	{
-		ROS_ERROR("The Cartesian Controller could not use the chain from '%s' to '%s'", root_name.c_str(), tip_name.c_str());
+		ROS_ERROR("The controller could not use the chain from '%s' to '%s'", root_name.c_str(), tip_name.c_str());
 		return false;
 	}
 
-	// Get gripper accelerometer tip name and construct a chain
-	std::string gripper_acc_tip;
-	if (!nh_.getParam("/gripper_acc_tip", gripper_acc_tip))
+	// Check that joints are calibrated
+	if (!chain_.allCalibrated())
 	{
-		ROS_ERROR("No accelerometer tip name given in namespace: %s)",nh_.getNamespace().c_str());
-		return false;
-	}
-	if (!chain_acc_link.init(robot_state_, root_name, gripper_acc_tip))
-	{
-		ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'", root_name.c_str(), gripper_acc_tip.c_str());
+		ROS_ERROR("Joints are not calibrated in given namespace: %s)",nh_.getNamespace().c_str());
 		return false;
 	}
 
@@ -1519,7 +1481,7 @@ bool PR2adaptNeuroControllerClass::initRobot()
 	kin_acc_.reset(new Kin<Joints>(kdl_chain_acc_link));
 
 	// Resize (pre-allocate) the variables in non-realtime.
-	tau_c_.resize(kdl_chain_.getNrOfJoints());						// TODO relpace kdl_chain_.getNrOfJoints() with Joints
+	tau_c_.resize(kdl_chain_.getNrOfJoints());						// TODO replace kdl_chain_.getNrOfJoints() with Joints
 	tau_measured_.resize(kdl_chain_.getNrOfJoints());
 
 	qnom.resize(kdl_chain_.getNrOfJoints());
@@ -1608,11 +1570,26 @@ bool PR2adaptNeuroControllerClass::initRobot()
 		if (!nh_.getParam( "/saturation/" + tmp, 		saturation_[i]  )){ ROS_ERROR("Failed to load /saturation!"); 		 saturation_[i]=0.0; }
 	}
 
+	/* Sensors */
+
+	// Get gripper accelerometer tip name and construct a chain
+	std::string gripper_acc_tip;
+	if (!nh_.getParam("/gripper_acc_tip", gripper_acc_tip))
+	{
+		ROS_ERROR("No accelerometer tip name given in namespace: %s)",nh_.getNamespace().c_str());
+		return false;
+	}
+	if (!chain_acc_link.init(robot_state_, root_name, gripper_acc_tip))
+	{
+		ROS_ERROR("The controller could not use the chain from '%s' to '%s'", root_name.c_str(), gripper_acc_tip.c_str());
+		return false;
+	}
+
 	// Get FT frame ID
-	ft_frame_id = root_name;
 	if (!nh_.getParam("/ft_frame_id", ft_frame_id))
 	{
 		ROS_ERROR("No ft_frame_id name given in namespace: %s)",nh_.getNamespace().c_str());
+		ft_frame_id = root_name;
 		return false;
 	}
 
@@ -1622,7 +1599,7 @@ bool PR2adaptNeuroControllerClass::initRobot()
 		// Torso to FT frame
 		if (!chain_ft_link.init(robot_state_, root_name, ft_frame_id))
 		{
-			ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'", root_name.c_str(), ft_frame_id.c_str());
+			ROS_ERROR("The controller could not use the chain from '%s' to '%s'", root_name.c_str(), ft_frame_id.c_str());
 			return false;
 		}
 		chain_ft_link.toKDL(kdl_chain_ft_link);
@@ -1631,7 +1608,7 @@ bool PR2adaptNeuroControllerClass::initRobot()
 		// Accel to FT frame
 		if (!chain_acc_to_ft_link.init(robot_state_, gripper_acc_tip, ft_frame_id))
 		{
-			ROS_ERROR("MyCartController could not use the chain from '%s' to '%s'", gripper_acc_tip.c_str(), ft_frame_id.c_str());
+			ROS_ERROR("The controller could not use the chain from '%s' to '%s'", gripper_acc_tip.c_str(), ft_frame_id.c_str());
 			return false;
 		}
 		chain_acc_to_ft_link.toKDL(kdl_chain_acc_to_ft_link);
@@ -1716,39 +1693,36 @@ bool PR2adaptNeuroControllerClass::initSensors()
 	// Get a handle to the hardware interface
 	pr2_hardware_interface::HardwareInterface* hardwareInterface = robot_state_->model_->hw_;
 	if(!hardwareInterface)
+	{
 		ROS_ERROR("Something wrong with the hardware interface pointer!");
+		result=false;
+	}
 
 
 	if( forceTorqueOn )
 	{
-		// Get F/T handles
-		l_ft_handle_ = hardwareInterface->getForceTorque("l_gripper_motor");
-		r_ft_handle_ = hardwareInterface->getForceTorque("r_gripper_motor");
+		// Get FT handles
+		ft_handle_ = hardwareInterface->getForceTorque(arm_prefix+"_gripper_motor");
 
-		if( !l_ft_handle_ )
+		if(!ft_handle_)
 		{
-			ROS_ERROR("Something wrong with getting l_ft handle");
+			ROS_ERROR("Something wrong with getting ft handle!");
 			result=false;
 		}
-		if( !r_ft_handle_ )
-		{
-			ROS_ERROR("Something wrong with getting r_ft handle");
-			result=false;
-		}
-		// Load FT bias
+
+		// Load FT bias parameter
+		ft_bias.setZero();
 		std::vector<double> bias_list;
 		if(!nh_.getParam("/bias", bias_list))
 		{
 			ROS_ERROR("Value not loaded from parameter: /bias !)");
-			ft_bias.setZero();
 			result=false;
 		}
 		else
 		{
 			if( bias_list.size() != 6)
 			{
-				ROS_ERROR("Bias vector has wrong size");
-				ft_bias.setZero();
+				ROS_ERROR("Bias vector has wrong size!");
 				result=false;
 			}
 			else
@@ -1759,12 +1733,12 @@ bool PR2adaptNeuroControllerClass::initSensors()
 				}
 			}
 		}
-		// Load gripper COM pose
+		// Load gripper COM pose parameter
+		r_gripper_com.setZero();
 		std::vector<double> gripper_com_list;
 		if(!nh_.getParam("/gripper_com_pose", gripper_com_list))
 		{
 			ROS_ERROR("Value not loaded from parameter: /gripper_com_pose !)");
-			r_gripper_com.setZero();
 			result=false;
 		}
 		else
@@ -1772,7 +1746,6 @@ bool PR2adaptNeuroControllerClass::initSensors()
 			if( gripper_com_list.size() != 6)
 			{
 				ROS_ERROR("Gripper vector has wrong size");
-				r_gripper_com.setZero();
 				result=false;
 			}
 			else
@@ -1783,52 +1756,32 @@ bool PR2adaptNeuroControllerClass::initSensors()
 				}
 			}
 		}
-		// Load gripper mass
+		// Load gripper mass parameter
 		if (!nh_.getParam( "/gripper_mass", gripper_mass))
 		{
 			ROS_ERROR("Value not loaded from parameter: /gripper_mass !)") ;
-			gripper_mass = 1.0;
+			gripper_mass = 0.0;
 			result=false;
 		}
 	}
 
-	// Get accelerometer handles
-	if(accelerometerOn)
+	if( accelerometerOn || forceTorqueOn )
 	{
-		/* get a handle to the left gripper accelerometer */
-		l_accelerometer_handle_ = hardwareInterface->getAccelerometer("l_gripper_motor");
-		if(!l_accelerometer_handle_)
+		// Get accelerometer handles
+		accelerometer_handle_ = hardwareInterface->getAccelerometer(arm_prefix+"_gripper_motor");
+		if(!accelerometer_handle_)
 		{
-			ROS_ERROR("Something wrong with getting accelerometer handle");
+			ROS_ERROR("Something wrong with getting accelerometer handle!");
 			result=false;
 		}
 
 		// set to 1.5 kHz bandwidth (should be the default)
-		l_accelerometer_handle_->command_.bandwidth_ = pr2_hardware_interface::AccelerometerCommand
-				::BANDWIDTH_1500HZ;
+//		accelerometer_handle_->command_.bandwidth_ = pr2_hardware_interface::AccelerometerCommand::BANDWIDTH_1500HZ;	// TODO check if needed
 
 		// set to +/- 8g range (0=2g,1=4g)
-		l_accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand
-				::RANGE_8G;
+//		accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand::RANGE_8G;	// TODO check if needed
 
-		/* get a handle to the right gripper accelerometer */
-		r_accelerometer_handle_ = hardwareInterface->getAccelerometer("r_gripper_motor");
-		if(!r_accelerometer_handle_)
-		{
-			ROS_ERROR("Something wrong with getting accelerometer handle");
-			result=false;
-		}
-
-		// set to 1.5 kHz bandwidth (should be the default)
-		r_accelerometer_handle_->command_.bandwidth_ = pr2_hardware_interface::AccelerometerCommand
-				::BANDWIDTH_1500HZ;
-
-		// set to +/- 8g range (0=2g,1=4g)
-		r_accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand
-				::RANGE_4G;
-
-		l_accelerationObserver = new accelerationObserver(l_accelerometer_handle_);
-		r_accelerationObserver = new accelerationObserver(r_accelerometer_handle_);
+		accObserver = new accelerationObserver(accelerometer_handle_);
 	}
 
 	return result;
@@ -2244,7 +2197,7 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	p_Xdd_m  = Xdd_m ;
 
 	transformed_force = Eigen::Vector3d::Zero();
-	r_acc_data          = Eigen::Vector3d::Zero();
+	accData           = Eigen::Vector3d::Zero();
 
 	t_r                  = Eigen::VectorXd::Zero( num_Outputs ) ;
 	task_ref             = Eigen::VectorXd::Zero( num_Outputs ) ;
