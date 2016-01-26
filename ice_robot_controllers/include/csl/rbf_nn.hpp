@@ -9,9 +9,6 @@
 #ifndef ICE_ROBOT_CONTROLLERS_INCLUDE_CSL_RBF_NN_HPP_
 #define ICE_ROBOT_CONTROLLERS_INCLUDE_CSL_RBF_NN_HPP_
 
-#define EIGEN_USE_NEW_STDVECTOR
-#include <Eigen/StdVector>
-
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
@@ -24,22 +21,23 @@ class RBFNeuralNetworkController {
 
 	// Definitions
 	enum { Joints = 7 };
-	typedef Eigen::Matrix<double, Joints  , 1> JointVec;
-	typedef Eigen::Matrix<double, Joints*4, 1> NNVec;
+	enum { NNinput = Joints*4 };
+	typedef Eigen::Matrix<double, Joints , 1> JointVec;
+	typedef Eigen::Matrix<double, NNinput, 1> NNVec;
 
 	bool updateWeights;
 
 	int numNodes;			// Number of NN nodes, index n
 	int numOutputs;			// Number of outputs (joints), index j
 
-	std::vector<Eigen::MatrixXd, Eigen::aligned_allocator<Eigen::MatrixXd> > W_j;	// Current NN weights for each output j
+	Eigen::MatrixXd W_;		// Current NN weights for each output [numOutputs x numNodes]
 
 	JointVec sigma;			// Modification term for weight update
 	double rbf_var;			// RBF variance = width^2
 	double rbf_mag;			// RBF amplitude of center
 	Eigen::MatrixXd gamma;	// For updating NN Weight [numNodes x numNodes]
 
-	std::vector<NNVec, Eigen::aligned_allocator<NNVec> > Mu_;	// RBF center for each node n
+	Eigen::MatrixXd Mu_;	// RBF center for each node n [NNinput x numNodes]
 
 	JointVec x1;			// Joint position
 	JointVec x2;			// Joint velocity
@@ -49,50 +47,6 @@ class RBFNeuralNetworkController {
 	JointVec a2_dot;
 
 	double dT;				// Time step
-
-//
-//        double num_Inputs  ; // n Size of the inputs
-//        double num_Outputs ; // m Size of the outputs
-//        double num_Hidden  ; // l Size of the hidden layer
-//        double num_Error   ; // filtered error
-//        double num_Joints  ; // number of joints.
-//
-//
-//    Eigen::MatrixXd V_;
-//    Eigen::MatrixXd W_;
-//    Eigen::MatrixXd V_next_;
-//    Eigen::MatrixXd W_next_;
-//
-//        Eigen::MatrixXd V_trans;
-//        Eigen::MatrixXd W_trans;
-//        Eigen::MatrixXd G;
-//        Eigen::MatrixXd F;
-//        Eigen::MatrixXd L;
-//        Eigen::MatrixXd Z;
-//
-//        Eigen::MatrixXd x;
-//        Eigen::MatrixXd y;
-//        Eigen::MatrixXd hiddenLayer_out;
-//        Eigen::MatrixXd hiddenLayerIdentity;
-//        Eigen::MatrixXd hiddenLayer_in;
-//        Eigen::MatrixXd outputLayer_out;
-//        Eigen::MatrixXd sigmaPrime;
-//        Eigen::MatrixXd r;
-//        Eigen::MatrixXd r_tran;
-//        Eigen::MatrixXd vRobust;
-//        Eigen::MatrixXd sigmaPrimeTrans_W_r;
-//
-//	double kappa;
-//	Eigen::MatrixXd Kv;
-//	Eigen::MatrixXd lambda;
-//	double Kz;
-//	double Zb;
-//	double nnF;
-//	double nnG;
-//	double nn_ON;
-//
-//	double feedForwardForce;
-
 
 public:
 
@@ -106,16 +60,12 @@ public:
         numOutputs	= Joints;	// 7 by default
 
         // Initialize Parameters
-        Eigen::MatrixXd zeroMat;
-        zeroMat.resize(numOutputs,1);
-        zeroMat.setZero();
-        double sigma_ = 0.02;
 
-        for(int i=0;i<numOutputs;i++)
-        {
-        	W_j.push_back( zeroMat );
-        	sigma(i) = sigma_;
-        }
+        W_.resize(numOutputs, numNodes);
+        W_.setZero();
+
+        sigma.setOnes();
+        sigma *= 0.02;
 
         rbf_var = 1.0;
         rbf_mag = 1.0;
@@ -124,14 +74,13 @@ public:
         gamma.setIdentity();
         gamma = 10*gamma;
 
+        // If the centers are -1 or 1, then there are 2^(numOutputs*4)=2^28 possible combinations.
+        // This would require too many nodes.
+        Mu_.resize(NNinput,numNodes);
+        Mu_.setRandom();	// TODO make elements -1 or +1
 
-        NNVec randVec;						// If the centers are -1 or 1, then there are 2^(numOutputs*4)=2^28 possible combinations.
-        for(int n=0;n<numNodes;n++)			// This would require too many nodes.
-        {
-        	randVec.Random();
-        	//randVec = (Eigen::VectorXi::Random() & 2) -1;
-        	Mu_.push_back(randVec);
-        }
+//        NNVec randVec;
+//        randVec = (Eigen::VectorXi::Random() & 2) -1;
 
         // Initialize state
         // x1
@@ -163,7 +112,7 @@ public:
 		double tmp;
 		for(int n=0;n<numNodes;n++)
 		{
-			x = Z-Mu_[n];
+			x = Z-Mu_.col(n);
 			tmp = x.transpose() * x;
 			S(n) = exp( -( tmp ) / rbf_var );
 		}
