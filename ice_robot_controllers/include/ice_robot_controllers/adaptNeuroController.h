@@ -382,8 +382,9 @@ private:
 
 	double fFForce;
 
-	csl::neural_network::OneLayerNeuralNetworkController nnController;			// TODO make easier to change
-	//csl::neural_network::TwoLayerNeuralNetworkController nnController;
+	//csl::neural_network::OneLayerNeuralNetworkController nnController;			// TODO make easier to change
+	csl::neural_network::TwoLayerNeuralNetworkController nnController;
+	//csl::neural_network::RBFNeuralNetworkController nnController;
 
 	// NN END
 	/////////////////////////
