@@ -311,6 +311,13 @@ void PR2adaptNeuroControllerClass::update()
 		tmp << 0, 0, 0, -1.571, -0.349, 1.571;
 		x_acc_to_ft_ = CartVec2Affine(tmp);
 
+		wrench_compensated_.setZero();
+		wrench_compensated_.topRows(3) = accData;
+
+		wrench_transformed_.setZero();
+		wrench_transformed_.topRows(3) = x_acc_to_ft_.linear()*accData;
+
+/*
 		wrench_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_*accData);	// Force vector TODO check dimensions, make sure r_acc_data has been updated
 
 		forceFT =  wrench_gripper_.topRows(3); // Temporary store values due to eigen limitations
@@ -321,7 +328,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		forceFT = wrench_compensated_.topRows(3);
 		tauFT	= wrench_compensated_.bottomRows(3);
-
+*/
 		// **************************************
 		// Force transformation
 		// FIXME this code produces the correct results but crashes the RT loop
@@ -335,7 +342,7 @@ void PR2adaptNeuroControllerClass::update()
 		//		W_mat_ << 0, -x_ft_.translation().z(), x_ft_.translation().y(),
 		//				  x_ft_.translation().z(), 0, -x_ft_.translation().x(),
 		//			      -x_ft_.translation().y(), x_ft_.translation().x(), 0;
-
+/*
 		W_mat_(0,0) = 0;
 		W_mat_(0,1) = -x_ft_.translation().z();
 		W_mat_(0,2) = x_ft_.translation().y();
@@ -355,6 +362,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		transformed_force = wrench_transformed_.topRows(3);
 		//transformed_force = Eigen::Vector3d::Zero();
+*/
 	}
 
 	// Force threshold (makes force zero bellow threshold)
@@ -644,7 +652,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		if (pub_ft_transformed_.trylock()) {
 			pub_ft_transformed_.msg_.header.stamp = last_time_;
-			tf::wrenchEigenToMsg(wrench_, pub_ft_transformed_.msg_.wrench);
+			tf::wrenchEigenToMsg(wrench_transformed_, pub_ft_transformed_.msg_.wrench);
 			pub_ft_transformed_.unlockAndPublish();
 		}
 
