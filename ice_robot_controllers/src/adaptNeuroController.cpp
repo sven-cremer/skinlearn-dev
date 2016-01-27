@@ -274,7 +274,7 @@ void PR2adaptNeuroControllerClass::update()
 //		accData(1) = accObserver->aY_lp ;
 //		accData(2) = accObserver->aZ_lp ;
 
-		// Retrieve right accelerometer data
+		// Retrieve accelerometer data
 		std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;	// TODO accelerometer_handle_ is not used?
 		accData.setZero();
 		int numValues = threeAccs.size();
@@ -307,7 +307,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		wrench_gripper_.bottomRows(3) = r_gripper_com.cross(forceFT); // Torque vector
 
-		wrench_compensated_ = wrench_ - ft_bias - wrench_gripper_;
+		wrench_compensated_ = wrench_ - ft_bias;// - wrench_gripper_;
 
 		forceFT = wrench_compensated_.topRows(3);
 		tauFT	= wrench_compensated_.bottomRows(3);
@@ -583,6 +583,7 @@ void PR2adaptNeuroControllerClass::update()
 			pub_x_desi_.msg_.header.stamp = last_time_;
 			//tf::poseEigenToMsg(CartVec2Affine(X_m), pub_x_desi_.msg_.pose);
 			tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
+			pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
 			pub_x_desi_.unlockAndPublish();
 		}
 
@@ -633,7 +634,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		if (pub_ft_transformed_.trylock()) {
 			pub_ft_transformed_.msg_.header.stamp = last_time_;
-			tf::wrenchEigenToMsg(wrench_transformed_, pub_ft_transformed_.msg_.wrench);
+			tf::wrenchEigenToMsg(wrench_, pub_ft_transformed_.msg_.wrench);
 			pub_ft_transformed_.unlockAndPublish();
 		}
 
