@@ -161,8 +161,8 @@ void PR2adaptNeuroControllerClass::starting()
 	start_time_    = robot_state_->getTime() ;
 	outer_elapsed_ = robot_state_->getTime() ;
 
-	// Move arm into position
-	if( !useCurrentCartPose ) // TODO this was moved from update() ... is this correct? The controller seems to oscillate now.
+	// Set starting position
+	if( !useCurrentCartPose )
 	{
 		// Start from specified
 		Eigen::Vector3d p_init(cartIniX,cartIniY,cartIniZ);
@@ -170,11 +170,15 @@ void PR2adaptNeuroControllerClass::starting()
 		x0_ = Eigen::Translation3d(p_init) * q_init;
 	}
 	x_d_ = x0_;
-
 	CartVec p = affine2CartVec(x_d_);
 	ROS_INFO("Starting pose: pos=[%f,%f,%f], rot=[%f,%f,%f]",p(0),p(1),p(2),p(3),p(4),p(5));
 
+	// Set transform from accelerometer to FT sensor
+	CartVec tmp;
+	tmp << 0, 0, 0, 3.142, 1.571, 1.919;	// rosrun tf tf_echo l_force_torque_link l_gripper_motor_accelerometer_link
+	x_acc_to_ft_ = CartVec2Affine(tmp);		// TODO: get from robot or load from config file
 
+	// Set filter values
 	qdot_filtered_.setZero();
 	joint_vel_filter_ = 1.0;
 
@@ -288,7 +292,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	}
 
-	if( forceTorqueOn )		// TODO only use left or right arm
+	if( forceTorqueOn )		// TODO check if accData has been updated
 	{
 		std::vector<geometry_msgs::Wrench> ftData_vector = ft_handle_->state_.samples_;
 		ft_samples    = ftData_vector.size() - 1;
@@ -301,26 +305,9 @@ void PR2adaptNeuroControllerClass::update()
 		// **************************************
 		// FT compensation
 
-		/*
-		rosrun tf tf_echo l_gripper_motor_accelerometer_link l_force_torque_link
-		- Translation: [0.000, 0.000, 0.000]
-		- Rotation: in Quaternion [-0.406, -0.579, 0.406, 0.579]
-		            in RPY [-1.571, -0.349, 1.571]
-		 */
-		CartVec tmp;
-		tmp << 0, 0, 0, -1.571, -0.349, 1.571;
-		x_acc_to_ft_ = CartVec2Affine(tmp);
+		wrench_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_.linear()*accData);	// Gripper force
 
-		wrench_compensated_.setZero();
-		wrench_compensated_.topRows(3) = accData;
-
-		wrench_transformed_.setZero();
-		wrench_transformed_.topRows(3) = x_acc_to_ft_.linear()*accData;
-
-/*
-		wrench_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_*accData);	// Force vector TODO check dimensions, make sure r_acc_data has been updated
-
-		forceFT =  wrench_gripper_.topRows(3); // Temporary store values due to eigen limitations
+		forceFT =  wrench_gripper_.topRows(3);	// Temporary store values due to eigen limitations
 
 		wrench_gripper_.bottomRows(3) = r_gripper_com.cross(forceFT); // Torque vector
 
@@ -328,7 +315,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		forceFT = wrench_compensated_.topRows(3);
 		tauFT	= wrench_compensated_.bottomRows(3);
-*/
+
 		// **************************************
 		// Force transformation
 		// FIXME this code produces the correct results but crashes the RT loop
@@ -342,7 +329,7 @@ void PR2adaptNeuroControllerClass::update()
 		//		W_mat_ << 0, -x_ft_.translation().z(), x_ft_.translation().y(),
 		//				  x_ft_.translation().z(), 0, -x_ft_.translation().x(),
 		//			      -x_ft_.translation().y(), x_ft_.translation().x(), 0;
-/*
+
 		W_mat_(0,0) = 0;
 		W_mat_(0,1) = -x_ft_.translation().z();
 		W_mat_(0,2) = x_ft_.translation().y();
@@ -362,7 +349,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		transformed_force = wrench_transformed_.topRows(3);
 		//transformed_force = Eigen::Vector3d::Zero();
-*/
+
 	}
 
 	// Force threshold (makes force zero bellow threshold)
