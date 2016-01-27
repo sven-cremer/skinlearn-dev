@@ -268,16 +268,24 @@ void PR2adaptNeuroControllerClass::update()
 
 	if( accelerometerOn )//|| forceTorqueOn )
 	{
-		accObserver->spin();
+//		accObserver->spin();
+
+//		accData(0) = accObserver->aX_lp ;
+//		accData(1) = accObserver->aY_lp ;
+//		accData(2) = accObserver->aZ_lp ;
 
 		// Retrieve right accelerometer data
-//		std::vector<geometry_msgs::Vector3> rightGripperAcc = accelerometer_handle_->state_.samples_;	// TODO accelerometer_handle_ is not used?
+		std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;	// TODO accelerometer_handle_ is not used?
+		accData.setZero();
+		int numValues = threeAccs.size();
+		for( int  i = 0; i < numValues; i++ )
+		{
+			accData(0) += threeAccs[i].x;
+			accData(1) += threeAccs[i].y;
+			accData(2) += threeAccs[i].z;
+		}
+		accData = accData.array() / (double)numValues;
 
-		accData(0) = accObserver->aX_lp ; // threeAccs[threeAccs.size()-1].x ;
-		accData(1) = accObserver->aY_lp ; // threeAccs[threeAccs.size()-1].y ;
-		accData(2) = accObserver->aZ_lp ; // threeAccs[threeAccs.size()-1].z ;
-
-//		rightGripperAcc.clear(); // Do we need this?
 	}
 
 	if( forceTorqueOn )		// TODO only use left or right arm
@@ -1781,7 +1789,7 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		// set to +/- 8g range (0=2g,1=4g)
 //		accelerometer_handle_->command_.range_ = pr2_hardware_interface::AccelerometerCommand::RANGE_8G;	// TODO check if needed
 
-		accObserver = new accelerationObserver(accelerometer_handle_);
+		//accObserver = new accelerationObserver(accelerometer_handle_);	// FIXME This seems to crash the RT loop
 	}
 
 	return result;
