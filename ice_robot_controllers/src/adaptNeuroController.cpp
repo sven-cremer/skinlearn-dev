@@ -201,7 +201,7 @@ void PR2adaptNeuroControllerClass::update()
 	if(forceTorqueOn)
 	{
 		kin_ft_->fk(q_,x_ft_);
-		kin_acc_to_ft_->fk(q_,x_acc_to_ft_);
+		//kin_acc_to_ft_->fk(q_,x_acc_to_ft_);
 	}
 
 	// Compute the forward kinematics and Jacobian (at this location).
@@ -301,13 +301,23 @@ void PR2adaptNeuroControllerClass::update()
 		// **************************************
 		// FT compensation
 
+		/*
+		rosrun tf tf_echo l_gripper_motor_accelerometer_link l_force_torque_link
+		- Translation: [0.000, 0.000, 0.000]
+		- Rotation: in Quaternion [-0.406, -0.579, 0.406, 0.579]
+		            in RPY [-1.571, -0.349, 1.571]
+		 */
+		CartVec tmp;
+		tmp << 0, 0, 0, -1.571, -0.349, 1.571;
+		x_acc_to_ft_ = CartVec2Affine(tmp);
+
 		wrench_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_*accData);	// Force vector TODO check dimensions, make sure r_acc_data has been updated
 
 		forceFT =  wrench_gripper_.topRows(3); // Temporary store values due to eigen limitations
 
 		wrench_gripper_.bottomRows(3) = r_gripper_com.cross(forceFT); // Torque vector
 
-		wrench_compensated_ = wrench_ - ft_bias;// - wrench_gripper_;
+		wrench_compensated_ = wrench_ - ft_bias - wrench_gripper_;
 
 		forceFT = wrench_compensated_.topRows(3);
 		tauFT	= wrench_compensated_.bottomRows(3);
