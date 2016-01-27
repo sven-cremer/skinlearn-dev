@@ -10,7 +10,7 @@
 #define ICE_ROBOT_CONTROLLERS_INCLUDE_CSL_RBF_NN_HPP_
 
 #include <Eigen/Core>
-#include <Eigen/Eigenvalues>
+
 
 namespace csl {
 
@@ -77,10 +77,12 @@ public:
         // If the centers are -1 or 1, then there are 2^(numOutputs*4)=2^28 possible combinations.
         // This would require too many nodes.
         Mu_.resize(NNinput,numNodes);
-        Mu_.setRandom();	// TODO make elements -1 or +1
-
-//        NNVec randVec;
-//        randVec = (Eigen::VectorXi::Random() & 2) -1;
+        Mu_.setRandom();								// uniform dist between (-1,1)
+        Eigen::MatrixXd pos(NNinput,numNodes);
+        Eigen::MatrixXd neg(NNinput,numNodes);
+        pos.setOnes();
+        neg = -pos;
+        Mu_ = (Mu_.array() < 0).select(neg,pos);		// make elements -1 or +1
 
         // Initialize state
         // x1
