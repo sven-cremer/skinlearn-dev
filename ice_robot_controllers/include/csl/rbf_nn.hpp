@@ -23,6 +23,7 @@ class RBFNeuralNetworkController {
 	enum { Joints = 7 };
 	enum { NNinput = Joints*4 };
 	typedef Eigen::Matrix<double, Joints , 1> JointVec;
+	typedef Eigen::Matrix<double, Joints , Joints> JointMat;
 	typedef Eigen::Matrix<double, NNinput, 1> NNVec;
 
 	bool updateWeights;
@@ -31,20 +32,31 @@ class RBFNeuralNetworkController {
 	int numOutputs;			// Number of outputs (joints), index j
 
 	Eigen::MatrixXd W_;		// Current NN weights for each output [numOutputs x numNodes]
+	Eigen::MatrixXd W_nxt;  // Next NN weights
+	Eigen::MatrixXd W_dot;	// Derivative of NN weights
+	Eigen::VectorXd S_;		// Activation function output
 
-	JointVec sigma;			// Modification term for weight update
+	JointVec sigma_;		// Modification term for weight update
+	double sigma;
 	double rbf_var;			// RBF variance = width^2
 	double rbf_mag;			// RBF amplitude of center
-	Eigen::MatrixXd gamma;	// For updating NN Weight [numNodes x numNodes]
-
+	Eigen::MatrixXd gamma_;	// For updating NN Weight [numNodes x numNodes]
+	double gamma;
 	Eigen::MatrixXd Mu_;	// RBF center for each node n [NNinput x numNodes]
 
 	JointVec x1;			// Joint position
 	JointVec x2;			// Joint velocity
+	JointVec z1;			// Position error
+	JointVec z1_dot;		// Velocity error
+	JointVec z2;
+	JointVec z2_dot;
 	JointVec a1;			// alpha
 	JointVec a2;
 	JointVec a1_dot;		// alpha derivative
 	JointVec a2_dot;
+	JointMat K1;			// Gains
+	JointMat K2;			// Gains
+	NNVec Z;
 
 	double dT;				// Time step
 
@@ -60,19 +72,26 @@ public:
         numOutputs	= Joints;	// 7 by default
 
         // Initialize Parameters
+        W_.   resize(numOutputs, numNodes);
+        W_dot.resize(numOutputs, numNodes);
+        W_nxt.resize(numOutputs, numNodes);
+        W_.   setZero();
+        W_dot.setZero();
+        W_nxt.setZero();
 
-        W_.resize(numOutputs, numNodes);
-        W_.setZero();
+        S_.resize(numNodes);
 
-        sigma.setOnes();
-        sigma *= 0.02;
+        sigma = 0.02;
+        sigma_.setOnes();
+        sigma_ *= sigma;
 
         rbf_var = 1.0;
         rbf_mag = 1.0;
 
-        gamma.resize(numNodes,numNodes);
-        gamma.setIdentity();
-        gamma = 10*gamma;
+        gamma = 10;
+        gamma_.resize(numNodes,numNodes);
+        gamma_.setIdentity();
+        gamma_ *= gamma;
 
         // If the centers are -1 or 1, then there are 2^(numOutputs*4)=2^28 possible combinations.
         // This would require too many nodes.
@@ -84,12 +103,17 @@ public:
         neg = -pos;
         Mu_ = (Mu_.array() < 0).select(neg,pos);		// make elements -1 or +1
 
-        // Initialize state
+        // Initialize states
         // x1
         x2.setZero();
 
-	}
+        // Set Gains
+        K1.setIdentity();
+        K1 *= 50;
+        K2.setIdentity();
+        K2 *= 50;
 
+	}
 
 //	void init( double p_variable )
 //	{
@@ -108,7 +132,7 @@ public:
 
 
 	void activationFcn(const Eigen::MatrixXd & Z,	// input
-		                        Eigen::MatrixXd & S )	// output
+		                        Eigen::VectorXd & S )	// output
 	{
 		NNVec x;
 		double tmp;
@@ -121,21 +145,33 @@ public:
 	}
 
 
-	void Update( Eigen::VectorXd & q    ,
-                  Eigen::VectorXd & qd   ,
+	void Update( Eigen::VectorXd & q    ,		// x1
+                  Eigen::VectorXd & qd   ,		// x2
                   Eigen::VectorXd & q_m  ,
                   Eigen::VectorXd & qd_m ,
-                  Eigen::VectorXd & t_r  ,
+                  Eigen::VectorXd & qdd_m ,
+                  Eigen::VectorXd & t_r  ,		// J'*f
                   Eigen::VectorXd & tau   )
 	{
 
-		// TODO
+		W_ = W_nxt;				// Update weight
 
-		// Create Z
-		// Compute S
-		// dW_j
-		// Wk+1 = Wk +  Wkdot*dt
-		// tau
+		z1 = q - q_m;			// Position error
+		z1_dot = qd - qd_m;		// Velocity error
+
+		a1 = -K1*z1 + qd_m;
+		z2 = qd - a1;
+		a1_dot = -K1*z1_dot + qdd_m;
+
+		Z << q, qd, a1, a1_dot;
+
+	    activationFcn(Z,S_);	// Compute S using RBF
+
+	    W_dot = -gamma*(z2*S_.transpose()+sigma*W_);	// TODO: use gamma and sigma matricies instead
+
+	    W_nxt = W_dot*dT + W_;							// Compute next weight update
+
+	    tau = -z1 - K2*z2 + W_.transpose()*S_ + t_r;	// Control input
 
 	}
 
