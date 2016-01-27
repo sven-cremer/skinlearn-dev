@@ -266,7 +266,7 @@ void PR2adaptNeuroControllerClass::update()
 		transformed_force = FLEX_force;
 	}
 
-	if( accelerometerOn || forceTorqueOn )
+	if( accelerometerOn )//|| forceTorqueOn )
 	{
 		accObserver->spin();
 
@@ -1765,7 +1765,7 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		}
 	}
 
-	if( accelerometerOn || forceTorqueOn )
+	if( accelerometerOn )//|| forceTorqueOn )
 	{
 		// Get accelerometer handles
 		accelerometer_handle_ = hardwareInterface->getAccelerometer(arm_prefix+"_gripper_motor");
