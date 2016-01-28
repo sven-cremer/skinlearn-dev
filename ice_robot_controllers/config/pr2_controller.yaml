@@ -9,13 +9,13 @@ useFlexiForce      : false
 accelerometerOn    : true
 
 executeCircleTraj  : true
-numCircleTraj      : 2
+numCircleTraj      : 3
 
 mannequinMode      : false
 mannequinThresPos  : 0.05
 mannequinThresRot  : 0.05 # not used
 
-publishRTtopics    : true
+publishRTtopics    : false
 
 # Specifically for MRAC
 useSimHuman        : true
@@ -163,16 +163,16 @@ cartDes3Yaw           :  0.0
 # lCartIniPitch       :  0.0
 # lCartIniYaw         : -1.57079633
 
-cartIniX             :  0.70
+cartIniX             :  0.75
 cartIniY             :  0.35
-cartIniZ             : -0.10
+cartIniZ             :  0.0
 cartIniRoll          :  0.0
 cartIniPitch         :  0.0
 cartIniYaw           :  0.0
 
-circleRate            : 0.5 # angular velocity in rad/sec (v = r*w = A*w)
+circleRate            : 0.4 # angular velocity in rad/sec (v = r*w = A*w)
 circleLlim            : 0.0 # amplitude = (circleUlim - circleLlim)/2
-circleUlim            : 0.2
+circleUlim            : 0.3
 
 nnNum_Inputs          : 35 
 nnNum_Outputs         : 7
