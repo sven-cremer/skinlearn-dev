@@ -6,12 +6,12 @@ useCurrentCartPose : false
 useNullspacePose   : true
 forceTorqueOn      : true
 useFlexiForce      : false
-accelerometerOn    : false
+accelerometerOn    : true
 
-executeCircleTraj  : false
-numCircleTraj      : 4
+executeCircleTraj  : true
+numCircleTraj      : 2
 
-mannequinMode      : true
+mannequinMode      : false
 mannequinThresPos  : 0.05
 mannequinThresRot  : 0.05 # not used
 
@@ -170,9 +170,9 @@ cartIniRoll          :  0.0
 cartIniPitch         :  0.0
 cartIniYaw           :  0.0
 
-circleRate            : 0.5
-circleLlim            : 0.5
-circleUlim            : 1.5
+circleRate            : 0.5 # angular velocity in rad/sec (v = r*w = A*w)
+circleLlim            : 0.0 # amplitude = (circleUlim - circleLlim)/2
+circleUlim            : 0.2
 
 nnNum_Inputs          : 35 
 nnNum_Outputs         : 7

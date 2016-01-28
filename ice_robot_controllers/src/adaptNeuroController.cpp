@@ -153,7 +153,7 @@ void PR2adaptNeuroControllerClass::starting()
 	/////////////////////////
 
 	// Initialize the phase of the circle as zero.
-	circle_phase_ = 0.0;
+	circle_phase = 0.0;
 	startCircleTraj = false;
 
 	// Also reset the time-of-last-servo-cycle.
@@ -169,8 +169,8 @@ void PR2adaptNeuroControllerClass::starting()
 		Eigen::Quaterniond q_init = euler2Quaternion( cartIniRoll, cartIniPitch, cartIniYaw );
 		x0_ = Eigen::Translation3d(p_init) * q_init;
 	}
-	x_d_ = x0_;
-	CartVec p = affine2CartVec(x_d_);
+	x_des_ = x0_;
+	CartVec p = affine2CartVec(x_des_);
 	ROS_INFO("Starting pose: pos=[%f,%f,%f], rot=[%f,%f,%f]",p(0),p(1),p(2),p(3),p(4),p(5));
 
 	// Set transform from accelerometer to FT sensor
@@ -362,45 +362,59 @@ void PR2adaptNeuroControllerClass::update()
 
 	if(executeCircleTraj)
 	{
-		// Follow a circle of 10cm at 0.4 rad/sec.
-		circle_phase_ += circle_rate * dt;
+		// Follow a circle at a fixed angular velocity
+		circle_phase += circle_rate * dt;				// w*t = w*(dt1+dt2+dt3+...)
 
-		Eigen::Matrix<double, 3, 1> circle(0,0,0);
-		circle.x() = 0.0;
-		circle.y() = 0.10 * sin(circle_phase_);
-		circle.z() = 0.10 * (1 - cos(circle_phase_));
+		Eigen::Vector3d p;
 
-		x_d_ = x0_;
-		x_d_.translation() += circle;
+		// Set position
+		p.x() = cartIniX;
+		p.y() = cartIniY + circleAmpl * cos(circle_phase) - circleAmpl;	// Start at cartIniY when circle_phase=0
+		p.z() = cartIniZ + circleAmpl * sin(circle_phase);
+		x_des_.translation() = p;
 
-//		if( x_d_.translation() == x0_.translation() )
+		// Set velocity
+		p.x() = 0.0;
+		p.y() = -circleAmpl * (circle_rate * circleAmpl) * sin(circle_phase);
+		p.z() =  circleAmpl * (circle_rate * circleAmpl) * cos(circle_phase);
+		xd_des_.translation() = p;
+
+		// Set acceleration
+		p.x() = 0.0;
+		p.y() = -circleAmpl * (circle_rate * circle_rate * circleAmpl) * cos(circle_phase);
+		p.z() = -circleAmpl * (circle_rate * circle_rate * circleAmpl) * sin(circle_phase);
+		xdd_des_.translation() = p;
+
+//		if( x_des_.translation() == x0_.translation() )
 //			loopsCircleTraj++;
 
-		if(circle_phase_ > (2*3.14159)*numCircleTraj)
+		//cartIniX,cartIniY,cartIniZ
+
+		if(circle_phase > (2*3.14159)*numCircleTraj)
 		{
 			executeCircleTraj = false;
 		}
 	}
-	//double circleAmpl = (circleUlim - circleLlim)/2 ;
+
 
 	if(mannequinMode && loop_count_ > 3000) // Check if initialized
 	{
 
 		// Compute error
-		computePoseError(x_, x_d_, xerr_);
+		computePoseError(x_, x_des_, xerr_);
 //		Eigen::Vector3d tmp1; tmp1 << xerr_.(0),xerr_.(1),xerr_.(2);
 //		Eigen::Vector3d tmp2; tmp2 << xerr_.(3),xerr_.(4),xerr_.(5);
 //		if(tmp1.norm() > mannequinThresPos)
 //		{
-//			x_d_ = x_;
+//			x_des_ = x_;
 //		}
 //		if(tmp2.norm() > mannequinThresRot)
 //		{
-//			x_d_ = x_;
+//			x_des_ = x_;
 //		}
 		if(xerr_.norm() > mannequinThresPos)	// TODO: implement two threshold
 		{
-			x_d_ = x_;
+			x_des_ = x_;
 		}
 
 
@@ -417,18 +431,10 @@ void PR2adaptNeuroControllerClass::update()
 	X = affine2CartVec(x_);
 	Xd = xdot_;				// FIXME make sure they are of same type
 
-	X_m = affine2CartVec(x_d_);
-	//	CartVec xyzrpy = affine2CartVec(xd_T);
-	//  X_m(0) = xd_.p(0);  Xd_m(0) = 0;  Xdd_m(0) = 0;		// FIXME should X_m be updated?
-	//  X_m(1) = xd_.p(1);  Xd_m(1) = 0;  Xdd_m(1) = 0;
-	//  X_m(2) = xd_.p(2);  Xd_m(2) = 0;  Xdd_m(2) = 0;
-	//	X_m(3) = xyzrpy(3);  Xd_m(3) = 0;  Xdd_m(3) = 0;
-	//	X_m(4) = xyzrpy(4);  Xd_m(4) = 0;  Xdd_m(4) = 0;
-	//	X_m(5) = xyzrpy(5);  Xd_m(5) = 0;  Xdd_m(5) = 0;
-	//X_m   = Eigen::VectorXd::Zero(6);
-
-	Xd_m  = Eigen::VectorXd::Zero(6);
-	Xdd_m = Eigen::VectorXd::Zero(6);
+	// Reference trajectory
+	X_m   = affine2CartVec(x_des_);
+	Xd_m  = affine2CartVec(xd_des_);
+	Xdd_m = affine2CartVec(xdd_des_);
 
 	if(forceTorqueOn)
 	{
@@ -477,7 +483,7 @@ void PR2adaptNeuroControllerClass::update()
 	// PD controller
 /*
 	// Calculate a Cartesian restoring force.
-	computePoseError(x_, x_d_, xerr_);			// TODO: Use xd_filtered_ instead
+	computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
 
 	CartVec kp, kd;
 	kp << 100.0,100.0,100.0,100.0,100.0,100.0;
@@ -1202,7 +1208,8 @@ bool PR2adaptNeuroControllerClass::runExperimentA(	ice_msgs::setValue::Request &
 		executeCircleTraj = true;
 
 		circle_rate = req.value;
-		circle_phase_ = 0;
+		circle_velocity = circle_rate*circleAmpl;
+		circle_phase = 0;
 		loopsCircleTraj = 0;
 
 		storage_index_ = 0;
@@ -1636,6 +1643,14 @@ bool PR2adaptNeuroControllerClass::initTrajectories()
 {
 
 	bool success = true;
+
+	// Set desired trajectories to zero
+	CartVec tmp;
+	tmp.setZero();
+	x_des_   = CartVec2Affine(tmp);	// Position
+	xd_des_  = CartVec2Affine(tmp); // Velocity
+	xdd_des_ = CartVec2Affine(tmp); // Acceleration
+
 	// Rate for circle trajectory
 	circle_rate = 3  ;
 	circleLlim  = 0  ;
@@ -1650,6 +1665,8 @@ bool PR2adaptNeuroControllerClass::initTrajectories()
 	if (!nh_.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; success = false; }
 
 	loopsCircleTraj = 0;
+	circleAmpl = (circleUlim - circleLlim)/2 ;
+	circle_velocity = circle_rate*circleAmpl;
 
 	// Desired cartesian pose
 	cartDesX     = 0.0 ;

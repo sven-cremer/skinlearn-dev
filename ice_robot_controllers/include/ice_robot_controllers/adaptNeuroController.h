@@ -116,8 +116,11 @@ private:
 	JointVec q_posture_;
 
 	Eigen::Affine3d x_;				// Tip pose
-	Eigen::Affine3d x_d_;			// Tip desired pose
 	Eigen::Affine3d x0_;			// Tip initial pose
+
+	Eigen::Affine3d x_des_;			// Tip desired pose
+	Eigen::Affine3d xd_des_;		// Tip desired velocity
+	Eigen::Affine3d xdd_des_;		// Tip desired acceleration
 
 	Eigen::Affine3d x_acc_;			// Gripper accelerometer pose
 	Eigen::Affine3d x_ft_;			// FT pose
@@ -140,8 +143,6 @@ private:
 	KDL::JntArray  q_upper;       // Joint position upper limits
 	KDL::JntArray  qd_limit;      // Joint velocity limits
 	KDL::JntArray  q_nominal;     // Nominal joint angles
-
-
 
 	CartVec xerr_;					// Cartesian error
 	CartVec xdot_;					// Cartesian velocity
@@ -246,7 +247,6 @@ private:
 	bool useSimHuman;
 
 	// The trajectory variables
-	double circle_phase_;			// Phase along the circle
 	ros::Time last_time_;			// Time of the last servo cycle
 	ros::Time start_time_;			// Time of the first servo cycle
 	ros::Time outer_elapsed_;		// Time elapsed since outer loop call
@@ -393,11 +393,14 @@ private:
 	double mannequinThresPos;
 	double mannequinThresRot;
 
-	double circle_rate         ;
+	double circle_phase        ;	// Phase along the circle
+	double circle_rate         ;	// Angular velocity
+	double circle_velocity     ;	// Linear velocity
 	double circleUlim          ;
 	double circleLlim          ;
+	double circleAmpl          ;
 	bool   startCircleTraj     ;
-	int loopsCircleTraj;
+	int    loopsCircleTraj     ;
 
 	bool   externalRefTraj     ;
 	bool   directlyUseTaskModel;
