@@ -410,6 +410,7 @@ private:
 	bool   directlyUseTaskModel;
 	double intentEst_delT      ;
 	double intentEst_M         ;
+	bool   useHumanIntent      ;
 
 	bool setRefTraj( ice_msgs::setCartPose::Request  & req ,
 			           ice_msgs::setCartPose::Response & resp );

@@ -8,14 +8,14 @@ forceTorqueOn      : true
 useFlexiForce      : false
 accelerometerOn    : true
 
-executeCircleTraj  : true
+executeCircleTraj  : false
 numCircleTraj      : 3
 
 mannequinMode      : false
 mannequinThresPos  : 0.05
 mannequinThresRot  : 0.05 # not used
 
-publishRTtopics    : false
+publishRTtopics    : true
 
 # Specifically for MRAC
 useSimHuman        : true
@@ -37,6 +37,7 @@ outerLoop_time     : 0.001
 externalRefTraj    : false
 
 # Human intent estimation
+useHumanIntent     : true
 intentEst_time     : 0.05
 intentEst_delT     : 0.1  # Propagation time
 intentEst_M        : 1.0  # M_i the mass of the intent admittance model
@@ -170,13 +171,13 @@ cartIniRoll          :  0.0
 cartIniPitch         :  0.0
 cartIniYaw           :  0.0
 
-circleRate            : 0.4 # angular velocity in rad/sec (v = r*w = A*w)
+circleRate            : 0.5 # angular velocity in rad/sec (v = r*w = A*w)
 circleLlim            : 0.0 # amplitude = (circleUlim - circleLlim)/2
 circleUlim            : 0.3
 
 nnNum_Inputs          : 35 
 nnNum_Outputs         : 7
-nnNum_Hidden          : 7
+nnNum_Hidden          : 3
 nnNum_Error           : 7  
 nnNum_Joints          : 7  
 

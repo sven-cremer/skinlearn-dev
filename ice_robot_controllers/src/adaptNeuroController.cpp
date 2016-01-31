@@ -400,8 +400,21 @@ void PR2adaptNeuroControllerClass::update()
 			executeCircleTraj = false;
 		}
 	}
+	if(useHumanIntent && loop_count_ > 3000)
+	{
+		if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
+		{
+			calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
 
+			// Transform human intent to torso lift link
+			CartVec xyz = affine2CartVec(x_acc_);
+			task_ref.x() = xyz(1) + task_ref.x() ;
+			task_ref.y() = xyz(2) + task_ref.y() ;
+			task_ref.z() = xyz(3) + task_ref.z() ;
 
+			intent_elapsed_ = robot_state_->getTime() ;
+		}
+	}
 	if(mannequinMode && loop_count_ > 3000) // Check if initialized
 	{
 
@@ -1444,6 +1457,7 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/mannequinThresPos", mannequinThresPos, 0.05);
 	nh_.param("/mannequinThresPos", mannequinThresRot, 0.05);
 	nh_.param("/mannequinMode",     mannequinMode,     false);
+	nh_.param("/useHumanIntent",     useHumanIntent,    false);
 	return true;
 }
 
