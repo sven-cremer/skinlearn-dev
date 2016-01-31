@@ -14,6 +14,7 @@
 #include <pr2_hardware_interface/hardware_interface.h>
 
 #include "pr2_gripper_sensor_controller/acceleration_observer.h"
+#include <pr2_gripper_sensor_controller/digitalFilter.h>
 
 // Math
 #include <Eigen/Geometry>
@@ -182,6 +183,9 @@ private:
 	double forceCutOffX ;
 	double forceCutOffY ;
 	double forceCutOffZ ;
+
+    CartVec lp_FT_data;					// lowpass FT data
+    digitalFilter *lp_FT_filter[3];		// lowpass FT filter
 
 	// Flexiforce data (input of the controller)
 	KDL::Wrench flexiforce_wrench_desi_;

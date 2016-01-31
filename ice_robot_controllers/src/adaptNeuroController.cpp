@@ -12,6 +12,7 @@ PR2adaptNeuroControllerClass::PR2adaptNeuroControllerClass()
 
 PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 {
+	delete[] lp_FT_filter;
 	sub_command_.shutdown();
 }
 
@@ -347,6 +348,10 @@ void PR2adaptNeuroControllerClass::update()
 
 		// **************************************
 
+		// Apply low-pass fitlter
+		for(int i=0; i < 6; i++)
+			lp_FT_data(i) = lp_FT_filter[0]->getNextFilteredValue(wrench_transformed_(i));
+
 		transformed_force = wrench_transformed_.topRows(3);
 		//transformed_force = Eigen::Vector3d::Zero();
 
@@ -451,7 +456,7 @@ void PR2adaptNeuroControllerClass::update()
 	//	}
 
 	//t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
-	t_r = wrench_transformed_;
+	t_r = -0.1*wrench_transformed_;					// sign correct?
 
 //	CartVec tmp;
 //	tmp(0) = l_ftData.wrench.force.x  ;
@@ -646,7 +651,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		if (pub_ft_transformed_.trylock()) {
 			pub_ft_transformed_.msg_.header.stamp = last_time_;
-			tf::wrenchEigenToMsg(wrench_transformed_, pub_ft_transformed_.msg_.wrench);
+			tf::wrenchEigenToMsg(lp_FT_data, pub_ft_transformed_.msg_.wrench);
 			pub_ft_transformed_.unlockAndPublish();
 		}
 
@@ -1795,6 +1800,13 @@ bool PR2adaptNeuroControllerClass::initSensors()
 			gripper_mass = 0.0;
 			result=false;
 		}
+
+		// Lowpass filter (1st order butterworth, lowpass 1000 hz)
+		float b_lpfilt[] = {0.634, 0.634};
+		float a_lpfilt[] = {1.0, 0.2679};
+		for(int i=0; i < 6; i++)
+			lp_FT_filter[i] = new digitalFilter(1, true,b_lpfilt,a_lpfilt);
+
 	}
 
 	if( accelerometerOn )//|| forceTorqueOn )
