@@ -184,8 +184,8 @@ private:
 	double forceCutOffY ;
 	double forceCutOffZ ;
 
-    CartVec lp_FT_data;					// lowpass FT data
-    digitalFilter *lp_FT_filter[3];		// lowpass FT filter
+//    CartVec lp_FT_data;					// lowpass FT data
+//    digitalFilter *lp_FT_filter[3];		// lowpass FT filter
 
 	// Flexiforce data (input of the controller)
 	KDL::Wrench flexiforce_wrench_desi_;

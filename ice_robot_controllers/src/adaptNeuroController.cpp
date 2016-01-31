@@ -12,7 +12,7 @@ PR2adaptNeuroControllerClass::PR2adaptNeuroControllerClass()
 
 PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 {
-	delete[] lp_FT_filter;
+//	delete[] lp_FT_filter;
 	sub_command_.shutdown();
 }
 
@@ -349,8 +349,8 @@ void PR2adaptNeuroControllerClass::update()
 		// **************************************
 
 		// Apply low-pass fitlter
-		for(int i=0; i < 6; i++)
-			lp_FT_data(i) = lp_FT_filter[0]->getNextFilteredValue(wrench_transformed_(i));
+//		for(int i=0; i < 6; i++)
+//			lp_FT_data(i) = (double)lp_FT_filter[0]->getNextFilteredValue((float)wrench_transformed_(i));
 
 		transformed_force = wrench_transformed_.topRows(3);
 		//transformed_force = Eigen::Vector3d::Zero();
@@ -651,7 +651,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		if (pub_ft_transformed_.trylock()) {
 			pub_ft_transformed_.msg_.header.stamp = last_time_;
-			tf::wrenchEigenToMsg(lp_FT_data, pub_ft_transformed_.msg_.wrench);
+			tf::wrenchEigenToMsg(wrench_transformed_, pub_ft_transformed_.msg_.wrench);
 			pub_ft_transformed_.unlockAndPublish();
 		}
 
@@ -1802,10 +1802,10 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		}
 
 		// Lowpass filter (1st order butterworth, lowpass 1000 hz)
-		float b_lpfilt[] = {0.634, 0.634};
-		float a_lpfilt[] = {1.0, 0.2679};
-		for(int i=0; i < 6; i++)
-			lp_FT_filter[i] = new digitalFilter(1, true,b_lpfilt,a_lpfilt);
+//		float b_lpfilt[] = {0.634, 0.634};
+//		float a_lpfilt[] = {1.0, 0.2679};
+//		for(int i=0; i < 6; i++)
+//			lp_FT_filter[i] = new digitalFilter(1, true,b_lpfilt,a_lpfilt);
 
 	}
 
