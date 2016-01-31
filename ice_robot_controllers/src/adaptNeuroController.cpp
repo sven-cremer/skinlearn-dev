@@ -404,6 +404,7 @@ void PR2adaptNeuroControllerClass::update()
 	{
 		if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
 		{
+			task_ref = x_des_.translation();
 			calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
 
 			// Transform human intent to torso lift link
