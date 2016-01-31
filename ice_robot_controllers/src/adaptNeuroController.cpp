@@ -450,7 +450,8 @@ void PR2adaptNeuroControllerClass::update()
 	//		t_r = force_measured_;					// Computed from joint efforts
 	//	}
 
-	t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
+	//t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
+	t_r = wrench_transformed_;
 
 //	CartVec tmp;
 //	tmp(0) = l_ftData.wrench.force.x  ;
