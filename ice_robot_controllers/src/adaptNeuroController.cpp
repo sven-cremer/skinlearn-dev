@@ -464,11 +464,11 @@ void PR2adaptNeuroControllerClass::update()
 
 		for(int i=0;i<6;i++)
 		{
-			if(wrench_transformed_(i) > 10)
+			if(wrench_transformed_(i) > 10.0)
 			{
 				wrench_transformed_(i) = 1.0;
 			}
-			else if (wrench_transformed_(i) < 10)
+			else if (wrench_transformed_(i) < -10.0)
 			{
 				wrench_transformed_(i) = -1.0;
 			}
