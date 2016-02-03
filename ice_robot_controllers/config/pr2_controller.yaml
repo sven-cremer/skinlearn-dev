@@ -3,7 +3,7 @@ port               : /dev/ttyACM0
 baud               : 2000000
 
 useCurrentCartPose : false
-useNullspacePose   : true
+useNullspacePose   : false
 forceTorqueOn      : true
 useFlexiForce      : false
 accelerometerOn    : true
@@ -11,11 +11,11 @@ accelerometerOn    : true
 executeCircleTraj  : false
 numCircleTraj      : 3
 
-mannequinMode      : false
+mannequinMode      : true
 mannequinThresPos  : 0.05
 mannequinThresRot  : 0.05 # not used
 
-publishRTtopics    : false
+publishRTtopics    : true
 
 # Specifically for MRAC
 useSimHuman        : false
@@ -190,7 +190,7 @@ nn_lambda             : 20 # not being used?
 nn_kappa              : 0.3
 nn_Kz                 : 0.001 # not being used?
 nn_Zb                 : 100 # not being used?
-nn_feedForwardForce   : 0.1 # small because of jitter from FT measurments
+nn_feedForwardForce   : 10.0 # small because of jitter from FT measurments
 nn_nnF                : 100 
 nn_nnG                : 200
 nn_ON                 : 1

@@ -479,7 +479,7 @@ void PR2adaptNeuroControllerClass::update()
 		}
 		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );
 
-		tau = J_ft_.transpose()*(fFForce*wrench_transformed_);	// FIXME sign correct?
+		tau = J_ft_.transpose()*(fFForce*wrench_transformed_);
 		// TODO J_ft_ seems to be equal to J_ ?
 	}
 	else
