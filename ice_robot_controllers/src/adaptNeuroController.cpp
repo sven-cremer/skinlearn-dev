@@ -224,7 +224,7 @@ void PR2adaptNeuroControllerClass::update()
 //		qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
 //	qdot_ = qdot_filtered_;
 
-	xdot_ = J_ * qdot_;		// [6x7]*[7x1]
+	xdot_ = J_ * qdot_;		// [6x7]*[7x1] -> [6x1]
 
 
 	// Estimate force at gripper tip
@@ -458,20 +458,12 @@ void PR2adaptNeuroControllerClass::update()
 
 	if(forceTorqueOn)
 	{
-		t_r(0) = transformed_force(0) ;			// FIXME make sure orientation is correct
-		t_r(1) = transformed_force(1) ;
-		//	    t_r(2) = transformed_force(2) ;
-		//	    t_r(3) = r_ftData.wrench.torque.x;		// FIXME transform wrenches
-		//	    t_r(4) = r_ftData.wrench.torque.y;
-		//	    t_r(5) = r_ftData.wrench.torque.z;
-
-
-		t_r = J_ft_.transpose()*wrench_transformed_;	// [7x6]*[6x1] sign correct?
+		t_r = -wrench_transformed_;		// FIXME sign correct?
 	}
 	else
 	{
-//		t_r = force_measured_;					// Computed from joint efforts
-		t_r = Eigen::VectorXd::Zero(7);				// FIXME inner loop only works if t_r = 0
+//		t_r = force_measured_;							// Computed from joint efforts
+		t_r = Eigen::VectorXd::Zero( num_Outputs );		// FIXME inner loop only works if t_r = 0
 	}
 
 
@@ -489,9 +481,8 @@ void PR2adaptNeuroControllerClass::update()
                              Xdd_m ,
                              q     ,
                              qd    ,
-                             t_r   ,			// Feedforward force [7x1]
-                             force_c  );		// Output [7x1]
-
+                             t_r   ,			// Feedforward force [6x1]
+                             force_c  );		// Output [6x1]
 
 	// PD controller
 /*
@@ -507,8 +498,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	JacobianTrans = J_.transpose();		// [6x7]^T->[7x6]
 
-	//tau = JacobianTrans*force_c;		// [7x6]*[7x1] FIXME ???
-	tau = force_c;
+	tau = JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
 
 	/***************** NULLSPACE *****************/
 
@@ -2187,13 +2177,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	/////////////////////////
 	// System Model
 
-	// FIXME remove below stuff
-	num_Inputs  = 44 ;
-	num_Outputs = 6  ; // 6 for 6 cart dof
-	//  num_Hidden  = 100;
-	num_Error   = 6  ;
-	num_Joints  = 7  ;
-
 	q       .resize( num_Joints ) ;
 	qd      .resize( num_Joints ) ;
 	qdd     .resize( num_Joints ) ;
@@ -2406,6 +2389,13 @@ bool PR2adaptNeuroControllerClass::initInnerLoop()
 	std::string para_nnNum_Hidden  = "/nnNum_Hidden" ;
 	std::string para_nnNum_Error   = "/nnNum_Error" ;
 	std::string para_nnNum_Joints  = "/nnNum_Joints" ;
+
+	// Default values
+	num_Inputs  = 44 ;
+	num_Outputs = 6  ; // Cartesian
+	num_Hidden  = 5  ;
+	num_Error   = 6  ;
+	num_Joints  = 7  ; // 7 DOF
 
 	if (!nh_.getParam( para_nnNum_Inputs , num_Inputs  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Inputs .c_str()) ; return false; }
 	if (!nh_.getParam( para_nnNum_Outputs, num_Outputs )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Outputs.c_str()) ; return false; }

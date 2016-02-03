@@ -4,9 +4,9 @@ baud               : 2000000
 
 useCurrentCartPose : false
 useNullspacePose   : true
-forceTorqueOn      : true
+forceTorqueOn      : false
 useFlexiForce      : false
-accelerometerOn    : true
+accelerometerOn    : false
 
 executeCircleTraj  : false
 numCircleTraj      : 3
@@ -15,10 +15,10 @@ mannequinMode      : false
 mannequinThresPos  : 0.05
 mannequinThresRot  : 0.05 # not used
 
-publishRTtopics    : true
+publishRTtopics    : false
 
 # Specifically for MRAC
-useSimHuman        : true
+useSimHuman        : false
 
 # Only one can be true
 useARMAmodel       : false
@@ -175,11 +175,11 @@ circleRate            : 0.5 # angular velocity in rad/sec (v = r*w = A*w)
 circleLlim            : 0.0 # amplitude = (circleUlim - circleLlim)/2
 circleUlim            : 0.3
 
-nnNum_Inputs          : 35 
-nnNum_Outputs         : 7
+nnNum_Inputs          : 44 
+nnNum_Outputs         : 6  # Cartesian
 nnNum_Hidden          : 3
-nnNum_Error           : 7  
-nnNum_Joints          : 7  
+nnNum_Error           : 6  
+nnNum_Joints          : 7  # DOF
 
 # Filtered error
 # r = (qd_m - qd) + lambda*(q_m - q);
@@ -190,7 +190,7 @@ nn_lambda             : 20 # not being used?
 nn_kappa              : 0.3
 nn_Kz                 : 0.001 # not being used?
 nn_Zb                 : 100 # not being used?
-nn_feedForwardForce   : 1
+nn_feedForwardForce   : 0
 nn_nnF                : 100 
 nn_nnG                : 200
 nn_ON                 : 1
