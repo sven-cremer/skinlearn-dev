@@ -444,6 +444,8 @@ void PR2adaptNeuroControllerClass::update()
 
 	/***************** UPDATE LOOP VARIABLES *****************/
 
+	tau = Eigen::VectorXd::Zero( num_Outputs );
+
 	// Current joint positions and velocities
 	q = q_;
 	qd = qdot_;
@@ -458,7 +460,8 @@ void PR2adaptNeuroControllerClass::update()
 
 	if(forceTorqueOn)
 	{
-		t_r = -wrench_transformed_;		// FIXME sign correct?
+		t_r = Eigen::VectorXd::Zero( num_Outputs );
+		tau = fFForce*(J_ft_.transpose()*wrench_compensated_);	// FIXME sign correct?
 	}
 	else
 	{
@@ -498,7 +501,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	JacobianTrans = J_.transpose();		// [6x7]^T->[7x6]
 
-	tau = JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
+	tau = tau + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
 
 	/***************** NULLSPACE *****************/
 
