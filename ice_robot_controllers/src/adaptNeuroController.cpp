@@ -206,6 +206,7 @@ void PR2adaptNeuroControllerClass::update()
 	if(forceTorqueOn)
 	{
 		kin_ft_->fk(q_,x_ft_);
+		kin_ft_->jac(q_,J_ft_);
 		//kin_acc_to_ft_->fk(q_,x_acc_to_ft_);
 	}
 
@@ -470,7 +471,7 @@ void PR2adaptNeuroControllerClass::update()
 	//	}
 
 	//t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
-	t_r = -0.1*wrench_transformed_;					// sign correct?
+	t_r = J_ft_.transpose()*wrench_transformed_;	// sign correct?
 
 //	CartVec tmp;
 //	tmp(0) = l_ftData.wrench.force.x  ;

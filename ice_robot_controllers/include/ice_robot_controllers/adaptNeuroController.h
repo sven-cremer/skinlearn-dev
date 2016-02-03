@@ -148,7 +148,8 @@ private:
 	CartVec xerr_;					// Cartesian error
 	CartVec xdot_;					// Cartesian velocity
 	JacobianMat J_;					// Jacobian
-	JacobianMat J_acc_;				// Jacobian
+	JacobianMat J_ft_;				// Jacobian FT sensor
+	JacobianMat J_acc_;				// Jacobian Acc sensor
 
 	JointVec saturation_;			// Saturation torques
 
