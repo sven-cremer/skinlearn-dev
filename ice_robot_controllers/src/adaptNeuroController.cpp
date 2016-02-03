@@ -461,7 +461,26 @@ void PR2adaptNeuroControllerClass::update()
 	if(forceTorqueOn)
 	{
 		t_r = Eigen::VectorXd::Zero( num_Outputs );
-		tau = fFForce*(J_ft_.transpose()*wrench_compensated_);	// FIXME sign correct?
+
+		for(int i=0;i<6;i++)
+		{
+			if(wrench_transformed_(i) > 10)
+			{
+				wrench_transformed_(i) = 1.0;
+			}
+			else if (wrench_transformed_(i) < 10)
+			{
+				wrench_transformed_(i) = -1.0;
+			}
+			else
+			{
+				wrench_transformed_(i) = 0.0;
+			}
+		}
+		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );
+
+		tau = J_ft_.transpose()*(fFForce*wrench_transformed_);	// FIXME sign correct?
+		// TODO J_ft_ seems to be equal to J_ ?
 	}
 	else
 	{
