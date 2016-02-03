@@ -224,7 +224,7 @@ void PR2adaptNeuroControllerClass::update()
 //		qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
 //	qdot_ = qdot_filtered_;
 
-	xdot_ = J_ * qdot_;
+	xdot_ = J_ * qdot_;		// [6x7]*[7x1]
 
 
 	// Estimate force at gripper tip
@@ -466,12 +466,12 @@ void PR2adaptNeuroControllerClass::update()
 		//	    t_r(5) = r_ftData.wrench.torque.z;
 
 
-		t_r = J_ft_.transpose()*wrench_transformed_;	// sign correct?
+		t_r = J_ft_.transpose()*wrench_transformed_;	// [7x6]*[6x1] sign correct?
 	}
 	else
 	{
 //		t_r = force_measured_;					// Computed from joint efforts
-		t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
+		t_r = Eigen::VectorXd::Zero(7);				// FIXME inner loop only works if t_r = 0
 	}
 
 
@@ -489,8 +489,8 @@ void PR2adaptNeuroControllerClass::update()
                              Xdd_m ,
                              q     ,
                              qd    ,
-                             t_r   ,			// Human force
-                             force_c  );		// Output
+                             t_r   ,			// Feedforward force [7x1]
+                             force_c  );		// Output [7x1]
 
 
 	// PD controller
@@ -505,9 +505,10 @@ void PR2adaptNeuroControllerClass::update()
 	force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
 */
 
-	JacobianTrans = J_.transpose();
+	JacobianTrans = J_.transpose();		// [6x7]^T->[7x6]
 
-	tau = JacobianTrans*force_c;
+	//tau = JacobianTrans*force_c;		// [7x6]*[7x1] FIXME ???
+	tau = force_c;
 
 	/***************** NULLSPACE *****************/
 
