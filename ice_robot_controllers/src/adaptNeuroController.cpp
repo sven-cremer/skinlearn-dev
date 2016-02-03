@@ -464,24 +464,16 @@ void PR2adaptNeuroControllerClass::update()
 		//	    t_r(3) = r_ftData.wrench.torque.x;		// FIXME transform wrenches
 		//	    t_r(4) = r_ftData.wrench.torque.y;
 		//	    t_r(5) = r_ftData.wrench.torque.z;
+
+
+		t_r = J_ft_.transpose()*wrench_transformed_;	// sign correct?
 	}
-	//	else
-	//	{
-	//		t_r = force_measured_;					// Computed from joint efforts
-	//	}
+	else
+	{
+//		t_r = force_measured_;					// Computed from joint efforts
+		t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
+	}
 
-	//t_r = Eigen::VectorXd::Zero(6);				// FIXME inner loop only works if t_r = 0
-	t_r = J_ft_.transpose()*wrench_transformed_;	// sign correct?
-
-//	CartVec tmp;
-//	tmp(0) = l_ftData.wrench.force.x  ;
-//	tmp(1) = l_ftData.wrench.force.y  ;
-//	tmp(2) = l_ftData.wrench.force.z  ;
-//	tmp(3) = l_ftData.wrench.torque.x ;
-//	tmp(4) = l_ftData.wrench.torque.y ;
-//	tmp(5) = l_ftData.wrench.torque.z ;
-
-	//	t_r = J_acc_.transpose() * tmp;
 
 	/***************** OUTER LOOP *****************/
 
