@@ -1486,10 +1486,11 @@ bool PR2adaptNeuroControllerClass::initRobot()
 
 	// Determine arm from tip_name
 	arm_prefix = tip_name[0];
-	if( arm_prefix != "r" || arm_prefix != "l")
-	{
-		ROS_ERROR("Unknown arm (l or r) from tip name: %s)",arm_prefix.c_str());
-	}
+	if( arm_prefix == "r" || arm_prefix == "l")
+		ROS_INFO("Arm prefix: %s",arm_prefix.c_str());
+	else
+		ROS_ERROR("Unknown arm (l or r) from tip name: %s",arm_prefix.c_str());
+
 
 	// Construct a chain from the root to the tip and prepare the kinematics.
 	if (!chain_.init(robot_state_, root_name, tip_name))
