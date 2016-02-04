@@ -185,7 +185,7 @@ void PR2adaptNeuroControllerClass::starting()
 
 	loop_count_ = 0;
 
-	m_Thread = boost::thread(&PR2adaptNeuroControllerClass::updateNonRealtime, this);
+	//m_Thread = boost::thread(&PR2adaptNeuroControllerClass::updateNonRealtime, this);
 
 }
 
@@ -193,8 +193,8 @@ void PR2adaptNeuroControllerClass::starting()
 void PR2adaptNeuroControllerClass::updateNonRealtime()
 {
 
-	lp_FT_data(2) += 1;			// tmp
-	ros::Duration(1.0).sleep();
+	//lp_FT_data(2) += 1;			// tmp
+	//ros::Duration(1.0).sleep();
 }
 
 
@@ -202,7 +202,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 void PR2adaptNeuroControllerClass::update()
 {
 
-	double dt;                    // Servo loop time step
+	double dt;                    // Servo loop time step		TODO make class variable
 	++loop_count_;
 
 	// Calculate the dt between servo cycles.
@@ -217,7 +217,7 @@ void PR2adaptNeuroControllerClass::update()
 	if(forceTorqueOn)
 	{
 		kin_ft_->fk(q_,x_ft_);
-		kin_ft_->jac(q_,J_ft_);
+		//kin_ft_->jac(q_,J_ft_);
 		//kin_acc_to_ft_->fk(q_,x_acc_to_ft_);
 	}
 
@@ -247,6 +247,7 @@ void PR2adaptNeuroControllerClass::update()
 //			force_measured_(i) += J_(i,j) * tau_measured_(j);
 //	}
 
+	transformed_force = Eigen::Vector3d::Zero();
 
 	/***************** SENSOR UPDATE *****************/
 	if(useFlexiForce)
@@ -285,12 +286,6 @@ void PR2adaptNeuroControllerClass::update()
 
 	if( accelerometerOn )//|| forceTorqueOn )
 	{
-//		accObserver->spin();
-
-//		accData(0) = accObserver->aX_lp ;
-//		accData(1) = accObserver->aY_lp ;
-//		accData(2) = accObserver->aZ_lp ;
-
 		// Retrieve accelerometer data
 		std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;	// TODO accelerometer_handle_ is not used?
 		accData.setZero();
@@ -302,7 +297,6 @@ void PR2adaptNeuroControllerClass::update()
 			accData(2) += threeAccs[i].z;
 		}
 		accData = accData.array() / (double)numValues;
-
 	}
 
 	if( forceTorqueOn )		// TODO check if accData has been updated
@@ -313,7 +307,6 @@ void PR2adaptNeuroControllerClass::update()
 		ftData.wrench = ftData_vector[ft_samples];
 
 		tf::wrenchMsgToEigen(ftData.wrench, wrench_);
-
 
 		// **************************************
 		// FT compensation
@@ -367,8 +360,6 @@ void PR2adaptNeuroControllerClass::update()
 		lp_FT_data(1) = wrench_transformed_(0); // unfiltered value
 
 		transformed_force = wrench_transformed_.topRows(3);
-		//transformed_force = Eigen::Vector3d::Zero();
-
 	}
 
 	// Force threshold (makes force zero bellow threshold)
@@ -453,11 +444,9 @@ void PR2adaptNeuroControllerClass::update()
 
 	}
 
-
-
 	/***************** UPDATE LOOP VARIABLES *****************/
 
-	tau = Eigen::VectorXd::Zero( num_Outputs );
+	tau = Eigen::VectorXd::Zero( num_Joints );		// [7x1]
 
 	// Current joint positions and velocities
 	q = q_;
@@ -473,7 +462,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	if(forceTorqueOn)
 	{
-		t_r = Eigen::VectorXd::Zero( num_Outputs );
+		t_r = Eigen::VectorXd::Zero( num_Joints );		// [6x1]
 
 		for(int i=0;i<6;i++)
 		{
@@ -492,7 +481,7 @@ void PR2adaptNeuroControllerClass::update()
 		}
 		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );	// TODO try without
 
-		tau = J_ft_.transpose()*(fFForce*wrench_transformed_);
+		tau = J_ft_.transpose()*(fFForce*wrench_transformed_);	// [7x6]*[6x1]->[7x1]
 		// TODO J_ft_ seems to be equal to J_ ?
 	}
 	else
