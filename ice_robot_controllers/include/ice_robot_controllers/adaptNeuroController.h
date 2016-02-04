@@ -14,8 +14,9 @@
 #include <pr2_mechanism_model/robot.h>
 #include <pr2_hardware_interface/hardware_interface.h>
 
-#include "pr2_gripper_sensor_controller/acceleration_observer.h"
-#include <pr2_gripper_sensor_controller/digitalFilter.h>
+//#include "pr2_gripper_sensor_controller/acceleration_observer.h"
+//#include <pr2_gripper_sensor_controller/digitalFilter.h>
+#include <ice_robot_controllers/digitalFilter.h>
 
 // Math
 #include <Eigen/Geometry>
@@ -163,7 +164,7 @@ private:
 	pr2_hardware_interface::ForceTorque* ft_handle_;
 	pr2_hardware_interface::Accelerometer* accelerometer_handle_;
 
-	accelerationObserver* accObserver;
+	//accelerationObserver* accObserver;
 	Eigen::Vector3d accData;
 
 	int ft_samples;

@@ -1836,8 +1836,8 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		}
 
 		// Lowpass filter (1st order butterworth, lowpass 1000 hz)
-		float b_lpfilt[] = {0.634, 0.634};
-		float a_lpfilt[] = {1.0, 0.2679};
+		double b_lpfilt[] = {0.634, 0.634};
+		double a_lpfilt[] = {1.0, 0.2679};
 //		for(int i=0; i < 6; i++)
 //			lp_FT_filter[i] = new digitalFilter();
 		 lp_FT_filter_X.reset(new digitalFilter(1, true,b_lpfilt,a_lpfilt));
