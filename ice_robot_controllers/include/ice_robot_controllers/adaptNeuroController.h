@@ -2,6 +2,7 @@
 // Utilities
 #include <fstream>
 #include <boost/scoped_ptr.hpp>
+#include <boost/thread.hpp>
 //#include "objTest.h"
 #include <ice_robot_controllers/KDLcontroller.h>
 #include <ice_robot_controllers/EigenConversions.h>
@@ -481,6 +482,8 @@ private:
 
 	  int loop_count_;
 
+	  boost::thread	m_Thread;
+
 public:
 	PR2adaptNeuroControllerClass();
 	~PR2adaptNeuroControllerClass();
@@ -494,5 +497,6 @@ public:
 
 	void readForceValuesCB(const geometry_msgs::WrenchConstPtr& wrench_msg);	// TODO change this message type to a vector
 
+	void updateNonRealtime();
 };
 }

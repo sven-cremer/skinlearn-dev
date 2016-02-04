@@ -184,6 +184,17 @@ void PR2adaptNeuroControllerClass::starting()
 	joint_vel_filter_ = 1.0;
 
 	loop_count_ = 0;
+
+	m_Thread = boost::thread(&PR2adaptNeuroControllerClass::updateNonRealtime, this);
+
+}
+
+/// Parallel thread for updates that are computationally expensive
+void PR2adaptNeuroControllerClass::updateNonRealtime()
+{
+
+	lp_FT_data(2) += 1;			// tmp
+	ros::Duration(1.0).sleep();
 }
 
 
