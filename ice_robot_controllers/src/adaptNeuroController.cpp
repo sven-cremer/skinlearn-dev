@@ -363,7 +363,7 @@ void PR2adaptNeuroControllerClass::update()
 		// Apply low-pass filter
 //		for(int i=0; i < 6; i++)
 //			lp_FT_data(i) = (double)lp_FT_filter[0]->getNextFilteredValue((float)wrench_transformed_(i));
-		lp_FT_data(0) = lp_FT_filter_X->getNextFilteredValue((float)wrench_transformed_(0));
+		lp_FT_data(0) = lp_FT_filter_X.getNextFilteredValue(wrench_transformed_(0));
 		lp_FT_data(1) = wrench_transformed_(0); // unfiltered value
 
 		transformed_force = wrench_transformed_.topRows(3);
@@ -1840,7 +1840,7 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		double a_lpfilt[] = {1.0, 0.2679};
 //		for(int i=0; i < 6; i++)
 //			lp_FT_filter[i] = new digitalFilter();
-		 lp_FT_filter_X.reset(new digitalFilter(1, true,b_lpfilt,a_lpfilt));
+		 lp_FT_filter_X.init(1, true,b_lpfilt,a_lpfilt);
 
 	}
 

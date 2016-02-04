@@ -19,6 +19,12 @@
 
 #include "ice_robot_controllers/digitalFilter.h"
 
+
+digitalFilter::digitalFilter()
+{
+	initialized = false;
+}
+
 digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR)
 {
 	filterOrder = filterOrder_userdef;
@@ -36,14 +42,20 @@ digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR)
 	x.setZero();
 	u.setZero();
 
+	initialized = true;
 }	
 
 digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR, double *b_userdef, double *a_userdef)
 {
-  
+	init(filterOrder_userdef, isIIR, b_userdef, a_userdef);
+}
+
+void digitalFilter::init(int filterOrder_userdef, bool isIIR, double *b_userdef, double *a_userdef)
+{
+
 	filterOrder = filterOrder_userdef;
         IIR = isIIR;
-	
+
 	b.resize(filterOrder + 1);
 	a.resize(filterOrder + 1);
 
@@ -51,7 +63,7 @@ digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR, double *b_user
 	u.resize(filterOrder + 1);
 
 	// Initialize the arrays
-	
+
 	for(int i = 0; i < (filterOrder + 1); i++)
 	{
 		b[i] = b_userdef[i];
@@ -59,8 +71,9 @@ digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR, double *b_user
 		x[i] = 0.0;
 		u[i] = 0.0;
 	}
-	
+	initialized = true;
 }
+
 
 double digitalFilter::getNextFilteredValue(double u_current)
 {

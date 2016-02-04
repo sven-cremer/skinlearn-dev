@@ -17,6 +17,12 @@
 //         Please refer to the matlab documentation page for implementation
 //         details: http://www.mathworks.com/access/helpdesk/help/techdoc/ref/filter.html
 
+/*
+ *  Modified on: Feb 4, 2016
+ *       Author: Sven Cremer
+ *  Description: Using Eigen instead of dynamic arrays, new constructor and init functions
+ */
+
 #ifndef _DIGITALFILTER_H_
 #define _DIGITALFILTER_H_
 
@@ -27,12 +33,15 @@ class digitalFilter
 
 public:
 	// Constructors
+	digitalFilter();
 	digitalFilter(int filterOrder_userdef, bool isIIR);	
 	digitalFilter(int filterOrder_userdef, bool isIIR, double *b_userdef, double *a_userdef);
 
 	~digitalFilter(void);	// Destructor
 
+	void init(int filterOrder_userdef, bool isIIR, double *b_userdef, double *a_userdef);
 	double getNextFilteredValue(double u_current);
+	bool initialized;
 
 protected:
 	Eigen::VectorXd a, b;		// filter coefficients
