@@ -19,6 +19,7 @@
 
 #include "ice_robot_controllers/digitalFilter.h"
 
+using namespace pr2_controller_ns;
 
 digitalFilter::digitalFilter()
 {
@@ -47,11 +48,6 @@ digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR)
 
 digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR, double *b_userdef, double *a_userdef)
 {
-	init(filterOrder_userdef, isIIR, b_userdef, a_userdef);
-}
-
-void digitalFilter::init(int filterOrder_userdef, bool isIIR, double *b_userdef, double *a_userdef)
-{
 
 	filterOrder = filterOrder_userdef;
         IIR = isIIR;
@@ -71,7 +67,35 @@ void digitalFilter::init(int filterOrder_userdef, bool isIIR, double *b_userdef,
 		x[i] = 0.0;
 		u[i] = 0.0;
 	}
+}
+
+bool digitalFilter::init(int filterOrder_userdef, bool isIIR, Eigen::VectorXd b_userdef, Eigen::VectorXd a_userdef)
+{
+
+	if(a_userdef.size() != filterOrder + 1)
+		return false;
+
+	if(b_userdef.size() != filterOrder + 1)
+		return false;
+
+	filterOrder = filterOrder_userdef;
+    IIR = isIIR;
+
+	b.resize(filterOrder + 1);
+	a.resize(filterOrder + 1);
+
+	x.resize(filterOrder + 1);
+	u.resize(filterOrder + 1);
+
+	// Initialize the arrays
+	b = b_userdef;
+	a = a_userdef;
+	x.setZero();
+	u.setZero();
+
 	initialized = true;
+
+	return true;
 }
 
 

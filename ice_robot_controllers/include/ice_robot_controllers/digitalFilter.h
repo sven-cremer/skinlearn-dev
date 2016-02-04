@@ -28,6 +28,8 @@
 
 #include <Eigen/Core>
 
+namespace pr2_controller_ns{
+
 class digitalFilter
 {
 
@@ -39,7 +41,7 @@ public:
 
 	~digitalFilter(void);	// Destructor
 
-	void init(int filterOrder_userdef, bool isIIR, double *b_userdef, double *a_userdef);
+	bool init(int filterOrder_userdef, bool isIIR, Eigen::VectorXd b_userdef, Eigen::VectorXd a_userdef);
 	double getNextFilteredValue(double u_current);
 	bool initialized;
 
@@ -52,6 +54,8 @@ private:
     bool IIR;
 	
 };
+
+} // namespace
 
 #endif
 
