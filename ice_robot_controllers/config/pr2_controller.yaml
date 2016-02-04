@@ -3,10 +3,11 @@ port               : /dev/ttyACM0
 baud               : 2000000
 
 useCurrentCartPose : false
-useNullspacePose   : false
-forceTorqueOn      : true
+useNullspacePose   : true
 useFlexiForce      : false
+forceTorqueOn      : true
 accelerometerOn    : true
+useDigitalFilter   : false
 
 executeCircleTraj  : false
 numCircleTraj      : 3

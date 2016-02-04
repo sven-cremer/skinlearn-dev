@@ -190,6 +190,7 @@ private:
     CartVec lp_FT_data;					// lowpass FT data
 //    digitalFilter *lp_FT_filter[3];		// lowpass FT filter
 	digitalFilter lp_FT_filter_X;
+	bool useDigitalFilter;
 
 	// Flexiforce data (input of the controller)
 	KDL::Wrench flexiforce_wrench_desi_;

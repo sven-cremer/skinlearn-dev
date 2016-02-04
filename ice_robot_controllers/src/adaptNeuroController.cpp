@@ -356,8 +356,11 @@ void PR2adaptNeuroControllerClass::update()
 		// Apply low-pass filter
 //		for(int i=0; i < 6; i++)
 //			lp_FT_data(i) = (double)lp_FT_filter[0]->getNextFilteredValue((float)wrench_transformed_(i));
-		lp_FT_data(0) = lp_FT_filter_X.getNextFilteredValue(wrench_transformed_(0));
-		lp_FT_data(1) = wrench_transformed_(0); // unfiltered value
+		if(useDigitalFilter)
+		{
+			//lp_FT_data(0) = lp_FT_filter_X.getNextFilteredValue(wrench_transformed_(0));
+			//lp_FT_data(1) = wrench_transformed_(0); // unfiltered value
+		}
 
 		transformed_force = wrench_transformed_.topRows(3);
 	}
@@ -1462,6 +1465,7 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/executeCircleTraj", executeCircleTraj, false);
 	nh_.param("/numCircleTraj",     numCircleTraj,     2);
 	nh_.param("/publishRTtopics",   publishRTtopics,   false);
+	nh_.param("/useDigitalFilter",  useDigitalFilter,  false);
 
 	nh_.param("/mannequinThresPos", mannequinThresPos, 0.05);
 	nh_.param("/mannequinThresPos", mannequinThresRot, 0.05);
@@ -1825,13 +1829,19 @@ bool PR2adaptNeuroControllerClass::initSensors()
 			result=false;
 		}
 
+	}
+
+	if( useDigitalFilter )
+	{
 		// Lowpass filter (1st order butterworth, lowpass 1000 hz)
 		Eigen::VectorXd b_lpfilt;
 		b_lpfilt.resize(2);
 		b_lpfilt << 0.634, 0.634;
+
 		Eigen::VectorXd a_lpfilt;
 		a_lpfilt.resize(2);
 		a_lpfilt << 1.0, 0.2679;
+
 //		for(int i=0; i < 6; i++)
 //			lp_FT_filter[i] = new digitalFilter();
 		if(!lp_FT_filter_X.init(1, true, b_lpfilt, a_lpfilt))
@@ -1839,7 +1849,6 @@ bool PR2adaptNeuroControllerClass::initSensors()
 			ROS_ERROR("Failed to init digital filter");
 			result=false;
 		}
-
 	}
 
 	if( accelerometerOn )//|| forceTorqueOn )
