@@ -465,7 +465,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	if(forceTorqueOn)
 	{
-		t_r = Eigen::VectorXd::Zero( num_Joints );		// [6x1]
+		t_r = Eigen::VectorXd::Zero( num_Outputs );		// [6x1]
 
 		for(int i=0;i<6;i++)
 		{
