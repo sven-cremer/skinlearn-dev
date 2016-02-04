@@ -349,9 +349,11 @@ void PR2adaptNeuroControllerClass::update()
 
 		// **************************************
 
-		// Apply low-pass fitlter
+		// Apply low-pass filter
 //		for(int i=0; i < 6; i++)
 //			lp_FT_data(i) = (double)lp_FT_filter[0]->getNextFilteredValue((float)wrench_transformed_(i));
+		lp_FT_data(0) = lp_FT_filter_X->getNextFilteredValue((float)wrench_transformed_(0));
+		lp_FT_data(1) = wrench_transformed_(0); // unfiltered value
 
 		transformed_force = wrench_transformed_.topRows(3);
 		//transformed_force = Eigen::Vector3d::Zero();
@@ -477,7 +479,7 @@ void PR2adaptNeuroControllerClass::update()
 				wrench_transformed_(i) = 0.0;
 			}
 		}
-		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );
+		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );	// TODO try without
 
 		tau = J_ft_.transpose()*(fFForce*wrench_transformed_);
 		// TODO J_ft_ seems to be equal to J_ ?
@@ -618,8 +620,8 @@ void PR2adaptNeuroControllerClass::update()
 	{
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
-			//tf::poseEigenToMsg(CartVec2Affine(X_m), pub_x_desi_.msg_.pose);
-			tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
+			tf::poseEigenToMsg(CartVec2Affine(lp_FT_data), pub_x_desi_.msg_.pose);	// tmp
+			//tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
 			pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
 			pub_x_desi_.unlockAndPublish();
 		}
@@ -1823,10 +1825,11 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		}
 
 		// Lowpass filter (1st order butterworth, lowpass 1000 hz)
-//		float b_lpfilt[] = {0.634, 0.634};
-//		float a_lpfilt[] = {1.0, 0.2679};
+		float b_lpfilt[] = {0.634, 0.634};
+		float a_lpfilt[] = {1.0, 0.2679};
 //		for(int i=0; i < 6; i++)
-//			lp_FT_filter[i] = new digitalFilter(1, true,b_lpfilt,a_lpfilt);
+//			lp_FT_filter[i] = new digitalFilter();
+		 lp_FT_filter_X.reset(new digitalFilter(1, true,b_lpfilt,a_lpfilt));
 
 	}
 
