@@ -72,10 +72,11 @@ digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR, double *b_user
 bool digitalFilter::init(int filterOrder_userdef, bool isIIR, Eigen::VectorXd b_userdef, Eigen::VectorXd a_userdef)
 {
 
-	if(a_userdef.size() != filterOrder + 1)
+//	std::cout<<"FILTER: "<<a_userdef<<"\nSIZE:"<<a_userdef.size()<<"\n";
+	if(a_userdef.size() != filterOrder_userdef + 1)
 		return false;
 
-	if(b_userdef.size() != filterOrder + 1)
+	if(b_userdef.size() != filterOrder_userdef + 1)
 		return false;
 
 	filterOrder = filterOrder_userdef;
