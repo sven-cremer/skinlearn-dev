@@ -24,33 +24,31 @@ digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR)
 	filterOrder = filterOrder_userdef;
     IIR = isIIR;
 	
-	b = new float [filterOrder + 1];
-	a = new float [filterOrder + 1];
+    b.resize(filterOrder + 1);
+    a.resize(filterOrder + 1);
 
-	x = new float [filterOrder + 1];
-	u = new float [filterOrder + 1];
+    x.resize(filterOrder + 1);
+    u.resize(filterOrder + 1);
 
 	// Initialize the arrays with zeros
-	for(int i = 0; i < (filterOrder + 1); i++)
-	{
-		b[i] = 0.0;
-		a[i] = 0.0;
-		x[i] = 0.0;
-		u[i] = 0.0;
-	}
+	b.setZero();
+	a.setZero();
+	x.setZero();
+	u.setZero();
+
 }	
 
-digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR, float *b_userdef, float *a_userdef)
+digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR, double *b_userdef, double *a_userdef)
 {
   
 	filterOrder = filterOrder_userdef;
         IIR = isIIR;
 	
-	b = new float [filterOrder + 1];
-	a = new float [filterOrder + 1];
+	b.resize(filterOrder + 1);
+	a.resize(filterOrder + 1);
 
-	x = new float [filterOrder + 1];
-	u = new float [filterOrder + 1];
+	x.resize(filterOrder + 1);
+	u.resize(filterOrder + 1);
 
 	// Initialize the arrays
 	
@@ -64,7 +62,7 @@ digitalFilter::digitalFilter(int filterOrder_userdef, bool isIIR, float *b_userd
 	
 }
 
-float digitalFilter::getNextFilteredValue(float u_current)
+double digitalFilter::getNextFilteredValue(double u_current)
 {
 	/* Shift x2 and u2 vectors, losing the last elements and putting new u2 value in zeroth spot. */
 	for (int i = filterOrder ; i > 0 ; i--) {
@@ -74,7 +72,7 @@ float digitalFilter::getNextFilteredValue(float u_current)
 	u[0] = u_current; 
 
 	/* Simulate system. */
-	float output = b[0] * u[0];
+	double output = b[0] * u[0];
 	  
         // if we have an IIR filter            
         if(IIR)
@@ -100,8 +98,5 @@ float digitalFilter::getNextFilteredValue(float u_current)
 
 digitalFilter::~digitalFilter(void)
 {
-	delete[] x;
-	delete[] u;
-	delete[] a;
-	delete[] b;
+
 }

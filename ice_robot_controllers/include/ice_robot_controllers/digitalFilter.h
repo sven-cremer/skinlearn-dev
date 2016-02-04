@@ -20,21 +20,23 @@
 #ifndef _DIGITALFILTER_H_
 #define _DIGITALFILTER_H_
 
+#include <Eigen/Core>
+
 class digitalFilter
 {
 
 public:
 	// Constructors
 	digitalFilter(int filterOrder_userdef, bool isIIR);	
-	digitalFilter(int filterOrder_userdef, bool isIIR, float *b_userdef, float *a_userdef);
+	digitalFilter(int filterOrder_userdef, bool isIIR, double *b_userdef, double *a_userdef);
 
 	~digitalFilter(void);	// Destructor
 
-	float getNextFilteredValue(float u_current);
+	double getNextFilteredValue(double u_current);
 
 protected:
-	float *a, *b;		// filter coefficients
-	float *u, *x;		// filter input and output states
+	Eigen::VectorXd a, b;		// filter coefficients
+	Eigen::VectorXd u, x;		// filter input and output states
 	
 private:
 	int filterOrder;
