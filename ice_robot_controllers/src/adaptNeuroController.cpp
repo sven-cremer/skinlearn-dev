@@ -1853,12 +1853,13 @@ bool PR2adaptNeuroControllerClass::initSensors()
 				a_filt(i) = a_filt_list[i];
 			}
 		}
+        std::cout<<"Loaded /a_filt: \n"<<a_filt<<"\n---\n";
 		// Load filter coefficients	(numerator)
 		b_filt.setZero();
 		std::vector<double> b_filt_list;
 		if(!nh_.getParam("/b_filt", b_filt_list))
 		{
-			ROS_ERROR("Value not loaded from parameter: /a_filt !)");
+			ROS_ERROR("Value not loaded from parameter: /b_filt !)");
 			result=false;
 		}
 		else
@@ -1870,9 +1871,11 @@ bool PR2adaptNeuroControllerClass::initSensors()
 				b_filt(i) = b_filt_list[i];
 			}
 		}
-//		for(int i=0; i < 6; i++)
-//			lp_FT_filter[i] = new digitalFilter();
-		if(!digitalFilter_X.init(num_coeff-1, true, a_filt, b_filt))
+        std::cout<<"Loaded /b_filt: \n"<<b_filt<<"\n---\n";
+        
+        int order = num_coeff-1;
+        std::cout<<"Filter order: "<<order<<"\n";
+		if(!digitalFilter_X.init(order, true, b_filt, a_filt))
 		{
 			ROS_ERROR("Failed to init digital filter");
 			result=false;
