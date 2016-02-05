@@ -32,20 +32,21 @@ useDirectmodel     : false
 
 outerLoop_time     : 0.001
 
-## Digital filter coefficients
+#### Digital filter coefficients
 ## Lowpass, 1st order butterworth
-# fc=1000 hz, fs=3000Hz
+# fc=1000Hz, fs=3000Hz
 #a_filt: [1.0, 0.2679]
 #b_filt: [0.634, 0.634]
-# fc=100 hz, fs=1000Hz
-#a_filt: [1.0, -0.5095]
-#b_filt: [0.2452, 0.2452]
-# fc=40Hz, fs=1000Hz
-#a_filt: [1.0, -0.7757]
-#b_filt: [0.1122, 0.1122]
-## Band-pass 5-1000 hz, 1st order chebychev
-a_filt: [1.0,-0.3329,-0.6610]
-b_filt: [0.8305, 0, -0.8305]
+# fc=35Hz, fs=1000Hz
+a_filt: [1.0, -0.8012]
+b_filt: [0.0994, 0.0994]
+## Band-pass, 1st order chebychev
+# 5-1000Hz, fs=3000Hz
+#a_filt: [1.0,-0.3329,-0.6610]
+#b_filt: [0.8305, 0, -0.8305]
+# 5-100Hz, fs=1000Hz
+#a_filt: [1.0,-1.0526,0.0634]
+#b_filt: [0.4683, 0, -0.4683]
 
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
