@@ -1833,7 +1833,7 @@ bool PR2adaptNeuroControllerClass::initSensors()
 
 	if( useDigitalFilter )
 	{
-		int order;
+		int num_coeff;
 		// Load filter coefficients	(denominator)
 		a_filt.setZero();
 		std::vector<double> a_filt_list;
@@ -1844,9 +1844,9 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		}
 		else
 		{
-			order = a_filt_list.size();
-			a_filt.resize(order);
-			for(unsigned i=0; i < order; i++)
+			num_coeff = a_filt_list.size();
+			a_filt.resize(num_coeff);
+			for(unsigned i=0; i < num_coeff; i++)
 			{
 				a_filt(i) = a_filt_list[i];
 			}
@@ -1861,16 +1861,16 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		}
 		else
 		{
-			order = b_filt_list.size();		// should be the same
-			b_filt.resize(order);
-			for(unsigned i=0; i < order; i++)
+			num_coeff = b_filt_list.size();		// should be the same
+			b_filt.resize(num_coeff);
+			for(unsigned i=0; i < num_coeff; i++)
 			{
 				b_filt(i) = b_filt_list[i];
 			}
 		}
 //		for(int i=0; i < 6; i++)
 //			lp_FT_filter[i] = new digitalFilter();
-		if(!digitalFilter_X.init(order, true, a_filt, b_filt))
+		if(!digitalFilter_X.init(num_coeff-1, true, a_filt, b_filt))
 		{
 			ROS_ERROR("Failed to init digital filter");
 			result=false;
