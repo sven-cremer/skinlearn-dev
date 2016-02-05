@@ -192,9 +192,11 @@ void PR2adaptNeuroControllerClass::starting()
 /// Parallel thread for updates that are computationally expensive
 void PR2adaptNeuroControllerClass::updateNonRealtime()
 {
-
-	filteredData(2) += 1;			// tmp
-	ros::Duration(1.0).sleep();
+	while(loop_count_ < 15000)
+	{
+		filteredData(2) += 1;			// tmp
+		ros::Duration(1.0).sleep();
+	}
 }
 
 
