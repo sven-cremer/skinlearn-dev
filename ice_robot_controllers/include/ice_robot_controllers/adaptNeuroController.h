@@ -187,10 +187,11 @@ private:
 	double forceCutOffY ;
 	double forceCutOffZ ;
 
-    CartVec lp_FT_data;					// lowpass FT data
-//    digitalFilter *lp_FT_filter[3];		// lowpass FT filter
-	digitalFilter lp_FT_filter_X;
-	bool useDigitalFilter;
+	bool useDigitalFilter;			// Flag for using filter
+    CartVec filteredData;			// Filtered data
+	digitalFilter digitalFilter_X;	// Filter object
+	Eigen::VectorXd a_filt;			// Filter coefficients (denominator)
+	Eigen::VectorXd b_filt;			// Filter coefficients (numerator)
 
 	// Flexiforce data (input of the controller)
 	KDL::Wrench flexiforce_wrench_desi_;

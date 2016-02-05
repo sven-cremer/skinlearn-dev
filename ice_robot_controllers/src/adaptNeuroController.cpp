@@ -193,7 +193,7 @@ void PR2adaptNeuroControllerClass::starting()
 void PR2adaptNeuroControllerClass::updateNonRealtime()
 {
 
-	//lp_FT_data(2) += 1;			// tmp
+	//filteredData(2) += 1;			// tmp
 	//ros::Duration(1.0).sleep();
 }
 
@@ -355,11 +355,11 @@ void PR2adaptNeuroControllerClass::update()
 
 		// Apply low-pass filter
 //		for(int i=0; i < 6; i++)
-//			lp_FT_data(i) = (double)lp_FT_filter[0]->getNextFilteredValue((float)wrench_transformed_(i));
+//			filteredData(i) = (double)lp_FT_filter[0]->getNextFilteredValue((float)wrench_transformed_(i));
 		if(useDigitalFilter)
 		{
-			//lp_FT_data(0) = lp_FT_filter_X.getNextFilteredValue(wrench_transformed_(0));
-			//lp_FT_data(1) = wrench_transformed_(0); // unfiltered value
+			filteredData(0) = digitalFilter_X.getNextFilteredValue(wrench_transformed_(0));
+			filteredData(1) = wrench_transformed_(0); // unfiltered value
 		}
 
 		transformed_force = wrench_transformed_.topRows(3);
@@ -623,7 +623,7 @@ void PR2adaptNeuroControllerClass::update()
 	{
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
-			tf::poseEigenToMsg(CartVec2Affine(lp_FT_data), pub_x_desi_.msg_.pose);	// tmp
+			tf::poseEigenToMsg(CartVec2Affine(filteredData), pub_x_desi_.msg_.pose);	// tmp
 			//tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
 			pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
 			pub_x_desi_.unlockAndPublish();
@@ -1833,18 +1833,43 @@ bool PR2adaptNeuroControllerClass::initSensors()
 
 	if( useDigitalFilter )
 	{
-		// Lowpass filter (1st order butterworth, lowpass 1000 hz)
-		Eigen::VectorXd b_lpfilt;
-		b_lpfilt.resize(2);
-		b_lpfilt << 0.634, 0.634;
-
-		Eigen::VectorXd a_lpfilt;
-		a_lpfilt.resize(2);
-		a_lpfilt << 1.0, 0.2679;
-
+		// Load filter coefficients	(denominator)
+		a_filt.setZero();
+		std::vector<double> a_filt_list;
+		if(!nh_.getParam("/a_filt", a_filt_list))
+		{
+			ROS_ERROR("Value not loaded from parameter: /a_filt !)");
+			result=false;
+		}
+		else
+		{
+			int order = a_filt_list.size();
+			a_filt.resize(order);
+			for(unsigned i=0; i < order; i++)
+			{
+				a_filt(i) = a_filt_list[i];
+			}
+		}
+		// Load filter coefficients	(numerator)
+		b_filt.setZero();
+		std::vector<double> b_filt_list;
+		if(!nh_.getParam("/b_filt", b_filt_list))
+		{
+			ROS_ERROR("Value not loaded from parameter: /a_filt !)");
+			result=false;
+		}
+		else
+		{
+			int order = b_filt_list.size();
+			b_filt.resize(order);
+			for(unsigned i=0; i < order; i++)
+			{
+				b_filt(i) = b_filt_list[i];
+			}
+		}
 //		for(int i=0; i < 6; i++)
 //			lp_FT_filter[i] = new digitalFilter();
-		if(!lp_FT_filter_X.init(1, true, b_lpfilt, a_lpfilt))
+		if(!digitalFilter_X.init(1, true, a_filt, b_filt))
 		{
 			ROS_ERROR("Failed to init digital filter");
 			result=false;
