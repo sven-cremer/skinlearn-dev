@@ -185,7 +185,7 @@ void PR2adaptNeuroControllerClass::starting()
 
 	loop_count_ = 0;
 
-	//m_Thread = boost::thread(&PR2adaptNeuroControllerClass::updateNonRealtime, this);
+	m_Thread = boost::thread(&PR2adaptNeuroControllerClass::updateNonRealtime, this);
 
 }
 
@@ -193,8 +193,8 @@ void PR2adaptNeuroControllerClass::starting()
 void PR2adaptNeuroControllerClass::updateNonRealtime()
 {
 
-	//filteredData(2) += 1;			// tmp
-	//ros::Duration(1.0).sleep();
+	filteredData(2) += 1;			// tmp
+	ros::Duration(1.0).sleep();
 }
 
 
