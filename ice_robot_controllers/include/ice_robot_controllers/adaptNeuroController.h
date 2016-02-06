@@ -164,11 +164,17 @@ private:
 	pr2_hardware_interface::ForceTorque* ft_handle_;
 	pr2_hardware_interface::Accelerometer* accelerometer_handle_;
 
-	//accelerationObserver* accObserver;
+	// Accelerometer
+	bool accData_received;
+	std::vector<geometry_msgs::Vector3> accData_vector;
+	int accData_vector_size;
 	Eigen::Vector3d accData;
 
-	int ft_samples;
-	geometry_msgs::WrenchStamped ftData;
+	// Force/Torque
+	bool ftData_received;
+	std::vector<geometry_msgs::Wrench> ftData_vector;
+	int ftData_vector_size;
+	geometry_msgs::WrenchStamped ftData_msg;
 
 	Eigen::Vector3d FT_transformed_force ;
 	Eigen::Vector3d FLEX_force          ;
@@ -178,7 +184,7 @@ private:
 	bool forceTorqueOn;
 	bool useFlexiForce;
 	std::string ft_frame_id;
-	CartVec wrench_;
+	CartVec wrench_raw_;
 	CartVec wrench_compensated_;
 	CartVec wrench_transformed_;
 	CartVec wrench_gripper_;			// Gripper wrench
@@ -188,7 +194,7 @@ private:
 	double forceCutOffZ ;
 
 	bool useDigitalFilter;			// Flag for using filter
-    CartVec filteredData;			// Filtered data
+    CartVec wrench_filtered_;		// Filtered data
 	std::vector<digitalFilter> digitalFilters;	// Filter object
 	Eigen::VectorXd a_filt;			// Filter coefficients (denominator)
 	Eigen::VectorXd b_filt;			// Filter coefficients (numerator)
@@ -486,6 +492,8 @@ private:
 	  int loop_count_;
 
 	  boost::thread	m_Thread;
+
+	  CartVec cartvec_tmp;
 
 public:
 	PR2adaptNeuroControllerClass();

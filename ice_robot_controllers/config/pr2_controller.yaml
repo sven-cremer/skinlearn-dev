@@ -207,7 +207,7 @@ nn_lambda             : 20 # not being used?
 nn_kappa              : 0.3
 nn_Kz                 : 0.001 # not being used?
 nn_Zb                 : 100 # not being used?
-nn_feedForwardForce   : 10.0 # small because of jitter from FT measurments
+nn_feedForwardForce   : 0.5 # small because of jitter from FT measurments
 nn_nnF                : 100 
 nn_nnG                : 200
 nn_ON                 : 1

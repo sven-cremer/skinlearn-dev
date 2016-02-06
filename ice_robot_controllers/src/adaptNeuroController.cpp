@@ -194,7 +194,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 {
 	while(loop_count_ < 15000)
 	{
-		//filteredData(2) += 1;			// tmp
+		cartvec_tmp(0) += 1;			// tmp
 		ros::Duration(1.0).sleep();
 	}
 }
@@ -251,7 +251,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	transformed_force = Eigen::Vector3d::Zero();
 
-	/***************** SENSOR UPDATE *****************/
+	/***************** GET SENSOR DATA *****************/
 	if(useFlexiForce)
 	{
 		// Read flexi force serial data
@@ -289,54 +289,53 @@ void PR2adaptNeuroControllerClass::update()
 	if( accelerometerOn )//|| forceTorqueOn )
 	{
 		// Retrieve accelerometer data
-		std::vector<geometry_msgs::Vector3> threeAccs = accelerometer_handle_->state_.samples_;	// TODO accelerometer_handle_ is not used?
+		accData_vector.clear();
+		accData_vector = accelerometer_handle_->state_.samples_;
+		accData_received = true;
+
+		// Convert into Eigen vector and compute average value
 		accData.setZero();
-		int numValues = threeAccs.size();
-		for( int  i = 0; i < numValues; i++ )
+		accData_vector_size = accData_vector.size();		// Usually three
+		for( int  i = 0; i < accData_vector_size; i++ )
 		{
-			accData(0) += threeAccs[i].x;
-			accData(1) += threeAccs[i].y;
-			accData(2) += threeAccs[i].z;
+			accData(0) += accData_vector[i].x;
+			accData(1) += accData_vector[i].y;
+			accData(2) += accData_vector[i].z;
 		}
-		accData = accData.array() / (double)numValues;
+		accData = accData.array() / (double)accData_vector_size;
 	}
+
+	if( forceTorqueOn )
+	{
+		// Retrieve Force/Torque data
+		ftData_vector.clear();
+		ftData_vector = ft_handle_->state_.samples_;
+		ftData_received = true;
+
+		// Convert into Eigen vector
+		ftData_vector_size = ftData_vector.size();			// Usually one (?)
+		ftData_msg.wrench = ftData_vector[ftData_vector_size-1];
+		tf::wrenchMsgToEigen(ftData_msg.wrench, wrench_raw_);
+	}
+
+	/***************** SENSOR DATA PROCESSING *****************/
 
 	if( forceTorqueOn )		// TODO check if accData has been updated
 	{
-		std::vector<geometry_msgs::Wrench> ftData_vector = ft_handle_->state_.samples_;
-		ft_samples    = ftData_vector.size() - 1;
-
-		ftData.wrench = ftData_vector[ft_samples];
-
-		tf::wrenchMsgToEigen(ftData.wrench, wrench_);
-
-		// **************************************
 		// FT compensation
 
 		wrench_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_.linear()*accData);	// Gripper force
 
-		forceFT =  wrench_gripper_.topRows(3);	// Temporary store values due to eigen limitations
+		forceFT =  wrench_gripper_.topRows(3);	// Temporary store values due to Eigen limitations
 
 		wrench_gripper_.bottomRows(3) = r_gripper_com.cross(forceFT); // Torque vector
 
-		wrench_compensated_ = wrench_ - ft_bias - wrench_gripper_;
+		wrench_compensated_ = wrench_raw_ - ft_bias - wrench_gripper_;
 
 		forceFT = wrench_compensated_.topRows(3);
 		tauFT	= wrench_compensated_.bottomRows(3);
 
-		// **************************************
 		// Force transformation
-		// FIXME this code produces the correct results but crashes the RT loop
-		//		double px = x_ft_.translation().x();
-		//		double py = x_ft_.translation().y();
-		//		double pz = x_ft_.translation().z();
-		//		W_mat_ << 0,-pz,py,
-		//			      pz,0,-px,
-		//			      -py,px,0;
-
-		//		W_mat_ << 0, -x_ft_.translation().z(), x_ft_.translation().y(),
-		//				  x_ft_.translation().z(), 0, -x_ft_.translation().x(),
-		//			      -x_ft_.translation().y(), x_ft_.translation().x(), 0;
 
 		W_mat_(0,0) = 0;
 		W_mat_(0,1) = -x_ft_.translation().z();
@@ -353,26 +352,23 @@ void PR2adaptNeuroControllerClass::update()
 		wrench_transformed_.bottomRows(3) = W_mat_*x_ft_.linear()*forceFT + x_ft_.linear()*tauFT;
 		wrench_transformed_.topRows(3)    = x_ft_.linear()*forceFT;
 
-		// **************************************
-
 		// Apply low-pass filter
-//		for(int i=0; i < 6; i++)
-//			filteredData(i) = (double)lp_FT_filter[0]->getNextFilteredValue((float)wrench_transformed_(i));
+
 		if(useDigitalFilter)
 		{
 	        for(int i=0;i<6;i++)
 	        {
-	        	filteredData(i) = digitalFilters[i].getNextFilteredValue(wrench_transformed_(i));
+	        	wrench_filtered_(i) = digitalFilters[i].getNextFilteredValue(wrench_transformed_(i));
 	        }
 		}
 
-		transformed_force = wrench_transformed_.topRows(3);
+		transformed_force = wrench_filtered_.topRows(3);
 	}
 
-	// Force threshold (makes force zero bellow threshold)
-	if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
-	if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
-	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
+	// Force threshold (makes force zero bellow threshold) FIXME not needed since force is filtered?
+//	if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
+//	if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
+//	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
 
 
 	/***************** REFERENCE TRAJECTORY *****************/
@@ -453,6 +449,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	/***************** UPDATE LOOP VARIABLES *****************/
 
+	t_r = Eigen::VectorXd::Zero( num_Outputs );		// [6x1]
 	tau = Eigen::VectorXd::Zero( num_Joints );		// [7x1]
 
 	// Current joint positions and velocities
@@ -469,33 +466,30 @@ void PR2adaptNeuroControllerClass::update()
 
 	if(forceTorqueOn)
 	{
-		t_r = Eigen::VectorXd::Zero( num_Outputs );		// [6x1]
+//		for(int i=0;i<6;i++)
+//		{
+//			if(wrench_transformed_(i) > 10.0)
+//			{
+//				wrench_transformed_(i) = 1.0;
+//			}
+//			else if (wrench_transformed_(i) < -10.0)
+//			{
+//				wrench_transformed_(i) = -1.0;
+//			}
+//			else
+//			{
+//				wrench_transformed_(i) = 0.0;
+//			}
+//		}
+//		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );	// TODO try without
 
-		for(int i=0;i<6;i++)
-		{
-			if(wrench_transformed_(i) > 10.0)
-			{
-				wrench_transformed_(i) = 1.0;
-			}
-			else if (wrench_transformed_(i) < -10.0)
-			{
-				wrench_transformed_(i) = -1.0;
-			}
-			else
-			{
-				wrench_transformed_(i) = 0.0;
-			}
-		}
-		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );	// TODO try without
-
-		tau = J_ft_.transpose()*(fFForce*wrench_transformed_);	// [7x6]*[6x1]->[7x1]
+		tau = J_ft_.transpose()*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
 		// TODO J_ft_ seems to be equal to J_ ?
 	}
-	else
-	{
+//	else
+//	{
 //		t_r = force_measured_;							// Computed from joint efforts
-		t_r = Eigen::VectorXd::Zero( num_Outputs );		// FIXME inner loop only works if t_r = 0
-	}
+//	}
 
 
 	/***************** OUTER LOOP *****************/
@@ -625,9 +619,12 @@ void PR2adaptNeuroControllerClass::update()
 
 	if (loop_count_ % 10 == 0 && publishRTtopics)
 	{
+		cartvec_tmp(4) = accData_vector_size;
+		cartvec_tmp(5) = ftData_vector_size;
+
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
-			tf::poseEigenToMsg(CartVec2Affine(filteredData), pub_x_desi_.msg_.pose);	// tmp
+			tf::poseEigenToMsg(CartVec2Affine(cartvec_tmp), pub_x_desi_.msg_.pose);	// tmp
 			//tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
 			pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
 			pub_x_desi_.unlockAndPublish();
@@ -680,7 +677,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		if (pub_ft_transformed_.trylock()) {
 			pub_ft_transformed_.msg_.header.stamp = last_time_;
-			tf::wrenchEigenToMsg(wrench_transformed_, pub_ft_transformed_.msg_.wrench);
+			tf::wrenchEigenToMsg(wrench_filtered_, pub_ft_transformed_.msg_.wrench);
 			pub_ft_transformed_.unlockAndPublish();
 		}
 
