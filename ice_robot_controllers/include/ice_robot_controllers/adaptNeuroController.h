@@ -189,7 +189,7 @@ private:
 
 	bool useDigitalFilter;			// Flag for using filter
     CartVec filteredData;			// Filtered data
-	digitalFilter digitalFilter_X;	// Filter object
+	std::vector<digitalFilter> digitalFilters;	// Filter object
 	Eigen::VectorXd a_filt;			// Filter coefficients (denominator)
 	Eigen::VectorXd b_filt;			// Filter coefficients (numerator)
 

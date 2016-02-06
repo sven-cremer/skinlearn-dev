@@ -194,7 +194,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 {
 	while(loop_count_ < 15000)
 	{
-		filteredData(2) += 1;			// tmp
+		//filteredData(2) += 1;			// tmp
 		ros::Duration(1.0).sleep();
 	}
 }
@@ -360,8 +360,10 @@ void PR2adaptNeuroControllerClass::update()
 //			filteredData(i) = (double)lp_FT_filter[0]->getNextFilteredValue((float)wrench_transformed_(i));
 		if(useDigitalFilter)
 		{
-			filteredData(0) = digitalFilter_X.getNextFilteredValue(wrench_transformed_(0));
-			filteredData(1) = wrench_transformed_(0); // unfiltered value
+	        for(int i=0;i<6;i++)
+	        {
+	        	filteredData(i) = digitalFilters[i].getNextFilteredValue(wrench_transformed_(i));
+	        }
 		}
 
 		transformed_force = wrench_transformed_.topRows(3);
@@ -1875,11 +1877,17 @@ bool PR2adaptNeuroControllerClass::initSensors()
         
         int order = num_coeff-1;
         std::cout<<"Filter order: "<<order<<"\n";
-		if(!digitalFilter_X.init(order, true, b_filt, a_filt))
-		{
-			ROS_ERROR("Failed to init digital filter");
-			result=false;
-		}
+        for(int i=0;i<6;i++)
+        {
+        	digitalFilter tmp;
+        	if(!tmp.init(order, true, b_filt, a_filt))
+    		{
+    			ROS_ERROR("Failed to init digital filter!");
+    			result=false;
+    		}
+        	digitalFilters.push_back(tmp);
+        }
+
 	}
 
 	if( accelerometerOn )//|| forceTorqueOn )
