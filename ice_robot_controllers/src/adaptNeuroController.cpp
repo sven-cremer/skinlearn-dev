@@ -295,8 +295,8 @@ void PR2adaptNeuroControllerClass::update()
 
 		// Convert into Eigen vector and compute average value
 		accData.setZero();
-		accData_vector_size = accData_vector.size();		// Usually three
-		for( int  i = 0; i < accData_vector_size; i++ )
+		accData_vector_size = accData_vector.size();		// 3 or 4 (usually three)
+		for( int  i = 0; i < accData_vector_size; i++ )		// Take average value
 		{
 			accData(0) += accData_vector[i].x;
 			accData(1) += accData_vector[i].y;
@@ -313,8 +313,8 @@ void PR2adaptNeuroControllerClass::update()
 		ftData_received = true;
 
 		// Convert into Eigen vector
-		ftData_vector_size = ftData_vector.size();			// Usually one (?)
-		ftData_msg.wrench = ftData_vector[ftData_vector_size-1];
+		ftData_vector_size = ftData_vector.size();					// 2,3,4 (usually three)
+		ftData_msg.wrench = ftData_vector[ftData_vector_size-1];	// Take latest value
 		tf::wrenchMsgToEigen(ftData_msg.wrench, wrench_raw_);
 	}
 
@@ -354,7 +354,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		// Apply low-pass filter
 
-		if(useDigitalFilter)
+		if(useDigitalFilter)		// FIXME wrench_filtered_ not updated if false
 		{
 	        for(int i=0;i<6;i++)
 	        {
@@ -483,7 +483,7 @@ void PR2adaptNeuroControllerClass::update()
 //		}
 //		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );	// TODO try without
 
-		tau = J_ft_.transpose()*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
+		tau = J_.transpose()*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
 		// TODO J_ft_ seems to be equal to J_ ?
 	}
 //	else
@@ -619,8 +619,8 @@ void PR2adaptNeuroControllerClass::update()
 
 	if (loop_count_ % 10 == 0 && publishRTtopics)
 	{
-		cartvec_tmp(4) = accData_vector_size;
-		cartvec_tmp(5) = ftData_vector_size;
+		cartvec_tmp(1) = accData_vector_size;
+		cartvec_tmp(2) = ftData_vector_size;
 
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
