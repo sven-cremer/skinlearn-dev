@@ -13,6 +13,7 @@ PR2adaptNeuroControllerClass::PR2adaptNeuroControllerClass()
 
 PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 {
+	m_Thread.interrupt();		// Kill thread at one of the interruption points
 }
 
 /// Controller initialization in non-realtime
@@ -198,7 +199,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	// Wait
 	while(!runComputations)
 	{
-		ros::Duration(0.0001).sleep();
+		boost::this_thread::sleep(boost::posix_time::milliseconds(0.05));
 	}
 
 	//Do Computations
