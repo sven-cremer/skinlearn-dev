@@ -114,8 +114,8 @@ private:
 	KDL::JntArray tau_measured_;
 	CartVec force_measured_;
 
-	KDL::JntArray  tau_c_;      	// Joint torques
-	JointVec tau_c_T;				// Joint torques
+	JointVec tau_;					// Joint torques
+	KDL::JntArray  tau_c_;      	// Joint control torques
 	//JointVec tau_posture;			// Joint posture torques
 	JointVec q_posture_;
 

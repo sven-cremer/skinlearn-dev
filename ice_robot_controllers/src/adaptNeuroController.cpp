@@ -223,7 +223,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	// Compute the forward kinematics and Jacobian (at this location).
 	kin_->fk(q_, x_);
-	kin_->jac(q_, J_);
+	kin_->jac(q_, J_);		// [6x7]
 
 	// Get accelerometer forward kinematics and Jacobian
 //	kin_acc_->fk(q_, x_acc_);				TODO update value for outloop
@@ -447,7 +447,7 @@ void PR2adaptNeuroControllerClass::update()
 	/***************** UPDATE LOOP VARIABLES *****************/
 
 	t_r.setZero();		// [6x1] (num_Outputs)
-	tau.setZero();		// [7x1] (num_Joints)
+	tau_.setZero();		// [7x1] (num_Joints)
 
 	// Current joint positions and velocities
 	q = q_;
@@ -480,7 +480,7 @@ void PR2adaptNeuroControllerClass::update()
 //		}
 //		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );	// TODO try without
 
-		tau = J_.transpose()*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
+		tau_ = J_.transpose()*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
 		// TODO J_ft_ seems to be equal to J_ ?
 	}
 
@@ -513,9 +513,9 @@ void PR2adaptNeuroControllerClass::update()
 	force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
 */
 
-	JacobianTrans = J_.transpose();		// [6x7]^T->[7x6]
+	JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
 
-	tau = tau + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
+	tau_ = tau_ + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
 
 	/***************** NULLSPACE *****************/
 
@@ -539,7 +539,7 @@ void PR2adaptNeuroControllerClass::update()
 		}
 		nullspaceTorque = nullSpace*50*( q_jointLimit - 0.0*qd );
 
-		tau = tau + nullspaceTorque;
+		tau_ = tau_ + nullspaceTorque;
 	}
 
 	/***************** TORQUE *****************/
@@ -548,9 +548,9 @@ void PR2adaptNeuroControllerClass::update()
 	for (int i = 0; i < num_Joints; ++i)
 	{
 		if (saturation_[i] > 0.0)
-			sat_scaling = std::min(sat_scaling, fabs(saturation_[i] / tau[i]));
+			sat_scaling = std::min(sat_scaling, fabs(saturation_[i] / tau_[i]));
 	}
-	tau_sat = sat_scaling * tau;
+	tau_sat = sat_scaling * tau_;
 
 	tau_c_ = JointEigen2Kdl( tau_sat );
 
@@ -1484,13 +1484,15 @@ bool PR2adaptNeuroControllerClass::initRobot()
 	kin_acc_.reset(new Kin<Joints>(kdl_chain_acc_link));
 
 	// Resize (pre-allocate) the variables in non-realtime.
-	tau_c_.resize(kdl_chain_.getNrOfJoints());						// TODO replace kdl_chain_.getNrOfJoints() with Joints
-	tau_measured_.resize(kdl_chain_.getNrOfJoints());
+	num_Joints = kdl_chain_.getNrOfJoints();				// TODO replace kdl_chain_.getNrOfJoints() with Joints
+	tau_.resize(num_Joints);
+	tau_c_.resize(num_Joints);
+	tau_measured_.resize(num_Joints);
 
-	qnom.resize(kdl_chain_.getNrOfJoints());
-	q_lower.resize(kdl_chain_.getNrOfJoints());
-	q_upper.resize(kdl_chain_.getNrOfJoints());
-	qd_limit.resize(kdl_chain_.getNrOfJoints());
+	qnom.resize(num_Joints);
+	q_lower.resize(num_Joints);
+	q_upper.resize(num_Joints);
+	qd_limit.resize(num_Joints);
 
 	q_lower(0) = urdf_model.getJoint("l_shoulder_pan_joint"  )->limits->lower;
 	q_lower(1) = urdf_model.getJoint("l_shoulder_lift_joint" )->limits->lower;
