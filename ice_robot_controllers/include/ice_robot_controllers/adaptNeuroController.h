@@ -251,6 +251,7 @@ private:
 	double k_posture;
 	double jacobian_inverse_damping;
 	JointVec joint_dd_ff_;
+	JointVec q_jointLimit ;
 
 	Eigen::VectorXd cartControlForce;
 	Eigen::VectorXd nullspaceTorque;

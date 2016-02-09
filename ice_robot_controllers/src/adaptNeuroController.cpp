@@ -247,7 +247,7 @@ void PR2adaptNeuroControllerClass::update()
 //			force_measured_(i) += J_(i,j) * tau_measured_(j);
 //	}
 
-	transformed_force = Eigen::Vector3d::Zero();
+	transformed_force.setZero();
 
 	/***************** GET SENSOR DATA *****************/
 	if(useFlexiForce)
@@ -351,7 +351,6 @@ void PR2adaptNeuroControllerClass::update()
 		wrench_transformed_.topRows(3)    = x_ft_.linear()*forceFT;
 
 		// Apply low-pass filter
-
 		if(useDigitalFilter)		// FIXME wrench_filtered_ not updated if false
 		{
 	        for(int i=0;i<6;i++)
@@ -447,8 +446,8 @@ void PR2adaptNeuroControllerClass::update()
 
 	/***************** UPDATE LOOP VARIABLES *****************/
 
-	t_r = Eigen::VectorXd::Zero( num_Outputs );		// [6x1]
-	tau = Eigen::VectorXd::Zero( num_Joints );		// [7x1]
+	t_r.setZero();		// [6x1] (num_Outputs)
+	tau.setZero();		// [7x1] (num_Joints)
 
 	// Current joint positions and velocities
 	q = q_;
@@ -484,11 +483,6 @@ void PR2adaptNeuroControllerClass::update()
 		tau = J_.transpose()*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
 		// TODO J_ft_ seems to be equal to J_ ?
 	}
-//	else
-//	{
-//		t_r = force_measured_;							// Computed from joint efforts
-//	}
-
 
 	/***************** OUTER LOOP *****************/
 
@@ -525,66 +519,28 @@ void PR2adaptNeuroControllerClass::update()
 
 	/***************** NULLSPACE *****************/
 
-	// Code taken from JT Cartesian controller
-
-	// Computes pseudo-inverse of J
-	JJt_damped = J_ * JacobianTrans + jacobian_inverse_damping * IdentityCart;
-	JJt_inv_damped = JJt_damped.inverse();
-	J_pinv = JacobianTrans * JJt_inv_damped;
-
-	// Computes the nullspace of J
-	nullSpace = IdentityJoints - J_pinv * J_;
-
 	// Computes the desired joint torques for achieving the posture
-	nullspaceTorque.setZero();
 	if (useNullspacePose)
 	{
-//		if(false)
-//		{
-//			// This doesn't seem to work
-//			JointVec posture_err = q_posture_ - q_;
-//			for (int j = 0; j < Joints; ++j)
-//			{
-//				if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
-//					posture_err[j] = angles::normalize_angle(posture_err[j]);		// -PI to +PI
-//			}
-//
-//			for (int j = 0; j < Joints; ++j) {
-//				if (fabs(q_posture_[j] - 9999) < 1e-5)
-//					posture_err[j] = 0.0;
-//			}
-//
-//			JointVec qdd_posture = k_posture* posture_err;
-//			nullspaceTorque = joint_dd_ff_.array() * (nullSpace * qdd_posture).array();
-//		}
-//		else
+		nullspaceTorque.setZero();
+
+		// Computes pseudo-inverse of J
+		JJt_damped = J_ * JacobianTrans + jacobian_inverse_damping * IdentityCart;
+		JJt_inv_damped = JJt_damped.inverse();
+		J_pinv = JacobianTrans * JJt_inv_damped;
+
+		// Computes the nullspace of J
+		nullSpace = IdentityJoints - J_pinv * J_;
+
+		for (int j = 0; j < Joints; ++j)
 		{
-
-			//		qnom(0) = -0.5   ;
-			//		qnom(1) =  0 ;
-			//		qnom(2) = -1.50   ;
-			//		qnom(3) = -1.7   ;
-			//		qnom(4) =  1.50   ;
-			//		qnom(5) =  0 ;
-			//		qnom(6) =  0 ;
-
-			JointVec q_jointLimit ;
-			for (int j = 0; j < Joints; ++j)
-			{
-				///////////////////
-				// Liegeois
-				// This is the Liegeois cost function from 1977
-				q_jointLimit(j) = - (q(j) - qnom(j) )/( q.rows() * ( q_upper(j) - q_lower(j))) ;
-				// END Liegeois
-				///////////////////
-			}
-			nullspaceTorque = nullSpace*50*( q_jointLimit - 0.0*qd );
+			// This is the Liegeois cost function from 1977
+			q_jointLimit(j) = - (q(j) - qnom(j) )/( q.rows() * ( q_upper(j) - q_lower(j))) ;
 		}
+		nullspaceTorque = nullSpace*50*( q_jointLimit - 0.0*qd );
 
 		tau = tau + nullspaceTorque;
 	}
-
-
 
 	/***************** TORQUE *****************/
 
@@ -608,9 +564,7 @@ void PR2adaptNeuroControllerClass::update()
 		bufferData();
 	}
 
-
 	/***************** DATA PUBLISHING *****************/
-
 
 	if (loop_count_ % 10 == 0 && publishRTtopics)
 	{
@@ -678,9 +632,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	}
 
-
 }
-
 
 void PR2adaptNeuroControllerClass::updateOuterLoop()
 {
