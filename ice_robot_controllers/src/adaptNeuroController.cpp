@@ -8,12 +8,11 @@ PLUGINLIB_EXPORT_CLASS( pr2_controller_ns::PR2adaptNeuroControllerClass, pr2_con
 
 PR2adaptNeuroControllerClass::PR2adaptNeuroControllerClass()
 : robot_state_(NULL)			// Initialize variables
-{}
+{
+}
 
 PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 {
-//	delete[] lp_FT_filter;
-	sub_command_.shutdown();
 }
 
 /// Controller initialization in non-realtime
@@ -61,6 +60,11 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	if( !initNN() )
 	{
 		ROS_ERROR("initNN() failed!");
+		return false;
+	}
+	if( !initNullspace() )
+	{
+		ROS_ERROR("initNullspace() failed!");
 		return false;
 	}
 
@@ -147,12 +151,6 @@ void PR2adaptNeuroControllerClass::starting()
 	chain_.getPositions(q0_);
 	kin_->fk(q0_, x0_);
 
-	/////////////////////////
-	// System Model
-
-	// System Model END
-	/////////////////////////
-
 	// Initialize the phase of the circle as zero.
 	circle_phase = 0.0;
 	startCircleTraj = false;
@@ -185,6 +183,7 @@ void PR2adaptNeuroControllerClass::starting()
 
 	loop_count_ = 0;
 
+	// Start threads
 	m_Thread = boost::thread(&PR2adaptNeuroControllerClass::updateNonRealtime, this);
 
 }
@@ -529,15 +528,12 @@ void PR2adaptNeuroControllerClass::update()
 	// Code taken from JT Cartesian controller
 
 	// Computes pseudo-inverse of J
-	Eigen::Matrix<double,6,6> I6; I6.setIdentity();
-	Eigen::Matrix<double,6,6> JJt_damped = J_ * JacobianTrans + jacobian_inverse_damping * I6;
-	Eigen::Matrix<double,6,6> JJt_inv_damped = JJt_damped.inverse();
-	Eigen::Matrix<double,Joints,6> J_pinv = JacobianTrans * JJt_inv_damped;
+	JJt_damped = J_ * JacobianTrans + jacobian_inverse_damping * IdentityCart;
+	JJt_inv_damped = JJt_damped.inverse();
+	J_pinv = JacobianTrans * JJt_inv_damped;
 
 	// Computes the nullspace of J
-	Eigen::Matrix<double,Joints,Joints> I;
-	I.setIdentity();
-	nullSpace = I - J_pinv * J_;
+	nullSpace = IdentityJoints - J_pinv * J_;
 
 	// Computes the desired joint torques for achieving the posture
 	nullspaceTorque.setZero();
@@ -593,12 +589,12 @@ void PR2adaptNeuroControllerClass::update()
 	/***************** TORQUE *****************/
 
 	// Torque Saturation							(if a torque command is larger than the saturation value, then scale all torque values such that torque_i=saturation_i)
-	double sat_scaling = 1.0;
-	for (int i = 0; i < num_Joints; ++i) {
+	for (int i = 0; i < num_Joints; ++i)
+	{
 		if (saturation_[i] > 0.0)
 			sat_scaling = std::min(sat_scaling, fabs(saturation_[i] / tau[i]));
 	}
-	Eigen::VectorXd tau_sat = sat_scaling * tau;
+	tau_sat = sat_scaling * tau;
 
 	tau_c_ = JointEigen2Kdl( tau_sat );
 
@@ -1670,6 +1666,10 @@ bool PR2adaptNeuroControllerClass::initRobot()
 		kin_acc_to_ft_.reset(new Kin<Joints>(kdl_chain_acc_to_ft_link));
 	}
 
+	// Torque Saturation
+	sat_scaling = 1.0;
+	tau_sat.resize( 7 );		// num_Outputs
+
 	return true;
 }
 
@@ -2484,4 +2484,10 @@ bool PR2adaptNeuroControllerClass::initInnerLoop()
 	return true;
 }
 
+bool PR2adaptNeuroControllerClass::initNullspace()
+{
+	IdentityCart.setIdentity();
+	IdentityJoints.setIdentity();
 
+	return true;
+}

@@ -240,6 +240,13 @@ private:
 	Eigen::MatrixXd JacobianTransPinv;
 	Eigen::MatrixXd nullSpace;
 
+	// Computes pseudo-inverse of J
+	Eigen::Matrix<double,6,6> IdentityCart;
+	Eigen::Matrix<double,6,6> JJt_damped;
+	Eigen::Matrix<double,6,6> JJt_inv_damped;
+	Eigen::Matrix<double,Joints,6> J_pinv;
+	Eigen::Matrix<double,Joints,Joints> IdentityJoints;
+
 	// Posture control
 	double k_posture;
 	double jacobian_inverse_damping;
@@ -251,6 +258,10 @@ private:
 
 	bool useCurrentCartPose ;		// Use current cart pose or use specified cart pose
 	bool useNullspacePose ;		// Use nullspace stuff
+
+	// Torque Saturation
+	double sat_scaling;
+	Eigen::VectorXd tau_sat;
 
 	// Outer loop
 	bool useARMAmodel ;		// Use ARMA
@@ -482,6 +493,7 @@ private:
 	bool initOuterLoop();
 	bool initSensors();
 	bool initNN();
+	bool initNullspace();
 
 	void updateOuterLoop();
 
