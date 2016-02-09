@@ -74,6 +74,7 @@ private:
 	typedef boost::array<double, 4> human_state_type;
 	typedef ice_msgs::neuroControllerState StateMsg;
 
+	int loopRateFactor;
 
 	ros::NodeHandle nh_;
 	double dt_;				// Servo loop time step
@@ -478,6 +479,7 @@ private:
 						    ice_msgs::setValue::Response& resp );
 
 	void bufferData();
+	bool recordData;
 	//  void setDataPoint(dataPoint::Datum* datum, double & dt);
 	//  dataPoint::controllerFullData controllerData;
 
@@ -506,6 +508,7 @@ private:
 	  int loop_count_;
 
 	  boost::thread	m_Thread;
+	  volatile bool runComputations;
 
 	  CartVec cartvec_tmp;
 

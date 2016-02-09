@@ -182,8 +182,10 @@ void PR2adaptNeuroControllerClass::starting()
 	joint_vel_filter_ = 1.0;
 
 	loop_count_ = 0;
+	recordData = false;
 
 	// Start threads
+	runComputations = false;
 	m_Thread = boost::thread(&PR2adaptNeuroControllerClass::updateNonRealtime, this);
 
 }
@@ -191,10 +193,256 @@ void PR2adaptNeuroControllerClass::starting()
 /// Parallel thread for updates that are computationally expensive
 void PR2adaptNeuroControllerClass::updateNonRealtime()
 {
-	while(loop_count_ < 15000)
+	while(true)
 	{
-		cartvec_tmp(0) += 1;			// tmp
-		ros::Duration(1.0).sleep();
+	// Wait
+	while(!runComputations)
+	{
+		ros::Duration(0.0001).sleep();
+	}
+
+	//Do Computations
+
+	/***************** SENSOR DATA PROCESSING *****************/
+
+		if( forceTorqueOn )		// TODO check if accData has been updated
+		{
+			// FT compensation
+
+			wrench_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_.linear()*accData);	// Gripper force
+
+			forceFT =  wrench_gripper_.topRows(3);	// Temporary store values due to Eigen limitations
+
+			wrench_gripper_.bottomRows(3) = r_gripper_com.cross(forceFT); // Torque vector
+
+			wrench_compensated_ = wrench_raw_ - ft_bias - wrench_gripper_;
+
+			forceFT = wrench_compensated_.topRows(3);
+			tauFT	= wrench_compensated_.bottomRows(3);
+
+			// Force transformation
+
+			W_mat_(0,0) = 0;
+			W_mat_(0,1) = -x_ft_.translation().z();
+			W_mat_(0,2) = x_ft_.translation().y();
+
+			W_mat_(1,0) = x_ft_.translation().z();
+			W_mat_(1,1) = 0;
+			W_mat_(1,2) = -x_ft_.translation().x();
+
+			W_mat_(2,0) = -x_ft_.translation().y();
+			W_mat_(2,1) = x_ft_.translation().x();
+			W_mat_(2,2) = 0;
+
+			wrench_transformed_.bottomRows(3) = W_mat_*x_ft_.linear()*forceFT + x_ft_.linear()*tauFT;
+			wrench_transformed_.topRows(3)    = x_ft_.linear()*forceFT;
+
+			// Apply low-pass filter
+			if(useDigitalFilter)		// FIXME wrench_filtered_ not updated if false
+			{
+		        for(int i=0;i<6;i++)
+		        {
+		        	wrench_filtered_(i) = digitalFilters[i].getNextFilteredValue(wrench_transformed_(i));
+		        }
+			}
+
+			transformed_force = wrench_filtered_.topRows(3);
+		}
+
+		// Force threshold (makes force zero bellow threshold) FIXME not needed since force is filtered?
+	//	if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
+	//	if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
+	//	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
+
+
+		/***************** REFERENCE TRAJECTORY *****************/
+
+		if(executeCircleTraj)
+		{
+			// Follow a circle at a fixed angular velocity
+			circle_phase += circle_rate * dt_;				// w*t = w*(dt1+dt2+dt3+...)
+
+			Eigen::Vector3d p;
+
+			// Set position
+			p.x() = cartIniX;
+			p.y() = cartIniY + circleAmpl * cos(circle_phase) - circleAmpl;	// Start at cartIniY when circle_phase=0
+			p.z() = cartIniZ + circleAmpl * sin(circle_phase);
+			x_des_.translation() = p;
+
+			// Set velocity
+			p.x() = 0.0;
+			p.y() = -circleAmpl * (circle_rate * circleAmpl) * sin(circle_phase);
+			p.z() =  circleAmpl * (circle_rate * circleAmpl) * cos(circle_phase);
+			xd_des_.translation() = p;
+
+			// Set acceleration
+			p.x() = 0.0;
+			p.y() = -circleAmpl * (circle_rate * circle_rate * circleAmpl) * cos(circle_phase);
+			p.z() = -circleAmpl * (circle_rate * circle_rate * circleAmpl) * sin(circle_phase);
+			xdd_des_.translation() = p;
+
+	//		if( x_des_.translation() == x0_.translation() )
+	//			loopsCircleTraj++;
+
+			//cartIniX,cartIniY,cartIniZ
+
+			if(circle_phase > (2*3.14159)*numCircleTraj)
+			{
+				executeCircleTraj = false;
+			}
+		}
+		if(useHumanIntent && loop_count_ > 3000)
+		{
+			if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
+			{
+				task_ref = x_des_.translation();
+				calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
+
+				// Transform human intent to torso lift link
+				CartVec xyz = affine2CartVec(x_acc_);
+				task_ref.x() = xyz(1) + task_ref.x() ;
+				task_ref.y() = xyz(2) + task_ref.y() ;
+				task_ref.z() = xyz(3) + task_ref.z() ;
+
+				intent_elapsed_ = robot_state_->getTime() ;
+			}
+		}
+		if(mannequinMode && loop_count_ > 3000) // Check if initialized
+		{
+
+			// Compute error
+			computePoseError(x_, x_des_, xerr_);
+	//		Eigen::Vector3d tmp1; tmp1 << xerr_.(0),xerr_.(1),xerr_.(2);
+	//		Eigen::Vector3d tmp2; tmp2 << xerr_.(3),xerr_.(4),xerr_.(5);
+	//		if(tmp1.norm() > mannequinThresPos)
+	//		{
+	//			x_des_ = x_;
+	//		}
+	//		if(tmp2.norm() > mannequinThresRot)
+	//		{
+	//			x_des_ = x_;
+	//		}
+			if(xerr_.norm() > mannequinThresPos)	// TODO: implement two threshold
+			{
+				x_des_ = x_;
+			}
+
+
+		}
+
+		/***************** UPDATE LOOP VARIABLES *****************/
+
+		t_r.setZero();		// [6x1] (num_Outputs)
+		tau_.setZero();		// [7x1] (num_Joints)
+
+		// Current joint positions and velocities
+		q = q_;
+		qd = qdot_;
+
+		X = affine2CartVec(x_);
+		Xd = xdot_;				// FIXME make sure they are of same type
+
+		// Reference trajectory
+		X_m   = affine2CartVec(x_des_);
+		Xd_m  = affine2CartVec(xd_des_);
+		Xdd_m = affine2CartVec(xdd_des_);
+
+		if(forceTorqueOn)
+		{
+	//		for(int i=0;i<6;i++)
+	//		{
+	//			if(wrench_transformed_(i) > 10.0)
+	//			{
+	//				wrench_transformed_(i) = 1.0;
+	//			}
+	//			else if (wrench_transformed_(i) < -10.0)
+	//			{
+	//				wrench_transformed_(i) = -1.0;
+	//			}
+	//			else
+	//			{
+	//				wrench_transformed_(i) = 0.0;
+	//			}
+	//		}
+	//		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );	// TODO try without
+
+			tau_ = J_.transpose()*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
+			// TODO J_ft_ seems to be equal to J_ ?
+		}
+
+		/***************** OUTER LOOP *****************/
+
+		//updateOuterLoop();
+
+		/***************** INNER LOOP *****************/
+
+		// Neural Network
+		nnController.UpdateCart( X     ,
+	                             Xd    ,
+	                             X_m   ,
+	                             Xd_m  ,
+	                             Xdd_m ,
+	                             q     ,
+	                             qd    ,
+	                             t_r   ,			// Feedforward force [6x1]
+	                             force_c  );		// Output [6x1]
+
+		// PD controller
+	/*
+		// Calculate a Cartesian restoring force.
+		computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
+
+		CartVec kp, kd;
+		kp << 100.0,100.0,100.0,100.0,100.0,100.0;
+		kd << 1.0,1.0,1.0,1.0,1.0,1.0;
+		// F    = -(       Kp * (x-x_dis)   +     Kd * (xdot - 0)    )
+		force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
+	*/
+
+		JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
+
+		tau_ = tau_ + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
+
+		/***************** NULLSPACE *****************/
+
+		// Computes the desired joint torques for achieving the posture
+		if (useNullspacePose)
+		{
+			nullspaceTorque.setZero();
+
+			// Computes pseudo-inverse of J
+			JJt_damped = J_ * JacobianTrans + jacobian_inverse_damping * IdentityCart;
+			JJt_inv_damped = JJt_damped.inverse();
+			J_pinv = JacobianTrans * JJt_inv_damped;
+
+			// Computes the nullspace of J
+			nullSpace = IdentityJoints - J_pinv * J_;
+
+			for (int j = 0; j < Joints; ++j)
+			{
+				// This is the Liegeois cost function from 1977
+				q_jointLimit(j) = - (q(j) - qnom(j) )/( q.rows() * ( q_upper(j) - q_lower(j))) ;
+			}
+			nullspaceTorque = nullSpace*50*( q_jointLimit - 0.0*qd );
+
+			tau_ = tau_ + nullspaceTorque;
+		}
+
+		/***************** TORQUE *****************/
+
+		// Torque Saturation							(if a torque command is larger than the saturation value, then scale all torque values such that torque_i=saturation_i)
+		for (int i = 0; i < num_Joints; ++i)
+		{
+			if (saturation_[i] > 0.0)
+				sat_scaling = std::min(sat_scaling, fabs(saturation_[i] / tau_[i]));
+		}
+		tau_sat = sat_scaling * tau_;
+
+		tau_c_ = JointEigen2Kdl( tau_sat );
+
+		runComputations = false;
+
 	}
 }
 
@@ -203,431 +451,214 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 void PR2adaptNeuroControllerClass::update()
 {
 
-	++loop_count_;
+	++loop_count_;	// Start at 1
 
-	// Calculate the dt between servo cycles.
-	dt_ = (robot_state_->getTime() - last_time_).toSec();
-	last_time_ = robot_state_->getTime();
-
-	// Get the current joint positions and velocities.
-	chain_.getPositions(q_);
-	chain_.getVelocities(qdot_);
-
-	// Get the pose of the F/T sensor
-	if(forceTorqueOn)
+	if(loop_count_ % loopRateFactor == 1 && !runComputations)	// Retrieve data and start computations in a thread
 	{
-		kin_ft_->fk(q_,x_ft_);
-		//kin_ft_->jac(q_,J_ft_);
-		//kin_acc_to_ft_->fk(q_,x_acc_to_ft_);
-	}
+		// Calculate the dt between servo cycles.
+		dt_ = (robot_state_->getTime() - last_time_).toSec();
+		last_time_ = robot_state_->getTime();
 
-	// Compute the forward kinematics and Jacobian (at this location).
-	kin_->fk(q_, x_);
-	kin_->jac(q_, J_);		// [6x7]
+		// Get the current joint positions and velocities.
+		chain_.getPositions(q_);
+		chain_.getVelocities(qdot_);
 
-	// Get accelerometer forward kinematics and Jacobian
-//	kin_acc_->fk(q_, x_acc_);				TODO update value for outloop
-//	kin_acc_->jac(q_, J_acc_);
-
-	// TODO Filter velocity values
-//	chain_.getVelocities(qdot_raw_);
-//	for (int i = 0; i < Joints; ++i)
-//		qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
-//	qdot_ = qdot_filtered_;
-
-	xdot_ = J_ * qdot_;		// [6x7]*[7x1] -> [6x1]
-
-
-	// Estimate force at gripper tip
-//	chain_.getEfforts(tau_measured_);
-//	for (unsigned int i = 0 ; i < 6 ; i++)
-//	{
-//		force_measured_(i) = 0;
-//		for (unsigned int j = 0 ; j < Joints ; j++)
-//			force_measured_(i) += J_(i,j) * tau_measured_(j);
-//	}
-
-	transformed_force.setZero();
-
-	/***************** GET SENSOR DATA *****************/
-	if(useFlexiForce)
-	{
-		// Read flexi force serial data
-		//  tacSerial->getDataArrayFromSerialPort( flexiForce );
-		flexiForce(0) = flexiforce_wrench_desi_.force(0) ;			// TODO change message type
-		flexiForce(1) = flexiforce_wrench_desi_.force(1) ;			// note: this variable is being updated by the readForceValuesCB
-		flexiForce(2) = flexiforce_wrench_desi_.force(2) ;
-		flexiForce(3) = flexiforce_wrench_desi_.torque(0);
-
-		//             0
-		//
-		//     1   >   ^    >   3 y
-		//
-		//             2
-		//             x
-
-		// X axis
-		if( flexiForce(0) > flexiForce(2) ){
-			FLEX_force(0) = -flexiForce(0);
-		}else{
-			FLEX_force(0) =  flexiForce(2);
-		}
-		// Y axis
-		if( flexiForce(1) > flexiForce(3) ){
-			FLEX_force(1) =  flexiForce(1);
-		}else{
-			FLEX_force(1) = -flexiForce(3);
-		}
-		// Z axis
-		FLEX_force(2) = 0;
-
-		transformed_force = FLEX_force;
-	}
-
-	if( accelerometerOn )//|| forceTorqueOn )
-	{
-		// Retrieve accelerometer data
-		accData_vector.clear();
-		accData_vector = accelerometer_handle_->state_.samples_;
-		accData_received = true;
-
-		// Convert into Eigen vector and compute average value
-		accData.setZero();
-		accData_vector_size = accData_vector.size();		// 3 or 4 (usually three)
-		for( int  i = 0; i < accData_vector_size; i++ )		// Take average value
+		// Get the pose of the F/T sensor
+		if(forceTorqueOn)
 		{
-			accData(0) += accData_vector[i].x;
-			accData(1) += accData_vector[i].y;
-			accData(2) += accData_vector[i].z;
+			kin_ft_->fk(q_,x_ft_);
+			//kin_ft_->jac(q_,J_ft_);
+			//kin_acc_to_ft_->fk(q_,x_acc_to_ft_);
 		}
-		accData = accData.array() / (double)accData_vector_size;
-	}
 
-	if( forceTorqueOn )
-	{
-		// Retrieve Force/Torque data
-		ftData_vector.clear();
-		ftData_vector = ft_handle_->state_.samples_;
-		ftData_received = true;
+		// Compute the forward kinematics and Jacobian (at this location).
+		kin_->fk(q_, x_);
+		kin_->jac(q_, J_);		// [6x7]
 
-		// Convert into Eigen vector
-		ftData_vector_size = ftData_vector.size();					// 2,3,4 (usually three)
-		ftData_msg.wrench = ftData_vector[ftData_vector_size-1];	// Take latest value
-		tf::wrenchMsgToEigen(ftData_msg.wrench, wrench_raw_);
-	}
+		// Get accelerometer forward kinematics and Jacobian
+		//	kin_acc_->fk(q_, x_acc_);				TODO update value for outloop
+		//	kin_acc_->jac(q_, J_acc_);
 
-	/***************** SENSOR DATA PROCESSING *****************/
+		// TODO Filter velocity values
+		//	chain_.getVelocities(qdot_raw_);
+		//	for (int i = 0; i < Joints; ++i)
+		//		qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
+		//	qdot_ = qdot_filtered_;
 
-	if( forceTorqueOn )		// TODO check if accData has been updated
-	{
-		// FT compensation
+		xdot_ = J_ * qdot_;		// [6x7]*[7x1] -> [6x1]
 
-		wrench_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_.linear()*accData);	// Gripper force
 
-		forceFT =  wrench_gripper_.topRows(3);	// Temporary store values due to Eigen limitations
+		// Estimate force at gripper tip
+		//	chain_.getEfforts(tau_measured_);
+		//	for (unsigned int i = 0 ; i < 6 ; i++)
+		//	{
+		//		force_measured_(i) = 0;
+		//		for (unsigned int j = 0 ; j < Joints ; j++)
+		//			force_measured_(i) += J_(i,j) * tau_measured_(j);
+		//	}
 
-		wrench_gripper_.bottomRows(3) = r_gripper_com.cross(forceFT); // Torque vector
+		transformed_force.setZero();
 
-		wrench_compensated_ = wrench_raw_ - ft_bias - wrench_gripper_;
-
-		forceFT = wrench_compensated_.topRows(3);
-		tauFT	= wrench_compensated_.bottomRows(3);
-
-		// Force transformation
-
-		W_mat_(0,0) = 0;
-		W_mat_(0,1) = -x_ft_.translation().z();
-		W_mat_(0,2) = x_ft_.translation().y();
-
-		W_mat_(1,0) = x_ft_.translation().z();
-		W_mat_(1,1) = 0;
-		W_mat_(1,2) = -x_ft_.translation().x();
-
-		W_mat_(2,0) = -x_ft_.translation().y();
-		W_mat_(2,1) = x_ft_.translation().x();
-		W_mat_(2,2) = 0;
-
-		wrench_transformed_.bottomRows(3) = W_mat_*x_ft_.linear()*forceFT + x_ft_.linear()*tauFT;
-		wrench_transformed_.topRows(3)    = x_ft_.linear()*forceFT;
-
-		// Apply low-pass filter
-		if(useDigitalFilter)		// FIXME wrench_filtered_ not updated if false
+		/***************** GET SENSOR DATA *****************/
+		if(useFlexiForce)
 		{
-	        for(int i=0;i<6;i++)
-	        {
-	        	wrench_filtered_(i) = digitalFilters[i].getNextFilteredValue(wrench_transformed_(i));
-	        }
+			// Read flexi force serial data
+			//  tacSerial->getDataArrayFromSerialPort( flexiForce );
+			flexiForce(0) = flexiforce_wrench_desi_.force(0) ;			// TODO change message type
+			flexiForce(1) = flexiforce_wrench_desi_.force(1) ;			// note: this variable is being updated by the readForceValuesCB
+			flexiForce(2) = flexiforce_wrench_desi_.force(2) ;
+			flexiForce(3) = flexiforce_wrench_desi_.torque(0);
+
+			//             0
+			//
+			//     1   >   ^    >   3 y
+			//
+			//             2
+			//             x
+
+			// X axis
+			if( flexiForce(0) > flexiForce(2) ){
+				FLEX_force(0) = -flexiForce(0);
+			}else{
+				FLEX_force(0) =  flexiForce(2);
+			}
+			// Y axis
+			if( flexiForce(1) > flexiForce(3) ){
+				FLEX_force(1) =  flexiForce(1);
+			}else{
+				FLEX_force(1) = -flexiForce(3);
+			}
+			// Z axis
+			FLEX_force(2) = 0;
+
+			transformed_force = FLEX_force;
 		}
 
-		transformed_force = wrench_filtered_.topRows(3);
-	}
-
-	// Force threshold (makes force zero bellow threshold) FIXME not needed since force is filtered?
-//	if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
-//	if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
-//	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
-
-
-	/***************** REFERENCE TRAJECTORY *****************/
-
-	if(executeCircleTraj)
-	{
-		// Follow a circle at a fixed angular velocity
-		circle_phase += circle_rate * dt_;				// w*t = w*(dt1+dt2+dt3+...)
-
-		Eigen::Vector3d p;
-
-		// Set position
-		p.x() = cartIniX;
-		p.y() = cartIniY + circleAmpl * cos(circle_phase) - circleAmpl;	// Start at cartIniY when circle_phase=0
-		p.z() = cartIniZ + circleAmpl * sin(circle_phase);
-		x_des_.translation() = p;
-
-		// Set velocity
-		p.x() = 0.0;
-		p.y() = -circleAmpl * (circle_rate * circleAmpl) * sin(circle_phase);
-		p.z() =  circleAmpl * (circle_rate * circleAmpl) * cos(circle_phase);
-		xd_des_.translation() = p;
-
-		// Set acceleration
-		p.x() = 0.0;
-		p.y() = -circleAmpl * (circle_rate * circle_rate * circleAmpl) * cos(circle_phase);
-		p.z() = -circleAmpl * (circle_rate * circle_rate * circleAmpl) * sin(circle_phase);
-		xdd_des_.translation() = p;
-
-//		if( x_des_.translation() == x0_.translation() )
-//			loopsCircleTraj++;
-
-		//cartIniX,cartIniY,cartIniZ
-
-		if(circle_phase > (2*3.14159)*numCircleTraj)
+		if( accelerometerOn )//|| forceTorqueOn )
 		{
-			executeCircleTraj = false;
+			// Retrieve accelerometer data
+			accData_vector.clear();
+			accData_vector = accelerometer_handle_->state_.samples_;
+			accData_received = true;
+
+			// Convert into Eigen vector and compute average value
+			accData.setZero();
+			accData_vector_size = accData_vector.size();		// 3 or 4 (usually three)
+			for( int  i = 0; i < accData_vector_size; i++ )		// Take average value
+			{
+				accData(0) += accData_vector[i].x;
+				accData(1) += accData_vector[i].y;
+				accData(2) += accData_vector[i].z;
+			}
+			accData = accData.array() / (double)accData_vector_size;
 		}
-	}
-	if(useHumanIntent && loop_count_ > 3000)
-	{
-		if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
+
+		if( forceTorqueOn )
 		{
-			task_ref = x_des_.translation();
-			calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
+			// Retrieve Force/Torque data
+			ftData_vector.clear();
+			ftData_vector = ft_handle_->state_.samples_;
+			ftData_received = true;
 
-			// Transform human intent to torso lift link
-			CartVec xyz = affine2CartVec(x_acc_);
-			task_ref.x() = xyz(1) + task_ref.x() ;
-			task_ref.y() = xyz(2) + task_ref.y() ;
-			task_ref.z() = xyz(3) + task_ref.z() ;
-
-			intent_elapsed_ = robot_state_->getTime() ;
+			// Convert into Eigen vector
+			ftData_vector_size = ftData_vector.size();					// 2,3,4 (usually three)
+			ftData_msg.wrench = ftData_vector[ftData_vector_size-1];	// Take latest value
+			tf::wrenchMsgToEigen(ftData_msg.wrench, wrench_raw_);
 		}
+
+
+		/***************** START DATA PROCESSING *****************/
+		runComputations = true;
+
 	}
-	if(mannequinMode && loop_count_ > 3000) // Check if initialized
+
+	if(loop_count_ % loopRateFactor == 0)	// After X loops, assume computations are done and send commands
 	{
 
-		// Compute error
-		computePoseError(x_, x_des_, xerr_);
-//		Eigen::Vector3d tmp1; tmp1 << xerr_.(0),xerr_.(1),xerr_.(2);
-//		Eigen::Vector3d tmp2; tmp2 << xerr_.(3),xerr_.(4),xerr_.(5);
-//		if(tmp1.norm() > mannequinThresPos)
-//		{
-//			x_des_ = x_;
-//		}
-//		if(tmp2.norm() > mannequinThresRot)
-//		{
-//			x_des_ = x_;
-//		}
-		if(xerr_.norm() > mannequinThresPos)	// TODO: implement two threshold
+		if(runComputations)
 		{
-			x_des_ = x_;
+			cartvec_tmp(0) = 1;	// computation took too long
+			return;
 		}
 
+		// Send torque command
+		chain_.setEfforts( tau_c_ );
 
-	}
+		/***************** DATA COLLECTION *****************/
 
-	/***************** UPDATE LOOP VARIABLES *****************/
-
-	t_r.setZero();		// [6x1] (num_Outputs)
-	tau_.setZero();		// [7x1] (num_Joints)
-
-	// Current joint positions and velocities
-	q = q_;
-	qd = qdot_;
-
-	X = affine2CartVec(x_);
-	Xd = xdot_;				// FIXME make sure they are of same type
-
-	// Reference trajectory
-	X_m   = affine2CartVec(x_des_);
-	Xd_m  = affine2CartVec(xd_des_);
-	Xdd_m = affine2CartVec(xdd_des_);
-
-	if(forceTorqueOn)
-	{
-//		for(int i=0;i<6;i++)
-//		{
-//			if(wrench_transformed_(i) > 10.0)
-//			{
-//				wrench_transformed_(i) = 1.0;
-//			}
-//			else if (wrench_transformed_(i) < -10.0)
-//			{
-//				wrench_transformed_(i) = -1.0;
-//			}
-//			else
-//			{
-//				wrench_transformed_(i) = 0.0;
-//			}
-//		}
-//		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );	// TODO try without
-
-		tau_ = J_.transpose()*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
-		// TODO J_ft_ seems to be equal to J_ ?
-	}
-
-	/***************** OUTER LOOP *****************/
-
-	//updateOuterLoop();
-
-	/***************** INNER LOOP *****************/
-
-	// Neural Network
-	nnController.UpdateCart( X     ,
-                             Xd    ,
-                             X_m   ,
-                             Xd_m  ,
-                             Xdd_m ,
-                             q     ,
-                             qd    ,
-                             t_r   ,			// Feedforward force [6x1]
-                             force_c  );		// Output [6x1]
-
-	// PD controller
-/*
-	// Calculate a Cartesian restoring force.
-	computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
-
-	CartVec kp, kd;
-	kp << 100.0,100.0,100.0,100.0,100.0,100.0;
-	kd << 1.0,1.0,1.0,1.0,1.0,1.0;
-	// F    = -(       Kp * (x-x_dis)   +     Kd * (xdot - 0)    )
-	force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
-*/
-
-	JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
-
-	tau_ = tau_ + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
-
-	/***************** NULLSPACE *****************/
-
-	// Computes the desired joint torques for achieving the posture
-	if (useNullspacePose)
-	{
-		nullspaceTorque.setZero();
-
-		// Computes pseudo-inverse of J
-		JJt_damped = J_ * JacobianTrans + jacobian_inverse_damping * IdentityCart;
-		JJt_inv_damped = JJt_damped.inverse();
-		J_pinv = JacobianTrans * JJt_inv_damped;
-
-		// Computes the nullspace of J
-		nullSpace = IdentityJoints - J_pinv * J_;
-
-		for (int j = 0; j < Joints; ++j)
+		if (recordData)
 		{
-			// This is the Liegeois cost function from 1977
-			q_jointLimit(j) = - (q(j) - qnom(j) )/( q.rows() * ( q_upper(j) - q_lower(j))) ;
-		}
-		nullspaceTorque = nullSpace*50*( q_jointLimit - 0.0*qd );
-
-		tau_ = tau_ + nullspaceTorque;
-	}
-
-	/***************** TORQUE *****************/
-
-	// Torque Saturation							(if a torque command is larger than the saturation value, then scale all torque values such that torque_i=saturation_i)
-	for (int i = 0; i < num_Joints; ++i)
-	{
-		if (saturation_[i] > 0.0)
-			sat_scaling = std::min(sat_scaling, fabs(saturation_[i] / tau_[i]));
-	}
-	tau_sat = sat_scaling * tau_;
-
-	tau_c_ = JointEigen2Kdl( tau_sat );
-
-	// Send torque command
-	chain_.setEfforts( tau_c_ );
-
-	/***************** DATA COLLECTION *****************/
-
-	if (loop_count_ % 10 && executeCircleTraj)
-	{
-		bufferData();
-	}
-
-	/***************** DATA PUBLISHING *****************/
-
-	if (loop_count_ % 10 == 0 && publishRTtopics)
-	{
-		cartvec_tmp(1) = accData_vector_size;
-		cartvec_tmp(2) = ftData_vector_size;
-
-		if (pub_x_desi_.trylock()) {
-			pub_x_desi_.msg_.header.stamp = last_time_;
-			tf::poseEigenToMsg(CartVec2Affine(cartvec_tmp), pub_x_desi_.msg_.pose);	// tmp
-			//tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
-			pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
-			pub_x_desi_.unlockAndPublish();
+			bufferData();
 		}
 
-		/*
-	    if (pub_state_.trylock()) {
-	      // Headers
-	      pub_state_.msg_.header.stamp = last_time_;
-	      pub_state_.msg_.x.header.stamp = last_time_;
-	      pub_state_.msg_.x_desi_filtered.header.stamp = last_time_;
-	      pub_state_.msg_.x_desi.header.stamp = last_time_;
-	      // Pose
-	      tf::poseEigenToMsg(x_, pub_state_.msg_.x.pose);
-	      tf::poseEigenToMsg(CartVec2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
-//	      tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
-	      // Error
-	      tf::twistEigenToMsg(xerr_, pub_state_.msg_.x_err);
-	      // Twist
-	      tf::twistEigenToMsg(xdot_, pub_state_.msg_.xd);
-//	      tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
-	      // Force
-	      tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured, t_r
-	      tf::wrenchEigenToMsg(force_c, pub_state_.msg_.force_c);
+		/***************** DATA PUBLISHING *****************/
 
-	      tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
-	      tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
+		if (publishRTtopics) //  && loop_count_ % 10 == 0 )
+		{
+//			cartvec_tmp(1) = accData_vector_size;
+//			cartvec_tmp(2) = ftData_vector_size;
 
-	      tf::matrixEigenToMsg(nnController.getInnerWeights(), pub_state_.msg_.V);
-	      tf::matrixEigenToMsg(nnController.getOuterWeights(), pub_state_.msg_.W);
+			if (pub_x_desi_.trylock()) {
+				pub_x_desi_.msg_.header.stamp = last_time_;
+				tf::poseEigenToMsg(CartVec2Affine(cartvec_tmp), pub_x_desi_.msg_.pose);	// tmp
+				//tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
+				pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
+				pub_x_desi_.unlockAndPublish();
+				cartvec_tmp(0) = 0;	// reset value
+			}
 
-	      for (int j = 0; j < Joints; ++j) {
-	        pub_state_.msg_.tau_posture[j] = nullspaceTorque[j];
-	        pub_state_.msg_.tau_c[j] = tau[j];
-	        pub_state_.msg_.q[j] = q_[j];
-	      }
-	      pub_state_.msg_.W_norm = nnController.getInnerWeightsNorm();
-	      pub_state_.msg_.V_norm = nnController.getOuterWeightsNorm();
+			/*
+			    if (pub_state_.trylock()) {
+			      // Headers
+			      pub_state_.msg_.header.stamp = last_time_;
+			      pub_state_.msg_.x.header.stamp = last_time_;
+			      pub_state_.msg_.x_desi_filtered.header.stamp = last_time_;
+			      pub_state_.msg_.x_desi.header.stamp = last_time_;
+			      // Pose
+			      tf::poseEigenToMsg(x_, pub_state_.msg_.x.pose);
+			      tf::poseEigenToMsg(CartVec2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
+		//	      tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
+			      // Error
+			      tf::twistEigenToMsg(xerr_, pub_state_.msg_.x_err);
+			      // Twist
+			      tf::twistEigenToMsg(xdot_, pub_state_.msg_.xd);
+		//	      tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
+			      // Force
+			      tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured, t_r
+			      tf::wrenchEigenToMsg(force_c, pub_state_.msg_.force_c);
 
-	      pub_state_.unlockAndPublish();
-	    }
-		 */
+			      tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
+			      tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
 
-		if (pub_ft_.trylock()) {
-			pub_ft_.msg_.header.stamp = last_time_;
-			tf::wrenchEigenToMsg(wrench_compensated_, pub_ft_.msg_.wrench);
-			//pub_ft_.msg_.wrench = l_ftData.wrench;
-			pub_ft_.unlockAndPublish();
-		}
+			      tf::matrixEigenToMsg(nnController.getInnerWeights(), pub_state_.msg_.V);
+			      tf::matrixEigenToMsg(nnController.getOuterWeights(), pub_state_.msg_.W);
 
-		if (pub_ft_transformed_.trylock()) {
-			pub_ft_transformed_.msg_.header.stamp = last_time_;
-			tf::wrenchEigenToMsg(wrench_filtered_, pub_ft_transformed_.msg_.wrench);
-			pub_ft_transformed_.unlockAndPublish();
+			      for (int j = 0; j < Joints; ++j) {
+			        pub_state_.msg_.tau_posture[j] = nullspaceTorque[j];
+			        pub_state_.msg_.tau_c[j] = tau[j];
+			        pub_state_.msg_.q[j] = q_[j];
+			      }
+			      pub_state_.msg_.W_norm = nnController.getInnerWeightsNorm();
+			      pub_state_.msg_.V_norm = nnController.getOuterWeightsNorm();
+
+			      pub_state_.unlockAndPublish();
+			    }
+
+
+				if (pub_ft_.trylock()) {
+					pub_ft_.msg_.header.stamp = last_time_;
+					tf::wrenchEigenToMsg(wrench_compensated_, pub_ft_.msg_.wrench);
+					//pub_ft_.msg_.wrench = l_ftData.wrench;
+					pub_ft_.unlockAndPublish();
+				}
+
+				if (pub_ft_transformed_.trylock()) {
+					pub_ft_transformed_.msg_.header.stamp = last_time_;
+					tf::wrenchEigenToMsg(wrench_filtered_, pub_ft_transformed_.msg_.wrench);
+					pub_ft_transformed_.unlockAndPublish();
+				}
+			 */
+
 		}
 
 	}
@@ -927,13 +958,12 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 
 void PR2adaptNeuroControllerClass::bufferData()
 {
-	int index = storage_index_;
-	if ((index >= 0) && (index < StoreLen))
+	if ((storage_index_ >= 0) && (storage_index_ < StoreLen))
 	{
 		//                tf::PoseKDLToMsg(x_m_, modelCartPos_);
 		//                tf::PoseKDLToMsg(x_  , robotCartPos_);
 
-		experimentDataA_msg_[index].dt                = dt_;
+		experimentDataA_msg_[storage_index_].dt                = dt_;
 
 		// Neural network
 //		tf::matrixEigenToMsg(nnController.getInnerWeights(),experimentDataA_msg_[index].net.V);
@@ -941,35 +971,39 @@ void PR2adaptNeuroControllerClass::bufferData()
 //	    experimentDataA_msg_[index].net.num_Inputs = num_Inputs;
 //		experimentDataA_msg_[index].net.num_Hidden = num_Hidden;
 //		experimentDataA_msg_[index].net.num_Outputs = num_Outputs;
-		experimentDataA_msg_[index].Wnorm = nnController.getOuterWeightsNorm();
-		experimentDataA_msg_[index].Vnorm = nnController.getInnerWeightsNorm();
+		experimentDataA_msg_[storage_index_].Wnorm = nnController.getOuterWeightsNorm();
+		experimentDataA_msg_[storage_index_].Vnorm = nnController.getInnerWeightsNorm();
 
 		// Actual trajectory
-		experimentDataA_msg_[index].x_x     = X(0);
-		experimentDataA_msg_[index].x_y     = X(1);
-		experimentDataA_msg_[index].x_z     = X(2);
-		experimentDataA_msg_[index].x_phi   = X(3);
-		experimentDataA_msg_[index].x_theta = X(4);
-		experimentDataA_msg_[index].x_psi   = X(5);
+		experimentDataA_msg_[storage_index_].x_x     = X(0);
+		experimentDataA_msg_[storage_index_].x_y     = X(1);
+		experimentDataA_msg_[storage_index_].x_z     = X(2);
+		experimentDataA_msg_[storage_index_].x_phi   = X(3);
+		experimentDataA_msg_[storage_index_].x_theta = X(4);
+		experimentDataA_msg_[storage_index_].x_psi   = X(5);
 
-		experimentDataA_msg_[index].xdot_x     = Xd(0);
-		experimentDataA_msg_[index].xdot_y     = Xd(1);
-		experimentDataA_msg_[index].xdot_z     = Xd(2);
-		experimentDataA_msg_[index].xdot_phi   = Xd(3);
-		experimentDataA_msg_[index].xdot_theta = Xd(4);
-		experimentDataA_msg_[index].xdot_psi   = Xd(5);
+		experimentDataA_msg_[storage_index_].xdot_x     = Xd(0);
+		experimentDataA_msg_[storage_index_].xdot_y     = Xd(1);
+		experimentDataA_msg_[storage_index_].xdot_z     = Xd(2);
+		experimentDataA_msg_[storage_index_].xdot_phi   = Xd(3);
+		experimentDataA_msg_[storage_index_].xdot_theta = Xd(4);
+		experimentDataA_msg_[storage_index_].xdot_psi   = Xd(5);
 
 		// Desired trajectory
 
-		experimentDataA_msg_[index].xdes_x     = X_m(0);
-		experimentDataA_msg_[index].xdes_y     = X_m(1);
-		experimentDataA_msg_[index].xdes_z     = X_m(2);
-		experimentDataA_msg_[index].xdes_phi   = X_m(3);
-		experimentDataA_msg_[index].xdes_theta = X_m(4);
-		experimentDataA_msg_[index].xdes_psi   = X_m(5);
+		experimentDataA_msg_[storage_index_].xdes_x     = X_m(0);
+		experimentDataA_msg_[storage_index_].xdes_y     = X_m(1);
+		experimentDataA_msg_[storage_index_].xdes_z     = X_m(2);
+		experimentDataA_msg_[storage_index_].xdes_phi   = X_m(3);
+		experimentDataA_msg_[storage_index_].xdes_theta = X_m(4);
+		experimentDataA_msg_[storage_index_].xdes_psi   = X_m(5);
 
 		// Increment for the next cycle.
-		storage_index_ = index+1;
+		storage_index_ = storage_index_+1;
+	}
+	else
+	{
+		recordData = false;
 	}
 }
 
@@ -1192,6 +1226,7 @@ bool PR2adaptNeuroControllerClass::runExperimentA(	ice_msgs::setValue::Request &
 		loopsCircleTraj = 0;
 
 		storage_index_ = 0;
+		recordData = true;
 	}
 
 	return true;
@@ -1406,6 +1441,7 @@ void PR2adaptNeuroControllerClass::readForceValuesCB(const geometry_msgs::Wrench
 
 bool PR2adaptNeuroControllerClass::initParam()
 {
+	nh_.param("/loopRateFactor",    loopRateFactor,    3);
 
 	nh_.param("/forceTorqueOn",     forceTorqueOn,     false);
 	nh_.param("/accelerometerOn",   accelerometerOn,   false);
@@ -1419,6 +1455,7 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/mannequinThresPos", mannequinThresRot, 0.05);
 	nh_.param("/mannequinMode",     mannequinMode,     false);
 	nh_.param("/useHumanIntent",     useHumanIntent,    false);
+
 	return true;
 }
 
