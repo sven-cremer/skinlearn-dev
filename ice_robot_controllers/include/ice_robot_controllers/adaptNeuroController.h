@@ -76,6 +76,7 @@ private:
 
 
 	ros::NodeHandle nh_;
+	double dt_;				// Servo loop time step
 
 	// The current robot state (to get the time stamp)
 	pr2_mechanism_model::RobotState* robot_state_;
@@ -464,7 +465,7 @@ private:
 	bool runExperimentA(	ice_msgs::setValue::Request & req,
 						    ice_msgs::setValue::Response& resp );
 
-	void bufferData( double & dt );
+	void bufferData();
 	//  void setDataPoint(dataPoint::Datum* datum, double & dt);
 	//  dataPoint::controllerFullData controllerData;
 

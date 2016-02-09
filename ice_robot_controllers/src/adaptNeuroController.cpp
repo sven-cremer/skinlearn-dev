@@ -204,11 +204,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 void PR2adaptNeuroControllerClass::update()
 {
 
-	double dt;                    // Servo loop time step		TODO make class variable
 	++loop_count_;
 
 	// Calculate the dt between servo cycles.
-	dt = (robot_state_->getTime() - last_time_).toSec();
+	dt_ = (robot_state_->getTime() - last_time_).toSec();
 	last_time_ = robot_state_->getTime();
 
 	// Get the current joint positions and velocities.
@@ -376,7 +375,7 @@ void PR2adaptNeuroControllerClass::update()
 	if(executeCircleTraj)
 	{
 		// Follow a circle at a fixed angular velocity
-		circle_phase += circle_rate * dt;				// w*t = w*(dt1+dt2+dt3+...)
+		circle_phase += circle_rate * dt_;				// w*t = w*(dt1+dt2+dt3+...)
 
 		Eigen::Vector3d p;
 
@@ -610,7 +609,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	if (loop_count_ % 10 && executeCircleTraj)
 	{
-		bufferData( dt );
+		bufferData();
 	}
 
 
@@ -978,7 +977,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 	/////////////////////////
 }
 
-void PR2adaptNeuroControllerClass::bufferData( double & dt )
+void PR2adaptNeuroControllerClass::bufferData()
 {
 	int index = storage_index_;
 	if ((index >= 0) && (index < StoreLen))
@@ -986,7 +985,7 @@ void PR2adaptNeuroControllerClass::bufferData( double & dt )
 		//                tf::PoseKDLToMsg(x_m_, modelCartPos_);
 		//                tf::PoseKDLToMsg(x_  , robotCartPos_);
 
-		experimentDataA_msg_[index].dt                = dt                          ;
+		experimentDataA_msg_[index].dt                = dt_;
 
 		// Neural network
 //		tf::matrixEigenToMsg(nnController.getInnerWeights(),experimentDataA_msg_[index].net.V);
