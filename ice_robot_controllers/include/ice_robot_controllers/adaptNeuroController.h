@@ -117,6 +117,7 @@ private:
 
 	JointVec tau_;					// Joint torques
 	KDL::JntArray  tau_c_;      	// Joint control torques
+	KDL::JntArray  tau_c_latest_;   // Latest joint control torques
 	//JointVec tau_posture;			// Joint posture torques
 	JointVec q_posture_;
 

@@ -581,9 +581,10 @@ void PR2adaptNeuroControllerClass::update()
 			cartvec_tmp(0)++;	// computation took too long
 			return;
 		}
-
-		// Send torque command
-		chain_.setEfforts( tau_c_ );
+		else
+		{
+			tau_c_latest_ = tau_c_;
+		}
 
 		/***************** DATA COLLECTION *****************/
 
@@ -592,22 +593,30 @@ void PR2adaptNeuroControllerClass::update()
 			bufferData();
 		}
 
-		/***************** DATA PUBLISHING *****************/
+	}
 
-		if (publishRTtopics) //  && loop_count_ % 10 == 0 )
-		{
-//			cartvec_tmp(1) = accData_vector_size;
-//			cartvec_tmp(2) = ftData_vector_size;
+	// Send torque command
+	if(loop_count_ > loopRateFactor)
+	{
+		chain_.setEfforts( tau_c_latest_ );
+	}
 
-			if (pub_x_desi_.trylock()) {
-				pub_x_desi_.msg_.header.stamp = last_time_;
-				tf::poseEigenToMsg(CartVec2Affine(cartvec_tmp), pub_x_desi_.msg_.pose);	// tmp
-				//tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
-				pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
-				pub_x_desi_.unlockAndPublish();
-			}
+	/***************** DATA PUBLISHING *****************/
 
-			/*
+	if (publishRTtopics && loop_count_ % 10 == 0 )
+	{
+		//			cartvec_tmp(1) = accData_vector_size;
+		//			cartvec_tmp(2) = ftData_vector_size;
+
+		if (pub_x_desi_.trylock()) {
+			pub_x_desi_.msg_.header.stamp = last_time_;
+			tf::poseEigenToMsg(CartVec2Affine(cartvec_tmp), pub_x_desi_.msg_.pose);	// tmp
+			//tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
+			pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
+			pub_x_desi_.unlockAndPublish();
+		}
+
+		/*
 			    if (pub_state_.trylock()) {
 			      // Headers
 			      pub_state_.msg_.header.stamp = last_time_;
@@ -657,11 +666,11 @@ void PR2adaptNeuroControllerClass::update()
 					tf::wrenchEigenToMsg(wrench_filtered_, pub_ft_transformed_.msg_.wrench);
 					pub_ft_transformed_.unlockAndPublish();
 				}
-			 */
-
-		}
+		 */
 
 	}
+
+
 
 }
 
