@@ -74,8 +74,10 @@ private:
 	typedef boost::array<double, 4> human_state_type;
 	typedef ice_msgs::neuroControllerState StateMsg;
 
+	int loopRateFactor;
 
 	ros::NodeHandle nh_;
+	double dt_;				// Servo loop time step
 
 	// The current robot state (to get the time stamp)
 	pr2_mechanism_model::RobotState* robot_state_;
@@ -113,8 +115,8 @@ private:
 	KDL::JntArray tau_measured_;
 	CartVec force_measured_;
 
-	KDL::JntArray  tau_c_;      	// Joint torques
-	JointVec tau_c_T;				// Joint torques
+	JointVec tau_;					// Joint torques
+	KDL::JntArray  tau_c_;      	// Joint control torques
 	//JointVec tau_posture;			// Joint posture torques
 	JointVec q_posture_;
 
@@ -239,10 +241,18 @@ private:
 	Eigen::MatrixXd JacobianTransPinv;
 	Eigen::MatrixXd nullSpace;
 
+	// Computes pseudo-inverse of J
+	Eigen::Matrix<double,6,6> IdentityCart;
+	Eigen::Matrix<double,6,6> JJt_damped;
+	Eigen::Matrix<double,6,6> JJt_inv_damped;
+	Eigen::Matrix<double,Joints,6> J_pinv;
+	Eigen::Matrix<double,Joints,Joints> IdentityJoints;
+
 	// Posture control
 	double k_posture;
 	double jacobian_inverse_damping;
 	JointVec joint_dd_ff_;
+	JointVec q_jointLimit ;
 
 	Eigen::VectorXd cartControlForce;
 	Eigen::VectorXd nullspaceTorque;
@@ -250,6 +260,10 @@ private:
 
 	bool useCurrentCartPose ;		// Use current cart pose or use specified cart pose
 	bool useNullspacePose ;		// Use nullspace stuff
+
+	// Torque Saturation
+	double sat_scaling;
+	Eigen::VectorXd tau_sat;
 
 	// Outer loop
 	bool useARMAmodel ;		// Use ARMA
@@ -464,7 +478,8 @@ private:
 	bool runExperimentA(	ice_msgs::setValue::Request & req,
 						    ice_msgs::setValue::Response& resp );
 
-	void bufferData( double & dt );
+	void bufferData();
+	bool recordData;
 	//  void setDataPoint(dataPoint::Datum* datum, double & dt);
 	//  dataPoint::controllerFullData controllerData;
 
@@ -481,6 +496,7 @@ private:
 	bool initOuterLoop();
 	bool initSensors();
 	bool initNN();
+	bool initNullspace();
 
 	void updateOuterLoop();
 
@@ -492,6 +508,7 @@ private:
 	  int loop_count_;
 
 	  boost::thread	m_Thread;
+	  volatile bool runComputations;
 
 	  CartVec cartvec_tmp;
 

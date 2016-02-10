@@ -2,14 +2,16 @@
 port               : /dev/ttyACM0
 baud               : 2000000
 
+loopRateFactor     : 10 # Virtual loop rate [ms] (time for computations = loopRateFactor - 2)
+
 useCurrentCartPose : false
 useNullspacePose   : true
 useFlexiForce      : false
-forceTorqueOn      : true
-accelerometerOn    : true
-useDigitalFilter   : true
+forceTorqueOn      : false
+accelerometerOn    : false
+useDigitalFilter   : false
 
-executeCircleTraj  : false
+executeCircleTraj  : true
 numCircleTraj      : 3
 
 mannequinMode      : false
