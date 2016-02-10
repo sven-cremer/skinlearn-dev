@@ -199,7 +199,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	// Wait
 	while(!runComputations)
 	{
-		boost::this_thread::sleep(boost::posix_time::milliseconds(0.05));
+		boost::this_thread::sleep(boost::posix_time::milliseconds(0.01));
 	}
 
 	//Do Computations
@@ -578,7 +578,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		if(runComputations)
 		{
-			cartvec_tmp(0) = 1;	// computation took too long
+			cartvec_tmp(0)++;	// computation took too long
 			return;
 		}
 
@@ -605,7 +605,6 @@ void PR2adaptNeuroControllerClass::update()
 				//tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
 				pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
 				pub_x_desi_.unlockAndPublish();
-				cartvec_tmp(0) = 0;	// reset value
 			}
 
 			/*

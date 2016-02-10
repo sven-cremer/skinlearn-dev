@@ -2,7 +2,7 @@
 port               : /dev/ttyACM0
 baud               : 2000000
 
-loopRateFactor     : 4 # Virtual loop rate [ms] (time for computations = loopRateFactor - 2)
+loopRateFactor     : 10 # Virtual loop rate [ms] (time for computations = loopRateFactor - 2)
 
 useCurrentCartPose : false
 useNullspacePose   : true
