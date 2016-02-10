@@ -187,10 +187,10 @@ public:
 			W_next_.setZero();
 
 			// Input weights should be randomly initialized
-//			V_.setRandom();
-//			V_next.setRandom();
-            V_.setOnes();
-            V_next_.setOnes();
+			V_.setRandom();
+			V_next_.setRandom();
+//            V_.setOnes();
+//            V_next_.setOnes();
             
 			F.setIdentity();
 			G.setIdentity();

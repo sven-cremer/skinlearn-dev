@@ -334,6 +334,8 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		/***************** UPDATE LOOP VARIABLES *****************/
 
+		JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
+
 		t_r.setZero();		// [6x1] (num_Outputs)
 		tau_.setZero();		// [7x1] (num_Joints)
 
@@ -368,7 +370,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	//		}
 	//		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );	// TODO try without
 
-			tau_ = J_.transpose()*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
+			tau_ = JacobianTrans*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
 			// TODO J_ft_ seems to be equal to J_ ?
 		}
 
@@ -403,8 +405,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		// F    = -(       Kp * (x-x_dis)   +     Kd * (xdot - 0)    )
 		force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
 	*/
-
-		JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
 
 		tau_ = tau_ + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
 
@@ -621,7 +621,7 @@ void PR2adaptNeuroControllerClass::update()
 			pub_x_desi_.unlockAndPublish();
 		}
 
-
+		/*
 		if (pub_state_.trylock()) {
 			// Headers
 			pub_state_.msg_.header.stamp = last_time_;
@@ -657,7 +657,7 @@ void PR2adaptNeuroControllerClass::update()
 
 			pub_state_.unlockAndPublish();
 		}
-
+		*/
 
 		if (pub_ft_.trylock()) {
 			pub_ft_.msg_.header.stamp = last_time_;
