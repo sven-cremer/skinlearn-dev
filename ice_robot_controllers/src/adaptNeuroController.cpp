@@ -379,6 +379,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		/***************** INNER LOOP *****************/
 
 		// Neural Network
+
+		nnController.updateDelT( dt_ );
+
 		nnController.UpdateCart( X     ,
 	                             Xd    ,
 	                             X_m   ,
@@ -607,6 +610,7 @@ void PR2adaptNeuroControllerClass::update()
 	{
 		//			cartvec_tmp(1) = accData_vector_size;
 		//			cartvec_tmp(2) = ftData_vector_size;
+		cartvec_tmp(1) = dt_;
 
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
