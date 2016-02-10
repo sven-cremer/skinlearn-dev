@@ -610,7 +610,8 @@ void PR2adaptNeuroControllerClass::update()
 	{
 		//			cartvec_tmp(1) = accData_vector_size;
 		//			cartvec_tmp(2) = ftData_vector_size;
-		cartvec_tmp(1) = dt_;
+		cartvec_tmp(1) = nnController.getOuterWeightsNorm();
+		cartvec_tmp(2) = nnController.getInnerWeightsNorm();
 
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
@@ -620,56 +621,56 @@ void PR2adaptNeuroControllerClass::update()
 			pub_x_desi_.unlockAndPublish();
 		}
 
-		/*
-			    if (pub_state_.trylock()) {
-			      // Headers
-			      pub_state_.msg_.header.stamp = last_time_;
-			      pub_state_.msg_.x.header.stamp = last_time_;
-			      pub_state_.msg_.x_desi_filtered.header.stamp = last_time_;
-			      pub_state_.msg_.x_desi.header.stamp = last_time_;
-			      // Pose
-			      tf::poseEigenToMsg(x_, pub_state_.msg_.x.pose);
-			      tf::poseEigenToMsg(CartVec2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
-		//	      tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
-			      // Error
-			      tf::twistEigenToMsg(xerr_, pub_state_.msg_.x_err);
-			      // Twist
-			      tf::twistEigenToMsg(xdot_, pub_state_.msg_.xd);
-		//	      tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
-			      // Force
-			      tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured, t_r
-			      tf::wrenchEigenToMsg(force_c, pub_state_.msg_.force_c);
 
-			      tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
-			      tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
+		if (pub_state_.trylock()) {
+			// Headers
+			pub_state_.msg_.header.stamp = last_time_;
+			pub_state_.msg_.x.header.stamp = last_time_;
+			pub_state_.msg_.x_desi_filtered.header.stamp = last_time_;
+			pub_state_.msg_.x_desi.header.stamp = last_time_;
+			// Pose
+			tf::poseEigenToMsg(x_, pub_state_.msg_.x.pose);
+			tf::poseEigenToMsg(CartVec2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
+			//	      tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
+			// Error
+			tf::twistEigenToMsg(xerr_, pub_state_.msg_.x_err);
+			// Twist
+			tf::twistEigenToMsg(xdot_, pub_state_.msg_.xd);
+			//	      tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
+			// Force
+			tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured, t_r
+			tf::wrenchEigenToMsg(force_c, pub_state_.msg_.force_c);
 
-			      tf::matrixEigenToMsg(nnController.getInnerWeights(), pub_state_.msg_.V);
-			      tf::matrixEigenToMsg(nnController.getOuterWeights(), pub_state_.msg_.W);
+			tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
+			tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
 
-			      for (int j = 0; j < Joints; ++j) {
-			        pub_state_.msg_.tau_posture[j] = nullspaceTorque[j];
-			        pub_state_.msg_.tau_c[j] = tau[j];
-			        pub_state_.msg_.q[j] = q_[j];
-			      }
-			      pub_state_.msg_.W_norm = nnController.getInnerWeightsNorm();
-			      pub_state_.msg_.V_norm = nnController.getOuterWeightsNorm();
+			tf::matrixEigenToMsg(nnController.getInnerWeights(), pub_state_.msg_.V);
+			tf::matrixEigenToMsg(nnController.getOuterWeights(), pub_state_.msg_.W);
 
-			      pub_state_.unlockAndPublish();
-			    }
+			for (int j = 0; j < Joints; ++j) {
+				pub_state_.msg_.tau_posture[j] = nullspaceTorque[j];
+				pub_state_.msg_.tau_c[j] = tau[j];
+				pub_state_.msg_.q[j] = q_[j];
+			}
+			pub_state_.msg_.W_norm = nnController.getInnerWeightsNorm();
+			pub_state_.msg_.V_norm = nnController.getOuterWeightsNorm();
 
-		 */
-				if (pub_ft_.trylock()) {
-					pub_ft_.msg_.header.stamp = last_time_;
-					tf::wrenchEigenToMsg(wrench_compensated_, pub_ft_.msg_.wrench);
-					//pub_ft_.msg_.wrench = l_ftData.wrench;
-					pub_ft_.unlockAndPublish();
-				}
+			pub_state_.unlockAndPublish();
+		}
 
-				if (pub_ft_transformed_.trylock()) {
-					pub_ft_transformed_.msg_.header.stamp = last_time_;
-					tf::wrenchEigenToMsg(wrench_filtered_, pub_ft_transformed_.msg_.wrench);
-					pub_ft_transformed_.unlockAndPublish();
-				}
+
+		if (pub_ft_.trylock()) {
+			pub_ft_.msg_.header.stamp = last_time_;
+			tf::wrenchEigenToMsg(wrench_compensated_, pub_ft_.msg_.wrench);
+			//pub_ft_.msg_.wrench = l_ftData.wrench;
+			pub_ft_.unlockAndPublish();
+		}
+
+		if (pub_ft_transformed_.trylock()) {
+			pub_ft_transformed_.msg_.header.stamp = last_time_;
+			tf::wrenchEigenToMsg(wrench_filtered_, pub_ft_transformed_.msg_.wrench);
+			pub_ft_transformed_.unlockAndPublish();
+		}
 
 	}
 
@@ -1964,6 +1965,8 @@ bool PR2adaptNeuroControllerClass::initNN()
                        nn_ON   );
 
 	nnController.updateDelT( delT );
+
+	nnController.setUpdateWeights(true);
 
 	return true;
 }
