@@ -603,7 +603,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	/***************** DATA PUBLISHING *****************/
 
-	if (publishRTtopics && loop_count_ % 10 == 0 )
+	if (publishRTtopics && loop_count_ % loopRateFactor == 0 )
 	{
 		//			cartvec_tmp(1) = accData_vector_size;
 		//			cartvec_tmp(2) = ftData_vector_size;
@@ -653,7 +653,7 @@ void PR2adaptNeuroControllerClass::update()
 			      pub_state_.unlockAndPublish();
 			    }
 
-
+		 */
 				if (pub_ft_.trylock()) {
 					pub_ft_.msg_.header.stamp = last_time_;
 					tf::wrenchEigenToMsg(wrench_compensated_, pub_ft_.msg_.wrench);
@@ -666,7 +666,6 @@ void PR2adaptNeuroControllerClass::update()
 					tf::wrenchEigenToMsg(wrench_filtered_, pub_ft_transformed_.msg_.wrench);
 					pub_ft_transformed_.unlockAndPublish();
 				}
-		 */
 
 	}
 
