@@ -1533,7 +1533,14 @@ bool PR2adaptNeuroControllerClass::initRobot()
 	num_Joints = kdl_chain_.getNrOfJoints();				// TODO replace kdl_chain_.getNrOfJoints() with Joints
 	tau_.resize(num_Joints);
 	tau_c_.resize(num_Joints);
+	tau_c_latest_.resize(num_Joints);
 	tau_measured_.resize(num_Joints);
+
+	for(int i=0;i<num_Joints;i++)
+	{
+		tau_c_(i) = 0.0;
+		tau_c_latest_(i) = 0.0;
+	}
 
 	qnom.resize(num_Joints);
 	q_lower.resize(num_Joints);
