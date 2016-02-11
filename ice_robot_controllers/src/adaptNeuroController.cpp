@@ -76,6 +76,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
 
 	// NN weights
+	updateInnerNNweights_srv_  = nh_.advertiseService("updateInnerNNweights" , &PR2adaptNeuroControllerClass::updateInnerNNweights   , this);
 	updateNNweights_srv_  = nh_.advertiseService("updateNNweights" , &PR2adaptNeuroControllerClass::updateNNweights   , this);
 	setNNweights_srv_  = nh_.advertiseService("setNNweights" , &PR2adaptNeuroControllerClass::setNNweights   , this);
 	getNNweights_srv_  = nh_.advertiseService("getNNweights" , &PR2adaptNeuroControllerClass::getNNweights   , this);
@@ -1221,26 +1222,33 @@ bool PR2adaptNeuroControllerClass::runExperimentA(	ice_msgs::setValue::Request &
 	nnController.setUpdateWeights(false);
 	Eigen::MatrixXd V_trans;
 	Eigen::MatrixXd W_trans;
-	V_trans.setOnes( num_Hidden , num_Inputs + 1 ) ;
-	W_trans.setZero( num_Outputs, num_Hidden     ) ;
+	//V_trans.setOnes( num_Hidden , num_Inputs + 1 ) ;
+	V_trans.setRandom( num_Hidden , num_Inputs + 1 ) ;
+	W_trans.setZero(   num_Outputs, num_Hidden     ) ;
 	nnController.setInnerWeights(V_trans);
 	nnController.setOuterWeights(W_trans);
 	nnController.setUpdateWeights(true);
 
-	// Start trajectory
+	// Set circle rate and decide if the inner weights will be updated
 	if(req.value > 0)
 	{
-		// Start circle traj
-		executeCircleTraj = true;
-
+		nnController.setUpdateInnerWeights(true);
 		circle_rate = req.value;
-		circle_velocity = circle_rate*circleAmpl;
-		circle_phase = 0;
-		loopsCircleTraj = 0;
-
-		storage_index_ = 0;
-		recordData = true;
 	}
+	else
+	{
+		nnController.setUpdateInnerWeights(false);
+		circle_rate = -req.value;
+	}
+	// Start circle traj
+	executeCircleTraj = true;
+
+	circle_velocity = circle_rate*circleAmpl;
+	circle_phase = 0;
+	loopsCircleTraj = 0;
+
+	storage_index_ = 0;
+	recordData = true;
 
 	return true;
 }
@@ -1358,6 +1366,15 @@ void PR2adaptNeuroControllerClass::stopping()
 {}
 
 
+bool PR2adaptNeuroControllerClass::updateInnerNNweights( ice_msgs::setBool::Request& req,
+		                                            ice_msgs::setBool::Response& resp )
+{
+
+	nnController.setUpdateInnerWeights(req.variable);
+	resp.success = true;
+
+	return true;
+}
 bool PR2adaptNeuroControllerClass::updateNNweights( ice_msgs::setBool::Request& req,
 		                                            ice_msgs::setBool::Response& resp )
 {
@@ -1965,8 +1982,6 @@ bool PR2adaptNeuroControllerClass::initNN()
                        nn_ON   );
 
 	nnController.updateDelT( delT );
-
-	nnController.setUpdateWeights(true);
 
 	return true;
 }

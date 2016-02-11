@@ -28,6 +28,7 @@ namespace neural_network {
 class TwoLayerNeuralNetworkController {
 
 	bool updateWeights;
+	bool updateInnerWeights;
 
         double num_Inputs  ; // n Size of the inputs
         double num_Outputs ; // m Size of the outputs
@@ -78,6 +79,7 @@ public:
 	TwoLayerNeuralNetworkController()
 	{
 		updateWeights = true;
+		updateInnerWeights = false;
 
           changeNNstructure( 35 ,   // num_Inputs
                              7  ,   // num_Outputs
@@ -187,10 +189,12 @@ public:
 			W_next_.setZero();
 
 			// Input weights should be randomly initialized
-			V_.setRandom();
-			V_next_.setRandom();
-//            V_.setOnes();
-//            V_next_.setOnes();
+			V_		.setRandom();
+			V_next_	.setRandom();
+//			V_ 		= 0.1*V_;
+//			V_next_ = 0.1*V_next_;
+//          V_.setOnes();
+//          V_next_.setOnes();
             
 			F.setIdentity();
 			G.setIdentity();
@@ -263,10 +267,15 @@ public:
 		W_next_ = W_trans_.transpose();
 		W_ = W_trans_.transpose();
 	}
-	void setUpdateWeights(bool updateWeights_)
+	void setUpdateWeights(bool p_updateWeights)
 	{
-		updateWeights = updateWeights_;
+		updateWeights = p_updateWeights;
 	}
+	void setUpdateInnerWeights(bool p_updateInnerWeights)
+	{
+		updateInnerWeights = p_updateInnerWeights;
+	}
+
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
@@ -364,6 +373,9 @@ void TwoLayerNeuralNetworkController::Update( Eigen::VectorXd & q    ,
 
 	// Wk+1                  = Wk                  +  Wkdot                                                                                                          * dt
 	W_next_ = W_ + (F*hiddenLayer_out*r_tran - F*sigmaPrime*V_trans*x*r_tran - kappa*F*r.norm()*W_) * delT;
+
+	if(!updateInnerWeights)
+		return;
 
 	sigmaPrimeTrans_W_r = sigmaPrime.transpose()*W_*r;      // make sigmaPrimeTrans_W_r_tran = r_tran*sigmaPrime*W_trans
 

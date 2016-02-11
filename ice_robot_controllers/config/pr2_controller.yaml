@@ -12,7 +12,7 @@ accelerometerOn    : true
 useDigitalFilter   : true
 
 executeCircleTraj  : false
-numCircleTraj      : 6
+numCircleTraj      : 3
 
 mannequinMode      : false
 mannequinThresPos  : 0.05
@@ -176,6 +176,7 @@ cartDes3Roll          :  0.0
 cartDes3Pitch         :  0.0
 cartDes3Yaw           :  0.0
 
+## Initial Position
 # lCartIniX           :  0.8
 # lCartIniY           :  0.05
 # lCartIniZ           :  0.0
@@ -183,16 +184,20 @@ cartDes3Yaw           :  0.0
 # lCartIniPitch       :  0.0
 # lCartIniYaw         : -1.57079633
 
-cartIniX             :  0.75
+cartIniX             :  0.70
 cartIniY             :  0.35
-cartIniZ             :  0.0
+cartIniZ             :  -0.10
+
+#cartIniX             :  0.75
+#cartIniY             :  0.35
+#cartIniZ             :  0.0
 cartIniRoll          :  0.0
 cartIniPitch         :  0.0
 cartIniYaw           :  0.0
 
 circleRate            : 0.5 # angular velocity in rad/sec (v = r*w = A*w)
 circleLlim            : 0.0 # amplitude = (circleUlim - circleLlim)/2
-circleUlim            : 0.3
+circleUlim            : 0.2
 
 nnNum_Inputs          : 44 
 nnNum_Outputs         : 6  # Cartesian
@@ -207,9 +212,9 @@ nnNum_Joints          : 7  # DOF
 nn_Kv                 : 5 # not being used? see cartPos_Kd and cartPos_Kp insteads
 nn_lambda             : 20 # not being used?
 nn_kappa              : 0.25
-nn_Kz                 : 0.001 # not being used?
+nn_Kz                 : 0.005 # not being used?
 nn_Zb                 : 100 # not being used?
-nn_feedForwardForce   : 0.5 # small because of jitter from FT measurments
+nn_feedForwardForce   : 0.0 # small because of jitter from FT measurments
 nn_nnF                : 100 # -> W (outer)
 nn_nnG                : 200 # -> V (inner)
 nn_ON                 : 1

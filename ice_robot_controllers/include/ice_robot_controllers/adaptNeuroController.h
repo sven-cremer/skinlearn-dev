@@ -457,6 +457,8 @@ private:
 	bool toggleFixedWeights( ice_msgs::fixedWeightToggle::Request & req,
 			                    ice_msgs::fixedWeightToggle::Response& resp );
 
+	bool updateInnerNNweights( ice_msgs::setBool::Request& req,
+			              ice_msgs::setBool::Response& resp );
 	bool updateNNweights( ice_msgs::setBool::Request& req,
 			              ice_msgs::setBool::Response& resp );
 	bool setNNweights(    ice_msgs::setNNweights::Request& req,
@@ -464,6 +466,7 @@ private:
 	bool getNNweights(    ice_msgs::getNNweights::Request& req,
 			              ice_msgs::getNNweights::Response& resp );
 
+	ros::ServiceServer updateInnerNNweights_srv_;
 	ros::ServiceServer updateNNweights_srv_;
 	ros::ServiceServer setNNweights_srv_;
 	ros::ServiceServer getNNweights_srv_;
