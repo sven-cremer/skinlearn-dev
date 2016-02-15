@@ -71,7 +71,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 
 	// Subscribe to Flexiforce wrench commands
 	if(useFlexiForce)
-		sub_command_ = nh_.subscribe<geometry_msgs::Wrench>("command", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
+		sub_command_ = nh_.subscribe<geometry_msgs::WrenchStamped>("tactile/wrench", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
 
@@ -206,6 +206,12 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	//Do Computations
 
 	/***************** SENSOR DATA PROCESSING *****************/
+
+	if(useFlexiForce)
+	{
+		// TODO: update t_r?
+		transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
+	}
 
 		if( forceTorqueOn )		// TODO check if accData has been updated
 		{
@@ -351,6 +357,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		X_m   = affine2CartVec(x_des_);
 		Xd_m  = affine2CartVec(xd_des_);
 		Xdd_m = affine2CartVec(xdd_des_);
+
+		if(useFlexiForce)
+		{
+			tau_ = JacobianTrans*(fFForce*tactile_wrench_);	// [7x6]*[6x1]->[7x1]
+		}
 
 		if(forceTorqueOn)
 		{
@@ -505,39 +516,11 @@ void PR2adaptNeuroControllerClass::update()
 		transformed_force.setZero();
 
 		/***************** GET SENSOR DATA *****************/
-		if(useFlexiForce)
-		{
-			// Read flexi force serial data
-			//  tacSerial->getDataArrayFromSerialPort( flexiForce );
-			flexiForce(0) = flexiforce_wrench_desi_.force(0) ;			// TODO change message type
-			flexiForce(1) = flexiforce_wrench_desi_.force(1) ;			// note: this variable is being updated by the readForceValuesCB
-			flexiForce(2) = flexiforce_wrench_desi_.force(2) ;
-			flexiForce(3) = flexiforce_wrench_desi_.torque(0);
 
-			//             0
-			//
-			//     1   >   ^    >   3 y
-			//
-			//             2
-			//             x
-
-			// X axis
-			if( flexiForce(0) > flexiForce(2) ){
-				FLEX_force(0) = -flexiForce(0);
-			}else{
-				FLEX_force(0) =  flexiForce(2);
-			}
-			// Y axis
-			if( flexiForce(1) > flexiForce(3) ){
-				FLEX_force(1) =  flexiForce(1);
-			}else{
-				FLEX_force(1) = -flexiForce(3);
-			}
-			// Z axis
-			FLEX_force(2) = 0;
-
-			transformed_force = FLEX_force;
-		}
+		// Flexiforce data updated by readForceValuesCB
+//		if(useFlexiForce)
+//		{
+//		}
 
 		if( accelerometerOn )//|| forceTorqueOn )
 		{
@@ -710,7 +693,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 			{
 				// Set ARMA parameters
 				// X axis
-				if( flexiForce(0) > flexiForce(2) ){
+				if( tactile_wrench_(0) < 0.0 ){		// TODO check inequality
 
 					outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_1 ) ;
 					if( useFixedWeights )
@@ -727,7 +710,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 				}
 
 				// Y axis
-				if( flexiForce(1) > flexiForce(3) ){
+				if( tactile_wrench_(1) < 0.0 ){
 					outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_2 ) ;
 					if( useFixedWeights )
 						outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_2 );
@@ -767,7 +750,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 			if( useFlexiForce )
 			{
 				// X axis
-				if( flexiForce(0) > flexiForce(2) )
+				if( tactile_wrench_(0) < 0.0 )
 				{
 					outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_1 ) ;
 				}else{
@@ -775,7 +758,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 				}
 
 				// Y axis
-				if( flexiForce(1) > flexiForce(3) )
+				if( tactile_wrench_(1) < 0.0 )
 				{
 					outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_2 ) ;
 				}else{
@@ -1458,15 +1441,15 @@ PR2adaptNeuroControllerClass::calcHumanIntentPos( Eigen::Vector3d & force,
 	pos = intentPos;
 }
 
-void PR2adaptNeuroControllerClass::readForceValuesCB(const geometry_msgs::WrenchConstPtr& wrench_msg)
+void PR2adaptNeuroControllerClass::readForceValuesCB(const geometry_msgs::WrenchStampedConstPtr& wrench_msg)
 {
-	// convert to wrench command
-	flexiforce_wrench_desi_.force(0) = wrench_msg->force.x;
-	flexiforce_wrench_desi_.force(1) = wrench_msg->force.y;
-	flexiforce_wrench_desi_.force(2) = wrench_msg->force.z;
-	flexiforce_wrench_desi_.torque(0) = wrench_msg->torque.x;
-	flexiforce_wrench_desi_.torque(1) = wrench_msg->torque.y;
-	flexiforce_wrench_desi_.torque(2) = wrench_msg->torque.z;
+	// Convert to wrench command
+	tactile_wrench_(0) = wrench_msg->wrench.force.x;
+	tactile_wrench_(1) = wrench_msg->wrench.force.y;
+	tactile_wrench_(2) = wrench_msg->wrench.force.z;
+	tactile_wrench_(3) = wrench_msg->wrench.torque.x;
+	tactile_wrench_(4) = wrench_msg->wrench.torque.y;
+	tactile_wrench_(5) = wrench_msg->wrench.torque.z;
 }
 
 bool PR2adaptNeuroControllerClass::initParam()
@@ -2346,8 +2329,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	task_refModel_output = Eigen::VectorXd::Zero( num_Outputs ) ;
 	tau                  = Eigen::VectorXd::Zero( num_Outputs ) ;
 	force_c              = Eigen::VectorXd::Zero( num_Outputs ) ;
-	// FIXME remove this hardcoded 4 value
-	flexiForce           = Eigen::VectorXd::Zero( 4 ) ;
 
 	// Initial Reference
 	task_ref = X_m ;

@@ -47,6 +47,7 @@
 #include <ice_msgs/setValue.h>
 #include <ice_msgs/experimentDataA.h>
 
+#include "geometry_msgs/Wrench.h"
 #include "geometry_msgs/WrenchStamped.h"
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
@@ -180,7 +181,6 @@ private:
 	geometry_msgs::WrenchStamped ftData_msg;
 
 	Eigen::Vector3d FT_transformed_force ;
-	Eigen::Vector3d FLEX_force          ;
 	Eigen::Vector3d transformed_force    ;
 
 	// Use FT sensors or not
@@ -203,7 +203,7 @@ private:
 	Eigen::VectorXd b_filt;			// Filter coefficients (numerator)
 
 	// Flexiforce data (input of the controller)
-	KDL::Wrench flexiforce_wrench_desi_;
+	CartVec tactile_wrench_;
 
 	// Cartesian paramters
 	double cartPos_Kp_x ; double cartPos_Kd_x ; // Translation x
@@ -527,7 +527,7 @@ public:
 
 	void calcHumanIntentPos( Eigen::Vector3d & force, Eigen::VectorXd & pos, double delT, double m );
 
-	void readForceValuesCB(const geometry_msgs::WrenchConstPtr& wrench_msg);	// TODO change this message type to a vector
+	void readForceValuesCB(const geometry_msgs::WrenchStampedConstPtr& wrench_msg);	// TODO change this message type to a vector
 
 	void updateNonRealtime();
 };
