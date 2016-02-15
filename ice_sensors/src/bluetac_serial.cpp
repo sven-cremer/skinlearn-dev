@@ -37,6 +37,7 @@ class TactileViz
   Eigen::VectorXd force;
   Eigen::VectorXd forceBias;
   Eigen::MatrixXd pos;
+  Eigen::MatrixXd rot;
 
   visualization_msgs::Marker m_vizMarker;
 
@@ -58,15 +59,24 @@ public:
 	force		.resize(numSensors);
 	forceBias	.resize(numSensors);
 	pos			.resize(numSensors,3);
+	rot			.resize(numSensors,4);
 
 	force		.setZero();
 	forceBias	.setZero();
 
-	pos << 0.1,-0.1, 0,
-		  -0.1,-0.1, 0,
-		  -0.1, 0.1, 0,
-		   0.0, 0.0, 0;
-		   //0.1, 0.1, 0;
+	//      x,  y,  z,      direction
+	pos << -1,  0,  0,	 // -x
+		    0,  1,  0,   // +y
+		    1,  0,  0,   // +x
+		    0, -1,  0;   // -y
+	pos = 0.1*pos;
+
+	double r=0.70711;
+	//     w, x, y, z,      direction
+	rot << 0, 0, 0, 1,   // -x
+		   r, 0, 0, r,   // +ya
+		   1, 0, 0, 0,   // +x
+		   r, 0, 0, -r;   // -y
 
 	firstRead=true;
 	forceScale = 1024;
@@ -95,31 +105,6 @@ public:
     tacSerial = new TactileSerial( port, baud );
   }
 
-  TactileViz( int argc, char** argv )
-  {
-	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("tactile/viz", 1);
-	m_tactileDataPub    = m_node.advertise<ice_msgs::tactileArrayData>("tactile/data", 1);
-
-	force		.resize(numSensors);
-	forceBias	.resize(numSensors);
-	pos			.resize(numSensors,3);
-	firstRead=true;
-
-	pos << 0.1,-0.1, 0,
-		  -0.1,-0.1, 0,
-		  -0.1, 0.1, 0,
-		   0.0, 0.0, 0;
-		   //0.1, 0.1, 0;
-
-	forceScale = 1;//1024;
-
-	port = "";
-	baud = 0;
-
-    // Flexiforce sensors
-	tacSerial = new TactileSerial( argc, argv );
-  }
-
   ~TactileViz() { }
 
   visualization_msgs::MarkerArray genVizvizMarkerArray( Eigen::MatrixXd & pos, Eigen::VectorXd & force )
@@ -133,10 +118,10 @@ public:
 	  m_vizMarker.type = visualization_msgs::Marker::ARROW;
 	  m_vizMarker.action = visualization_msgs::Marker::ADD;
 
-	  m_vizMarker.pose.orientation.x = 0.7071;
-	  m_vizMarker.pose.orientation.y = 0.0;
-	  m_vizMarker.pose.orientation.z = 0.7071;
-	  m_vizMarker.pose.orientation.w = 0.0;
+//	  m_vizMarker.pose.orientation.x = 0.7071;
+//	  m_vizMarker.pose.orientation.y = 0.0;
+//	  m_vizMarker.pose.orientation.z = 0.7071;
+//	  m_vizMarker.pose.orientation.w = 0.0;
 
 	  for(int i =0; i < numSensors; i++)
 	  {
@@ -146,7 +131,12 @@ public:
 		  m_vizMarker.pose.position.y = pos(i,1);
 		  m_vizMarker.pose.position.z = pos(i,2);
 
-		  m_vizMarker.scale.x = force(i)/forceScale;
+		  m_vizMarker.pose.orientation.w = rot(i,0);
+		  m_vizMarker.pose.orientation.x = rot(i,1);
+		  m_vizMarker.pose.orientation.y = rot(i,2);
+		  m_vizMarker.pose.orientation.z = rot(i,3);
+
+		  m_vizMarker.scale.x = force(i);
 		  m_vizMarker.scale.y = 0.03;
 		  m_vizMarker.scale.z = 0.03;
 
@@ -222,8 +212,16 @@ public:
 		  std::cout<<"->Reading data failed!\n";
 		  return;
 	  }
-	  //force = force / 100.0;
+	  // Remove bias
 	  force = force - forceBias;
+	  // Check threshold
+	  if(force.norm() < 30.0)
+	  {
+		  force.setZero();
+	  }
+	  //std::cout<<"Norm: "<<force.norm()<<"\n";
+	  // Scale force
+	  force = force / forceScale;
 
 	  // Publish markers
 	  m_tactileVizPub.publish( genVizvizMarkerArray(pos, force ) );
