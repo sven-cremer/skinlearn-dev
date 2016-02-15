@@ -193,6 +193,7 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 //    }
 //	force = force + Eigen::VectorXd::Ones(numSensors) - forceBias;
 
+    // Filter values
     for( unsigned int i=0; i<force.size(); i++)
     {
     	force(i) = forceLPFilt[i]->getNextFilteredValue(force(i));
@@ -201,6 +202,7 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
     		force(i) = 0;
     	}
     }
+    return true;
 }
 
 };

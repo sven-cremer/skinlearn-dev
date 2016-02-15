@@ -59,7 +59,8 @@ public:
 	forceBias	.resize(numSensors);
 	pos			.resize(numSensors,3);
 
-	firstRead=true;
+	force		.setZero();
+	forceBias	.setZero();
 
 	pos << 0.1,-0.1, 0,
 		  -0.1,-0.1, 0,
@@ -67,6 +68,7 @@ public:
 		   0.0, 0.0, 0;
 		   //0.1, 0.1, 0;
 
+	firstRead=true;
 	forceScale = 1024;
 
 	frame_id = "/base_link";	// TODO make parameter
@@ -215,8 +217,13 @@ public:
   void readAndPublish()
   {
 	  // Read data
-	  tacSerial->getDataArrayFromSerialPort( force );
+	  if(!tacSerial->getDataArrayFromSerialPort( force ))
+	  {
+		  std::cout<<"->Reading data failed!\n";
+		  return;
+	  }
 	  //force = force / 100.0;
+	  force = force - forceBias;
 
 	  // Publish markers
 	  m_tactileVizPub.publish( genVizvizMarkerArray(pos, force ) );
@@ -228,8 +235,28 @@ public:
 	  publishTactileWrench();
   }
 
+  void measureBias()
+  {
+	  std::cout<<"#Estimating bias ...\n";
+
+	  forceBias.setZero();
+	  int loops = 0;
+	  while(loops < 30)
+	  {
+		  if(tacSerial->getDataArrayFromSerialPort( force ))
+		  {
+			  forceBias += force;
+			  loops++;
+		  }
+		  ros::Duration(0.1).sleep();
+	  }
+	  forceBias = forceBias / loops;
+	  std::cout<<"Bias:\n"<<forceBias<<"\n---\n";
+  }
+
   int go()
   {
+	  measureBias();
 	  while ( ros::ok() )
 	  {
 		  readAndPublish();
