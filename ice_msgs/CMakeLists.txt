@@ -19,6 +19,8 @@ add_message_files(DIRECTORY msg FILES
   combinedError.msg
   combinedTwistError.msg
   controllerState.msg
+  # sensors
+  tactileArrayData.msg
 )
 
 add_service_files(DIRECTORY srv FILES
