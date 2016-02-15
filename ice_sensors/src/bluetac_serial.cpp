@@ -10,7 +10,7 @@
 #include "ice_sensors/tactile_serial.h"
 
 #include <ice_msgs/tactileArrayData.h>
-#include <geometry_msgs/Wrench.h>
+#include <geometry_msgs/WrenchStamped.h>
 
 #include <vector>
 #include <string>
@@ -24,11 +24,11 @@ class TactileViz
 
   ros::NodeHandle  m_node;
   ros::Publisher   m_tactileVizPub;
-  ros::Publisher   m_tactilePub;
-  ros::Subscriber  m_sensorSub;
+  ros::Publisher   m_tactileDataPub;
+  ros::Publisher   m_tactileWrenchPub;
 
-  ice_msgs::tactileArrayData m_tactile_data;
-  geometry_msgs::Wrench m_flexiforce_wrench;
+  ice_msgs::tactileArrayData   m_tactile_data;
+  geometry_msgs::WrenchStamped m_tactile_wrench;
 
   bool firstRead;
 
@@ -43,18 +43,22 @@ class TactileViz
   std::string port;
   double      baud;
 
+  std::string frame_id;
+
   TactileSerial *tacSerial;
 
 public:
 
   TactileViz( )
   {
-	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("tactile/viz", 1);
-	m_tactilePub    = m_node.advertise<ice_msgs::tactileArrayData>("tactile/data", 1);
+	m_tactileVizPub		= m_node.advertise<visualization_msgs::MarkerArray>("tactile/viz", 1);
+	m_tactileDataPub    = m_node.advertise<ice_msgs::tactileArrayData>(		"tactile/data", 1);
+	m_tactileWrenchPub  = m_node.advertise<geometry_msgs::WrenchStamped>(	"tactile/wrench", 1);
 
 	force		.resize(numSensors);
 	forceBias	.resize(numSensors);
 	pos			.resize(numSensors,3);
+
 	firstRead=true;
 
 	pos << 0.1,-0.1, 0,
@@ -65,6 +69,9 @@ public:
 
 	forceScale = 1024;
 
+	frame_id = "/base_link";	// TODO make parameter
+
+	// Read parameters
     std::string para_port = "/port";
     std::string para_baud = "/baud";
 
@@ -89,7 +96,7 @@ public:
   TactileViz( int argc, char** argv )
   {
 	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("tactile/viz", 1);
-	m_tactilePub    = m_node.advertise<ice_msgs::tactileArrayData>("tactile/data", 1);
+	m_tactileDataPub    = m_node.advertise<ice_msgs::tactileArrayData>("tactile/data", 1);
 
 	force		.resize(numSensors);
 	forceBias	.resize(numSensors);
@@ -102,7 +109,7 @@ public:
 		   0.0, 0.0, 0;
 		   //0.1, 0.1, 0;
 
-	forceScale = 1024;
+	forceScale = 1;//1024;
 
 	port = "";
 	baud = 0;
@@ -117,10 +124,10 @@ public:
   {
 	  visualization_msgs::MarkerArray m_vizMarkerArray;
 
-	  m_vizMarker.header.frame_id = "link";
-	  m_vizMarker.header.stamp = ros::Time();
+	  m_vizMarker.header.frame_id = frame_id;
+	  m_vizMarker.header.stamp = ros::Time::now();
 	  m_vizMarker.ns = "vizFt";
-	  
+
 	  m_vizMarker.type = visualization_msgs::Marker::ARROW;
 	  m_vizMarker.action = visualization_msgs::Marker::ADD;
 
@@ -129,54 +136,107 @@ public:
 	  m_vizMarker.pose.orientation.z = 0.7071;
 	  m_vizMarker.pose.orientation.w = 0.0;
 
-	for(int i =0; i < force.size(); i++)
-	{
-	  m_vizMarker.id = i;
-	
-	  m_vizMarker.pose.position.x = pos(i,0);
-	  m_vizMarker.pose.position.y = pos(i,1);
-	  m_vizMarker.pose.position.z = pos(i,2);
+	  for(int i =0; i < numSensors; i++)
+	  {
+		  m_vizMarker.id = i;
 
-	  m_vizMarker.scale.x = force(i)/forceScale;
-	  m_vizMarker.scale.y = 0.03;
-	  m_vizMarker.scale.z = 0.03;
+		  m_vizMarker.pose.position.x = pos(i,0);
+		  m_vizMarker.pose.position.y = pos(i,1);
+		  m_vizMarker.pose.position.z = pos(i,2);
 
-	  m_vizMarker.color.a = 1.0;
-	  m_vizMarker.color.r = 1.0*   m_vizMarker.scale.x ;
-	  m_vizMarker.color.g = 1.0*(1-m_vizMarker.scale.x);
-	  m_vizMarker.color.b = 0.0;
+		  m_vizMarker.scale.x = force(i)/forceScale;
+		  m_vizMarker.scale.y = 0.03;
+		  m_vizMarker.scale.z = 0.03;
 
-	  m_vizMarkerArray.markers.push_back(m_vizMarker);
-	 }
+		  m_vizMarker.color.a = 1.0;
+		  m_vizMarker.color.r = 1.0*   m_vizMarker.scale.x ;
+		  m_vizMarker.color.g = 1.0*(1-m_vizMarker.scale.x);
+		  m_vizMarker.color.b = 0.0;
+
+		  m_vizMarkerArray.markers.push_back(m_vizMarker);
+	  }
 
 	  return m_vizMarkerArray;
   }
 
-void publishTactileData()
+  void publishTactileData()
   {
-    tacSerial->getDataArrayFromSerialPort( force );
-    //force = force / 100.0;
-
-	m_tactileVizPub.publish( genVizvizMarkerArray(pos, force ) );
-
-	m_tactile_data.data.resize(numSensors);
-    for( int i=0; i<numSensors; i++)
-    {
-    	m_tactile_data.data[i] = force(i);
-    }
-	m_tactilePub.publish(m_tactile_data);
+	  m_tactile_data.data.resize(numSensors);
+	  for( int i=0; i<numSensors; i++)
+	  {
+		  m_tactile_data.data[i] = force(i);
+	  }
+	  m_tactileDataPub.publish(m_tactile_data);
   }
 
-int go()
-{
-  while ( ros::ok() )
+  void publishTactileWrench()
   {
-    publishTactileData();
-    ros::spinOnce();
+	  // Tactile box layout
+	  //             0
+	  //
+	  //     1   >   ^    >   3 y
+	  //
+	  //             2
+	  //             x
+	  // X-axis
+	  if(force(0) > force(2))
+	  {
+		  m_tactile_wrench.wrench.force.x = -force(0);
+	  }
+	  else
+	  {
+		  m_tactile_wrench.wrench.force.x = force(2);
+	  }
+	  // Y-axis
+	  if(force(1) > force(3))
+	  {
+		  m_tactile_wrench.wrench.force.y = force(1);
+	  }
+	  else
+	  {
+		  m_tactile_wrench.wrench.force.y = -force(3);
+	  }
+	  // Z-axis
+	  m_tactile_wrench.wrench.force.z = 0.0;
+
+	  // Torque
+	  m_tactile_wrench.wrench.torque.x = 0.0;
+	  m_tactile_wrench.wrench.torque.y = 0.0;
+	  m_tactile_wrench.wrench.torque.z = 0.0;
+
+	  // Update header
+	  m_tactile_wrench.header.frame_id = frame_id;
+	  m_tactile_wrench.header.stamp = ros::Time::now();
+
+	  // Publish topic
+	  m_tactileWrenchPub.publish(m_tactile_wrench);
   }
 
-  return 0;
-}
+  void readAndPublish()
+  {
+	  // Read data
+	  tacSerial->getDataArrayFromSerialPort( force );
+	  //force = force / 100.0;
+
+	  // Publish markers
+	  m_tactileVizPub.publish( genVizvizMarkerArray(pos, force ) );
+
+	  // Publish data array
+	  publishTactileData();
+
+	  // Publish wrench
+	  publishTactileWrench();
+  }
+
+  int go()
+  {
+	  while ( ros::ok() )
+	  {
+		  readAndPublish();
+		  ros::spinOnce();
+	  }
+	  return 0;
+  }
 
 };
 
@@ -184,11 +244,10 @@ int
 main( int argc, char** argv )
 {
     // Initialize ROS
-    ros::init (argc, argv, "tactile_viz");
+    ros::init (argc, argv, "tactile_node");
     ros::NodeHandle node;
 
     TactileViz tacViz;
-//    TactileViz tacViz(argc, argv);
 
     tacViz.go();
 }
