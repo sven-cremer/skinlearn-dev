@@ -6,10 +6,10 @@ loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRat
 
 useCurrentCartPose : false
 useNullspacePose   : false
-useFlexiForce      : false
-forceTorqueOn      : true
-accelerometerOn    : true
-useDigitalFilter   : true
+useFlexiForce      : true
+forceTorqueOn      : false
+accelerometerOn    : false
+useDigitalFilter   : false
 
 executeCircleTraj  : false
 numCircleTraj      : 3
@@ -24,7 +24,7 @@ publishRTtopics    : true
 useSimHuman        : false
 
 # Only one can be true
-useARMAmodel       : false
+useARMAmodel       : true
 useCTARMAmodel     : false
 useFIRmodel        : false
 useMRACmodel       : false
@@ -32,7 +32,7 @@ useIRLmodel        : false
 useMSDmodel        : false
 useDirectmodel     : false
 
-outerLoop_time     : 0.001
+outerLoop_time     : 0.05
 
 #### Digital filter coefficients
 ## Lowpass, 1st order butterworth
@@ -211,11 +211,11 @@ nnNum_Joints          : 7  # DOF
 
 nn_Kv                 : 5 # not being used? see cartPos_Kd and cartPos_Kp insteads
 nn_lambda             : 20 # not being used?
-nn_kappa              : 0.15
-nn_Kz                 : 0.001 # not being used?
-nn_Zb                 : 1 # not being used?
-nn_feedForwardForce   : 0.0 # small because of jitter from FT measurments
-nn_nnF                : 200 # -> W (outer)
+nn_kappa              : 0.25
+nn_Kz                 : 0.005 # not being used?
+nn_Zb                 : 100 # not being used?
+nn_feedForwardForce   : 50 # small because of jitter from FT measurments
+nn_nnF                : 100 # -> W (outer)
 nn_nnG                : 200 # -> V (inner)
 nn_ON                 : 1
 
@@ -238,12 +238,12 @@ cartRot_Kp_y          : 10
 cartRot_Kp_z          : 10
 
 # Prevents motion if qd=0
-cartPos_Kd_x          : 1
-cartPos_Kd_y          : 1
-cartPos_Kd_z          : 1
-cartRot_Kd_x          : 1
-cartRot_Kd_y          : 1
-cartRot_Kd_z          : 1
+cartPos_Kd_x          : 10
+cartPos_Kd_y          : 10
+cartPos_Kd_z          : 10
+cartRot_Kd_x          : 3
+cartRot_Kd_y          : 3
+cartRot_Kd_z          : 3
 
 # Nominal angles for the arm joints
                 # Left arm          # Right arm

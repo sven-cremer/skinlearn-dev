@@ -388,7 +388,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		/***************** OUTER LOOP *****************/
 
-		//updateOuterLoop();
+		updateOuterLoop();
 
 		/***************** INNER LOOP *****************/
 
@@ -592,14 +592,14 @@ void PR2adaptNeuroControllerClass::update()
 
 	if (publishRTtopics && loop_count_ % loopRateFactor == 0 )
 	{
-		//			cartvec_tmp(1) = accData_vector_size;
-		//			cartvec_tmp(2) = ftData_vector_size;
-		cartvec_tmp(1) = nnController.getOuterWeightsNorm();
-		cartvec_tmp(2) = nnController.getInnerWeightsNorm();
+		//cartvec_tmp(1) = accData_vector_size;
+		//cartvec_tmp(2) = ftData_vector_size;
+		//cartvec_tmp(1) = nnController.getOuterWeightsNorm();
+		//cartvec_tmp(2) = nnController.getInnerWeightsNorm();
 
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
-			tf::poseEigenToMsg(CartVec2Affine(cartvec_tmp), pub_x_desi_.msg_.pose);	// tmp
+			tf::poseEigenToMsg(CartVec2Affine(tactile_wrench_), pub_x_desi_.msg_.pose);	// cartvec_tmp
 			//tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
 			pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
 			pub_x_desi_.unlockAndPublish();
@@ -667,6 +667,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 	// OUTER Loop Update
 
 	// Human Intent Estimation
+	/*
 	if( !externalRefTraj )
 	{
 		if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
@@ -682,6 +683,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 			intent_elapsed_ = robot_state_->getTime() ;
 		}
 	}
+	*/
 
 
 	if( ( robot_state_->getTime() - outer_elapsed_ ).toSec() >= outerLoopTime )
