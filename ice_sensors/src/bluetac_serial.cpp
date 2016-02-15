@@ -9,6 +9,7 @@
 
 #include "ice_sensors/tactile_serial.h"
 
+#include <ice_msgs/tactileArrayData.h>
 #include <geometry_msgs/Wrench.h>
 
 #include <vector>
@@ -19,11 +20,14 @@
 
 class TactileViz
 {
+  enum { numSensors = 4 };
+
   ros::NodeHandle  m_node;
   ros::Publisher   m_tactileVizPub;
   ros::Publisher   m_tactilePub;
   ros::Subscriber  m_sensorSub;
 
+  ice_msgs::tactileArrayData m_tactile_data;
   geometry_msgs::Wrench m_flexiforce_wrench;
 
   bool firstRead;
@@ -38,18 +42,19 @@ class TactileViz
 
   std::string port;
   double      baud;
+
   TactileSerial *tacSerial;
 
 public:
 
   TactileViz( )
   {
-	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("viz/tactile", 1);
-	m_tactilePub    = m_node.advertise<geometry_msgs::Wrench>("pr2_cartneuroController/command", 1);
+	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("tactile/viz", 1);
+	m_tactilePub    = m_node.advertise<ice_msgs::tactileArrayData>("tactile/data", 1);
 
-	force.resize(4);
-	forceBias.resize(4);
-	pos.resize(4,3);
+	force		.resize(numSensors);
+	forceBias	.resize(numSensors);
+	pos			.resize(numSensors,3);
 	firstRead=true;
 
 	pos << 0.1,-0.1, 0,
@@ -65,12 +70,12 @@ public:
 
     if (!m_node.getParam( para_port , port ))
     {
-    	ROS_WARN("Value not loaded from parameter: %s !)", para_port.c_str());
+    	ROS_WARN("Parameter not found: %s", para_port.c_str());
     	port = "/dev/ttyACM0";
     }
     if (!m_node.getParam( para_baud , baud ))
     {
-    	ROS_WARN("Value not loaded from parameter: %s !)", para_baud.c_str());
+    	ROS_WARN("Parameter not found: %s", para_baud.c_str());
     	baud = 2000000;
     }
 
@@ -83,12 +88,12 @@ public:
 
   TactileViz( int argc, char** argv )
   {
-	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("viz/tactile", 1);
-	m_tactilePub    = m_node.advertise<geometry_msgs::Wrench>("command", 1);
+	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("tactile/viz", 1);
+	m_tactilePub    = m_node.advertise<ice_msgs::tactileArrayData>("tactile/data", 1);
 
-	force.resize(4);
-	forceBias.resize(4);
-	pos.resize(4,3);
+	force		.resize(numSensors);
+	forceBias	.resize(numSensors);
+	pos			.resize(numSensors,3);
 	firstRead=true;
 
 	pos << 0.1,-0.1, 0,
@@ -150,17 +155,16 @@ public:
 void publishTactileData()
   {
     tacSerial->getDataArrayFromSerialPort( force );
-    force = force / 100.0;
+    //force = force / 100.0;
 
 	m_tactileVizPub.publish( genVizvizMarkerArray(pos, force ) );
 
-	m_flexiforce_wrench.force.x  = force(0);
-	m_flexiforce_wrench.force.y  = force(1);
-	m_flexiforce_wrench.force.z  = force(2);
-	m_flexiforce_wrench.torque.x = force(3);
-	m_flexiforce_wrench.torque.y = 0.0;
-	m_flexiforce_wrench.torque.z = 0.0;
-	m_tactilePub.publish(m_flexiforce_wrench);
+	m_tactile_data.data.resize(numSensors);
+    for( int i=0; i<numSensors; i++)
+    {
+    	m_tactile_data.data[i] = force(i);
+    }
+	m_tactilePub.publish(m_tactile_data);
   }
 
 int go()

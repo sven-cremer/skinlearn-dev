@@ -157,18 +157,20 @@ void initFilter()
 
 bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 {
+
+	force.resize(numSensors);
+	force.setZero();
+
     result = my_serial->readline();
     std::vector<std::string> strvec;
-
-    force.setZero();
 
     boost::algorithm::split(strvec,result,boost::algorithm::is_any_of(","), boost::algorithm::token_compress_on);
 
     // Display output (for debugging)
-    for( unsigned int i=0; i<strvec.size(); i++)
-    {
-    	std::cout<<"strvec["<<i<<"]: "<<strvec[i].c_str()<<"\n";
-    }
+//    for( unsigned int i=0; i<strvec.size(); i++)
+//    {
+//    	std::cout<<"strvec["<<i<<"]: "<<strvec[i].c_str()<<"\n";
+//    }
 
     // Check data
     if(strvec.size() != 5)
@@ -177,34 +179,27 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
     	return false;
     }
 
-    for( unsigned int i=0; i<force.size(); i++)
+    for( unsigned int i=0; i<numSensors; i++)
     {
     	std::string tmp = strvec[i];
     	force(i) = boost::lexical_cast<double>(tmp);
-    	std::cout<<"force("<<i<<"): "<<force(i)<<"\n";
-
-//    	   std::istringstream ss(tmp);
-//    	   double x;
-//    	   if (!(ss >> x))
-//    		   force(i)= 0.0;
-//    	   else
-//    		   force(i) = x;
-
-    }
-    std::cout<<"-----\n";
-
-    if(firstRead)
-    {
-	forceBias = force;
-	firstRead = false;
+    	//std::cout<<"force("<<i<<"): "<<force(i)<<"\n";
     }
 
-	force = force + Eigen::VectorXd::Ones(force.size()) - forceBias;
+//    if(firstRead)
+//    {
+//		forceBias = force;
+//		firstRead = false;
+//    }
+//	force = force + Eigen::VectorXd::Ones(numSensors) - forceBias;
 
     for( unsigned int i=0; i<force.size(); i++)
     {
     	force(i) = forceLPFilt[i]->getNextFilteredValue(force(i));
-    	if(force(i) < 0){force(i) = 0;}
+    	if(force(i) < 0)
+    	{
+    		force(i) = 0;
+    	}
     }
 }
 
