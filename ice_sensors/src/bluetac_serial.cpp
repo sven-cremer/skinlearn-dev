@@ -118,11 +118,6 @@ public:
 	  m_vizMarker.type = visualization_msgs::Marker::ARROW;
 	  m_vizMarker.action = visualization_msgs::Marker::ADD;
 
-//	  m_vizMarker.pose.orientation.x = 0.7071;
-//	  m_vizMarker.pose.orientation.y = 0.0;
-//	  m_vizMarker.pose.orientation.z = 0.7071;
-//	  m_vizMarker.pose.orientation.w = 0.0;
-
 	  for(int i =0; i < numSensors; i++)
 	  {
 		  m_vizMarker.id = i;
@@ -179,6 +174,7 @@ public:
 	  {
 		  m_tactile_wrench.wrench.force.x = force(2);
 	  }
+//	  m_tactile_wrench.wrench.force.x = force(2) - force(0);	// Issue: if one side is too sensitive it's always close to the max value
 	  // Y-axis
 	  if(force(1) > force(3))
 	  {
@@ -188,6 +184,7 @@ public:
 	  {
 		  m_tactile_wrench.wrench.force.y = -force(3);
 	  }
+//	  m_tactile_wrench.wrench.force.y = force(1) - force(3);
 	  // Z-axis
 	  m_tactile_wrench.wrench.force.z = 0.0;
 
@@ -209,19 +206,22 @@ public:
 	  // Read data
 	  if(!tacSerial->getDataArrayFromSerialPort( force ))
 	  {
-		  std::cout<<"->Reading data failed!\n";
+		  //std::cout<<"->Reading data failed!\n";
 		  return;
 	  }
 	  // Remove bias
 	  force = force - forceBias;
-	  // Check threshold
-	  if(force.norm() < 30.0)
-	  {
-		  force.setZero();
-	  }
-	  //std::cout<<"Norm: "<<force.norm()<<"\n";
 	  // Scale force
 	  force = force / forceScale;
+	  // Apply threshold
+	  for( int i=0; i<numSensors; i++)
+	  {
+		  if(force(i) < 0.035)	// TODO improve thresholding
+		  {
+			  force(i)=0;
+		  }
+	  }
+	  //std::cout<<"Norm: "<<force.norm()<<"\n";
 
 	  // Publish markers
 	  m_tactileVizPub.publish( genVizvizMarkerArray(pos, force ) );
