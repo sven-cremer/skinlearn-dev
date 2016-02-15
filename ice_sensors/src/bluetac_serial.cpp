@@ -65,17 +65,17 @@ public:
 
     if (!m_node.getParam( para_port , port ))
     {
-    	ROS_ERROR("Value not loaded from parameter: %s !)", para_port.c_str());
+    	ROS_WARN("Value not loaded from parameter: %s !)", para_port.c_str());
     	port = "/dev/ttyACM0";
     }
     if (!m_node.getParam( para_baud , baud ))
     {
-    	ROS_ERROR("Value not loaded from parameter: %s !)", para_baud.c_str());
+    	ROS_WARN("Value not loaded from parameter: %s !)", para_baud.c_str());
     	baud = 2000000;
     }
 
-    ROS_INFO_STREAM(port);
-    ROS_INFO_STREAM(baud);
+    ROS_INFO("Port: %s",port.c_str());
+    ROS_INFO("Baud: %f",baud);
 
     // Flexiforce sensors
     tacSerial = new TactileSerial( port, baud );
@@ -85,6 +85,7 @@ public:
   {
 	m_tactileVizPub = m_node.advertise<visualization_msgs::MarkerArray>("viz/tactile", 1);
 	m_tactilePub    = m_node.advertise<geometry_msgs::Wrench>("command", 1);
+
 	force.resize(4);
 	forceBias.resize(4);
 	pos.resize(4,3);

@@ -31,13 +31,15 @@ using std::vector;
 
 class TactileSerial
 {
+  enum { numSensors = 4 };
+
   string result;
   serial::Serial *my_serial;
 
   bool firstRead;
   Eigen::VectorXd forceBias;
 
-  digitalFilter *forceLPFilt[4];
+  digitalFilter *forceLPFilt[numSensors];
 
   float tempData;
 
@@ -60,7 +62,7 @@ private:
 		  serial::PortInfo device = *iter++;
 		  printf( "(%s, %s, %s)\n", device.port.c_str(), device.description.c_str(), device.hardware_id.c_str() );
 	  }
-}
+  }
 
 void print_usage()
 {
@@ -75,7 +77,7 @@ TactileSerial(string port, unsigned long baud)
 
 initFilter();
 
-forceBias.resize(4);
+forceBias.resize(numSensors);
 firstRead=true;
 
   if( port == "-e" ) {
@@ -149,8 +151,8 @@ void initFilter()
 	  float b_lpfilt[] = {0.2452,  0.2452};
 	  float a_lpfilt[] = {1.0000, -0.5095};
 
-	  for(int i=0; i < 4; i++)
-	    forceLPFilt[i] = new digitalFilter(1, true,b_lpfilt,a_lpfilt);
+	  for(int i=0; i < numSensors; i++)
+	    forceLPFilt[i] = new digitalFilter(1, true, b_lpfilt, a_lpfilt);
 }
 
 bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
@@ -158,14 +160,38 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
     result = my_serial->readline();
     std::vector<std::string> strvec;
 
-    force << 0.0,0.0,0.0,0.0;
+    force.setZero();
 
     boost::algorithm::split(strvec,result,boost::algorithm::is_any_of(","), boost::algorithm::token_compress_on);
-	    
+
+    // Display output (for debugging)
+    for( unsigned int i=0; i<strvec.size(); i++)
+    {
+    	std::cout<<"strvec["<<i<<"]: "<<strvec[i].c_str()<<"\n";
+    }
+
+    // Check data
+    if(strvec.size() != 5)
+    {
+    	std::cout<<"Unexpected length: "<<strvec.size()<<"\n";
+    	return false;
+    }
+
     for( unsigned int i=0; i<force.size(); i++)
     {
-	force(i) = boost::lexical_cast<double>(strvec[i]);
+    	std::string tmp = strvec[i];
+    	force(i) = boost::lexical_cast<double>(tmp);
+    	std::cout<<"force("<<i<<"): "<<force(i)<<"\n";
+
+//    	   std::istringstream ss(tmp);
+//    	   double x;
+//    	   if (!(ss >> x))
+//    		   force(i)= 0.0;
+//    	   else
+//    		   force(i) = x;
+
     }
+    std::cout<<"-----\n";
 
     if(firstRead)
     {
