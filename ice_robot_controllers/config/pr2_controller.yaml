@@ -214,7 +214,7 @@ nn_lambda             : 20 # not being used?
 nn_kappa              : 0.25
 nn_Kz                 : 0.005 # not being used?
 nn_Zb                 : 100 # not being used?
-nn_feedForwardForce   : 50 # small because of jitter from FT measurments
+nn_feedForwardForce   : 1.0 # small because of jitter from FT measurments
 nn_nnF                : 100 # -> W (outer)
 nn_nnG                : 200 # -> V (inner)
 nn_ON                 : 1

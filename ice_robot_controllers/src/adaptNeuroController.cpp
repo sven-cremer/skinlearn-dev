@@ -71,7 +71,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 
 	// Subscribe to Flexiforce wrench commands
 	if(useFlexiForce)
-		sub_command_ = nh_.subscribe<geometry_msgs::WrenchStamped>("tactile/wrench", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
+		sub_command_ = nh_.subscribe<geometry_msgs::WrenchStamped>("/tactile/wrench", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
 
@@ -518,9 +518,10 @@ void PR2adaptNeuroControllerClass::update()
 		/***************** GET SENSOR DATA *****************/
 
 		// Flexiforce data updated by readForceValuesCB
-//		if(useFlexiForce)
-//		{
-//		}
+		if(useFlexiForce)
+		{
+			ros::spinOnce();
+		}
 
 		if( accelerometerOn )//|| forceTorqueOn )
 		{
