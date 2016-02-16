@@ -209,7 +209,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 	if(useFlexiForce)
 	{
+		tactile_wrench_ = -tactile_wrench_;
 		// TODO: update t_r?
+		// TODO: transform into torso frame
 		transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
 	}
 
@@ -520,7 +522,7 @@ void PR2adaptNeuroControllerClass::update()
 		// Flexiforce data updated by readForceValuesCB
 		if(useFlexiForce)
 		{
-			ros::spinOnce();
+			ros::spinOnce();	// TODO move to nonRealtime update, seems to slow down loop
 		}
 
 		if( accelerometerOn )//|| forceTorqueOn )
