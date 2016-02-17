@@ -330,10 +330,10 @@ private:
 	csl::outer_loop::CtRlsModel outerLoopCTRLSmodelY ;
 
 	Eigen::MatrixXd outerLoopWk         ;
+	Eigen::MatrixXd outerLoopWk_flexi_0 ;
 	Eigen::MatrixXd outerLoopWk_flexi_1 ;
 	Eigen::MatrixXd outerLoopWk_flexi_2 ;
 	Eigen::MatrixXd outerLoopWk_flexi_3 ;
-	Eigen::MatrixXd outerLoopWk_flexi_4 ;
 
 	// Fixed filter weights or adaptive weights
 	bool useFixedWeights;

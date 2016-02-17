@@ -209,7 +209,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 	if(useFlexiForce)
 	{
-		tactile_wrench_ = -tactile_wrench_;
+		//tactile_wrench_ = -tactile_wrench_;
 		// TODO: update t_r?
 		// TODO: transform into torso frame
 		transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
@@ -360,10 +360,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		Xd_m  = affine2CartVec(xd_des_);
 		Xdd_m = affine2CartVec(xdd_des_);
 
-		if(useFlexiForce)
-		{
-			tau_ = JacobianTrans*(fFForce*tactile_wrench_);	// [7x6]*[6x1]->[7x1]
-		}
+//		if(useFlexiForce)
+//		{
+//			tau_ = JacobianTrans*(-fFForce*tactile_wrench_);	// [7x6]*[6x1]->[7x1]
+//		}
 
 		if(forceTorqueOn)
 		{
@@ -694,37 +694,45 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 		// RLS ARMA
 		if( useARMAmodel )
 		{
-			if( useFlexiForce )
+			if( useFlexiForce )	// TODO only update weights when needed or have two models per axis?
 			{
 				// Set ARMA parameters
-				// X axis
-				if( tactile_wrench_(0) < 0.0 ){		// TODO check inequality
+				// Note: tactile_wrench_ corresponds to the applied force (not the reactant force)
 
-					outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_1 ) ;
+				// X axis
+				if( tactile_wrench_(0) > 0.0 )	// Positive if pressing 0 (i.e. forward)
+				{
+
+					outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_0 ) ;
 					if( useFixedWeights )
-						outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_1 );
+						outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_0 );
 					else
 						outerLoopRLSmodelX.setUpdatedWeights();
 
-				}else{
-					outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_3 ) ;
+				}
+				else							// Negative if pressing 2 (i.e. backward)
+				{
+					outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_2 ) ;
 					if( useFixedWeights )
-						outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_3 );
+						outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_2 );
 					else
 						outerLoopRLSmodelX.setUpdatedWeights();
 				}
 
 				// Y axis
-				if( tactile_wrench_(1) < 0.0 ){
-					outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_2 ) ;
+				if( tactile_wrench_(1) > 0.0 )	// Positive if pressing 1 (i.e. outward)
+				{
+					outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_1 ) ;
 					if( useFixedWeights )
-						outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_2 );
+						outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_1 );
 					else
 						outerLoopRLSmodelY.setUpdatedWeights();
-				}else{
-					outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_4 ) ;
+				}
+				else							// Negative if pressing 3 (i.e. inward)
+				{
+					outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_3 ) ;
 					if( useFixedWeights )
-						outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_4 );
+						outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_3 );
 					else
 						outerLoopRLSmodelY.setUpdatedWeights();
 				}
@@ -755,19 +763,19 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 			if( useFlexiForce )
 			{
 				// X axis
-				if( tactile_wrench_(0) < 0.0 )
+				if( tactile_wrench_(0) > 0.0 )
 				{
-					outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_1 ) ;
+					outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_0 ) ;
 				}else{
-					outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_3 ) ;
+					outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_2 ) ;
 				}
 
 				// Y axis
-				if( tactile_wrench_(1) < 0.0 )
+				if( tactile_wrench_(1) > 0.0 )
 				{
-					outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_2 ) ;
+					outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_1 ) ;
 				}else{
-					outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_4 ) ;
+					outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_3 ) ;
 				}
 
 			}else
@@ -1448,7 +1456,7 @@ PR2adaptNeuroControllerClass::calcHumanIntentPos( Eigen::Vector3d & force,
 
 void PR2adaptNeuroControllerClass::readForceValuesCB(const geometry_msgs::WrenchStampedConstPtr& wrench_msg)
 {
-	// Convert to wrench command
+	// Convert to CartVec
 	tactile_wrench_(0) = wrench_msg->wrench.force.x;
 	tactile_wrench_(1) = wrench_msg->wrench.force.y;
 	tactile_wrench_(2) = wrench_msg->wrench.force.z;
@@ -2057,7 +2065,7 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	if (!nh_.getParam( para_forceCutOffZ , forceCutOffZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffZ.c_str()) ; return false; }
 
 
-
+	// TODO make filter weights vectors
 	std::string para_filtW0        = "/filtW0"        ;
 	std::string para_filtW1        = "/filtW1"        ;
 	std::string para_filtW2        = "/filtW2"        ;
@@ -2159,32 +2167,29 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 
 
 	outerLoopWk.resize(8,1);
+	outerLoopWk_flexi_0.resize(8,1);
 	outerLoopWk_flexi_1.resize(8,1);
 	outerLoopWk_flexi_2.resize(8,1);
 	outerLoopWk_flexi_3.resize(8,1);
-	outerLoopWk_flexi_4.resize(8,1);
 
 
 	if( useFIRmodel || useARMAmodel || useCTARMAmodel)
 	{
-		outerLoopWk(0,0) = filtW0 ; outerLoopWk_flexi_1(0,0) = flex_1_filtW0 ; outerLoopWk_flexi_2(0,0) = flex_2_filtW0 ; outerLoopWk_flexi_3(0,0) = flex_3_filtW0 ; outerLoopWk_flexi_4(0,0) = flex_4_filtW0 ;
-		outerLoopWk(1,0) = filtW1 ; outerLoopWk_flexi_1(1,0) = flex_1_filtW1 ; outerLoopWk_flexi_2(1,0) = flex_2_filtW1 ; outerLoopWk_flexi_3(1,0) = flex_3_filtW1 ; outerLoopWk_flexi_4(1,0) = flex_4_filtW1 ;
-		outerLoopWk(2,0) = filtW2 ; outerLoopWk_flexi_1(2,0) = flex_1_filtW2 ; outerLoopWk_flexi_2(2,0) = flex_2_filtW2 ; outerLoopWk_flexi_3(2,0) = flex_3_filtW2 ; outerLoopWk_flexi_4(2,0) = flex_4_filtW2 ;
-		outerLoopWk(3,0) = filtW3 ; outerLoopWk_flexi_1(3,0) = flex_1_filtW3 ; outerLoopWk_flexi_2(3,0) = flex_2_filtW3 ; outerLoopWk_flexi_3(3,0) = flex_3_filtW3 ; outerLoopWk_flexi_4(3,0) = flex_4_filtW3 ;
-		outerLoopWk(4,0) = filtW4 ; outerLoopWk_flexi_1(4,0) = flex_1_filtW4 ; outerLoopWk_flexi_2(4,0) = flex_2_filtW4 ; outerLoopWk_flexi_3(4,0) = flex_3_filtW4 ; outerLoopWk_flexi_4(4,0) = flex_4_filtW4 ;
-		outerLoopWk(5,0) = filtW5 ; outerLoopWk_flexi_1(5,0) = flex_1_filtW5 ; outerLoopWk_flexi_2(5,0) = flex_2_filtW5 ; outerLoopWk_flexi_3(5,0) = flex_3_filtW5 ; outerLoopWk_flexi_4(5,0) = flex_4_filtW5 ;
-		outerLoopWk(6,0) = filtW6 ; outerLoopWk_flexi_1(6,0) = flex_1_filtW6 ; outerLoopWk_flexi_2(6,0) = flex_2_filtW6 ; outerLoopWk_flexi_3(6,0) = flex_3_filtW6 ; outerLoopWk_flexi_4(6,0) = flex_4_filtW6 ;
-		outerLoopWk(7,0) = filtW7 ; outerLoopWk_flexi_1(7,0) = flex_1_filtW7 ; outerLoopWk_flexi_2(7,0) = flex_2_filtW7 ; outerLoopWk_flexi_3(7,0) = flex_3_filtW7 ; outerLoopWk_flexi_4(7,0) = flex_4_filtW7 ;
+		outerLoopWk(0,0) = filtW0 ; outerLoopWk_flexi_0(0,0) = flex_1_filtW0 ; outerLoopWk_flexi_1(0,0) = flex_2_filtW0 ; outerLoopWk_flexi_2(0,0) = flex_3_filtW0 ; outerLoopWk_flexi_3(0,0) = flex_4_filtW0 ;
+		outerLoopWk(1,0) = filtW1 ; outerLoopWk_flexi_0(1,0) = flex_1_filtW1 ; outerLoopWk_flexi_1(1,0) = flex_2_filtW1 ; outerLoopWk_flexi_2(1,0) = flex_3_filtW1 ; outerLoopWk_flexi_3(1,0) = flex_4_filtW1 ;
+		outerLoopWk(2,0) = filtW2 ; outerLoopWk_flexi_0(2,0) = flex_1_filtW2 ; outerLoopWk_flexi_1(2,0) = flex_2_filtW2 ; outerLoopWk_flexi_2(2,0) = flex_3_filtW2 ; outerLoopWk_flexi_3(2,0) = flex_4_filtW2 ;
+		outerLoopWk(3,0) = filtW3 ; outerLoopWk_flexi_0(3,0) = flex_1_filtW3 ; outerLoopWk_flexi_1(3,0) = flex_2_filtW3 ; outerLoopWk_flexi_2(3,0) = flex_3_filtW3 ; outerLoopWk_flexi_3(3,0) = flex_4_filtW3 ;
+		outerLoopWk(4,0) = filtW4 ; outerLoopWk_flexi_0(4,0) = flex_1_filtW4 ; outerLoopWk_flexi_1(4,0) = flex_2_filtW4 ; outerLoopWk_flexi_2(4,0) = flex_3_filtW4 ; outerLoopWk_flexi_3(4,0) = flex_4_filtW4 ;
+		outerLoopWk(5,0) = filtW5 ; outerLoopWk_flexi_0(5,0) = flex_1_filtW5 ; outerLoopWk_flexi_1(5,0) = flex_2_filtW5 ; outerLoopWk_flexi_2(5,0) = flex_3_filtW5 ; outerLoopWk_flexi_3(5,0) = flex_4_filtW5 ;
+		outerLoopWk(6,0) = filtW6 ; outerLoopWk_flexi_0(6,0) = flex_1_filtW6 ; outerLoopWk_flexi_1(6,0) = flex_2_filtW6 ; outerLoopWk_flexi_2(6,0) = flex_3_filtW6 ; outerLoopWk_flexi_3(6,0) = flex_4_filtW6 ;
+		outerLoopWk(7,0) = filtW7 ; outerLoopWk_flexi_0(7,0) = flex_1_filtW7 ; outerLoopWk_flexi_1(7,0) = flex_2_filtW7 ; outerLoopWk_flexi_2(7,0) = flex_3_filtW7 ; outerLoopWk_flexi_3(7,0) = flex_4_filtW7 ;
 	}else
 	{
-		outerLoopWk(0,0) = 0.0 ; outerLoopWk_flexi_1(0,0) = 0.0 ; outerLoopWk_flexi_2(0,0) = 0.0 ; outerLoopWk_flexi_3(0,0) = 0.0 ; outerLoopWk_flexi_4(0,0) = 0.0 ;
-		outerLoopWk(1,0) = 0.0 ; outerLoopWk_flexi_1(1,0) = 0.0 ; outerLoopWk_flexi_2(1,0) = 0.0 ; outerLoopWk_flexi_3(1,0) = 0.0 ; outerLoopWk_flexi_4(1,0) = 0.0 ;
-		outerLoopWk(2,0) = 0.0 ; outerLoopWk_flexi_1(2,0) = 0.0 ; outerLoopWk_flexi_2(2,0) = 0.0 ; outerLoopWk_flexi_3(2,0) = 0.0 ; outerLoopWk_flexi_4(2,0) = 0.0 ;
-		outerLoopWk(3,0) = 0.0 ; outerLoopWk_flexi_1(3,0) = 0.0 ; outerLoopWk_flexi_2(3,0) = 0.0 ; outerLoopWk_flexi_3(3,0) = 0.0 ; outerLoopWk_flexi_4(3,0) = 0.0 ;
-		outerLoopWk(4,0) = 0.0 ; outerLoopWk_flexi_1(4,0) = 0.0 ; outerLoopWk_flexi_2(4,0) = 0.0 ; outerLoopWk_flexi_3(4,0) = 0.0 ; outerLoopWk_flexi_4(4,0) = 0.0 ;
-		outerLoopWk(5,0) = 0.0 ; outerLoopWk_flexi_1(5,0) = 0.0 ; outerLoopWk_flexi_2(5,0) = 0.0 ; outerLoopWk_flexi_3(5,0) = 0.0 ; outerLoopWk_flexi_4(5,0) = 0.0 ;
-		outerLoopWk(6,0) = 0.0 ; outerLoopWk_flexi_1(6,0) = 0.0 ; outerLoopWk_flexi_2(6,0) = 0.0 ; outerLoopWk_flexi_3(6,0) = 0.0 ; outerLoopWk_flexi_4(6,0) = 0.0 ;
-		outerLoopWk(7,0) = 0.0 ; outerLoopWk_flexi_1(7,0) = 0.0 ; outerLoopWk_flexi_2(7,0) = 0.0 ; outerLoopWk_flexi_3(7,0) = 0.0 ; outerLoopWk_flexi_4(7,0) = 0.0 ;
+		outerLoopWk.setZero();
+		outerLoopWk_flexi_0.setZero();
+		outerLoopWk_flexi_1.setZero();
+		outerLoopWk_flexi_2.setZero();
+		outerLoopWk_flexi_3.setZero();
 	}
 
 	int numIrlSamples = 100;
