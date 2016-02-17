@@ -599,10 +599,16 @@ void PR2adaptNeuroControllerClass::update()
 		//cartvec_tmp(2) = ftData_vector_size;
 		//cartvec_tmp(1) = nnController.getOuterWeightsNorm();
 		//cartvec_tmp(2) = nnController.getInnerWeightsNorm();
+		cartvec_tmp(0) = outerLoopWk_flexi_2(0,0);
+		cartvec_tmp(1) = outerLoopWk_flexi_2(1,0);
+		cartvec_tmp(2) = outerLoopWk_flexi_2(2,0);
+		cartvec_tmp(3) = outerLoopWk_flexi_2(3,0);
+		cartvec_tmp(4) = outerLoopWk_flexi_2(4,0);
+		cartvec_tmp(5) = outerLoopWk_flexi_2(5,0);
 
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
-			tf::poseEigenToMsg(CartVec2Affine(tactile_wrench_), pub_x_desi_.msg_.pose);	// cartvec_tmp
+			tf::poseEigenToMsg(CartVec2Affine(cartvec_tmp), pub_x_desi_.msg_.pose);	// cartvec_tmp
 			//tf::poseEigenToMsg(x_acc_to_ft_, pub_x_desi_.msg_.pose);
 			pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
 			pub_x_desi_.unlockAndPublish();
