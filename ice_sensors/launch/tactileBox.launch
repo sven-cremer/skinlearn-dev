@@ -1,0 +1,7 @@
+<launch>
+
+   <rosparam file="$(find ice_sensors)/config/tactileBox.yaml" command="load" />
+
+   <node name="tactileBox_node" pkg="ice_sensors" type="bluetac_serial" args="" respawn="true" output="screen"/>
+
+</launch>

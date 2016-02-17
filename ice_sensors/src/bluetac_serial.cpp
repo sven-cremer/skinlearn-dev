@@ -81,11 +81,10 @@ public:
 	firstRead=true;
 	forceScale = 1024;
 
-	frame_id = "/base_link";	// TODO make parameter
-
 	// Read parameters
     std::string para_port = "/port";
     std::string para_baud = "/baud";
+	std::string para_frame = "/tactile_frame_id";
 
     if (!m_node.getParam( para_port , port ))
     {
@@ -97,9 +96,16 @@ public:
     	ROS_WARN("Parameter not found: %s", para_baud.c_str());
     	baud = 2000000;
     }
+    if (!m_node.getParam( para_frame , frame_id ))
+    {
+    	ROS_WARN("Parameter not found: %s", para_frame.c_str());
+    	//frame_id = "/base_link";
+    	frame_id = "/l_gripper_tool_frame";
+    }
 
-    ROS_INFO("Port: %s",port.c_str());
-    ROS_INFO("Baud: %f",baud);
+    ROS_INFO("Port:  %s",port.c_str());
+    ROS_INFO("Baud:  %f",baud);
+    ROS_INFO("Frame: %s",frame_id.c_str());
 
     // Flexiforce sensors
     tacSerial = new TactileSerial( port, baud );
@@ -159,12 +165,17 @@ public:
   void publishTactileWrench()
   {
 	  // Tactile box layout
-	  //             0
 	  //
-	  //     1   >   ^    >   3 y
+	  //             |
+	  //      |------|------|
+	  //      |             |
+	  //      |      0      |
+	  //
+	  //      1  >   ^   >  3 +y
 	  //
 	  //             2
-	  //             x
+	  //            +x
+
 	  // X-axis
 	  if(force(0) > force(2))
 	  {
