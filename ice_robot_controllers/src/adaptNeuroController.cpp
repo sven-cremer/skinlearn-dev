@@ -207,14 +207,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 	/***************** SENSOR DATA PROCESSING *****************/
 
-	if(useFlexiForce)
-	{
-		//tactile_wrench_ = -tactile_wrench_;
-		// TODO: update t_r?
-		// TODO: transform into torso frame
-		transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
-	}
-
 		if( forceTorqueOn )		// TODO check if accData has been updated
 		{
 			// FT compensation
@@ -257,6 +249,14 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 
 			transformed_force = wrench_filtered_.topRows(3);
+		}
+
+		if(useFlexiForce)
+		{
+			//tactile_wrench_ = -tactile_wrench_;
+			// TODO: update t_r?
+			// TODO: transform into torso frame
+			transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
 		}
 
 		// Force threshold (makes force zero bellow threshold) FIXME not needed since force is filtered?
