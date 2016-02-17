@@ -137,9 +137,12 @@ public:
 		  m_vizMarker.pose.orientation.y = rot(i,2);
 		  m_vizMarker.pose.orientation.z = rot(i,3);
 
-		  m_vizMarker.scale.x = -force(i);	// Show reactant force
-		  m_vizMarker.scale.y = 0.03;
-		  m_vizMarker.scale.z = 0.03;
+		  if(force(i)>0.0)
+			  m_vizMarker.scale.x = -force(i);	// Show reactant force
+		  else
+			  m_vizMarker.scale.x = -0.01;
+		  m_vizMarker.scale.y = 0.02;
+		  m_vizMarker.scale.z = 0.02;
 
 		  m_vizMarker.color.a = 1.0;
 		  m_vizMarker.color.r = 1.0*   m_vizMarker.scale.x ;
