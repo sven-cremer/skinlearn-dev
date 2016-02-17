@@ -1,15 +1,16 @@
 # Flexiforce settings
 port               : /dev/ttyACM0
 baud               : 2000000
+tactile_frame_id   : l_gripper_tool_frame
 
 loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRateFactor - 2)
 
 useCurrentCartPose : false
-useNullspacePose   : false
+useNullspacePose   : true
 useFlexiForce      : true
-forceTorqueOn      : false
-accelerometerOn    : false
-useDigitalFilter   : false
+forceTorqueOn      : true
+accelerometerOn    : true
+useDigitalFilter   : true
 
 executeCircleTraj  : false
 numCircleTraj      : 3
@@ -214,7 +215,7 @@ nn_lambda             : 20 # not being used?
 nn_kappa              : 0.25
 nn_Kz                 : 0.005 # not being used?
 nn_Zb                 : 100 # not being used?
-nn_feedForwardForce   : 25.0 # small because of jitter from FT measurments
+nn_feedForwardForce   : 1.0 #25.0 # small because of jitter from FT measurments
 nn_nnF                : 100 # -> W (outer)
 nn_nnG                : 200 # -> V (inner)
 nn_ON                 : 1
