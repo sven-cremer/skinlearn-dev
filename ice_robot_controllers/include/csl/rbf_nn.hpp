@@ -36,16 +36,15 @@ class RBFNeuralNetworkController {
 	Eigen::MatrixXd W_dot;	// Derivative of NN weights
 	Eigen::VectorXd S_;		// Activation function output
 
-	//JointVec sigma_;		// Modification term for weight update
-	double sigma;
+	double sigma;			// Modification term for weight update
 	double rbf_var;			// RBF variance = width^2
 	double rbf_mag;			// RBF amplitude of center
-	//Eigen::MatrixXd gamma_;	// For updating NN Weight [numNodes x numNodes]
+	JointMat Gamma_;		// For updating NN Weight [numNodes x numNodes]
 	double gamma;
 	Eigen::MatrixXd Mu_;	// RBF center for each node n [NNinput x numNodes]
 
-	JointVec x1;			// Joint position
-	JointVec x2;			// Joint velocity
+//	JointVec x1;			// Joint position
+//	JointVec x2;			// Joint velocity
 	JointVec e1;			// Position error
 	JointVec e1_dot;		// Velocity error
 	JointVec e2;			// Error variable
@@ -59,6 +58,18 @@ class RBFNeuralNetworkController {
 	NNVec Z_;				// Input vector for NN
 
 	double dT;				// Time step
+
+	// Hysteresis nonlinearity NN
+	bool enableHysteresisNN;
+	JointMat beta;
+	JointMat beta_nxt;
+	JointMat beta_dot;
+	JointMat Gamma_beta_;
+	double gamma_beta;
+	double sigma_beta;
+	double b;
+	Eigen::VectorXd tanh_;
+	Eigen::VectorXd e2b_;
 
 public:
 
@@ -81,17 +92,13 @@ public:
 
         S_.resize(numNodes);
 
-        sigma = 0.02;
-        //sigma_.setOnes();
-        //sigma_ *= sigma;
-
         rbf_var = 1.0;
         rbf_mag = 1.0;
 
-        gamma = 10;
-        //gamma_.resize(numNodes,numNodes);
-        //gamma_.setIdentity();
-        //gamma_ *= gamma;
+        sigma = 0.01;
+        gamma = 50;
+        Gamma_.setIdentity();
+        Gamma_ *= gamma;
 
         // If the centers are -1 or 1, then there are 2^(numOutputs*4)=2^28 possible combinations.
         // This would require too many nodes.
@@ -103,22 +110,31 @@ public:
         neg = -pos;
         Mu_ = (Mu_.array() < 0).select(neg,pos);		// make elements -1 or +1
 
-        // Initialize states
-        // x1
-        x2.setZero();
-
         // Set Gains
         K1.setIdentity();
-        K1 *= 50;
+        K1 *= 5;
         K2.setIdentity();
-        K2 *= 50;
+        K2 *= 20;
 
+    	// Hysteresis nonlinearity
+        enableHysteresisNN = true;
+        beta.setZero();
+        beta_dot.setZero();
+        beta_nxt.setZero();
+    	b = 1;
+    	sigma_beta = 0.01;
+    	gamma_beta = 50;
+    	Gamma_beta_.setIdentity();
+    	Gamma_beta_ *= gamma_beta;
 	}
 
-//	void init( double p_variable )
-//	{
-//
-//	}
+	void init( double p_K1, double p_K2,
+			   double p_sigma_w, double p_gamma_w,
+			   double p_sigma_b, double p_gamma_b,
+			   double b)
+	{
+
+	}
 
 	void updateDelT( double p_dT )
 	{
@@ -130,6 +146,17 @@ public:
 		updateWeights = updateWeights_;
 	}
 
+	void hyperbolicTangent(const Eigen::VectorXd & Z,	// input
+		                     	 Eigen::VectorXd & S )	// output
+	{
+		int N = Z.size();
+		S.resize(N);
+		for(int n=0;n<N;n++)
+		{
+			S(n) = tanh( Z(n) );
+		}
+
+	}
 
 	void activationFcn(const Eigen::MatrixXd & Z,	// input
 		                     Eigen::VectorXd & S )	// output
@@ -156,6 +183,7 @@ public:
 
 		dT = delT;
 		W_ = W_nxt;				// Update weight
+		beta = beta_nxt;
 
 		e1 = q - q_m;			// Position error (15)
 		e1_dot = qd - qd_m;		// Velocity error (16)
@@ -168,11 +196,20 @@ public:
 
 	    activationFcn(Z_,S_);		// Compute S using RBF
 
-	    W_dot = gamma*(e2*S_.transpose()-sigma*W_);	// TODO: use gamma and sigma matricies instead
+	    W_dot = Gamma_*(e2*S_.transpose()-sigma*W_);	// TODO: use gamma and sigma matricies instead
 
 	    W_nxt = W_dot*dT + W_;		// Compute next weight update
 
 	    tau = -e1 - K2*e2 + W_*S_;	// Control signal
+
+    	// Hysteresis nonlinearity
+	    if(!enableHysteresisNN)
+	    	return;
+	    e2b_ = e2 / b;
+	    hyperbolicTangent(e2b_,tanh_);
+    	beta_dot = Gamma_beta_*(tanh_*e2.transpose() - sigma_beta*beta);
+    	beta_nxt = beta_dot*dT + beta;
+    	tau = tau - beta*tanh_;
 
 	}
 
