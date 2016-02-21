@@ -24,6 +24,7 @@ publishRTtopics    : true
 # Specifically for MRAC
 useSimHuman        : false
 
+useOuterloop       : true
 # Only one can be true
 useARMAmodel       : true
 useCTARMAmodel     : false

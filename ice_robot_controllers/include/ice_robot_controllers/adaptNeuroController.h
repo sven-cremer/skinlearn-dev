@@ -46,6 +46,7 @@
 #include <ice_msgs/setNNweights.h>
 #include <ice_msgs/setValue.h>
 #include <ice_msgs/experimentDataA.h>
+#include <ice_msgs/experimentDataB.h>
 
 #include "geometry_msgs/Wrench.h"
 #include "geometry_msgs/WrenchStamped.h"
@@ -67,6 +68,7 @@ public:
 private:
 	enum { StoreLen = 30000 };
 	enum { Joints = 7 };
+	enum Experiment{ A, B };
 
 	// Definitions
 	typedef Eigen::Matrix<double, 7, 1> JointVec;
@@ -267,6 +269,7 @@ private:
 	Eigen::VectorXd tau_sat;
 
 	// Outer loop
+	bool useOuterloop ;
 	bool useARMAmodel ;		// Use ARMA
 	bool useCTARMAmodel ;	// Use CT ARMA
 	bool useFIRmodel ;		// Use FIR
@@ -292,6 +295,7 @@ private:
 	ros::Publisher pubControllerParam_     ;
 	ros::Publisher pubControllerFullData_  ;
 	ros::Publisher pubExperimentDataA_     ;
+	ros::Publisher pubExperimentDataB_     ;
 
 	bool publishRTtopics;
 
@@ -307,6 +311,7 @@ private:
 	ice_msgs::controllerParam    msgControllerParam    [StoreLen];
 	ice_msgs::controllerFullData msgControllerFullData [StoreLen];
 	ice_msgs::experimentDataA    experimentDataA_msg_  [StoreLen];
+	ice_msgs::experimentDataB    experimentDataB_msg_  [StoreLen];
 
 	volatile int storage_index_;
 
@@ -479,16 +484,20 @@ private:
 	ros::ServiceServer toggleFixedWeights_srv_;
 
 	ros::ServiceServer runExperimentA_srv_;
+	ros::ServiceServer runExperimentB_srv_;
 
 	bool runExperimentA(	ice_msgs::setValue::Request & req,
 						    ice_msgs::setValue::Response& resp );
+	bool runExperimentB(	ice_msgs::setValue::Request & req,
+						    ice_msgs::setValue::Response& resp );
+
+	Experiment experiment_;
 
 	void bufferData();
 	bool recordData;
 	//  void setDataPoint(dataPoint::Datum* datum, double & dt);
 	//  dataPoint::controllerFullData controllerData;
 
-	std::fstream saveDataFile;
 	bool accelerometerOn;
 
 	bool executeCircleTraj;

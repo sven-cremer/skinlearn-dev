@@ -74,6 +74,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 		sub_command_ = nh_.subscribe<geometry_msgs::WrenchStamped>("/tactile/wrench", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
+	runExperimentB_srv_ = nh_.advertiseService("runExperimentB" , &PR2adaptNeuroControllerClass::runExperimentB   , this);
 
 	// NN weights
 	updateInnerNNweights_srv_  = nh_.advertiseService("updateInnerNNweights" , &PR2adaptNeuroControllerClass::updateInnerNNweights   , this);
@@ -97,6 +98,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	pubControllerParam_      = nh_.advertise< ice_msgs::controllerParam    >( "controller_params"    , StoreLen);
 	pubControllerFullData_   = nh_.advertise< ice_msgs::controllerFullData >( "controllerFullData"   , StoreLen);
 	pubExperimentDataA_	     = nh_.advertise< ice_msgs::experimentDataA    >( "experimentDataA"   , StoreLen);
+	pubExperimentDataB_	     = nh_.advertise< ice_msgs::experimentDataB    >( "experimentDataB"   , StoreLen);
 
 	storage_index_ = StoreLen;
 	// DATA COLLECTION END
@@ -390,7 +392,24 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		/***************** OUTER LOOP *****************/
 
-		updateOuterLoop();
+		if(useOuterloop && loop_count_ > 3000)
+		{
+			// Variables previously updated:
+			//	Xd_m				-> Model reference trajectory velocity
+			//	Xd					-> Actual velocity
+			//	X_m					-> Model reference trajectory position
+			//	X					-> Actual position
+			//	Xdd_m				-> Model reference trajectory acceleration
+			//	transformed_force	-> from flexiforce or FT sensor
+			//	task_ref			-> Reference trajectory from human intent
+
+			updateOuterLoop();
+
+			// Output variable:
+			X_m = task_refModel_output;
+			Xd_m.setZero();
+			Xdd_m.setZero();
+		}
 
 		/***************** INNER LOOP *****************/
 
@@ -974,7 +993,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 
 void PR2adaptNeuroControllerClass::bufferData()
 {
-	if ((storage_index_ >= 0) && (storage_index_ < StoreLen))
+	if ((storage_index_ >= 0) && (storage_index_ < StoreLen) && experiment_ == PR2adaptNeuroControllerClass::A)
 	{
 		//                tf::PoseKDLToMsg(x_m_, modelCartPos_);
 		//                tf::PoseKDLToMsg(x_  , robotCartPos_);
@@ -1006,13 +1025,51 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataA_msg_[storage_index_].xdot_psi   = Xd(5);
 
 		// Desired trajectory
-
 		experimentDataA_msg_[storage_index_].xdes_x     = X_m(0);
 		experimentDataA_msg_[storage_index_].xdes_y     = X_m(1);
 		experimentDataA_msg_[storage_index_].xdes_z     = X_m(2);
 		experimentDataA_msg_[storage_index_].xdes_phi   = X_m(3);
 		experimentDataA_msg_[storage_index_].xdes_theta = X_m(4);
 		experimentDataA_msg_[storage_index_].xdes_psi   = X_m(5);
+
+		// Increment for the next cycle.
+		storage_index_ = storage_index_+1;
+	}
+	else if ((storage_index_ >= 0) && (storage_index_ < StoreLen) && experiment_ == PR2adaptNeuroControllerClass::B)
+	{
+		//                tf::PoseKDLToMsg(x_m_, modelCartPos_);
+		//                tf::PoseKDLToMsg(x_  , robotCartPos_);
+
+		experimentDataB_msg_[storage_index_].dt                = dt_;
+
+		// Filter weights
+
+		// Neural network
+		experimentDataB_msg_[storage_index_].Wnorm = nnController.getOuterWeightsNorm();
+		experimentDataB_msg_[storage_index_].Vnorm = nnController.getInnerWeightsNorm();
+
+		// Actual trajectory
+		experimentDataB_msg_[storage_index_].x_x     = X(0);
+		experimentDataB_msg_[storage_index_].x_y     = X(1);
+		experimentDataB_msg_[storage_index_].x_z     = X(2);
+		experimentDataB_msg_[storage_index_].x_phi   = X(3);
+		experimentDataB_msg_[storage_index_].x_theta = X(4);
+		experimentDataB_msg_[storage_index_].x_psi   = X(5);
+
+		experimentDataB_msg_[storage_index_].xdot_x     = Xd(0);
+		experimentDataB_msg_[storage_index_].xdot_y     = Xd(1);
+		experimentDataB_msg_[storage_index_].xdot_z     = Xd(2);
+		experimentDataB_msg_[storage_index_].xdot_phi   = Xd(3);
+		experimentDataB_msg_[storage_index_].xdot_theta = Xd(4);
+		experimentDataB_msg_[storage_index_].xdot_psi   = Xd(5);
+
+		// Desired trajectory
+		experimentDataB_msg_[storage_index_].xdes_x     = X_m(0);
+		experimentDataB_msg_[storage_index_].xdes_y     = X_m(1);
+		experimentDataB_msg_[storage_index_].xdes_z     = X_m(2);
+		experimentDataB_msg_[storage_index_].xdes_phi   = X_m(3);
+		experimentDataB_msg_[storage_index_].xdes_theta = X_m(4);
+		experimentDataB_msg_[storage_index_].xdes_psi   = X_m(5);
 
 		// Increment for the next cycle.
 		storage_index_ = storage_index_+1;
@@ -1168,29 +1225,6 @@ bool PR2adaptNeuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate:
 	return true;
 }
 
-/// Service call to save the data
-bool PR2adaptNeuroControllerClass::save( ice_msgs::saveControllerData::Request & req,
-                                             ice_msgs::saveControllerData::Response& resp )
-{
-	/* Record the starting time. */
-	ros::Time started = ros::Time::now();
-
-	// Start circle traj
-	startCircleTraj = true;
-
-	/* Mark the buffer as clear (which will start storing). */
-	storage_index_ = 0;
-
-	std::string fileNameProto = req.fileName ;
-
-	// Save data to file
-	saveDataFile.open(fileNameProto.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
-
-	resp.success = true;
-
-	return true;
-}
-
 /// Service call to publish the saved data
 bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Request & req,
                                                 std_srvs::Empty::Response& resp )
@@ -1206,7 +1240,10 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 		//    pubRobotCartPos_   .publish(msgRobotCartPos   [index]);
 		//    pubControllerParam_.publish(msgControllerParam[index]);
 		//    pubControllerFullData_.publish(msgControllerFullData[index]);
-		pubExperimentDataA_.publish(experimentDataA_msg_[index]);
+		if(	experiment_ == PR2adaptNeuroControllerClass::A)
+			pubExperimentDataA_.publish(experimentDataA_msg_[index]);
+		if(	experiment_ == PR2adaptNeuroControllerClass::B)
+			pubExperimentDataB_.publish(experimentDataB_msg_[index]);
 	}
 
 	return true;
@@ -1217,6 +1254,8 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 bool PR2adaptNeuroControllerClass::runExperimentA(	ice_msgs::setValue::Request & req,
 														ice_msgs::setValue::Response& resp )
 {
+	experiment_ = PR2adaptNeuroControllerClass::A;
+
 	/* Record the starting time. */
 	ros::Time started = ros::Time::now();
 
@@ -1248,6 +1287,43 @@ bool PR2adaptNeuroControllerClass::runExperimentA(	ice_msgs::setValue::Request &
 	circle_velocity = circle_rate*circleAmpl;
 	circle_phase = 0;
 	loopsCircleTraj = 0;
+
+	storage_index_ = 0;
+	recordData = true;
+
+	return true;
+}
+
+/// Service call to run an experiment
+bool PR2adaptNeuroControllerClass::runExperimentB(	ice_msgs::setValue::Request & req,
+													ice_msgs::setValue::Response& resp )
+{
+	experiment_ = PR2adaptNeuroControllerClass::B;
+
+	/* Record the starting time. */
+	ros::Time started = ros::Time::now();
+
+	// Re-set NN
+	nnController.setUpdateWeights(false);
+	Eigen::MatrixXd V_trans;
+	Eigen::MatrixXd W_trans;
+	//V_trans.setOnes( num_Hidden , num_Inputs + 1 ) ;
+	V_trans.setRandom( num_Hidden , num_Inputs + 1 ) ;
+	W_trans.setZero(   num_Outputs, num_Hidden     ) ;
+	nnController.setInnerWeights(V_trans);
+	nnController.setOuterWeights(W_trans);
+	nnController.setUpdateWeights(true);
+
+	// Decide if the inner weights will be updated
+	if(req.value > 0)
+	{
+		nnController.setUpdateInnerWeights(true);
+	}
+	else
+	{
+		nnController.setUpdateInnerWeights(false);
+	}
+	x_des_ = x0_;
 
 	storage_index_ = 0;
 	recordData = true;
@@ -1482,6 +1558,8 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/numCircleTraj",     numCircleTraj,     2);
 	nh_.param("/publishRTtopics",   publishRTtopics,   false);
 	nh_.param("/useDigitalFilter",  useDigitalFilter,  false);
+
+	nh_.param("/useOuterloop",      useOuterloop,      false);
 
 	nh_.param("/mannequinThresPos", mannequinThresPos, 0.05);
 	nh_.param("/mannequinThresPos", mannequinThresRot, 0.05);
