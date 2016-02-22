@@ -45,6 +45,7 @@
 #include <ice_msgs/getNNweights.h>
 #include <ice_msgs/setNNweights.h>
 #include <ice_msgs/setValue.h>
+#include <ice_msgs/setInteger.h>
 #include <ice_msgs/experimentDataA.h>
 #include <ice_msgs/experimentDataB.h>
 
@@ -340,6 +341,9 @@ private:
 	Eigen::MatrixXd outerLoopWk_flexi_2 ;
 	Eigen::MatrixXd outerLoopWk_flexi_3 ;
 
+	Eigen::MatrixXd weightsRLSmodelX ;
+	Eigen::MatrixXd weightsRLSmodelY ;
+
 	// Fixed filter weights or adaptive weights
 	bool useFixedWeights;
 
@@ -482,6 +486,13 @@ private:
 	ros::ServiceServer capture_srv_;
 	ros::ServiceServer setRefTraj_srv_;
 	ros::ServiceServer toggleFixedWeights_srv_;
+
+	ros::ServiceServer tactileCalibration_srv_;
+
+	bool tactileCalibrationCB(	ice_msgs::setInteger::Request & req,
+						    	ice_msgs::setInteger::Response& resp );
+	int tactileSensorSelected_;
+	int numTactileSensors_;
 
 	ros::ServiceServer runExperimentA_srv_;
 	ros::ServiceServer runExperimentB_srv_;

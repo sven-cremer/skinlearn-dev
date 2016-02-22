@@ -2,8 +2,10 @@
 float64 dt
 
 # ARMA filter
-std_msgs/Float64MultiArray filterWeights
-float64 filterNorm
+std_msgs/Float64MultiArray filterWeightsX
+float64 filterNormX
+std_msgs/Float64MultiArray filterWeightsY
+float64 filterNormY
 
 # Neural network
 # twoLayerNN net

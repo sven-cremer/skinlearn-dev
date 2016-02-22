@@ -73,6 +73,9 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	if(useFlexiForce)
 		sub_command_ = nh_.subscribe<geometry_msgs::WrenchStamped>("/tactile/wrench", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
 
+	tactileCalibration_srv_ = nh_.advertiseService("/tactile/calibration" , &PR2adaptNeuroControllerClass::tactileCalibrationCB   , this);
+
+
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
 	runExperimentB_srv_ = nh_.advertiseService("runExperimentB" , &PR2adaptNeuroControllerClass::runExperimentB   , this);
 
@@ -405,10 +408,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			updateOuterLoop();
 
-			// Output variable:
-			X_m = task_refModel_output;
-			Xd_m.setZero();
-			Xdd_m.setZero();
+			// Output variables:
+			//   task_refModel_output;
+			//   X_m;
+			//   Xd_m;
+			//   Xdd_m;
 		}
 
 		/***************** INNER LOOP *****************/
@@ -618,12 +622,8 @@ void PR2adaptNeuroControllerClass::update()
 		//cartvec_tmp(2) = ftData_vector_size;
 		//cartvec_tmp(1) = nnController.getOuterWeightsNorm();
 		//cartvec_tmp(2) = nnController.getInnerWeightsNorm();
-		cartvec_tmp(0) = outerLoopWk_flexi_2(0,0);
-		cartvec_tmp(1) = outerLoopWk_flexi_2(1,0);
-		cartvec_tmp(2) = outerLoopWk_flexi_2(2,0);
-		cartvec_tmp(3) = outerLoopWk_flexi_2(3,0);
-		cartvec_tmp(4) = outerLoopWk_flexi_2(4,0);
-		cartvec_tmp(5) = outerLoopWk_flexi_2(5,0);
+		cartvec_tmp(1) = task_refModel_output(0);
+		cartvec_tmp(2) = task_refModel_output(1);
 
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
@@ -719,11 +719,23 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 		// RLS ARMA
 		if( useARMAmodel )
 		{
-			if( useFlexiForce )	// TODO only update weights when needed or have two models per axis?
+			if( useFlexiForce )	// One model per axis containing all the sensors
 			{
+
+				if(tactileSensorSelected_ > 0)	// Calibration mode		FIXME: use useFixedWeights instead
+				{
+					outerLoopRLSmodelX.setUpdatedWeights();
+					outerLoopRLSmodelY.setUpdatedWeights();
+				}
+				else							// Fixed weights
+				{
+					outerLoopRLSmodelX.setFixedWeights(weightsRLSmodelX);
+					outerLoopRLSmodelY.setFixedWeights(weightsRLSmodelY);
+				}
+
 				// Set ARMA parameters
 				// Note: tactile_wrench_ corresponds to the applied force (not the reactant force)
-
+/*
 				// X axis
 				if( tactile_wrench_(0) > 0.0 )	// Positive if pressing 0 (i.e. forward)
 				{
@@ -761,9 +773,10 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 					else
 						outerLoopRLSmodelY.setUpdatedWeights();
 				}
+*/
 			}
 
-			// X axis
+			// X axis (use 1D update)
 			outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
                                            Xd                     (0) ,
                                            X_m                    (0) ,
@@ -783,15 +796,20 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
                                            task_ref               (1) ,
                                            task_refModel_output   (1)  );
 
-			// ROS_ERROR_STREAM("USING RLS ARMA");
+			outerLoopRLSmodelX.getWeights( weightsRLSmodelX ) ;
+			outerLoopRLSmodelY.getWeights( weightsRLSmodelY ) ;
 
+			// ROS_ERROR_STREAM("USING RLS ARMA");
+/*
 			if( useFlexiForce )
 			{
 				// X axis
 				if( tactile_wrench_(0) > 0.0 )
 				{
 					outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_0 ) ;
-				}else{
+				}
+				else
+				{
 					outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_2 ) ;
 				}
 
@@ -799,17 +817,21 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 				if( tactile_wrench_(1) > 0.0 )
 				{
 					outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_1 ) ;
-				}else{
+				}
+				else
+				{
 					outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_3 ) ;
 				}
 
-			}else
+			}
+			else
 			{
 				outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
 				outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
 			}
-
+*/
 		}
+
 
 		// CT RLS ARMA
 		if( useCTARMAmodel )
@@ -1037,12 +1059,14 @@ void PR2adaptNeuroControllerClass::bufferData()
 	}
 	else if ((storage_index_ >= 0) && (storage_index_ < StoreLen) && experiment_ == PR2adaptNeuroControllerClass::B)
 	{
-		//                tf::PoseKDLToMsg(x_m_, modelCartPos_);
-		//                tf::PoseKDLToMsg(x_  , robotCartPos_);
-
 		experimentDataB_msg_[storage_index_].dt                = dt_;
 
 		// Filter weights
+		tf::matrixEigenToMsg(weightsRLSmodelX, experimentDataB_msg_[storage_index_].filterWeightsX);
+		tf::matrixEigenToMsg(weightsRLSmodelY, experimentDataB_msg_[storage_index_].filterWeightsY);
+
+		experimentDataB_msg_[storage_index_].filterNormX = weightsRLSmodelX.norm();
+		experimentDataB_msg_[storage_index_].filterNormY = weightsRLSmodelY.norm();
 
 		// Neural network
 		experimentDataB_msg_[storage_index_].Wnorm = nnController.getOuterWeightsNorm();
@@ -1244,6 +1268,25 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 			pubExperimentDataA_.publish(experimentDataA_msg_[index]);
 		if(	experiment_ == PR2adaptNeuroControllerClass::B)
 			pubExperimentDataB_.publish(experimentDataB_msg_[index]);
+	}
+
+	return true;
+}
+
+/// Service call to select sensor for Cailbration
+bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::setInteger::Request & req,
+															ice_msgs::setInteger::Response& resp )
+{
+
+	if(req.value < 0)	// Stop calibration
+	{
+		tactileSensorSelected_ = -1;
+		return true;
+	}
+
+	if(req.value < numTactileSensors_)
+	{
+		tactileSensorSelected_ = req.value;
 	}
 
 	return true;
@@ -2013,6 +2056,9 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		//accObserver = new accelerationObserver(accelerometer_handle_);	// FIXME This seems to crash the RT loop
 	}
 
+
+	nh_.param("/num_tactile_sensors",     numTactileSensors_,     4);
+
 	return result;
 }
 
@@ -2474,18 +2520,30 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 
 	// RLS
 
-	outerLoopRLSmodelX.updateDelT( outerLoopTime );
-	outerLoopRLSmodelX.updateAB( task_mA,
-			task_mB );
+	outerLoopRLSmodelX.updateDelT( outerLoopTime );		// FIXME assumens 1D, 4+4*4 filter parameters
+	outerLoopRLSmodelX.updateAB( task_mA, task_mB );
 	outerLoopRLSmodelX.initRls( rls_lambda, rls_sigma );
 	//  outerLoopRLSmodelX.initPos( cartIniX );
 
 
 	outerLoopRLSmodelY.updateDelT( outerLoopTime );
-	outerLoopRLSmodelY.updateAB( task_mA,
-			task_mB );
+	outerLoopRLSmodelY.updateAB( task_mA, task_mB );
 	outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
 	//  outerLoopRLSmodelY.initPos( cartIniY );
+
+	weightsRLSmodelX.resize(4+4*4,1);
+	weightsRLSmodelY.resize(4+4*4,1);
+	weightsRLSmodelX.setZero();
+	weightsRLSmodelY.setZero();
+
+	//armaModels.resize(numTactileSensors_);
+//	for(int i=0;i<numTactileSensors_;i++)
+//	{
+//		armaModels[i].updateDelT( outerLoopTime );
+//		armaModels[i].updateAB( task_mA, task_mB );
+//		armaModels[i].initRls( rls_lambda, rls_sigma );
+//		armaModels.push_back(outerLoopRLSmodelX);
+//	}
 
 	// CT RLS
 	outerLoopCTRLSmodelX.updateDelT( outerLoopTime );
