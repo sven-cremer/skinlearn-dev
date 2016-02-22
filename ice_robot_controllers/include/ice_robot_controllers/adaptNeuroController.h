@@ -455,9 +455,6 @@ private:
 	bool paramUpdate( ice_msgs::controllerParamUpdate::Request  & req ,
 			            ice_msgs::controllerParamUpdate::Response & resp );
 
-	bool save( ice_msgs::saveControllerData::Request & req,
-			    ice_msgs::saveControllerData::Response& resp );
-
 	bool publishExperimentData( std_srvs::Empty::Request & req,
 			        std_srvs::Empty::Response& resp );
 
@@ -481,7 +478,6 @@ private:
 	ros::ServiceServer setNNweights_srv_;
 	ros::ServiceServer getNNweights_srv_;
 
-	ros::ServiceServer save_srv_;
 	ros::ServiceServer publish_srv_;
 	ros::ServiceServer capture_srv_;
 	ros::ServiceServer setRefTraj_srv_;
