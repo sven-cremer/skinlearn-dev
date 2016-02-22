@@ -15,8 +15,11 @@ namespace outer_loop
 class RlsModel
 {
 
-  int num_Joints; // number of joints.
-  int num_Fir   ; // number of FIR parameters.
+  int num_Dim;		// Number of dimensions (joints or Cartesian)
+  int num_Sen;		// Number of force sensors
+  int num_Fir;		// Number of FIR parameters
+  int num_x_Fir;	// Number of x_m FIR parameters
+  int num_f_Fir;	// Number of f_h FIR parameters
 
   Eigen::MatrixXd q;
   Eigen::MatrixXd qd;
@@ -63,13 +66,12 @@ class RlsModel
   double a_task ;
   double b_task ;
 
-  fir_state_type ode_init_x;
+//  fir_state_type ode_init_x;
 
   oel::ls::RLSFilter rls_filter;
 
   // Switch RLS on/off
   bool useFixedWeights ;
-
   bool firstTime ;
 
   void stackFirIn( Eigen::MatrixXd & u_in )
@@ -89,13 +91,19 @@ class RlsModel
   void stackArmaIn( Eigen::MatrixXd & y_prev, Eigen::MatrixXd & u_in )
   {
     // TODO parameterize this
-    // Moves top to bottom rows are time series, columns are joints
+    // Moves top to bottom rows are time series, columns are dimension
     // First in First out bottom most location nth row is dumped
-    Uk_plus.block<4-1, 1>(1,0) = Uk.block<4-1, 1>(0,0);
-    Uk_plus.block<1,1>(0,0) = - y_prev.transpose();
 
-    Uk_plus.block<4-1, 1>(5,0) = Uk.block<4-1, 1>(4,0);
-    Uk_plus.block<1,1>(4,0) = u_in.transpose();
+	// Update x_m
+    Uk_plus.block(1,0,num_x_Fir-1,num_Dim) = Uk.block(0,0,num_x_Fir-1,num_Dim);	// Move down rows (overwrites last entry)
+    Uk_plus.block(0,0,1,num_Dim) = - y_prev.transpose();						// Update first entry with new value(s)
+
+    // Update f_i for each sensor i
+    for(int i=num_x_Fir; i<num_x_Fir+num_Sen*num_f_Fir; i += num_f_Fir)
+    {
+		Uk_plus.block(i+1,0,num_f_Fir-1,num_Dim) = Uk.block(i,0,num_f_Fir-1,num_Dim);	// Move down rows
+		Uk_plus.block(i,0,1,num_Dim) = u_in.col(i).transpose();							// Update first entry
+    }
 
     Uk = Uk_plus;
   }
@@ -109,87 +117,83 @@ public:
     a_task = 0.5 ;
     b_task = 0.5 ;
 
-    //
-    init( 1, 8 );
+    init( 1, 4, 4, 1 );	// TODO make parameters
   }
   ~RlsModel()
   {
   }
 
-  void init( int para_num_Joints, int para_num_Fir )
+  void init( int para_num_Dim, int para_num_Fir,  int para_num_Sen = 1)
   {
+	  init( para_num_Dim, para_num_Fir, para_num_Fir, para_num_Sen);
+  }
 
-    num_Fir    = para_num_Fir;
-    num_Joints = para_num_Joints;
+  void init( int para_num_Dim, int para_num_x_Fir, int para_num_f_Fir, int para_num_Sen)
+  {
+    num_Dim = para_num_Dim;
+    num_Sen = para_num_Sen;
+    num_x_Fir = para_num_x_Fir;
+    num_f_Fir = para_num_f_Fir;
 
-    q         .resize( num_Joints, 1 ) ;
-    qd        .resize( num_Joints, 1 ) ;
-    qdd       .resize( num_Joints, 1 ) ;
+    num_Fir = num_x_Fir + num_Sen*num_f_Fir;
 
-    q_m       .resize( num_Joints, 1 ) ;
-    qd_m      .resize( num_Joints, 1 ) ;
-    qdd_m     .resize( num_Joints, 1 ) ;
+    // Set dimensions
+    q         .resize( num_Dim, 1 ) ;
+    qd        .resize( num_Dim, 1 ) ;
+    qdd       .resize( num_Dim, 1 ) ;
 
-    prv_q_m   .resize( num_Joints, 1 ) ;
-    prv_qd_m  .resize( num_Joints, 1 ) ;
+    q_m       .resize( num_Dim, 1 ) ;
+    qd_m      .resize( num_Dim, 1 ) ;
+    qdd_m     .resize( num_Dim, 1 ) ;
 
-    ref_q_d   .resize( num_Joints, 1 ) ;
-    ref_qd_m  .resize( num_Joints, 1 ) ;
-    ref_qdd_m .resize( num_Joints, 1 ) ;
+    prv_q_m   .resize( num_Dim, 1 ) ;
+    prv_qd_m  .resize( num_Dim, 1 ) ;
 
-    task_ref      .resize( num_Joints, 1 ) ;
+    ref_q_d   .resize( num_Dim, 1 ) ;
+    ref_qd_m  .resize( num_Dim, 1 ) ;
+    ref_qdd_m .resize( num_Dim, 1 ) ;
 
-    t_r   .resize( num_Joints, 1 ) ;
+    task_ref  .resize( num_Dim, 1 ) ;
+    t_r		  .resize( num_Dim, 1 ) ;
 
-    Wk    .resize( num_Fir, num_Joints ) ;
-    Wk = Eigen::MatrixXd::Zero( num_Fir, num_Joints );
+    Wk		.resize( num_Fir, num_Dim ) ;
+    Uk		.resize( num_Fir, num_Dim ) ;
+    Uk_plus	.resize( num_Fir, num_Dim ) ;
+    Dk		.resize( num_Dim, 1       ) ;
+    Pk		.resize( num_Fir, num_Fir ) ;
 
-    Dk    .resize( num_Joints, 1 ) ;
-    Dk = Eigen::MatrixXd::Zero( num_Joints, 1 );
+    // Initialize matricies
+    q         .setZero();
+    qd        .setZero();
+    qdd       .setZero();
+    q_m       .setZero();
+    qd_m      .setZero();
+    qdd_m     .setZero();
+    prv_q_m   .setZero();
+    prv_qd_m  .setZero();
+    ref_q_d   .setZero();
+    ref_qd_m  .setZero();
+    ref_qdd_m .setZero();
+    task_ref  .setZero();
+    t_r       .setZero();
+    Wk		  .setZero();
+    Dk		  .setZero();
+    Uk_plus	  .setZero();
+    Uk		  .setZero();
 
-    // FIXME need to make this a 3 dimensional matrix
-    Pk    .resize( num_Fir, num_Fir       ) ;
     m_sigma = 0.001 ;
     Pk = Eigen::MatrixXd::Identity( num_Fir, num_Fir )/m_sigma ;
 
-    Uk.resize( num_Fir, num_Joints ) ;
-    Uk = Eigen::MatrixXd::Zero( num_Fir, num_Joints ) ;
-
-    Uk_plus.resize( num_Fir, num_Joints ) ;
-    Uk_plus = Eigen::MatrixXd::Zero( num_Fir, num_Joints ) ;
-
-    q         = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    qd        = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    qdd       = Eigen::MatrixXd::Zero( num_Joints, 1 );
-
-    q_m       = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    qd_m      = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    qdd_m     = Eigen::MatrixXd::Zero( num_Joints, 1 );
-
-    prv_q_m   = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    prv_qd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
-
-    ref_q_d   = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    ref_qd_m  = Eigen::MatrixXd::Zero( num_Joints, 1 );
-    ref_qdd_m = Eigen::MatrixXd::Zero( num_Joints, 1 );
-
-    task_ref  = Eigen::MatrixXd::Zero( num_Joints, 1 );
-
-    t_r       = Eigen::MatrixXd::Zero( num_Joints, 1 );
-
-    m_lm        = 0.98; // Forgetting factor
-
-    // Don't use fixed weights by default
-    useFixedWeights = false;
-
+    useFixedWeights = false;	// Don't use fixed weights by default
     firstTime = true;
 
     // initial conditions
-    ode_init_x[0 ] = 0.0;
-    ode_init_x[1 ] = 0.0;
-    ode_init_x[2 ] = 0.0;
+//    ode_init_x[0 ] = 0.0;
+//    ode_init_x[1 ] = 0.0;
+//    ode_init_x[2 ] = 0.0;
 
     posInit = 0;
+    m_lm 	= 0.98;				// Forgetting factor
 
     rls_filter.init( Wk, Uk, Dk, Pk, m_lm );
 
@@ -199,10 +203,10 @@ public:
   {
 	  posInit = p_posInit;
 
-	  Uk_plus(0) = posInit ;
-	  Uk_plus(1) = posInit ;
-	  Uk_plus(2) = posInit ;
-	  Uk_plus(3) = posInit ;
+	  Eigen::MatrixXd tmp = Eigen::MatrixXd::Ones(num_x_Fir, num_Dim);
+	  tmp *= posInit;
+
+	  Uk_plus(0,0,num_x_Fir, num_Dim) = tmp;
 
 	  Uk = Uk_plus;
 
@@ -385,7 +389,7 @@ public:
 	}
 
 
-    ode_init_x[2] = task_ref(0);
+//    ode_init_x[2] = task_ref(0);
 
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
 
