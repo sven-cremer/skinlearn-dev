@@ -206,7 +206,7 @@ public:
 	  Eigen::MatrixXd tmp = Eigen::MatrixXd::Ones(num_x_Fir, num_Dim);
 	  tmp *= posInit;
 
-	  Uk_plus(0,0,num_x_Fir, num_Dim) = tmp;
+	  Uk_plus.block(0,0,num_x_Fir, num_Dim) = tmp;
 
 	  Uk = Uk_plus;
 
