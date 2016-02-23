@@ -308,21 +308,27 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		}
 		if(useHumanIntent && loop_count_ > 3000)
 		{
-			if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
-			{
-				task_ref = x_des_.translation();
-				calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
 
-				// Transform human intent to torso lift link
-				CartVec xyz = affine2CartVec(x_acc_);
-				task_ref.x() = xyz(1) + task_ref.x() ;
-				task_ref.y() = xyz(2) + task_ref.y() ;
-				task_ref.z() = xyz(3) + task_ref.z() ;
+//			if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
+//			{
+//				task_ref = x_des_.translation();
+//
+//				calcHumanIntentPos( transformed_force, task_ref, intentEst_delT, intentEst_M );
+//
+//				// Transform human intent to torso lift link
+//				CartVec xyz = affine2CartVec(x_acc_);
+//				task_ref.x() = xyz(1) + task_ref.x() ;
+//				task_ref.y() = xyz(2) + task_ref.y() ;
+//				task_ref.z() = xyz(3) + task_ref.z() ;
 
-				x_des_.translation() = task_ref;
+			// TODO check limits?			a = F/m							v=v0+at			x=x0+vt
+			x_des_.translation() += (transformed_force / intentEst_M) * intentEst_delT * intentEst_delT;
 
-				intent_elapsed_ = robot_state_->getTime() ;
-			}
+//
+//				x_des_.translation() = task_ref;
+//
+//				intent_elapsed_ = robot_state_->getTime() ;
+//			}
 		}
 		if(mannequinMode && loop_count_ > 3000) // Check if initialized
 		{
