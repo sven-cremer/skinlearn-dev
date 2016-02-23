@@ -94,6 +94,12 @@ class RlsModel
     // Moves top to bottom rows are time series, columns are dimension
     // First in First out bottom most location nth row is dumped
 
+	  Uk_plus.block<4-1, 1>(1,0) = Uk.block<4-1, 1>(0,0);
+	  Uk_plus.block<1,1>(0,0) = - y_prev.transpose();
+
+	  Uk_plus.block<4-1, 1>(5,0) = Uk.block<4-1, 1>(4,0);
+	  Uk_plus.block<1,1>(4,0) = u_in.transpose();
+/*
 	// Update x_m
     Uk_plus.block(1,0,num_x_Fir-1,num_Dim) = Uk.block(0,0,num_x_Fir-1,num_Dim);	// Move down rows (overwrites last entry)
     Uk_plus.block(0,0,1,num_Dim) = - y_prev.transpose();						// Update first entry with new value(s)
@@ -104,7 +110,7 @@ class RlsModel
 		Uk_plus.block(i+1,0,num_f_Fir-1,num_Dim) = Uk.block(i,0,num_f_Fir-1,num_Dim);	// Move down rows
 		Uk_plus.block(i,0,1,num_Dim) = u_in.col(i).transpose();							// Update first entry
     }
-
+*/
     Uk = Uk_plus;
   }
 

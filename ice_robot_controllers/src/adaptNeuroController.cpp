@@ -720,23 +720,12 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 		// RLS ARMA
 		if( useARMAmodel )
 		{
+/*
 			if( useFlexiForce )	// One model per axis containing all the sensors
 			{
-
-				if(tactileSensorSelected_ > 0)	// Calibration mode		FIXME: use useFixedWeights instead
-				{
-					outerLoopRLSmodelX.setUpdatedWeights();
-					outerLoopRLSmodelY.setUpdatedWeights();
-				}
-				else							// Fixed weights
-				{
-					outerLoopRLSmodelX.setFixedWeights(weightsRLSmodelX);
-					outerLoopRLSmodelY.setFixedWeights(weightsRLSmodelY);
-				}
-
 				// Set ARMA parameters
 				// Note: tactile_wrench_ corresponds to the applied force (not the reactant force)
-/*
+
 				// X axis
 				if( tactile_wrench_(0) > 0.0 )	// Positive if pressing 0 (i.e. forward)
 				{
@@ -774,7 +763,18 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 					else
 						outerLoopRLSmodelY.setUpdatedWeights();
 				}
+
+			}
 */
+			if(tactileSensorSelected_ > 0)	// Calibration mode		FIXME: use useFixedWeights instead
+			{
+				outerLoopRLSmodelX.setUpdatedWeights();
+				outerLoopRLSmodelY.setUpdatedWeights();
+			}
+			else							// Fixed weights
+			{
+				outerLoopRLSmodelX.setFixedWeights(weightsRLSmodelX);
+				outerLoopRLSmodelY.setFixedWeights(weightsRLSmodelY);
 			}
 
 			// X axis (use 1D update)
@@ -2059,6 +2059,7 @@ bool PR2adaptNeuroControllerClass::initSensors()
 
 
 	nh_.param("/num_tactile_sensors",     numTactileSensors_,     4);
+	tactileSensorSelected_ = 1;
 
 	return result;
 }
@@ -2532,8 +2533,8 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
 	//  outerLoopRLSmodelY.initPos( cartIniY );
 
-	weightsRLSmodelX.resize(4+4*4,1);
-	weightsRLSmodelY.resize(4+4*4,1);
+	weightsRLSmodelX.resize(4+1*4,1);	// FIXME use parameters
+	weightsRLSmodelY.resize(4+1*4,1);
 	weightsRLSmodelX.setZero();
 	weightsRLSmodelY.setZero();
 

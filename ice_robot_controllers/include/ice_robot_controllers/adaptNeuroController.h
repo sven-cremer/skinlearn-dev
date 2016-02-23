@@ -1,6 +1,5 @@
 
 // Utilities
-#include <fstream>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
 //#include "objTest.h"
