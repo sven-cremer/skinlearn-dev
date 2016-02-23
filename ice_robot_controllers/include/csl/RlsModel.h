@@ -345,14 +345,17 @@ public:
     t_r     (0)          = param_t_r      ;
     task_ref(0)          = param_task_ref ;
 
-    // Save input forces/torques
+    // Save input forces/torques in Uk
     stackArmaIn( q_m, t_r );
+
+    // Compute xd and perform RLS update
     update();
 
-    param_task_ref_model = ref_q_d(0)     ;
-    param_q_m            = q_m(0)         ;
-    param_qd_m           = qd_m(0)        ;
-    param_qdd_m          = qdd_m(0)       ;
+    // Return results
+    param_task_ref_model = ref_q_d(0)     ;		// x_d
+    param_q_m            = q_m(0)         ;		// x_m
+    param_qd_m           = qd_m(0)        ;		// xd_m
+    param_qdd_m          = qdd_m(0)       ;		// xdd_m
   }
 
   void updateARMA( Eigen::MatrixXd & param_qd_m          ,
@@ -370,16 +373,19 @@ public:
     q                    = param_q        ;
     qdd_m                = param_qdd_m    ;
     t_r                  = param_t_r      ;
-    task_ref             = param_task_ref ;
+    task_ref             = param_task_ref ;		// x_r
 
-    // Save input forces/torques
+    // Save input forces/torques in Uk
     stackArmaIn( q_m, t_r );
+
+    // Compute xd and perform RLS update
     update();
 
-    param_task_ref_model = ref_q_d        ;
-    param_q_m            = q_m            ;
-    param_qd_m           = qd_m           ;
-    param_qdd_m          = qdd_m          ;
+    // Return results
+    param_task_ref_model = ref_q_d        ;		// x_d
+    param_q_m            = q_m            ;		// x_m
+    param_qd_m           = qd_m           ;		// xd_m
+    param_qdd_m          = qdd_m          ;		// xdd_m
   }
 
   void update()
@@ -394,13 +400,12 @@ public:
 		firstTime = false;
 	}
 
-
 //    ode_init_x[2] = task_ref(0);
-
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
 
-    ref_q_d(0)   = ref_q_d(0) + ref_qd_m(0)*delT;
-    ref_qd_m(0)  = a_task*task_ref(0) - b_task*ref_q_d(0);
+	// Compute xd using prescribed task model D(s)
+    ref_q_d(0)   = ref_q_d(0) + ref_qd_m(0)*delT;				// xd
+    ref_qd_m(0)  = a_task*task_ref(0) - b_task*ref_q_d(0);		//
 
     ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
 
@@ -411,29 +416,28 @@ public:
     // Save iteration number
     iter = iter + 1;
 
-    // Desired is the task reference model
+    // Desired is the task reference model (xm -> xd)
     Dk = ref_q_d;
 
-    //if( iter > num_Fir )
+    // Update filter weights using RLS
+    if( !useFixedWeights )
     {
-      if( !useFixedWeights )
-      {
-		  rls_filter.Update( Wk, Uk, Dk, Pk );
+    	rls_filter.Update( Wk, Uk, Dk, Pk );
 
-		  Wk = rls_filter.getEstimate();
-		  Pk = rls_filter.getCovariance();
-      }
-
-      q_m   = Uk.transpose()*Wk  ;
-
-      // Backward difference
-      // TODO better way to do this?
-      qd_m  = (q_m  - prv_q_m )/delT ;
-      qdd_m = (qd_m - prv_qd_m)/delT ;
+    	Wk = rls_filter.getEstimate();
+    	Pk = rls_filter.getCovariance();
     }
 
+    // Compute x_m(t) = h(t)*theta(t)
+    q_m   = Uk.transpose()*Wk  ;
+
+    // Compute xd_m and xdd_m using backward difference (TODO better way to do this?)
+    qd_m  = (q_m  - prv_q_m )/delT ;
+    qdd_m = (qd_m - prv_qd_m)/delT ;
+
+    // Store values
     prv_q_m  = q_m ;
-    prv_qd_m = qd_m;
+    prv_qd_m = qd_m;S
 
   }
 };
