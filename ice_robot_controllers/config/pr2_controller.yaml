@@ -59,7 +59,7 @@ b_filt: [0.0994, 0.0994]
 externalRefTraj    : false
 
 # Human intent estimation
-useHumanIntent     : false
+useHumanIntent     : true
 intentEst_time     : 0.05
 intentEst_delT     : 0.1  # Propagation time
 intentEst_M        : 1.0  # M_i the mass of the intent admittance model

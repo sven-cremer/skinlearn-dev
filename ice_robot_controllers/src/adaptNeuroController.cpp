@@ -319,6 +319,8 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				task_ref.y() = xyz(2) + task_ref.y() ;
 				task_ref.z() = xyz(3) + task_ref.z() ;
 
+				x_des_.translation() = task_ref;
+
 				intent_elapsed_ = robot_state_->getTime() ;
 			}
 		}
