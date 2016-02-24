@@ -187,8 +187,22 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 
     for( unsigned int i=0; i<num_sensors; i++)
     {
-    	std::string tmp = strvec[i];
-    	force(i) = boost::lexical_cast<double>(tmp);
+    	std::string str = strvec[i];
+
+    	if (std::string::npos != str.find_first_not_of("0123456789"))
+    	{
+    		std::cout << "Found garbage in string! \n";
+
+    		std::string tmp;
+    		std::size_t found = str.find_first_of("0123456789");
+    		while (found!=std::string::npos)
+    		{
+    			tmp += str[found];
+    			found =str.find_first_of("0123456789",found+1);
+    		}
+    		str = tmp;
+    	}
+    	force(i) = boost::lexical_cast<double>(str);
 //    	std::cout<<"force("<<i<<"): "<<force(i)<<"\n";
     }
 
