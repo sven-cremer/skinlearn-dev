@@ -32,6 +32,7 @@ using std::vector;
 class TactileSerial
 {
   enum { numSensors = 4 };
+  int num_sensors;
 
   string result;
   serial::Serial *my_serial;
@@ -39,7 +40,7 @@ class TactileSerial
   bool firstRead;
   Eigen::VectorXd forceBias;
 
-  digitalFilter *forceLPFilt[numSensors];
+  std::vector<digitalFilter*> sensorFilters;
 
   float tempData;
 
@@ -72,12 +73,13 @@ void print_usage()
 
 public:
 
-TactileSerial(string port, unsigned long baud)
+TactileSerial(string port, unsigned long baud, int param_num_sensors)
 {
 
+num_sensors = param_num_sensors;
 initFilter();
 
-forceBias.resize(numSensors);
+forceBias.resize(num_sensors);
 firstRead=true;
 
   if( port == "-e" ) {
@@ -136,7 +138,9 @@ if(argc < 2)
 }
 
 ~TactileSerial()
-{}
+{
+	my_serial->close();		// Close serial port
+}
 
 void initFilter()	// TODO read from parameter server
 {
@@ -148,17 +152,22 @@ void initFilter()	// TODO read from parameter server
 //	float b_lpfilt[] = {0.0994,  0.0994};
 //	float a_lpfilt[] = {1.0000, -0.8012};
 
-	for(int i=0; i < numSensors; i++)
-		forceLPFilt[i] = new digitalFilter(1, true, b_lpfilt, a_lpfilt);
+	for(int i=0; i < num_sensors; i++)
+	{
+		digitalFilter* tmpPtr = new digitalFilter(1, true, b_lpfilt, a_lpfilt);
+		sensorFilters.push_back(tmpPtr);
+	}
 }
 
 bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 {
 
-	force.resize(numSensors);
+	force.resize(num_sensors);
 	force.setZero();
 
     result = my_serial->readline();
+//  std::cout<<"Result: "<<result<<"\n---\n";
+
     std::vector<std::string> strvec;
 
     boost::algorithm::split(strvec,result,boost::algorithm::is_any_of(","), boost::algorithm::token_compress_on);
@@ -169,18 +178,18 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 //    	std::cout<<"strvec["<<i<<"]: "<<strvec[i].c_str()<<"\n";
 //    }
 
-    // Check data
-    if(strvec.size() != 5)
+    // Check data: #,...,#,#,\n
+    if(strvec.size() != num_sensors + 1)
     {
     	std::cout<<"Reading serial data failed (unexpected vector size: "<<strvec.size()<<")\n";
     	return false;
     }
 
-    for( unsigned int i=0; i<numSensors; i++)
+    for( unsigned int i=0; i<num_sensors; i++)
     {
     	std::string tmp = strvec[i];
     	force(i) = boost::lexical_cast<double>(tmp);
-    	//std::cout<<"force("<<i<<"): "<<force(i)<<"\n";
+//    	std::cout<<"force("<<i<<"): "<<force(i)<<"\n";
     }
 
 //    if(firstRead)
@@ -191,14 +200,15 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 //	force = force + Eigen::VectorXd::Ones(numSensors) - forceBias;
 
     // Filter values
-    for( unsigned int i=0; i<force.size(); i++)
+    for( int i=0; i<num_sensors; i++)
     {
-    	force(i) = forceLPFilt[i]->getNextFilteredValue(force(i));
+    	force(i) = sensorFilters[i]->getNextFilteredValue(force(i));
     	if(force(i) < 0)
     	{
     		force(i) = 0;
     	}
     }
+
     return true;
 }
 

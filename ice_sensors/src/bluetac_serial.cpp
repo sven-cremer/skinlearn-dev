@@ -20,7 +20,7 @@
 
 class TactileViz
 {
-  enum { numSensors = 4 };
+  int num_sensors;
 
   ros::NodeHandle  m_node;
   ros::Publisher   m_tactileVizPub;
@@ -39,8 +39,6 @@ class TactileViz
   Eigen::MatrixXd pos;
   Eigen::MatrixXd rot;
 
-  visualization_msgs::Marker m_vizMarker;
-
   std::string port;
   double      baud;
 
@@ -56,35 +54,11 @@ public:
 	m_tactileDataPub    = m_node.advertise<ice_msgs::tactileArrayData>(		"tactile/data", 1);
 	m_tactileWrenchPub  = m_node.advertise<geometry_msgs::WrenchStamped>(	"tactile/wrench", 1);
 
-	force		.resize(numSensors);
-	forceBias	.resize(numSensors);
-	pos			.resize(numSensors,3);
-	rot			.resize(numSensors,4);
-
-	force		.setZero();
-	forceBias	.setZero();
-
-	//      x,  y,  z,      direction
-	pos <<  1,  0,  0,	 // -x
-		    0, -1,  0,   // +y
-		   -1,  0,  0,   // +x
-		    0,  1,  0;   // -y
-	pos = 0.1*pos;
-
-	double r=0.70711;
-	//     w, x, y, z,      direction
-	rot << 0, 0, 0, 1,   // -x
-		   r, 0, 0, r,   // +ya
-		   1, 0, 0, 0,   // +x
-		   r, 0, 0, -r;   // -y
-
-	firstRead=true;
-	forceScale = 1024;
-
 	// Read parameters
     std::string para_port = "/port";
     std::string para_baud = "/baud";
 	std::string para_frame = "/tactile_frame_id";
+	std::string para_num_sensors = "/num_sensors";
 
     if (!m_node.getParam( para_port , port ))
     {
@@ -102,20 +76,57 @@ public:
     	//frame_id = "/base_link";
     	frame_id = "/l_gripper_tool_frame";
     }
+    if (!m_node.getParam( para_num_sensors , num_sensors ))
+    {
+    	ROS_WARN("Parameter not found: %s", para_num_sensors.c_str());
+    	num_sensors = 4;
+    }
 
     ROS_INFO("Port:  %s",port.c_str());
     ROS_INFO("Baud:  %f",baud);
     ROS_INFO("Frame: %s",frame_id.c_str());
+    ROS_INFO("Number of sensors: %d",num_sensors);
+
+	force		.resize(num_sensors);
+	forceBias	.resize(num_sensors);
+	force		.setZero();
+	forceBias	.setZero();
+
+	pos			.resize(num_sensors,3);
+	rot			.resize(num_sensors,4);
+	pos			.setZero();
+	rot			.setZero();
+
+	if(num_sensors == 4)
+	{
+		//      x,  y,  z,      direction
+		pos <<  1,  0,  0,	 // -x
+				0, -1,  0,   // +y
+			   -1,  0,  0,   // +x
+				0,  1,  0;   // -y
+		pos = 0.1*pos;
+
+		double r=0.70711;
+		//     w, x, y, z,      direction
+		rot << 0, 0, 0, 1,   // -x
+			   r, 0, 0, r,   // +ya
+			   1, 0, 0, 0,   // +x
+			   r, 0, 0, -r;  // -y
+	}
+
+	firstRead=true;
+	forceScale = 1024;
 
     // Flexiforce sensors
-    tacSerial = new TactileSerial( port, baud );
+    tacSerial = new TactileSerial( port, baud, num_sensors );
   }
 
   ~TactileViz() { }
 
-  visualization_msgs::MarkerArray genVizvizMarkerArray( Eigen::MatrixXd & pos, Eigen::VectorXd & force )
+  void publishRVizMarkerArray()
   {
 	  visualization_msgs::MarkerArray m_vizMarkerArray;
+	  visualization_msgs::Marker m_vizMarker;
 
 	  m_vizMarker.header.frame_id = frame_id;
 	  m_vizMarker.header.stamp = ros::Time::now();
@@ -124,7 +135,7 @@ public:
 	  m_vizMarker.type = visualization_msgs::Marker::ARROW;
 	  m_vizMarker.action = visualization_msgs::Marker::ADD;
 
-	  for(int i =0; i < numSensors; i++)
+	  for(int i =0; i < num_sensors; i++)
 	  {
 		  m_vizMarker.id = i;
 
@@ -152,13 +163,13 @@ public:
 		  m_vizMarkerArray.markers.push_back(m_vizMarker);
 	  }
 
-	  return m_vizMarkerArray;
+	  m_tactileVizPub.publish( m_vizMarkerArray );
   }
 
   void publishTactileData()
   {
-	  m_tactile_data.data.resize(numSensors);
-	  for( int i=0; i<numSensors; i++)
+	  m_tactile_data.data.resize(num_sensors);
+	  for( int i=0; i<num_sensors; i++)
 	  {
 		  m_tactile_data.data[i] = force(i);
 	  }
@@ -228,7 +239,7 @@ public:
 	  // Scale force
 	  force = force / forceScale;
 	  // Apply threshold
-	  for( int i=0; i<numSensors; i++)
+	  for( int i=0; i<num_sensors; i++)
 	  {
 		  if(force(i) < 0.035)	// TODO improve thresholding
 		  {
@@ -237,14 +248,18 @@ public:
 	  }
 	  //std::cout<<"Norm: "<<force.norm()<<"\n";
 
-	  // Publish markers
-	  m_tactileVizPub.publish( genVizvizMarkerArray(pos, force ) );
+	  if(num_sensors == 4)
+	  {
+		  // Publish markers
+		  publishRVizMarkerArray();
+
+		  // Publish wrench
+		  publishTactileWrench();
+
+	  }
 
 	  // Publish data array
 	  publishTactileData();
-
-	  // Publish wrench
-	  publishTactileWrench();
   }
 
   void measureBias()
