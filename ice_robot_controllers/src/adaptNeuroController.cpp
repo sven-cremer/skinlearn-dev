@@ -720,8 +720,9 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 	}
 	*/
 
+	double current_delT = (robot_state_->getTime() - outer_elapsed_ ).toSec();
 
-	if( ( robot_state_->getTime() - outer_elapsed_ ).toSec() >= outerLoopTime )
+	if( current_delT >= outerLoopTime )
 	{
 		// RLS ARMA
 		if( useARMAmodel )
@@ -784,16 +785,18 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 			}
 
 			// X axis (use 1D update)
-			outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,
+			outerLoopRLSmodelX.updateDelT(current_delT);
+			outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,   // output: xd_m
                                            Xd                     (0) ,
-                                           X_m                    (0) ,
+                                           X_m                    (0) ,   // output: x_m
                                            X                      (0) ,
-                                           Xdd_m                  (0) ,
-                                           transformed_force      (0) ,
-                                           task_ref               (0) ,
-                                           task_refModel_output   (0)  );
+                                           Xdd_m                  (0) ,   // output: xdd_m
+                                           transformed_force      (0) ,   // input:  force or voltage
+                                           task_ref               (0) ,   // input:  x_r
+                                           task_refModel_output   (0)  ); // output: x_d
 
 			// Y axis
+			outerLoopRLSmodelY.updateDelT(current_delT);
 			outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
                                            Xd                     (1) ,
                                            X_m                    (1) ,
@@ -1068,6 +1071,10 @@ void PR2adaptNeuroControllerClass::bufferData()
 	{
 		experimentDataB_msg_[storage_index_].dt                = dt_;
 
+		// Neural network
+		experimentDataB_msg_[storage_index_].Wnorm = nnController.getOuterWeightsNorm();
+		experimentDataB_msg_[storage_index_].Vnorm = nnController.getInnerWeightsNorm();
+
 		// Filter weights
 		tf::matrixEigenToMsg(weightsRLSmodelX, experimentDataB_msg_[storage_index_].filterWeightsX);
 		tf::matrixEigenToMsg(weightsRLSmodelY, experimentDataB_msg_[storage_index_].filterWeightsY);
@@ -1075,32 +1082,63 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataB_msg_[storage_index_].filterNormX = weightsRLSmodelX.norm();
 		experimentDataB_msg_[storage_index_].filterNormY = weightsRLSmodelY.norm();
 
-		// Neural network
-		experimentDataB_msg_[storage_index_].Wnorm = nnController.getOuterWeightsNorm();
-		experimentDataB_msg_[storage_index_].Vnorm = nnController.getInnerWeightsNorm();
+		// Force input
+		experimentDataB_msg_[storage_index_].tactile_force.x = transformed_force(0);
+		experimentDataB_msg_[storage_index_].tactile_force.y = transformed_force(1);
+		experimentDataB_msg_[storage_index_].tactile_force.z = transformed_force(2);
 
 		// Actual trajectory
-		experimentDataB_msg_[storage_index_].x_x     = X(0);
-		experimentDataB_msg_[storage_index_].x_y     = X(1);
-		experimentDataB_msg_[storage_index_].x_z     = X(2);
-		experimentDataB_msg_[storage_index_].x_phi   = X(3);
-		experimentDataB_msg_[storage_index_].x_theta = X(4);
-		experimentDataB_msg_[storage_index_].x_psi   = X(5);
+		experimentDataB_msg_[storage_index_].x.x     = X(0);
+		experimentDataB_msg_[storage_index_].x.y     = X(1);
+		experimentDataB_msg_[storage_index_].x.z     = X(2);
+		experimentDataB_msg_[storage_index_].x.phi   = X(3);
+		experimentDataB_msg_[storage_index_].x.the   = X(4);
+		experimentDataB_msg_[storage_index_].x.psi   = X(5);
 
-		experimentDataB_msg_[storage_index_].xdot_x     = Xd(0);
-		experimentDataB_msg_[storage_index_].xdot_y     = Xd(1);
-		experimentDataB_msg_[storage_index_].xdot_z     = Xd(2);
-		experimentDataB_msg_[storage_index_].xdot_phi   = Xd(3);
-		experimentDataB_msg_[storage_index_].xdot_theta = Xd(4);
-		experimentDataB_msg_[storage_index_].xdot_psi   = Xd(5);
+		experimentDataB_msg_[storage_index_].xd.x    = Xd(0);
+		experimentDataB_msg_[storage_index_].xd.y    = Xd(1);
+		experimentDataB_msg_[storage_index_].xd.z    = Xd(2);
+		experimentDataB_msg_[storage_index_].xd.phi  = Xd(3);
+		experimentDataB_msg_[storage_index_].xd.the  = Xd(4);
+		experimentDataB_msg_[storage_index_].xd.psi  = Xd(5);
 
-		// Desired trajectory
-		experimentDataB_msg_[storage_index_].xdes_x     = X_m(0);
-		experimentDataB_msg_[storage_index_].xdes_y     = X_m(1);
-		experimentDataB_msg_[storage_index_].xdes_z     = X_m(2);
-		experimentDataB_msg_[storage_index_].xdes_phi   = X_m(3);
-		experimentDataB_msg_[storage_index_].xdes_theta = X_m(4);
-		experimentDataB_msg_[storage_index_].xdes_psi   = X_m(5);
+		// Human intent
+		experimentDataB_msg_[storage_index_].x_i.x     = task_ref(0);
+		experimentDataB_msg_[storage_index_].x_i.y     = task_ref(1);
+		experimentDataB_msg_[storage_index_].x_i.z     = task_ref(2);
+		experimentDataB_msg_[storage_index_].x_i.phi   = task_ref(3);
+		experimentDataB_msg_[storage_index_].x_i.the   = task_ref(4);
+		experimentDataB_msg_[storage_index_].x_i.psi   = task_ref(5);
+
+		// Task trajectory
+		experimentDataB_msg_[storage_index_].x_d.x     = task_refModel_output(0);
+		experimentDataB_msg_[storage_index_].x_d.y     = task_refModel_output(1);
+		experimentDataB_msg_[storage_index_].x_d.z     = task_refModel_output(2);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.phi   = task_refModel_output(3);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.the   = task_refModel_output(4);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.psi   = task_refModel_output(5);  // = 0
+
+		// Model trajectory
+		experimentDataB_msg_[storage_index_].x_m.x     = X_m(0);
+		experimentDataB_msg_[storage_index_].x_m.y     = X_m(1);
+		experimentDataB_msg_[storage_index_].x_m.z     = X_m(2);
+		experimentDataB_msg_[storage_index_].x_m.phi   = X_m(3);
+		experimentDataB_msg_[storage_index_].x_m.the   = X_m(4);
+		experimentDataB_msg_[storage_index_].x_m.psi   = X_m(5);
+
+		experimentDataB_msg_[storage_index_].xd_m.x     = Xd_m(0);
+		experimentDataB_msg_[storage_index_].xd_m.y     = Xd_m(1);
+		experimentDataB_msg_[storage_index_].xd_m.z     = Xd_m(2);
+		experimentDataB_msg_[storage_index_].xd_m.phi   = Xd_m(3);
+		experimentDataB_msg_[storage_index_].xd_m.the   = Xd_m(4);
+		experimentDataB_msg_[storage_index_].xd_m.psi   = Xd_m(5);
+
+		experimentDataB_msg_[storage_index_].xdd_m.x     = Xdd_m(0);
+		experimentDataB_msg_[storage_index_].xdd_m.y     = Xdd_m(1);
+		experimentDataB_msg_[storage_index_].xdd_m.z     = Xdd_m(2);
+		experimentDataB_msg_[storage_index_].xdd_m.phi   = Xdd_m(3);
+		experimentDataB_msg_[storage_index_].xdd_m.the   = Xdd_m(4);
+		experimentDataB_msg_[storage_index_].xdd_m.psi   = Xdd_m(5);
 
 		// Increment for the next cycle.
 		storage_index_ = storage_index_+1;
