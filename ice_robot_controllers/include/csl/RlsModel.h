@@ -36,6 +36,7 @@ class RlsModel
   Eigen::MatrixXd ref_q_d;
   Eigen::MatrixXd ref_qd_m;
   Eigen::MatrixXd ref_qdd_m;
+  Eigen::MatrixXd prv_ref_q_d;
 
   Eigen::MatrixXd task_ref;
   Eigen::MatrixXd task_ref_model;
@@ -158,6 +159,7 @@ public:
     ref_q_d   .resize( num_Dim, 1 ) ;
     ref_qd_m  .resize( num_Dim, 1 ) ;
     ref_qdd_m .resize( num_Dim, 1 ) ;
+    prv_ref_q_d.resize( num_Dim, 1 ) ;
 
     task_ref  .resize( num_Dim, 1 ) ;
     t_r		  .resize( num_Dim, 1 ) ;
@@ -180,6 +182,7 @@ public:
     ref_q_d   .setZero();
     ref_qd_m  .setZero();
     ref_qdd_m .setZero();
+    prv_ref_q_d.setZero();
     task_ref  .setZero();
     t_r       .setZero();
     Wk		  .setZero();
@@ -328,25 +331,23 @@ public:
     param_qdd_m          = qdd_m          ;
   }
 
-  void updateARMA( double & param_qd_m           ,
+  void updateARMA( double & param_qd_m           ,		// output: xd_m
                    double & param_qd             ,
-                   double & param_q_m            ,
+                   double & param_q_m            ,		// output: x_m
                    double & param_q              ,
-                   double & param_qdd_m          ,
-                   double & param_t_r            ,
-                   double & param_task_ref       ,
-                   double & param_task_ref_model  )
+                   double & param_qdd_m          ,		// output: xdd_m
+                   double & param_t_r            ,		// input:  force or voltage
+                   double & param_task_ref       ,		// input:  x_r
+                   double & param_task_ref_model  )		// output: x_d
   {
-    qd_m    (0)          = param_qd_m     ;
-    qd      (0)          = param_qd       ;
-    q_m     (0)          = param_q_m      ;
-    q       (0)          = param_q        ;
-    qdd_m   (0)          = param_qdd_m    ;
-    t_r     (0)          = param_t_r      ;
-    task_ref(0)          = param_task_ref ;
-
-    // Save input forces/torques in Uk
-    stackArmaIn( q_m, t_r );
+//    qd_m    (0)          = param_qd_m     ;
+//    qd      (0)          = param_qd       ;
+//    q_m     (0)          = param_q_m      ;
+//    q       (0)          = param_q        ;
+//    qdd_m   (0)          = param_qdd_m    ;
+    t_r     (0)          = param_t_r      ;		// f_r
+    task_ref(0)          = param_task_ref ;		// x_r
+    // Assumption: delT has already been updated
 
     // Compute xd and perform RLS update
     update();
@@ -358,25 +359,23 @@ public:
     param_qdd_m          = qdd_m(0)       ;		// xdd_m
   }
 
-  void updateARMA( Eigen::MatrixXd & param_qd_m          ,
+  void updateARMA( Eigen::MatrixXd & param_qd_m          ,  // output: xd_m
                    Eigen::MatrixXd & param_qd            ,
-                   Eigen::MatrixXd & param_q_m           ,
+                   Eigen::MatrixXd & param_q_m           ,  // output: x_m
                    Eigen::MatrixXd & param_q             ,
-                   Eigen::MatrixXd & param_qdd_m         ,
-                   Eigen::MatrixXd & param_t_r           ,
-                   Eigen::MatrixXd & param_task_ref      ,
-                   Eigen::MatrixXd & param_task_ref_model )
+                   Eigen::MatrixXd & param_qdd_m         ,  // output: xdd_m
+                   Eigen::MatrixXd & param_t_r           ,  // input:  force or voltage
+                   Eigen::MatrixXd & param_task_ref      ,  // input:  x_r
+                   Eigen::MatrixXd & param_task_ref_model ) // output: x_d
   {
-    qd_m                 = param_qd_m     ;
-    qd                   = param_qd       ;
-    q_m                  = param_q_m      ;
-    q                    = param_q        ;
-    qdd_m                = param_qdd_m    ;
-    t_r                  = param_t_r      ;
+//    qd_m                 = param_qd_m     ;
+//    qd                   = param_qd       ;
+//    q_m                  = param_q_m      ;
+//    q                    = param_q        ;
+//    qdd_m                = param_qdd_m    ;
+    t_r                  = param_t_r      ;		// f_r
     task_ref             = param_task_ref ;		// x_r
-
-    // Save input forces/torques in Uk
-    stackArmaIn( q_m, t_r );
+    // Assumption: delT has already been updated
 
     // Compute xd and perform RLS update
     update();
@@ -392,10 +391,11 @@ public:
   {
 	if( firstTime )
 	{
-		prv_q_m  = q_m ;
-		prv_qd_m = qd_m;
-
-		ref_q_d  = q_m;
+//		prv_q_m  = q_m ;
+//		prv_qd_m = qd_m;
+//
+//		ref_q_d  = q_m;
+//		prv_ref_q_d = q_m;
 
 		firstTime = false;
 	}
@@ -403,21 +403,28 @@ public:
 //    ode_init_x[2] = task_ref(0);
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
 
-	// Compute xd using prescribed task model D(s)
-    ref_q_d(0)   = ref_q_d(0) + ref_qd_m(0)*delT;				// xd
-    ref_qd_m(0)  = a_task*task_ref(0) - b_task*ref_q_d(0);		//
+/*  Isura's old code:
+    ref_q_d(0)   = ref_q_d(0) + ref_qd_m(0)*delT;
+    ref_qd_m(0)  = a_task*task_ref(0) - b_task*ref_q_d(0);
 
     ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
+*/
 
 //    ref_q_m(0)   = ode_init_x[0 ] ;
 //    ref_qd_m(0)  = ode_init_x[1 ] ;
 //    ref_qdd_m(0) = 0; //m*( task_ref(0) - d*ode_init_x[1 ] - k*ode_init_x[0 ] );
 
-    // Save iteration number
-    iter = iter + 1;
+	// Compute x_d using prescribed task model D(s)
+	ref_q_d = ( a_task*delT*task_ref + prv_ref_q_d ) / ( 1+b_task*delT );
 
-    // Desired is the task reference model (xm -> xd)
+    // Save iteration number
+//    iter = iter + 1;
+
+    // Desired is the task reference model (x_m -> x_d)
     Dk = ref_q_d;
+
+    // Save input forces/torques in Uk
+    stackArmaIn( prv_q_m, t_r );			//FIXME: correct location?
 
     // Update filter weights using RLS
     if( !useFixedWeights )
@@ -437,7 +444,7 @@ public:
 
     // Store values
     prv_q_m  = q_m ;
-    prv_qd_m = qd_m;S
+    prv_qd_m = qd_m;
 
   }
 };
