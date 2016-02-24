@@ -71,8 +71,10 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 
 	// Subscribe to Flexiforce wrench commands
 	if(useFlexiForce)
-		sub_command_ = nh_.subscribe<geometry_msgs::WrenchStamped>("/tactile/wrench", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
-
+	{
+		//sub_command_ = nh_.subscribe<geometry_msgs::WrenchStamped>("/tactile/wrench", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
+		sub_command_ = nh_.subscribe<ice_msgs::tactileArrayData>("/tactile/data", 1, &PR2adaptNeuroControllerClass::readTactileDataCB, this);
+	}
 	tactileCalibration_srv_ = nh_.advertiseService("/tactile/calibration" , &PR2adaptNeuroControllerClass::tactileCalibrationCB   , this);
 
 
@@ -260,7 +262,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			//tactile_wrench_ = -tactile_wrench_;
 			// TODO: update t_r?
 			// TODO: transform into torso frame
-			transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
+			//transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
 		}
 
 		// Force threshold (makes force zero bellow threshold) FIXME not needed since force is filtered?
@@ -773,17 +775,67 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 
 			}
 */
-			if(tactileSensorSelected_ > 0)	// Calibration mode		FIXME: use useFixedWeights instead
+
+			// Raw tactile data (voltages)
+
+			if(0 <= tactileSensorSelected_ && tactileSensorSelected_ < numTactileSensors_)	// Calibration mode		FIXME: use useFixedWeights instead
 			{
-				outerLoopRLSmodelX.setUpdatedWeights();
-				outerLoopRLSmodelY.setUpdatedWeights();
+				//ARMAmodel_flexi_[tactileSensorSelected_].setUpdatedWeights();
+				for(int i=0; i<numTactileSensors_*tactile_dimensions_;i++)
+				{
+					ARMAmodel_flexi_[i]->setUpdatedWeights();
+				}
 			}
 			else							// Fixed weights
 			{
-				outerLoopRLSmodelX.setFixedWeights(weightsRLSmodelX);
-				outerLoopRLSmodelY.setFixedWeights(weightsRLSmodelY);
+				for(int i=0; i<numTactileSensors_*tactile_dimensions_;i++)
+				{
+					Eigen::MatrixXd tmp = filterWeights_flexi_.col(i);
+					ARMAmodel_flexi_[i]->setFixedWeights(tmp);
+				}
 			}
 
+			task_ref = x_des_.translation();
+
+			X_m.setZero();
+			Xd_m.setZero();
+			Xdd_m.setZero();
+			task_refModel_output.setZero();
+
+			int sensorNr = 0;
+			CartVec tmp;
+			for(int d=0; d<tactile_dimensions_;d++)
+			{
+				for(int i=0;i<numTactileSensors_;i++)
+				{
+					int k = i + numTactileSensors_*d;	// Sensor number
+
+					ARMAmodel_flexi_[k]->updateDelT(current_delT);
+					ARMAmodel_flexi_[k]->updateARMA(tmp                    (1) ,   // output: xd_m
+												    Xd                     (0) ,
+													tmp                    (0) ,   // output: x_m
+												    X                      (0) ,
+													tmp                    (3) ,   // output: xdd_m
+												    tactile_data_      	   (d) ,   // input:  force or voltage
+												    task_ref               (d) ,   // input:  x_r
+													tmp                    (4)  ); // output: x_d
+
+					X_m(d) 					+= tmp(0);
+					Xd_m(d) 				+= tmp(1);
+					Xdd_m(d) 				+= tmp(2);
+					task_refModel_output(d)	+= tmp(4);
+				}
+			}
+
+			for(int i=0; i<numTactileSensors_*tactile_dimensions_;i++)
+			{
+				Eigen::MatrixXd tmp2;
+				ARMAmodel_flexi_[i]->getWeights(tmp2);
+				filterWeights_flexi_.col(i) = tmp2;
+			}
+
+
+/*
 			// X axis (use 1D update)
 			outerLoopRLSmodelX.updateDelT(current_delT);
 			outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,   // output: xd_m
@@ -810,7 +862,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 			outerLoopRLSmodelY.getWeights( weightsRLSmodelY ) ;
 
 			// ROS_ERROR_STREAM("USING RLS ARMA");
-/*
+
 			if( useFlexiForce )
 			{
 				// X axis
@@ -1079,13 +1131,54 @@ void PR2adaptNeuroControllerClass::bufferData()
 //		tf::matrixEigenToMsg(weightsRLSmodelX, experimentDataB_msg_[storage_index_].filterWeightsX);
 //		tf::matrixEigenToMsg(weightsRLSmodelY, experimentDataB_msg_[storage_index_].filterWeightsY);
 
+		experimentDataB_msg_[storage_index_].flexi0.f0 = filterWeights_flexi_(0,0);
+		experimentDataB_msg_[storage_index_].flexi0.f1 = filterWeights_flexi_(1,0);
+		experimentDataB_msg_[storage_index_].flexi0.f2 = filterWeights_flexi_(2,0);
+		experimentDataB_msg_[storage_index_].flexi0.f3 = filterWeights_flexi_(3,0);
+		experimentDataB_msg_[storage_index_].flexi0.f4 = filterWeights_flexi_(4,0);
+		experimentDataB_msg_[storage_index_].flexi0.f5 = filterWeights_flexi_(5,0);
+		experimentDataB_msg_[storage_index_].flexi0.f6 = filterWeights_flexi_(6,0);
+		experimentDataB_msg_[storage_index_].flexi0.f7 = filterWeights_flexi_(7,0);
+
+		experimentDataB_msg_[storage_index_].flexi1.f0 = filterWeights_flexi_(0,1);
+		experimentDataB_msg_[storage_index_].flexi1.f1 = filterWeights_flexi_(1,1);
+		experimentDataB_msg_[storage_index_].flexi1.f2 = filterWeights_flexi_(2,1);
+		experimentDataB_msg_[storage_index_].flexi1.f3 = filterWeights_flexi_(3,1);
+		experimentDataB_msg_[storage_index_].flexi1.f4 = filterWeights_flexi_(4,1);
+		experimentDataB_msg_[storage_index_].flexi1.f5 = filterWeights_flexi_(5,1);
+		experimentDataB_msg_[storage_index_].flexi1.f6 = filterWeights_flexi_(6,1);
+		experimentDataB_msg_[storage_index_].flexi1.f7 = filterWeights_flexi_(7,1);
+
+		experimentDataB_msg_[storage_index_].flexi2.f0 = filterWeights_flexi_(0,2);
+		experimentDataB_msg_[storage_index_].flexi2.f1 = filterWeights_flexi_(1,2);
+		experimentDataB_msg_[storage_index_].flexi2.f2 = filterWeights_flexi_(2,2);
+		experimentDataB_msg_[storage_index_].flexi2.f3 = filterWeights_flexi_(3,2);
+		experimentDataB_msg_[storage_index_].flexi2.f4 = filterWeights_flexi_(4,2);
+		experimentDataB_msg_[storage_index_].flexi2.f5 = filterWeights_flexi_(5,2);
+		experimentDataB_msg_[storage_index_].flexi2.f6 = filterWeights_flexi_(6,2);
+		experimentDataB_msg_[storage_index_].flexi2.f7 = filterWeights_flexi_(7,2);
+
+		experimentDataB_msg_[storage_index_].flexi3.f0 = filterWeights_flexi_(0,3);
+		experimentDataB_msg_[storage_index_].flexi3.f1 = filterWeights_flexi_(1,3);
+		experimentDataB_msg_[storage_index_].flexi3.f2 = filterWeights_flexi_(2,3);
+		experimentDataB_msg_[storage_index_].flexi3.f3 = filterWeights_flexi_(3,3);
+		experimentDataB_msg_[storage_index_].flexi3.f4 = filterWeights_flexi_(4,3);
+		experimentDataB_msg_[storage_index_].flexi3.f5 = filterWeights_flexi_(5,3);
+		experimentDataB_msg_[storage_index_].flexi3.f6 = filterWeights_flexi_(6,3);
+		experimentDataB_msg_[storage_index_].flexi3.f7 = filterWeights_flexi_(7,3);
+
+
 		experimentDataB_msg_[storage_index_].filterNormX = weightsRLSmodelX.norm();
 		experimentDataB_msg_[storage_index_].filterNormY = weightsRLSmodelY.norm();
 
 		// Force input
-		experimentDataB_msg_[storage_index_].tactile_force.x = transformed_force(0);
-		experimentDataB_msg_[storage_index_].tactile_force.y = transformed_force(1);
-		experimentDataB_msg_[storage_index_].tactile_force.z = transformed_force(2);
+//		experimentDataB_msg_[storage_index_].tactile_force.x = transformed_force(0);
+//		experimentDataB_msg_[storage_index_].tactile_force.y = transformed_force(1);
+//		experimentDataB_msg_[storage_index_].tactile_force.z = transformed_force(2);
+		experimentDataB_msg_[storage_index_].tactile_data_0  = tactile_data_(0);
+		experimentDataB_msg_[storage_index_].tactile_data_1  = tactile_data_(1);
+		experimentDataB_msg_[storage_index_].tactile_data_2  = tactile_data_(2);
+		experimentDataB_msg_[storage_index_].tactile_data_3  = tactile_data_(3);
 
 		// Actual trajectory
 		experimentDataB_msg_[storage_index_].x.x     = X(0);
@@ -1633,6 +1726,15 @@ void PR2adaptNeuroControllerClass::readForceValuesCB(const geometry_msgs::Wrench
 	tactile_wrench_(3) = wrench_msg->wrench.torque.x;
 	tactile_wrench_(4) = wrench_msg->wrench.torque.y;
 	tactile_wrench_(5) = wrench_msg->wrench.torque.z;
+}
+
+void PR2adaptNeuroControllerClass::readTactileDataCB(const ice_msgs::tactileArrayDataConstPtr& msg)
+{
+	// Convert to CartVec
+	for( int i=0; i<msg->data.size(); i++)
+	{
+		tactile_data_[i] = msg->data[i];
+	}
 }
 
 bool PR2adaptNeuroControllerClass::initParam()
@@ -2582,14 +2684,21 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	weightsRLSmodelX.setZero();
 	weightsRLSmodelY.setZero();
 
-	//armaModels.resize(numTactileSensors_);
-//	for(int i=0;i<numTactileSensors_;i++)
-//	{
-//		armaModels[i].updateDelT( outerLoopTime );
-//		armaModels[i].updateAB( task_mA, task_mB );
-//		armaModels[i].initRls( rls_lambda, rls_sigma );
-//		armaModels.push_back(outerLoopRLSmodelX);
-//	}
+	tactile_dimensions_ = 2;					// X and Y
+	tactile_data_.resize(numTactileSensors_);	// Number of sensors
+	tactile_data_.setZero();
+	filterWeights_flexi_.resize(8,numTactileSensors_*tactile_dimensions_);
+	filterWeights_flexi_.setZero();
+	for(int i=0;i<numTactileSensors_*tactile_dimensions_;i++)
+	{
+		csl::outer_loop::RlsModel* tmpPtr = new csl::outer_loop::RlsModel();
+		tmpPtr->updateDelT( outerLoopTime );
+		tmpPtr->updateAB( task_mA, task_mB );
+		tmpPtr->initRls( rls_lambda, rls_sigma );
+		//tmpPtr->setUpdatedWeights();
+
+		ARMAmodel_flexi_.push_back(tmpPtr);
+	}
 
 	// CT RLS
 	outerLoopCTRLSmodelX.updateDelT( outerLoopTime );

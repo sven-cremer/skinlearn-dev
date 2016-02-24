@@ -47,6 +47,7 @@
 #include <ice_msgs/setInteger.h>
 #include <ice_msgs/experimentDataA.h>
 #include <ice_msgs/experimentDataB.h>
+#include <ice_msgs/tactileArrayData.h>
 
 #include "geometry_msgs/Wrench.h"
 #include "geometry_msgs/WrenchStamped.h"
@@ -340,6 +341,11 @@ private:
 	Eigen::MatrixXd outerLoopWk_flexi_2 ;
 	Eigen::MatrixXd outerLoopWk_flexi_3 ;
 
+	std::vector<csl::outer_loop::RlsModel*>   ARMAmodel_flexi_;
+	Eigen::MatrixXd filterWeights_flexi_;
+	Eigen::VectorXd tactile_data_;
+	int tactile_dimensions_;
+
 	Eigen::MatrixXd weightsRLSmodelX ;
 	Eigen::MatrixXd weightsRLSmodelY ;
 
@@ -519,6 +525,10 @@ private:
 	bool initNullspace();
 
 	void updateOuterLoop();
+	void updateNonRealtime();
+
+	void readForceValuesCB(const geometry_msgs::WrenchStampedConstPtr& wrench_msg);
+	void readTactileDataCB(const ice_msgs::tactileArrayDataConstPtr& msg);
 
 	  realtime_tools::RealtimePublisher<StateMsg> pub_state_;
 	  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pub_x_desi_;
@@ -543,8 +553,5 @@ public:
 
 	void calcHumanIntentPos( Eigen::Vector3d & force, Eigen::VectorXd & pos, double delT, double m );
 
-	void readForceValuesCB(const geometry_msgs::WrenchStampedConstPtr& wrench_msg);	// TODO change this message type to a vector
-
-	void updateNonRealtime();
 };
 }

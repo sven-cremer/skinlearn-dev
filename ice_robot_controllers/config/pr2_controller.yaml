@@ -9,9 +9,9 @@ loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRat
 useCurrentCartPose : false
 useNullspacePose   : true
 useFlexiForce      : true
-forceTorqueOn      : false
-accelerometerOn    : false
-useDigitalFilter   : false
+forceTorqueOn      : true
+accelerometerOn    : true
+useDigitalFilter   : true
 
 executeCircleTraj  : false
 numCircleTraj      : 3
