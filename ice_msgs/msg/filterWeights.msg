@@ -6,5 +6,3 @@ float64 f4
 float64 f5
 float64 f6
 float64 f7
-float64 f8
-float64 f9

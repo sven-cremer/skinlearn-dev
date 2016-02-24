@@ -1167,9 +1167,44 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataB_msg_[storage_index_].flexi3.f6 = filterWeights_flexi_(6,3);
 		experimentDataB_msg_[storage_index_].flexi3.f7 = filterWeights_flexi_(7,3);
 
+		experimentDataB_msg_[storage_index_].flexi4.f0 = filterWeights_flexi_(0,4);
+		experimentDataB_msg_[storage_index_].flexi4.f1 = filterWeights_flexi_(1,4);
+		experimentDataB_msg_[storage_index_].flexi4.f2 = filterWeights_flexi_(2,4);
+		experimentDataB_msg_[storage_index_].flexi4.f3 = filterWeights_flexi_(3,4);
+		experimentDataB_msg_[storage_index_].flexi4.f4 = filterWeights_flexi_(4,4);
+		experimentDataB_msg_[storage_index_].flexi4.f5 = filterWeights_flexi_(5,4);
+		experimentDataB_msg_[storage_index_].flexi4.f6 = filterWeights_flexi_(6,4);
+		experimentDataB_msg_[storage_index_].flexi4.f7 = filterWeights_flexi_(7,4);
 
-		experimentDataB_msg_[storage_index_].filterNormX = weightsRLSmodelX.norm();
-		experimentDataB_msg_[storage_index_].filterNormY = weightsRLSmodelY.norm();
+		experimentDataB_msg_[storage_index_].flexi5.f0 = filterWeights_flexi_(0,5);
+		experimentDataB_msg_[storage_index_].flexi5.f1 = filterWeights_flexi_(1,5);
+		experimentDataB_msg_[storage_index_].flexi5.f2 = filterWeights_flexi_(2,5);
+		experimentDataB_msg_[storage_index_].flexi5.f3 = filterWeights_flexi_(3,5);
+		experimentDataB_msg_[storage_index_].flexi5.f4 = filterWeights_flexi_(4,5);
+		experimentDataB_msg_[storage_index_].flexi5.f5 = filterWeights_flexi_(5,5);
+		experimentDataB_msg_[storage_index_].flexi5.f6 = filterWeights_flexi_(6,5);
+		experimentDataB_msg_[storage_index_].flexi5.f7 = filterWeights_flexi_(7,5);
+
+		experimentDataB_msg_[storage_index_].flexi6.f0 = filterWeights_flexi_(0,6);
+		experimentDataB_msg_[storage_index_].flexi6.f1 = filterWeights_flexi_(1,6);
+		experimentDataB_msg_[storage_index_].flexi6.f2 = filterWeights_flexi_(2,6);
+		experimentDataB_msg_[storage_index_].flexi6.f3 = filterWeights_flexi_(3,6);
+		experimentDataB_msg_[storage_index_].flexi6.f4 = filterWeights_flexi_(4,6);
+		experimentDataB_msg_[storage_index_].flexi6.f5 = filterWeights_flexi_(5,6);
+		experimentDataB_msg_[storage_index_].flexi6.f6 = filterWeights_flexi_(6,6);
+		experimentDataB_msg_[storage_index_].flexi6.f7 = filterWeights_flexi_(7,6);
+
+		experimentDataB_msg_[storage_index_].flexi7.f0 = filterWeights_flexi_(0,7);
+		experimentDataB_msg_[storage_index_].flexi7.f1 = filterWeights_flexi_(1,7);
+		experimentDataB_msg_[storage_index_].flexi7.f2 = filterWeights_flexi_(2,7);
+		experimentDataB_msg_[storage_index_].flexi7.f3 = filterWeights_flexi_(3,7);
+		experimentDataB_msg_[storage_index_].flexi7.f4 = filterWeights_flexi_(4,7);
+		experimentDataB_msg_[storage_index_].flexi7.f5 = filterWeights_flexi_(5,7);
+		experimentDataB_msg_[storage_index_].flexi7.f6 = filterWeights_flexi_(6,7);
+		experimentDataB_msg_[storage_index_].flexi7.f7 = filterWeights_flexi_(7,7);
+
+		experimentDataB_msg_[storage_index_].filterNormX = filterWeights_flexi_.norm();
+		//experimentDataB_msg_[storage_index_].filterNormY = weightsRLSmodelY.norm();
 
 		// Force input
 //		experimentDataB_msg_[storage_index_].tactile_force.x = transformed_force(0);
