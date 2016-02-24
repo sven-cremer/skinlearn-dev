@@ -1076,8 +1076,8 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataB_msg_[storage_index_].Vnorm = nnController.getInnerWeightsNorm();
 
 		// Filter weights
-		tf::matrixEigenToMsg(weightsRLSmodelX, experimentDataB_msg_[storage_index_].filterWeightsX);
-		tf::matrixEigenToMsg(weightsRLSmodelY, experimentDataB_msg_[storage_index_].filterWeightsY);
+//		tf::matrixEigenToMsg(weightsRLSmodelX, experimentDataB_msg_[storage_index_].filterWeightsX);
+//		tf::matrixEigenToMsg(weightsRLSmodelY, experimentDataB_msg_[storage_index_].filterWeightsY);
 
 		experimentDataB_msg_[storage_index_].filterNormX = weightsRLSmodelX.norm();
 		experimentDataB_msg_[storage_index_].filterNormY = weightsRLSmodelY.norm();

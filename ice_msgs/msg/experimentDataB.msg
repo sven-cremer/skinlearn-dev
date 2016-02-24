@@ -7,9 +7,9 @@ float64 Vnorm
 float64 Wnorm
 
 # ARMA filter
-std_msgs/Float64MultiArray filterWeightsX
+#std_msgs/Float64MultiArray filterWeightsX
+#std_msgs/Float64MultiArray filterWeightsY
 float64 filterNormX
-std_msgs/Float64MultiArray filterWeightsY
 float64 filterNormY
 
 # Force input

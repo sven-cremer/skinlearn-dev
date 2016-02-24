@@ -25,7 +25,7 @@ publishRTtopics    : true
 # Specifically for MRAC
 useSimHuman        : false
 
-useOuterloop       : false
+useOuterloop       : true
 # Only one can be true
 useARMAmodel       : true
 useCTARMAmodel     : false
@@ -62,7 +62,7 @@ externalRefTraj    : false
 useHumanIntent     : true
 intentEst_time     : 0.05
 intentEst_delT     : 0.1  # Propagation time
-intentEst_M        : 75.0  # M_i the mass of the intent admittance model
+intentEst_M        : 50.0  # M_i the mass of the intent admittance model
 
 # The params of the RLS estimator
 rls_lambda         : 0.98
