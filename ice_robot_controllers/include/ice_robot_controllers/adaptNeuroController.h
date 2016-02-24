@@ -301,7 +301,8 @@ private:
 	bool publishRTtopics;
 
 	// ROS subscribers
-	ros::Subscriber sub_command_;
+	ros::Subscriber sub_tactileWrench_;
+	ros::Subscriber sub_tactileData_  ;
 
 	// ROS messages
 	geometry_msgs::WrenchStamped msgFTData             [StoreLen];

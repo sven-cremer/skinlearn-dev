@@ -72,8 +72,8 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	// Subscribe to Flexiforce wrench commands
 	if(useFlexiForce)
 	{
-		//sub_command_ = nh_.subscribe<geometry_msgs::WrenchStamped>("/tactile/wrench", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
-		sub_command_ = nh_.subscribe<ice_msgs::tactileArrayData>("/tactile/data", 1, &PR2adaptNeuroControllerClass::readTactileDataCB, this);
+		sub_tactileWrench_ = nh_.subscribe<geometry_msgs::WrenchStamped>("/tactile/wrench", 1, &PR2adaptNeuroControllerClass::readForceValuesCB, this);
+		sub_tactileData_   = nh_.subscribe<ice_msgs::tactileArrayData>("/tactile/data", 1, &PR2adaptNeuroControllerClass::readTactileDataCB, this);
 	}
 	tactileCalibration_srv_ = nh_.advertiseService("/tactile/calibration" , &PR2adaptNeuroControllerClass::tactileCalibrationCB   , this);
 
@@ -262,7 +262,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			//tactile_wrench_ = -tactile_wrench_;
 			// TODO: update t_r?
 			// TODO: transform into torso frame
-			//transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
+			transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
 		}
 
 		// Force threshold (makes force zero bellow threshold) FIXME not needed since force is filtered?
@@ -774,7 +774,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 				}
 
 			}
-*/
+
 
 			// Raw tactile data (voltages)
 
@@ -794,8 +794,8 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 					ARMAmodel_flexi_[i]->setFixedWeights(tmp);
 				}
 			}
-
-			task_ref = x_des_.translation();
+*/
+			task_ref.topRows(3) = x_des_.translation();
 
 			X_m.setZero();
 			Xd_m.setZero();
@@ -1539,6 +1539,13 @@ bool PR2adaptNeuroControllerClass::runExperimentB(	ice_msgs::setValue::Request &
 	{
 		nnController.setUpdateInnerWeights(false);
 	}
+
+	// Start updating ARMA weights
+	for(int i=0; i<numTactileSensors_*tactile_dimensions_;i++)
+	{
+		ARMAmodel_flexi_[i]->setUpdatedWeights();
+	}
+
 	x_des_ = x0_;
 
 	storage_index_ = 0;
