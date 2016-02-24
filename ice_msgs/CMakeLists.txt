@@ -23,6 +23,7 @@ add_message_files(DIRECTORY msg FILES
   controllerState.msg
   # sensors
   tactileArrayData.msg
+  filterWeights.msg
 )
 
 add_service_files(DIRECTORY srv FILES
