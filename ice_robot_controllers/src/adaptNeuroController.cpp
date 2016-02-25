@@ -210,15 +210,15 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 {
 	while(true)
 	{
-	// Wait
-	while(!runComputations)
-	{
-		boost::this_thread::sleep(boost::posix_time::milliseconds(0.01));
-	}
+		// 1) Wait
+		while(!runComputations)
+		{
+			boost::this_thread::sleep(boost::posix_time::milliseconds(0.01));
+		}
 
-	//Do Computations
+		// 2) Do Computations
 
-	/***************** SENSOR DATA PROCESSING *****************/
+		/***************** SENSOR DATA PROCESSING *****************/
 
 		if( forceTorqueOn )		// TODO check if accData has been updated
 		{
@@ -315,6 +315,26 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				executeCircleTraj = false;
 			}
 		}
+		if(mannequinMode && loop_count_ > 3000) // Check if initialized
+		{
+
+			// Compute error
+			computePoseError(x_, x_des_, xerr_);
+	//		Eigen::Vector3d tmp1; tmp1 << xerr_.(0),xerr_.(1),xerr_.(2);
+	//		Eigen::Vector3d tmp2; tmp2 << xerr_.(3),xerr_.(4),xerr_.(5);
+	//		if(tmp1.norm() > mannequinThresPos)
+	//		{
+	//			x_des_ = x_;
+	//		}
+	//		if(tmp2.norm() > mannequinThresRot)
+	//		{
+	//			x_des_ = x_;
+	//		}
+			if(xerr_.norm() > mannequinThresPos)	// TODO: implement two threshold
+			{
+				x_des_ = x_;
+			}
+		}
 		if(useHumanIntent && loop_count_ > 3000)
 		{
 
@@ -339,28 +359,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				intent_elapsed_ = robot_state_->getTime() ;
 //			}
 		}
-		if(mannequinMode && loop_count_ > 3000) // Check if initialized
-		{
 
-			// Compute error
-			computePoseError(x_, x_des_, xerr_);
-	//		Eigen::Vector3d tmp1; tmp1 << xerr_.(0),xerr_.(1),xerr_.(2);
-	//		Eigen::Vector3d tmp2; tmp2 << xerr_.(3),xerr_.(4),xerr_.(5);
-	//		if(tmp1.norm() > mannequinThresPos)
-	//		{
-	//			x_des_ = x_;
-	//		}
-	//		if(tmp2.norm() > mannequinThresRot)
-	//		{
-	//			x_des_ = x_;
-	//		}
-			if(xerr_.norm() > mannequinThresPos)	// TODO: implement two threshold
-			{
-				x_des_ = x_;
-			}
-
-
-		}
 
 		/***************** UPDATE LOOP VARIABLES *****************/
 
@@ -381,6 +380,8 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //		Xd_m  = affine2CartVec(xd_des_);
 //		Xdd_m = affine2CartVec(xdd_des_);
 
+		/***************** FEEDFORWARD FORCE *****************/
+
 //		if(useFlexiForce)
 //		{
 //			tau_ = JacobianTrans*(-fFForce*tactile_wrench_);	// [7x6]*[6x1]->[7x1]
@@ -388,25 +389,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		if(forceTorqueOn)
 		{
-	//		for(int i=0;i<6;i++)
-	//		{
-	//			if(wrench_transformed_(i) > 10.0)
-	//			{
-	//				wrench_transformed_(i) = 1.0;
-	//			}
-	//			else if (wrench_transformed_(i) < -10.0)
-	//			{
-	//				wrench_transformed_(i) = -1.0;
-	//			}
-	//			else
-	//			{
-	//				wrench_transformed_(i) = 0.0;
-	//			}
-	//		}
-	//		wrench_transformed_.bottomRows(3) = Eigen::VectorXd::Zero( 3 );	// TODO try without
-
 			tau_ = JacobianTrans*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
-			// TODO J_ft_ seems to be equal to J_ ?
 		}
 
 		/***************** OUTER LOOP *****************/
@@ -422,7 +405,49 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			//	transformed_force	-> from flexiforce or FT sensor
 			//	task_ref			-> Reference trajectory from human intent
 
-			updateOuterLoop();
+			//updateOuterLoop();
+
+			outer_delT = (robot_state_->getTime() - outer_elapsed_ ).toSec();
+
+			task_ref.topRows(3) = x_des_.translation();
+
+			X_m.setZero();
+			Xd_m.setZero();
+			Xdd_m.setZero();
+			task_refModel_output.setZero();
+
+			CartVec tmp;
+			for(int d=0; d<tactile_dimensions_;d++)
+			{
+				for(int i=0;i<numTactileSensors_;i++)
+				{
+					int k = i + numTactileSensors_*d;	// Sensor number
+
+					ARMAmodel_flexi_[k]->updateDelT(outer_delT);
+					ARMAmodel_flexi_[k]->updateARMA(tmp                    (1) ,   // output: xd_m
+												    Xd                     (0) ,
+													tmp                    (0) ,   // output: x_m
+												    X                      (0) ,
+													tmp                    (3) ,   // output: xdd_m
+												    tactile_data_      	   (i) ,   // input:  force or voltage
+												    task_ref               (d) ,   // input:  x_r
+													tmp                    (4)  ); // output: x_d
+
+					X_m(d) 					+= tmp(0);
+					Xd_m(d) 				+= tmp(1);
+					Xdd_m(d) 				+= tmp(2);
+					task_refModel_output(d)	+= tmp(4);
+				}
+			}
+
+			for(int i=0; i<numTactileSensors_*tactile_dimensions_;i++)
+			{
+				Eigen::MatrixXd tmp2;
+				ARMAmodel_flexi_[i]->getWeights(tmp2);
+				filterWeights_flexi_.col(i) = tmp2;
+			}
+
+			outer_elapsed_ = robot_state_->getTime() ;
 
 			// Output variables:
 			//   task_refModel_output;
