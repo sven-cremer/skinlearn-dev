@@ -1,5 +1,6 @@
 # Time
 float64 dt
+float64 outer_dt
 
 # Neural network
 # twoLayerNN net

@@ -220,6 +220,7 @@ private:
 	geometry_msgs::Pose robotCartPos_;
 
 	double delT;
+	double outer_delT;
 	double outerLoopTime;
 	double intentLoopTime;
 

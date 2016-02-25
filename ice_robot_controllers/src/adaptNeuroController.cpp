@@ -184,6 +184,9 @@ void PR2adaptNeuroControllerClass::starting()
 	CartVec p = affine2CartVec(x_des_);
 	ROS_INFO("Starting pose: pos=[%f,%f,%f], rot=[%f,%f,%f]",p(0),p(1),p(2),p(3),p(4),p(5));
 
+	// Reference trajectory
+	X_m   = affine2CartVec(x_des_);
+
 	// Set transform from accelerometer to FT sensor
 	CartVec tmp;
 	tmp << 0, 0, 0, 3.142, 1.571, 1.919;	// rosrun tf tf_echo l_force_torque_link l_gripper_motor_accelerometer_link
@@ -373,10 +376,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		X = affine2CartVec(x_);
 		Xd = xdot_;				// FIXME make sure they are of same type
 
-		// Reference trajectory
-		X_m   = affine2CartVec(x_des_);
-		Xd_m  = affine2CartVec(xd_des_);
-		Xdd_m = affine2CartVec(xdd_des_);
+//		// Reference trajectory
+//		X_m   = affine2CartVec(x_des_);
+//		Xd_m  = affine2CartVec(xd_des_);
+//		Xdd_m = affine2CartVec(xdd_des_);
 
 //		if(useFlexiForce)
 //		{
@@ -726,9 +729,9 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 	}
 	*/
 
-	double current_delT = (robot_state_->getTime() - outer_elapsed_ ).toSec();
+	outer_delT = (robot_state_->getTime() - outer_elapsed_ ).toSec();
 
-	if( current_delT >= outerLoopTime )
+	if( outer_delT >= outerLoopTime )
 	{
 		// RLS ARMA
 		if( useARMAmodel )
@@ -814,7 +817,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 				{
 					int k = i + numTactileSensors_*d;	// Sensor number
 
-					ARMAmodel_flexi_[k]->updateDelT(current_delT);
+					ARMAmodel_flexi_[k]->updateDelT(outer_delT);
 					ARMAmodel_flexi_[k]->updateARMA(tmp                    (1) ,   // output: xd_m
 												    Xd                     (0) ,
 													tmp                    (0) ,   // output: x_m
@@ -1126,6 +1129,7 @@ void PR2adaptNeuroControllerClass::bufferData()
 	else if ((storage_index_ >= 0) && (storage_index_ < StoreLen) && experiment_ == PR2adaptNeuroControllerClass::B)
 	{
 		experimentDataB_msg_[storage_index_].dt                = dt_;
+		experimentDataB_msg_[storage_index_].outer_dt          = outer_delT;
 
 		// Neural network
 		experimentDataB_msg_[storage_index_].Wnorm = nnController.getOuterWeightsNorm();
