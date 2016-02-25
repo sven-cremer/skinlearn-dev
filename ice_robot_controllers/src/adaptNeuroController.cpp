@@ -433,10 +433,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 												    task_ref               (d) ,   // input:  x_r
 													tmp                    (4)  ); // output: x_d
 
-					X_m(d) 					+= tmp(0);
-					Xd_m(d) 				+= tmp(1);
-					Xdd_m(d) 				+= tmp(2);
-					task_refModel_output(d)	+= tmp(4);
+					X_m(d) 					+= tmp(0)/numTactileSensors_;
+					Xd_m(d) 				+= tmp(1)/numTactileSensors_;
+					Xdd_m(d) 				+= tmp(2)/numTactileSensors_;
+					task_refModel_output(d)	+= tmp(4)/numTactileSensors_;
 				}
 			}
 
