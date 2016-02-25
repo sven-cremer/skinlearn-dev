@@ -14,6 +14,10 @@ PR2adaptNeuroControllerClass::PR2adaptNeuroControllerClass()
 PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 {
 	m_Thread.interrupt();		// Kill thread at one of the interruption points
+	for(int i=0; i<numTactileSensors_*tactile_dimensions_;i++)
+	{
+		delete ARMAmodel_flexi_[i];
+	}
 }
 
 /// Controller initialization in non-realtime
