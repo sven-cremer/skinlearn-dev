@@ -816,7 +816,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 													tmp                    (0) ,   // output: x_m
 												    X                      (0) ,
 													tmp                    (3) ,   // output: xdd_m
-												    tactile_data_      	   (d) ,   // input:  force or voltage
+												    tactile_data_      	   (i) ,   // input:  force or voltage
 												    task_ref               (d) ,   // input:  x_r
 													tmp                    (4)  ); // output: x_d
 

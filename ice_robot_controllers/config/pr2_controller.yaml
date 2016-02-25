@@ -9,9 +9,9 @@ loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRat
 useCurrentCartPose : false
 useNullspacePose   : true
 useFlexiForce      : true
-forceTorqueOn      : true
-accelerometerOn    : true
-useDigitalFilter   : true
+forceTorqueOn      : false
+accelerometerOn    : false
+useDigitalFilter   : false
 
 executeCircleTraj  : false
 numCircleTraj      : 3
@@ -62,7 +62,7 @@ externalRefTraj    : false
 useHumanIntent     : true
 intentEst_time     : 0.05
 intentEst_delT     : 0.1  # Propagation time
-intentEst_M        : 50.0  # M_i the mass of the intent admittance model
+intentEst_M        : 5.0  # M_i the mass of the intent admittance model
 
 # The params of the RLS estimator
 rls_lambda         : 0.98
