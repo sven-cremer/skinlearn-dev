@@ -399,6 +399,10 @@ public:
 
 		firstTime = false;
 	}
+    // Store values
+    prv_q_m  		= q_m ;		// x_m
+    prv_qd_m 		= qd_m;		// xd_m
+    prv_ref_q_d 	= ref_q_d;	// x_r
 
 //    ode_init_x[2] = task_ref(0);
 //    boost::numeric::odeint::integrate( task_model , ode_init_x , 0.0 , delT , delT );
@@ -442,9 +446,17 @@ public:
     qd_m  = (q_m  - prv_q_m )/delT ;
     qdd_m = (qd_m - prv_qd_m)/delT ;
 
-    // Store values
-    prv_q_m  = q_m ;
-    prv_qd_m = qd_m;
+//	if(q(0) == 0)
+//	{
+//		std::cout<<"x_r = "<<task_ref<<"\n";
+//		std::cout<<"x_d = "<<ref_q_d<<"\n";
+//		std::cout<<"x_m = "<<q_m<<"\n";
+//		std::cout<<"p_m = "<<prv_q_m<<"\n";
+//		std::cout<<"a   = "<<a_task<<"\n";
+//		std::cout<<"b   = "<<b_task<<"\n";
+//		std::cout<<"dt  = "<<delT<<"\n";
+//		std::cout<<"---\n";
+//	}
 
   }
 };

@@ -450,7 +450,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			outer_elapsed_ = robot_state_->getTime() ;
 
 			// Output variables:
-			//   task_refModel_output;
+			//   task_refModel_output;		<- x_d
 			//   X_m;
 			//   Xd_m;
 			//   Xdd_m;
