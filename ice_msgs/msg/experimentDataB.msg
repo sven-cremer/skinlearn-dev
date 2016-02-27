@@ -14,10 +14,6 @@ filterWeights flexi0
 filterWeights flexi1
 filterWeights flexi2
 filterWeights flexi3
-filterWeights flexi4
-filterWeights flexi5
-filterWeights flexi6
-filterWeights flexi7
 float64 filterNormX
 float64 filterNormY
 
