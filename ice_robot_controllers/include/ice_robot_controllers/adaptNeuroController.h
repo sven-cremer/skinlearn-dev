@@ -189,6 +189,7 @@ private:
 	// Use FT sensors or not
 	bool forceTorqueOn;
 	bool useFlexiForce;
+	bool calibrateSensors;
 	std::string ft_frame_id;
 	CartVec wrench_raw_;
 	CartVec wrench_compensated_;
@@ -347,6 +348,8 @@ private:
 	Eigen::MatrixXd filterWeights_flexi_;
 	Eigen::VectorXd tactile_data_;
 	int tactile_dimensions_;
+	Eigen::MatrixXd sensorDirections;
+	double calibrationDistance_;
 
 	Eigen::MatrixXd weightsRLSmodelX ;
 	Eigen::MatrixXd weightsRLSmodelY ;
@@ -375,6 +378,9 @@ private:
 
 	Eigen::VectorXd t_r;
 	Eigen::VectorXd task_ref;
+	Eigen::VectorXd x_r;
+	Eigen::VectorXd xd_r;
+	double delta_x;
 	Eigen::VectorXd task_refModel_output;
 	Eigen::VectorXd tau;
 	Eigen::VectorXd force_c;

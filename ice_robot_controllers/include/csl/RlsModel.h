@@ -277,6 +277,11 @@ public:
 	useFixedWeights = false;
   }
 
+  void setUseFixedWeights(bool param_useFixedWeights)
+  {
+	useFixedWeights = param_useFixedWeights;
+  }
+
   void updateFIR( double & param_qd_m           ,
                   double & param_qd             ,
                   double & param_q_m            ,
@@ -385,6 +390,34 @@ public:
     param_q_m            = q_m            ;		// x_m
     param_qd_m           = qd_m           ;		// xd_m
     param_qdd_m          = qdd_m          ;		// xdd_m
+  }
+
+  void useARMA( double & param_q_m           ,  // output: x_m
+                double & param_qd_m          ,  // output: xd_m
+                double & param_qdd_m         ,  // output: xdd_m
+                double & param_t_r           )  // input:  force or voltage
+  {
+    t_r(0) = param_t_r;
+    // Assumption: delT has already been updated
+
+    // Store values
+    prv_q_m  = q_m ;		// x_m
+    prv_qd_m = qd_m;		// xd_m
+
+    // Update Uk
+    stackArmaIn( prv_q_m, t_r );
+
+    // Compute x_m(t) = h(t)*theta(t)
+    q_m  = Uk.transpose()*Wk  ;
+
+    // Compute xd_m using backward difference
+    qd_m  = (q_m  - prv_q_m )/delT ;
+    qdd_m = (qd_m - prv_qd_m)/delT ;
+
+    // Return results
+    param_q_m   = q_m (0);		// x_m
+    param_qd_m  = qd_m(0);		// xd_m
+    param_qdd_m = qdd_m(0);	// xdd_m
   }
 
   void update()
