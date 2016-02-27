@@ -1571,7 +1571,11 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::setInteger::R
 		x_r = affine2CartVec(x0_);
 		xd_r.setZero();
 
-		ARMAmodel_flexi_[tactileSensorSelected_]->setUseFixedWeights(false);
+		//ARMAmodel_flexi_[tactileSensorSelected_]->setUseFixedWeights(false);
+		for(int i=0; i<numTactileSensors_;i++)
+		{
+			ARMAmodel_flexi_[i]->setUseFixedWeights(false);
+		}
 		calibrateSensors = true;
 
 		// Capture data
