@@ -362,7 +362,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		if(calibrateSensors)
 		{
 			// Generate x_r with xd_r ~ V
-			double rate = 0.5;
+			double rate = -0.5;
 
 			xd_r.topRows(3) = rate*tactile_data_(tactileSensorSelected_)*sensorDirections.col(tactileSensorSelected_);
 
@@ -372,7 +372,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			calibrationDistance_ += delta_x;
 
-			if(calibrationDistance_ > 0.2)
+			if(calibrationDistance_ > 0.10)
 			{
 				// Fix filter weights
 				ARMAmodel_flexi_[tactileSensorSelected_]->setUseFixedWeights(true);
@@ -445,7 +445,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //			sensor_3 : [0,1]
 
 
-			if(calibrateSensors)
+			if(calibrateSensors)	// TODO: check if tactileSensorSelected_ within range
 			{
 				task_ref(0) = delta_x; // + x_r ?
 
@@ -485,10 +485,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 												  tmp(2),				// output: xdd_m
 												  tactile_data_(i) );	// input:  force or voltage
 
-
-					X_m  .topRows(3) += tmp(0)*sensorDirections.col(tactileSensorSelected_);
-					Xd_m .topRows(3) += tmp(1)*sensorDirections.col(tactileSensorSelected_);
-					Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(tactileSensorSelected_);
+					X_m  .topRows(3) += tmp(0)*sensorDirections.col(i);
+					Xd_m .topRows(3) += tmp(1)*sensorDirections.col(i);
+					Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(i);
 				}
 				// Save weights
 				for(int i=0; i<numTactileSensors_;i++)
