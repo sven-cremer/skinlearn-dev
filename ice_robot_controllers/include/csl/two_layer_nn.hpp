@@ -79,7 +79,7 @@ public:
 	TwoLayerNeuralNetworkController()
 	{
 		updateWeights = true;
-		updateInnerWeights = false;
+		updateInnerWeights = true;
 
           changeNNstructure( 35 ,   // num_Inputs
                              7  ,   // num_Outputs
