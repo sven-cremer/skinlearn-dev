@@ -374,9 +374,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			if(calibrationDistance_ > 0.10)
 			{
+				calibrateSensors = false;
+				xd_r.setZero();
 				// Fix filter weights
 				ARMAmodel_flexi_[tactileSensorSelected_]->setUseFixedWeights(true);
-				calibrateSensors = false;
 			}
 		}
 
@@ -1558,6 +1559,11 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::setInteger::R
 
 		ARMAmodel_flexi_[tactileSensorSelected_]->setUseFixedWeights(false);
 		calibrateSensors = true;
+
+		// Capture data
+		experiment_ = PR2adaptNeuroControllerClass::B;
+		storage_index_ = 0;
+		recordData = true;
 	}
 
 	return true;
@@ -1697,6 +1703,8 @@ bool PR2adaptNeuroControllerClass::capture(	std_srvs::Empty::Request & req,
 //		pubExperimentDataA_.publish(experimentDataA_msg_[index]);
 //	}
 
+	// Capture data
+	experiment_ = PR2adaptNeuroControllerClass::B;
 	storage_index_ = 0;
 	recordData = true;
 
