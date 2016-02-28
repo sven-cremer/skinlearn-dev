@@ -362,14 +362,14 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		if(calibrateSensors)
 		{
 			// Generate x_r with xd_r ~ V
-			double rate = -0.5;
+			double rate = 0.5;
 
 			prev_x_r = x_r;
 
 			// Calibrate all sensors
 			for(int i=0; i<numTactileSensors_;i++)
 			{
-				xd_r.topRows(3) = rate*tactile_data_(i)*sensorDirections.col(i);
+				xd_r.topRows(3) = -rate*tactile_data_(i)*sensorDirections.col(i);
 				x_r .topRows(3) = x_r.topRows(3) + xd_r.topRows(3)*dt_;
 			}
 
@@ -381,7 +381,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			delta_x = (x_r - prev_x_r).norm();
 			calibrationDistance_ += delta_x;
 
-			if(calibrationDistance_ > 4.0)
+			if(calibrationDistance_ > maxCalibrationDistance_)
 			{
 				calibrateSensors = false;
 				xd_r.setZero();
@@ -469,8 +469,8 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				CartVec tmp;
 				for(int i=0; i<numTactileSensors_;i++)
 				{
-					// Project into sensor axis
-					tmp(4) = task_ref.topRows(3).dot( sensorDirections.col(i) );
+					// Project into sensor axis to get -delta_X
+					tmp(4) = -task_ref.topRows(3).dot( sensorDirections.col(i) );
 
 					ARMAmodel_flexi_[i]->updateDelT(outer_delT);
 
@@ -1911,6 +1911,8 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/loopRateFactor",    loopRateFactor,    3);
 
 	nh_.param("/calibrateSensors",  calibrateSensors,  false);
+	nh_.param("/max_calibration_distance", maxCalibrationDistance_,     1.0);
+
 	nh_.param("/forceTorqueOn",     forceTorqueOn,     false);
 	nh_.param("/accelerometerOn",   accelerometerOn,   false);
 	nh_.param("/useFlexiForce",     useFlexiForce,     false);

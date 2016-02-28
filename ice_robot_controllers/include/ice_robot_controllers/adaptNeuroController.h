@@ -350,6 +350,7 @@ private:
 	int tactile_dimensions_;
 	Eigen::MatrixXd sensorDirections;
 	double calibrationDistance_;
+	double maxCalibrationDistance_;
 
 	Eigen::MatrixXd weightsRLSmodelX ;
 	Eigen::MatrixXd weightsRLSmodelY ;
