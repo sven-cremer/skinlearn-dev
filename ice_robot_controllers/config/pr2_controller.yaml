@@ -61,16 +61,16 @@ b_filt: [0.0994, 0.0994]
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
 # i.e. an admittance model is used to generate x_i from f_h the force from the FT sensor
-externalRefTraj    : false
+externalRefTraj    : true
 
 # Human intent estimation
 useHumanIntent     : false
 intentEst_time     : 0.05
 intentEst_delT     : 0.1  # Propagation time
-intentEst_M        : 10.0  # M_i the mass of the intent admittance model
+intentEst_M        : 2.0  # M_i the mass of the intent admittance model
 
 # The params of the RLS estimator
-rls_lambda         : 0.75
+rls_lambda         : 0.98
 rls_sigma          : 0.001
 
 # IRL

@@ -369,8 +369,17 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			// Calibrate all sensors
 			for(int i=0; i<numTactileSensors_;i++)
 			{
-				xd_r.topRows(3) = -rate*tactile_data_(i)*sensorDirections.col(i);
-				x_r .topRows(3) = x_r.topRows(3) + xd_r.topRows(3)*dt_;
+				if(externalRefTraj)	// Use a fixed x_r
+				{
+					if(tactile_data_(i)>0)
+						xdd_r.topRows(3) = -(1/intentEst_M)*sensorDirections.col(i);
+				}
+				else	// Make voltage proportional to user input
+				{
+					xdd_r.topRows(3) = -(1/intentEst_M)*tactile_data_(i)*sensorDirections.col(i);
+				}
+				xd_r .topRows(3) += xdd_r.topRows(3)*dt_;
+				x_r  .topRows(3) +=  xd_r.topRows(3)*dt_;
 			}
 
 			// Single sensor calibration
@@ -385,6 +394,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			{
 				calibrateSensors = false;
 				xd_r.setZero();
+				xdd_r.setZero();
 				// Fix filter weights
 				for(int i=0; i<numTactileSensors_;i++)
 				{
@@ -1570,6 +1580,7 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::setInteger::R
 
 		x_r = affine2CartVec(x0_);
 		xd_r.setZero();
+		xdd_r.setZero();
 
 		//ARMAmodel_flexi_[tactileSensorSelected_]->setUseFixedWeights(false);
 		for(int i=0; i<numTactileSensors_;i++)
@@ -2823,7 +2834,8 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	task_ref             = Eigen::VectorXd::Zero( num_Outputs ) ;
 	x_r                  = Eigen::VectorXd::Zero( num_Outputs ) ;
 	xd_r                 = Eigen::VectorXd::Zero( num_Outputs ) ;
-	prev_x_r            = Eigen::VectorXd::Zero( num_Outputs ) ;
+	xdd_r                = Eigen::VectorXd::Zero( num_Outputs ) ;
+	prev_x_r             = Eigen::VectorXd::Zero( num_Outputs ) ;
 	delta_x				 = 0;
 	task_refModel_output = Eigen::VectorXd::Zero( num_Outputs ) ;
 	tau                  = Eigen::VectorXd::Zero( num_Outputs ) ;

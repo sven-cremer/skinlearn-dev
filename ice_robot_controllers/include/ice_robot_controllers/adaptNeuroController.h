@@ -381,6 +381,7 @@ private:
 	Eigen::VectorXd task_ref;
 	Eigen::VectorXd x_r;
 	Eigen::VectorXd xd_r;
+	Eigen::VectorXd xdd_r;
 	Eigen::VectorXd prev_x_r;
 	double delta_x;
 	Eigen::VectorXd task_refModel_output;
