@@ -100,18 +100,25 @@ class RlsModel
 
 	  Uk_plus.block<4-1, 1>(5,0) = Uk.block<4-1, 1>(4,0);
 	  Uk_plus.block<1,1>(4,0) = u_in.transpose();
-/*
+
+	  std::cout<<"Uk_plus (old code):\n"<<Uk_plus<<"\n---\n";
+	  Uk_plus.setZero();
 	// Update x_m
     Uk_plus.block(1,0,num_x_Fir-1,num_Dim) = Uk.block(0,0,num_x_Fir-1,num_Dim);	// Move down rows (overwrites last entry)
     Uk_plus.block(0,0,1,num_Dim) = - y_prev.transpose();						// Update first entry with new value(s)
 
     // Update f_i for each sensor i
+    int j=0;
     for(int i=num_x_Fir; i<num_x_Fir+num_Sen*num_f_Fir; i += num_f_Fir)
     {
 		Uk_plus.block(i+1,0,num_f_Fir-1,num_Dim) = Uk.block(i,0,num_f_Fir-1,num_Dim);	// Move down rows
-		Uk_plus.block(i,0,1,num_Dim) = u_in.col(i).transpose();							// Update first entry
+		Uk_plus.block(i,0,1,num_Dim) = u_in.col(j).transpose();							// Update first entry
+		j++;
     }
-*/
+
+	  std::cout<<"Uk_plus (new code):\n"<<Uk_plus<<"\n---\n";
+	  std::cout<<"\n======\n";
+
     Uk = Uk_plus;
   }
 

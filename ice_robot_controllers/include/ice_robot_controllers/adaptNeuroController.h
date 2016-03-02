@@ -344,13 +344,14 @@ private:
 	Eigen::MatrixXd outerLoopWk_flexi_2 ;
 	Eigen::MatrixXd outerLoopWk_flexi_3 ;
 
-	std::vector<csl::outer_loop::RlsModel*>   ARMAmodel_flexi_;
+	std::vector<csl::outer_loop::RlsModel*> ARMAmodel_flexi_;
 	Eigen::MatrixXd filterWeights_flexi_;
 	Eigen::VectorXd tactile_data_;
 	int tactile_dimensions_;
 	Eigen::MatrixXd sensorDirections;
 	double calibrationDistance_;
 	double maxCalibrationDistance_;
+	csl::outer_loop::RlsModel* ARMAmodel_flexi_combined_;
 
 	Eigen::MatrixXd weightsRLSmodelX ;
 	Eigen::MatrixXd weightsRLSmodelY ;

@@ -2923,6 +2923,13 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 		ARMAmodel_flexi_.push_back(tmpPtr);
 	}
 
+	// One ARMA model for all the sensors
+	ARMAmodel_flexi_combined_ = new csl::outer_loop::RlsModel(1, 4, 4, 4);
+	ARMAmodel_flexi_combined_->updateDelT( outerLoopTime );
+	ARMAmodel_flexi_combined_->updateAB( task_mA, task_mB );
+	ARMAmodel_flexi_combined_->initRls( rls_lambda, rls_sigma );
+	ARMAmodel_flexi_combined_->setUseFixedWeights(true);
+
 	// CT RLS
 	outerLoopCTRLSmodelX.updateDelT( outerLoopTime );
 	outerLoopCTRLSmodelX.updateAB( task_mA,
