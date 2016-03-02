@@ -2914,7 +2914,7 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	filterWeights_flexi_.setZero();
 	for(int i=0;i<numTactileSensors_;i++)
 	{
-		csl::outer_loop::RlsModel* tmpPtr = new csl::outer_loop::RlsModel();
+		csl::outer_loop::RlsModel* tmpPtr = new csl::outer_loop::RlsModel(1, 4, 4, 1);
 		tmpPtr->updateDelT( outerLoopTime );
 		tmpPtr->updateAB( task_mA, task_mB );
 		tmpPtr->initRls( rls_lambda, rls_sigma );

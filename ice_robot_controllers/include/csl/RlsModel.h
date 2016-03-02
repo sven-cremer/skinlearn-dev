@@ -124,7 +124,17 @@ public:
     a_task = 0.5 ;
     b_task = 0.5 ;
 
-    init( 1, 4, 4, 1 );	// TODO make parameters
+    init( 1, 4, 4, 1 );
+  }
+  RlsModel(int para_num_Dim, int para_num_x_Fir, int para_num_f_Fir, int para_num_Sen)
+  {
+    delT = 0.001; /// 1000 Hz by default
+    iter = 1;
+
+    a_task = 0.5 ;
+    b_task = 0.5 ;
+
+    init( para_num_Dim, para_num_x_Fir, para_num_f_Fir, para_num_Sen );
   }
   ~RlsModel()
   {
@@ -417,7 +427,7 @@ public:
     // Return results
     param_q_m   = q_m (0);		// x_m
     param_qd_m  = qd_m(0);		// xd_m
-    param_qdd_m = qdd_m(0);	// xdd_m
+    param_qdd_m = qdd_m(0);		// xdd_m
   }
 
   void update()
