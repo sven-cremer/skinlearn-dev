@@ -262,8 +262,6 @@ int main(int argc, char** argv)
 				  tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
 				  char cmd[100];
 				  puts("*** Enter name of new rosbag file ***");
-				  cin.clear();
-				  cin.sync();
 				  cin.getline(cmd,100);
 				  tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
 
@@ -291,8 +289,6 @@ int main(int argc, char** argv)
 			  tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
 			  char cmd[100];
 			  puts("*** Enter name of rosbag file ***");
-			  cin.clear();
-			  cin.sync();
 			  cin.getline(cmd,100);
 			  tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
 
@@ -390,12 +386,10 @@ int main(int argc, char** argv)
 					 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
 					 char cmd[100];
 					 puts("*** Enter name of new data file ***");
-					 cin.clear();
-					 cin.sync();
-					 cin.getline(cmd,100);					   // FIXME doesn't work first time after calling cin >>
+					 cin.getline(cmd,100);
 					 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
 
-					 dataFile = string(cmd);					// TODO: add package path
+					 dataFile = string(cmd);				   // TODO: add package path
 				 }
 				 break;
 				 case 'r':
@@ -404,8 +398,11 @@ int main(int argc, char** argv)
 					 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
 					 char cmd[100];
 					 puts("*** Enter number of trials ***");
-					 cin >> numTrials;							// TODO: check user input
+					 cin.getline(cmd,100);
 					 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
+
+					 std::stringstream  linestream(cmd);
+					 linestream >> numTrials;				   // TODO: check user input
 				 }
 				 break;
 				 case 's':
