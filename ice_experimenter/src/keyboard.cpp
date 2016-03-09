@@ -345,30 +345,31 @@ int main(int argc, char** argv)
       /******************************** calibration ****************************************/
       case 'c':
       {
-
     	  bool calibrationRunning = false;
-          bool stop_menu2 = false;
-           string fname;
 
-           int activeSensor = 3;
-           string dataFile = "default";
-           string dataDir = "~/test_rtp";		// TODO get package path
-           string topic = "rostopic echo -p /pr2_adaptNeuroController/experimentDataB";
+    	  int activeSensor = 3;
+    	  string dataFile = "default";
+    	  string dataDir = "~/test_rtp";		// TODO get package path
+    	  string topic = "/pr2_adaptNeuroController/experimentDataB";
 
-           int curTrial = 0;
-           int numTrials = 0;
+    	  int curTrial = 0;
+    	  int numTrials = 4;
 
+           bool stop_menu2 = false;
            while(!stop_menu2)
            {
 
         	 displayCalibrationExperimentMenu(activeSensor, dataFile, curTrial, numTrials, calibrationRunning);
 
              // get the next event from the keyboard
-             if(read(kfd, &c, 1) < 0)
-             {
-               perror("read():");
-               exit(-1);
-             }
+        	 if(!calibrationRunning)
+        	 {
+				 if(read(kfd, &c, 1) < 0)
+				 {
+				   perror("read():");
+				   exit(-1);
+				 }
+        	 }
 
              switch(c)
              {
@@ -378,6 +379,8 @@ int main(int argc, char** argv)
             	 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
             	 char cmd[100];
             	 puts("*** Enter name of new data file ***");
+            	 cin.clear();
+            	 cin.sync();
             	 cin.getline(cmd,100);
             	 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
 
@@ -396,6 +399,7 @@ int main(int argc, char** argv)
              case 's':
              {
             	 calibrationRunning = true;
+            	 cout<<"Starting calibration!\n";
              }
              break;
              case 'q':
@@ -409,6 +413,7 @@ int main(int argc, char** argv)
              // Run calibration
              if(calibrationRunning)
              {
+            	 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
             	 curTrial++;
 
             	 // Start calibration
@@ -416,41 +421,51 @@ int main(int argc, char** argv)
             	 setValue_msg.request.value = 0.2;
             	 if (!setTactileCalibration_srv_.call(setValue_msg))
             	 {
-            		 ROS_ERROR("Failed to call service!");
-            		 break;
+            		 ROS_ERROR("Failed to call tactile calibration service!");
             	 }
+            	 ROS_INFO("Started calibration with sensor %i",activeSensor);
 
             	 // Save rtp file
             	 std::ostringstream convert;
             	 convert << curTrial;
-            	 std::string cmd1 = topic.c_str() + string(" > ") + dataDir.c_str() + string("/") + dataFile.c_str() + string("_") + convert.str() + string(".rtp");
+            	 std::string cmd1 = string("rostopic echo -p ") + topic.c_str() + string(" > ") + dataDir.c_str() + string("/") + dataFile.c_str() + string("_") + convert.str() + string(".rtp &");
+            	 cout<<"Executing "<<cmd1.c_str()<<"\n";
             	 system( cmd1.c_str() );
 
             	 // Check status
             	 ice_msgs::setBool bool_msgs;
-            	 while(!status_srv_.call(bool_msgs))
+            	 bool_msgs.response.success = true;	// False when calibration is not longer runnign
+            	 while(bool_msgs.response.success)
             	 {
+            		 if(!status_srv_.call(bool_msgs))
+                	 {
+                		 ROS_ERROR("Failed to call status service!");
+                	 }
             		 sleep(0.5);
             	 }
+            	 ROS_INFO("Completed calibration step ... publishing data");
 
             	 // Publish data
             	 std_srvs::Empty empty_msgs;
             	 if (!publishExpData_srv_.call(empty_msgs))
             	 {
-            		 ROS_ERROR("Failed to call service!");
+            		 ROS_ERROR("Failed to call publishing data service!");
             	 }
 
             	 sleep(1.5);
 
             	 // Stop saving rtp file
             	 std::string cmd2 = string("pkill -9 -f ") + topic.c_str();
+            	 cout<<"Executing "<<cmd2.c_str()<<"\n";
             	 system( cmd2.c_str() );
 
             	 if(curTrial >= numTrials)
             	 {
             		 calibrationRunning = false;
             		 curTrial = 0;
+                	 cout<<"Completed calibration!\n";
             	 }
+            	 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
              }
 
            } // end while
