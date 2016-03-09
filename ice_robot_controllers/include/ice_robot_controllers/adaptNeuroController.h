@@ -500,6 +500,10 @@ private:
 	ros::ServiceServer setRefTraj_srv_;
 	ros::ServiceServer toggleFixedWeights_srv_;
 
+	ros::ServiceServer status_srv_;
+	bool statusCB( ice_msgs::setBool::Request & req,
+				   ice_msgs::setBool::Response& resp );
+
 	ros::ServiceServer tactileCalibration_srv_;
 
 	bool tactileCalibrationCB(	ice_msgs::setValue::Request & req,

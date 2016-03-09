@@ -80,6 +80,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 		sub_tactileData_   = nh_.subscribe<ice_msgs::tactileArrayData>("/tactile/data", 1, &PR2adaptNeuroControllerClass::readTactileDataCB, this);
 	}
 	tactileCalibration_srv_ = nh_.advertiseService("/tactile/calibration" , &PR2adaptNeuroControllerClass::tactileCalibrationCB   , this);
+	status_srv_ = nh_.advertiseService("/tactile/status" , &PR2adaptNeuroControllerClass::statusCB   , this);
 
 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
@@ -1552,6 +1553,15 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 		if(	experiment_ == PR2adaptNeuroControllerClass::B)
 			pubExperimentDataB_.publish(experimentDataB_msg_[index]);
 	}
+
+	return true;
+}
+
+/// Service to check status
+bool PR2adaptNeuroControllerClass::statusCB( ice_msgs::setBool::Request & req,
+											 ice_msgs::setBool::Response& resp )
+{
+	resp.success = calibrateSensors;
 
 	return true;
 }
