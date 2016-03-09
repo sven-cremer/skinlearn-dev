@@ -25,6 +25,7 @@
 #include <ice_msgs/getState.h>
 #include <ice_msgs/twoLayerNN.h>
 #include <ice_msgs/setValue.h>
+#include <std_srvs/Empty.h>
 
 
 using namespace std;
@@ -67,7 +68,7 @@ void displayNNweightsMenu()
 	puts(" ");
 }
 
-void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int curTrial, int numTrials)
+void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int curTrial, int numTrials, bool runningCalibration)
 {
 	// NN status
 	string tmp1 = "Status: " + (string)(controller_active ?  "ON" : "OFF");
@@ -95,11 +96,15 @@ void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int cur
 	puts("         2          ");
 	puts("        +x          ");
 	puts("---------------------------");
-	puts("Use 'c' to enter number of calibration runs");
-	puts("Use 'd' to change datafile name");
-	puts("");
-	puts("Use 'q' to quit and return to main menu");
-	puts(" ");
+	if(!runningCalibration)
+	{
+		puts("Use 'c' to enter number of calibration runs");
+		puts("Use 'd' to change datafile name");
+		puts("Use 's' to start calibration");
+		puts("");
+		puts("Use 'q' to quit and return to main menu");
+		puts(" ");
+	}
 }
 
 //void displayRefTrajMenu()
@@ -148,6 +153,8 @@ int main(int argc, char** argv)
   ros::ServiceClient setNNWeights_srv_ = nh.serviceClient<ice_msgs::setNNweights>("/pr2_adaptNeuroController/setNNweights");
   ros::ServiceClient getNNWeights_srv_ = nh.serviceClient<ice_msgs::getNNweights>("/pr2_adaptNeuroController/getNNweights");
   ros::ServiceClient setTactileCalibration_srv_ = nh.serviceClient<ice_msgs::setValue>("/tactile/calibration");
+  ros::ServiceClient publishExpData_srv_ = nh.serviceClient<std_srvs::Empty>("/pr2_adaptNeuroController/publishExpData");
+  ros::ServiceClient status_srv_ = nh.serviceClient<ice_msgs::setBool>("/tactile/status");
 
   // ROS messages
   ice_msgs::setBool setBool_msgs_;
@@ -344,6 +351,7 @@ int main(int argc, char** argv)
 
            int activeSensor = 3;
            string dataFile = "default";
+           string dataDir = "~/test_rtp/";		// TODO get package path
 
            int curTrial = 0;
            int numTrials = 0;
@@ -351,7 +359,7 @@ int main(int argc, char** argv)
            while(!stop_menu2)
            {
 
-        	 displayCalibrationExperimentMenu(activeSensor, dataFile, curTrial, numTrials);
+        	 displayCalibrationExperimentMenu(activeSensor, dataFile, curTrial, numTrials, calibrationRunning);
 
              // get the next event from the keyboard
              if(read(kfd, &c, 1) < 0)
@@ -387,18 +395,27 @@ int main(int argc, char** argv)
              case 's':
              {
             	 // Run calibration
-    			  ice_msgs::setValue setValue_msg_;
-    			  setValue_msg_.request.value = 0.2;
-    			  if (!setTactileCalibration_srv_.call(setValue_msg_))
+    			  ice_msgs::setValue setValue_msg;
+    			  setValue_msg.request.value = 0.2;
+    			  if (!setTactileCalibration_srv_.call(setValue_msg))
     			  {
     				  ROS_ERROR("Failed to call service!");
     			  }
 
     			  // Check status
 
-    			  // Save topic
+    			  // Save rtp file
+    			  std::ostringstream convert;
+    			  convert << curTrial;
+    			  std::string fileName = string("rostopic echo -p /pr2_adaptNeuroController/experimentDataB > ") + dataDir.c_str() + dataFile.c_str() + string("_")+  convert.str() + string(".rtp");
+    			  system( fileName.c_str() );
 
-    			  // etc.
+    			  // Publish data
+    			  ice_msgs::setBool bool_msgs;
+    			  if (!status_srv_.call(bool_msgs))
+    			  {
+    				  ROS_ERROR("Failed to call service!");
+    			  }
              }
              break;
              case 'q':
