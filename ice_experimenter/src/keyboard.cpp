@@ -72,19 +72,27 @@ void displayNNweightsMenu()
 void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int curTrial, int numTrials, bool runningCalibration)
 {
 	// NN status
-	string tmp1 = "Status: " + (string)(controller_active ?  "ON" : "OFF");
-	string tmp2 = "Updating: " + (string)(controller_active ?  "YES" : "NO");
-	puts("---------------------------");
-	puts("   ice_controller     ");
-	puts(tmp1.c_str());
-	puts(tmp1.c_str());
+//	string tmp1 = "Status: " + (string)(controller_active ?  "ON" : "OFF");
+//	string tmp2 = "Updating: " + (string)(controller_active ?  "YES" : "NO");
+//	puts("---------------------------");
+//	puts("   ice_controller     ");
+//	puts(tmp1.c_str());
+//	puts(tmp1.c_str());
 
 	// Sensors
 	puts("---------------------------");
 	puts("MENU:   Calibration Experiment");
 	printf("Active sensor: %i \n", activeSensor);
-	printf("Data file: %s + _%i.rtp \n", dataFile.c_str(),curTrial);
-	printf("Run %i out of %i \n", curTrial, numTrials);
+	if(!runningCalibration)
+	{
+		printf("Data file: %s + _#.rtp \n", dataFile.c_str());
+		printf("Number of trials: %i \n", numTrials);
+	}
+	else
+	{
+		printf("Data file: %s + _%i.rtp \n", dataFile.c_str(),curTrial+1);
+		printf("Running %i out of %i \n", curTrial+1, numTrials);
+	}
 	puts("---------------------------");
 	puts("Tactile box layout");
 	puts("         |          ");
@@ -99,7 +107,7 @@ void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int cur
 	puts("---------------------------");
 	if(!runningCalibration)
 	{
-		puts("Use 'c' to enter number of calibration runs");
+		puts("Use 'r' to enter number of calibration runs");
 		puts("Use 'd' to change datafile name");
 		puts("Use 's' to start calibration");
 		puts("");
@@ -254,6 +262,8 @@ int main(int argc, char** argv)
 				  tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
 				  char cmd[100];
 				  puts("*** Enter name of new rosbag file ***");
+				  cin.clear();
+				  cin.sync();
 				  cin.getline(cmd,100);
 				  tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
 
@@ -281,6 +291,8 @@ int main(int argc, char** argv)
 			  tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
 			  char cmd[100];
 			  puts("*** Enter name of rosbag file ***");
+			  cin.clear();
+			  cin.sync();
 			  cin.getline(cmd,100);
 			  tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
 
@@ -361,7 +373,7 @@ int main(int argc, char** argv)
 
         	 displayCalibrationExperimentMenu(activeSensor, dataFile, curTrial, numTrials, calibrationRunning);
 
-             // get the next event from the keyboard
+             // Get the next event from the keyboard
         	 if(!calibrationRunning)
         	 {
 				 if(read(kfd, &c, 1) < 0)
@@ -369,49 +381,49 @@ int main(int argc, char** argv)
 				   perror("read():");
 				   exit(-1);
 				 }
+
+				 switch(c)
+				 {
+				 case 'd':
+				 {
+					 // Ask for file name
+					 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
+					 char cmd[100];
+					 puts("*** Enter name of new data file ***");
+					 cin.clear();
+					 cin.sync();
+					 cin.getline(cmd,100);					   // FIXME doesn't work first time after calling cin >>
+					 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
+
+					 dataFile = string(cmd);					// TODO: add package path
+				 }
+				 break;
+				 case 'r':
+				 {
+					 // Ask for number of trials
+					 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
+					 char cmd[100];
+					 puts("*** Enter number of trials ***");
+					 cin >> numTrials;							// TODO: check user input
+					 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
+				 }
+				 break;
+				 case 's':
+				 {
+					 calibrationRunning = true;
+					 cout<<"Starting calibration!\n";
+				 }
+				 break;
+				 case 'q':
+					 stop_menu2 = true;
+					 break;
+				 default:
+					 ROS_INFO_STREAM("Keycode not found: " << c);
+					 break;
+				 } //end switch
+
         	 }
-
-             switch(c)
-             {
-             case 'd':
-             {
-            	 // Ask for file name
-            	 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
-            	 char cmd[100];
-            	 puts("*** Enter name of new data file ***");
-            	 cin.clear();
-            	 cin.sync();
-            	 cin.getline(cmd,100);
-            	 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
-
-            	 dataFile = string(cmd);					// TODO: add package path
-             }
-             break;
-             case 'c':
-             {
-            	 // Ask for number of trials
-            	 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
-            	 puts("*** Enter number of trials ***");
-            	 cin >> numTrials;							// TODO: check user input
-            	 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
-             }
-             break;
-             case 's':
-             {
-            	 calibrationRunning = true;
-            	 cout<<"Starting calibration!\n";
-             }
-             break;
-             case 'q':
-            	 stop_menu2 = true;
-            	 break;
-             default:
-            	 ROS_INFO_STREAM("Keycode not found: " << c);
-            	 break;
-             } //end switch
-
-             // Run calibration
-             if(calibrationRunning)
+        	 else	// Run calibration
              {
             	 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
             	 curTrial++;
@@ -423,16 +435,17 @@ int main(int argc, char** argv)
             	 {
             		 ROS_ERROR("Failed to call tactile calibration service!");
             	 }
-            	 ROS_INFO("Started calibration with sensor %i",activeSensor);
+            	 cout<<"Started calibration with sensor "<<activeSensor<<"\n";
 
             	 // Save rtp file
             	 std::ostringstream convert;
             	 convert << curTrial;
             	 std::string cmd1 = string("rostopic echo -p ") + topic.c_str() + string(" > ") + dataDir.c_str() + string("/") + dataFile.c_str() + string("_") + convert.str() + string(".rtp &");
-            	 cout<<"Executing "<<cmd1.c_str()<<"\n";
+            	 cout<<"$ "<<cmd1.c_str()<<"\n";
             	 system( cmd1.c_str() );
 
             	 // Check status
+            	 cout<<"Waiting for calibration run to complete ... ";
             	 ice_msgs::setBool bool_msgs;
             	 bool_msgs.response.success = true;	// False when calibration is not longer runnign
             	 while(bool_msgs.response.success)
@@ -443,22 +456,25 @@ int main(int argc, char** argv)
                 	 }
             		 sleep(0.5);
             	 }
-            	 ROS_INFO("Completed calibration step ... publishing data");
+            	 cout<<" done!\n";
 
             	 // Publish data
+            	 cout<<"Publishing data ...";
             	 std_srvs::Empty empty_msgs;
             	 if (!publishExpData_srv_.call(empty_msgs))
             	 {
             		 ROS_ERROR("Failed to call publishing data service!");
             	 }
-
             	 sleep(1.5);
+            	 cout<<" done!\n";
 
             	 // Stop saving rtp file
             	 std::string cmd2 = string("pkill -9 -f ") + topic.c_str();
-            	 cout<<"Executing "<<cmd2.c_str()<<"\n";
+            	 cout<<"$ "<<cmd2.c_str()<<"\n";
+
             	 system( cmd2.c_str() );
 
+            	 // Check if done
             	 if(curTrial >= numTrials)
             	 {
             		 calibrationRunning = false;
