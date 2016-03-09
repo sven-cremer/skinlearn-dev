@@ -502,8 +502,8 @@ private:
 
 	ros::ServiceServer tactileCalibration_srv_;
 
-	bool tactileCalibrationCB(	ice_msgs::setInteger::Request & req,
-						    	ice_msgs::setInteger::Response& resp );
+	bool tactileCalibrationCB(	ice_msgs::setValue::Request & req,
+						    	ice_msgs::setValue::Response& resp );
 	int tactileSensorSelected_;
 	int numTactileSensors_;
 

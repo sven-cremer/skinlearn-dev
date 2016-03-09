@@ -24,6 +24,7 @@
 #include <ice_msgs/setNNweights.h>
 #include <ice_msgs/getState.h>
 #include <ice_msgs/twoLayerNN.h>
+#include <ice_msgs/setValue.h>
 
 
 using namespace std;
@@ -43,6 +44,7 @@ void displayMainMenu()
 	puts("Use 'i' to initialize robot");
 	puts("Use 'w' to open NN weights menu");
 	puts("Use 'r' to open reference trajectory menu");
+	puts("Use 'c' to open calibration experiment menu");
 	puts(" ");
 	puts("Use '-' to set variables");
 	puts(" ");
@@ -61,6 +63,41 @@ void displayNNweightsMenu()
 	puts("Use 's' to save NN weights.");
 	puts("Use 'l' to load NN weights.");
 	puts(" ");
+	puts("Use 'q' to quit and return to main menu");
+	puts(" ");
+}
+
+void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int curTrial, int numTrials)
+{
+	// NN status
+	string tmp1 = "Status: " + (string)(controller_active ?  "ON" : "OFF");
+	string tmp2 = "Updating: " + (string)(controller_active ?  "YES" : "NO");
+	puts("---------------------------");
+	puts("   ice_controller     ");
+	puts(tmp1.c_str());
+	puts(tmp1.c_str());
+
+	// Sensors
+	puts("---------------------------");
+	puts("MENU:   Calibration Experiment");
+	printf("Active sensor: %i \n", activeSensor);
+	printf("Data file: %s + _%i.rtp \n", dataFile.c_str(),curTrial);
+	printf("Run %i out of %i \n", curTrial, numTrials);
+	puts("---------------------------");
+	puts("Tactile box layout");
+	puts("         |          ");
+	puts("  |------|------|   ");
+	puts("  |             |   ");
+	puts("  |      0      |   ");
+	puts("                    ");
+	puts("  1  >   ^   >  3 +y");
+	puts("                    ");
+	puts("         2          ");
+	puts("        +x          ");
+	puts("---------------------------");
+	puts("Use 'c' to enter number of calibration runs");
+	puts("Use 'd' to change datafile name");
+	puts("");
 	puts("Use 'q' to quit and return to main menu");
 	puts(" ");
 }
@@ -110,6 +147,7 @@ int main(int argc, char** argv)
   ros::ServiceClient toggle_updateWeights_srv_ = nh.serviceClient<ice_msgs::setBool>("/pr2_adaptNeuroController/updateNNweights");
   ros::ServiceClient setNNWeights_srv_ = nh.serviceClient<ice_msgs::setNNweights>("/pr2_adaptNeuroController/setNNweights");
   ros::ServiceClient getNNWeights_srv_ = nh.serviceClient<ice_msgs::getNNweights>("/pr2_adaptNeuroController/getNNweights");
+  ros::ServiceClient setTactileCalibration_srv_ = nh.serviceClient<ice_msgs::setValue>("/tactile/calibration");
 
   // ROS messages
   ice_msgs::setBool setBool_msgs_;
@@ -295,6 +333,83 @@ int main(int argc, char** argv)
       case 'r':
       {
     	  break;
+      }
+      /******************************** calibration ****************************************/
+      case 'c':
+      {
+
+    	  bool calibrationRunning = false;
+          bool stop_menu2 = false;
+           string fname;
+
+           int activeSensor = 3;
+           string dataFile = "default";
+
+           int curTrial = 0;
+           int numTrials = 0;
+
+           while(!stop_menu2)
+           {
+
+        	 displayCalibrationExperimentMenu(activeSensor, dataFile, curTrial, numTrials);
+
+             // get the next event from the keyboard
+             if(read(kfd, &c, 1) < 0)
+             {
+               perror("read():");
+               exit(-1);
+             }
+
+             switch(c)
+             {
+             case 'd':
+             {
+            	 // Ask for file name
+            	 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
+            	 char cmd[100];
+            	 puts("*** Enter name of new data file ***");
+            	 cin.getline(cmd,100);
+            	 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
+
+            	 dataFile = string(cmd);					// TODO: add package path
+             }
+             break;
+             case 'c':
+             {
+            	 // Ask for number of trials
+            	 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
+            	 char cmd[100];
+            	 puts("*** Enter number of trials ***");
+            	 cin >> numTrials;							// TODO: check user input
+            	 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
+             }
+             break;
+             case 's':
+             {
+            	 // Run calibration
+    			  ice_msgs::setValue setValue_msg_;
+    			  setValue_msg_.request.value = 0.2;
+    			  if (!setTactileCalibration_srv_.call(setValue_msg_))
+    			  {
+    				  ROS_ERROR("Failed to call service!");
+    			  }
+
+    			  // Check status
+
+    			  // Save topic
+
+    			  // etc.
+             }
+             break;
+             case 'q':
+            	 stop_menu2 = true;
+            	 break;
+             default:
+            	 ROS_INFO_STREAM("Keycode not found: " << c);
+            	 break;
+             } //end switch
+           } // end while
+           break;
       }
       /******************************** QUIT ****************************************/
       case 'q':

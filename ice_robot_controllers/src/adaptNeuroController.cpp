@@ -362,8 +362,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		if(calibrateSensors)
 		{
 			// Generate x_r with xd_r ~ V
-			double rate = 0.5;
-
 			prev_x_r = x_r;
 
 			// Calibrate all sensors
@@ -383,6 +381,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 
 			// Single sensor calibration
+//			double rate = 0.5;
 //			xd_r.topRows(3) = rate*tactile_data_(tactileSensorSelected_)*sensorDirections.col(tactileSensorSelected_);
 //			x_r.topRows(3) = x_r.topRows(3) + xd_r.topRows(3)*dt_;
 //			delta_x = ( xd_r.topRows(3)*dt_ ).norm();
@@ -401,6 +400,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 					ARMAmodel_flexi_[i]->setUseFixedWeights(true);
 				}
 				//ARMAmodel_flexi_[tactileSensorSelected_]->setUseFixedWeights(true);
+				recordData = false;
 			}
 		}
 
@@ -1557,21 +1557,24 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 }
 
 /// Service call to select sensor for Cailbration
-bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::setInteger::Request & req,
-															ice_msgs::setInteger::Response& resp )
+bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::setValue::Request & req,
+															ice_msgs::setValue::Response& resp )
 {
 
-	if(req.value < 0)	// Stop calibration
+	if(req.value <= 0)	// Stop calibration
 	{
 		tactileSensorSelected_ = -1;
 		calibrateSensors = false;
+
+		//resp.success = true;
 		return true;
 	}
 
-	// Start calibration
-	if(req.value < numTactileSensors_)
+	// Start calibration of all sensors
+	if(req.value > 0)
 	{
-		tactileSensorSelected_ = req.value;
+		//tactileSensorSelected_ = req.value;
+		maxCalibrationDistance_ = req.value;
 		calibrationDistance_ = 0.0;
 
 		X_m = affine2CartVec(x0_);
@@ -1595,6 +1598,7 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::setInteger::R
 		recordData = true;
 	}
 
+	//resp.success = true;
 	return true;
 }
 
