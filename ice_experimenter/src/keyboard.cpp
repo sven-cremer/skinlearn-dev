@@ -6,6 +6,7 @@
  */
 
 
+//#include <boost/date_time.hpp>
 #include <boost/thread.hpp>
 #include <boost/foreach.hpp>
 #define foreach BOOST_FOREACH
@@ -351,7 +352,8 @@ int main(int argc, char** argv)
 
            int activeSensor = 3;
            string dataFile = "default";
-           string dataDir = "~/test_rtp/";		// TODO get package path
+           string dataDir = "~/test_rtp";		// TODO get package path
+           string topic = "rostopic echo -p /pr2_adaptNeuroController/experimentDataB";
 
            int curTrial = 0;
            int numTrials = 0;
@@ -386,7 +388,6 @@ int main(int argc, char** argv)
              {
             	 // Ask for number of trials
             	 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
-            	 char cmd[100];
             	 puts("*** Enter number of trials ***");
             	 cin >> numTrials;							// TODO: check user input
             	 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
@@ -394,28 +395,7 @@ int main(int argc, char** argv)
              break;
              case 's':
              {
-            	 // Run calibration
-    			  ice_msgs::setValue setValue_msg;
-    			  setValue_msg.request.value = 0.2;
-    			  if (!setTactileCalibration_srv_.call(setValue_msg))
-    			  {
-    				  ROS_ERROR("Failed to call service!");
-    			  }
-
-    			  // Check status
-
-    			  // Save rtp file
-    			  std::ostringstream convert;
-    			  convert << curTrial;
-    			  std::string fileName = string("rostopic echo -p /pr2_adaptNeuroController/experimentDataB > ") + dataDir.c_str() + dataFile.c_str() + string("_")+  convert.str() + string(".rtp");
-    			  system( fileName.c_str() );
-
-    			  // Publish data
-    			  ice_msgs::setBool bool_msgs;
-    			  if (!status_srv_.call(bool_msgs))
-    			  {
-    				  ROS_ERROR("Failed to call service!");
-    			  }
+            	 calibrationRunning = true;
              }
              break;
              case 'q':
@@ -425,6 +405,54 @@ int main(int argc, char** argv)
             	 ROS_INFO_STREAM("Keycode not found: " << c);
             	 break;
              } //end switch
+
+             // Run calibration
+             if(calibrationRunning)
+             {
+            	 curTrial++;
+
+            	 // Start calibration
+            	 ice_msgs::setValue setValue_msg;
+            	 setValue_msg.request.value = 0.2;
+            	 if (!setTactileCalibration_srv_.call(setValue_msg))
+            	 {
+            		 ROS_ERROR("Failed to call service!");
+            		 break;
+            	 }
+
+            	 // Save rtp file
+            	 std::ostringstream convert;
+            	 convert << curTrial;
+            	 std::string cmd1 = topic.c_str() + string(" > ") + dataDir.c_str() + string("/") + dataFile.c_str() + string("_") + convert.str() + string(".rtp");
+            	 system( cmd1.c_str() );
+
+            	 // Check status
+            	 ice_msgs::setBool bool_msgs;
+            	 while(!status_srv_.call(bool_msgs))
+            	 {
+            		 sleep(0.5);
+            	 }
+
+            	 // Publish data
+            	 std_srvs::Empty empty_msgs;
+            	 if (!publishExpData_srv_.call(empty_msgs))
+            	 {
+            		 ROS_ERROR("Failed to call service!");
+            	 }
+
+            	 sleep(1.5);
+
+            	 // Stop saving rtp file
+            	 std::string cmd2 = string("pkill -9 -f ") + topic.c_str();
+            	 system( cmd2.c_str() );
+
+            	 if(curTrial >= numTrials)
+            	 {
+            		 calibrationRunning = false;
+            		 curTrial = 0;
+            	 }
+             }
+
            } // end while
            break;
       }
