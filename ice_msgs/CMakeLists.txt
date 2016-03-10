@@ -11,12 +11,14 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(DIRECTORY msg FILES
   # ice_robot_controllers
   CartVec.msg
+  JointVec.msg
   neuroControllerState.msg
   controllerFullData.msg
   controllerParam.msg
   twoLayerNN.msg
   experimentDataA.msg
   experimentDataB.msg
+  experimentDataC.msg
   # pr2_cart
   combinedError.msg
   combinedTwistError.msg
