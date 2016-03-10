@@ -1,0 +1,7 @@
+geometry_msgs/Pose start
+float64 distance
+float64 time
+int8 activeSensor
+bool recordData
+---
+bool success
