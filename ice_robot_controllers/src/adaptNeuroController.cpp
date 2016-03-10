@@ -214,7 +214,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		// 1) Wait
 		while(!runComputations)
 		{
-			boost::this_thread::sleep(boost::posix_time::milliseconds(0.01));
+			boost::this_thread::sleep(boost::posix_time::milliseconds(0.005));
 		}
 
 		// 2) Do Computations
@@ -360,32 +360,36 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				intent_elapsed_ = robot_state_->getTime() ;
 //			}
 		}
-		if(calibrateSensors)
+		if(calibrateSensors && false)	// TODO make x_r step, task model is inside RlsModel
 		{
 			// Generate x_r with xd_r ~ V
 			prev_x_r = x_r;
 
 			// Calibrate all sensors
-			for(int i=0; i<numTactileSensors_;i++)
+			if(tactileSensorSelected_ >= numTactileSensors_)
 			{
-				if(externalRefTraj)	// Use a fixed x_r
+				for(int i=0; i<numTactileSensors_;i++)
 				{
-					if(tactile_data_(i)>0)
-						xdd_r.topRows(3) = -(1/intentEst_M)*sensorDirections.col(i);
+					if(externalRefTraj)	// Use a fixed x_r
+					{
+						if(tactile_data_(i)>0)
+							xdd_r.topRows(3) = -(1/intentEst_M)*sensorDirections.col(i);
+					}
+					else	// Make voltage proportional to user input
+					{
+						xdd_r.topRows(3) = -(1/intentEst_M)*tactile_data_(i)*sensorDirections.col(i);
+					}
+					xd_r .topRows(3) += xdd_r.topRows(3)*dt_;
+					x_r  .topRows(3) +=  xd_r.topRows(3)*dt_;
 				}
-				else	// Make voltage proportional to user input
-				{
-					xdd_r.topRows(3) = -(1/intentEst_M)*tactile_data_(i)*sensorDirections.col(i);
-				}
-				xd_r .topRows(3) += xdd_r.topRows(3)*dt_;
-				x_r  .topRows(3) +=  xd_r.topRows(3)*dt_;
 			}
-
-			// Single sensor calibration
-//			double rate = 0.5;
-//			xd_r.topRows(3) = rate*tactile_data_(tactileSensorSelected_)*sensorDirections.col(tactileSensorSelected_);
-//			x_r.topRows(3) = x_r.topRows(3) + xd_r.topRows(3)*dt_;
-//			delta_x = ( xd_r.topRows(3)*dt_ ).norm();
+			else // TODO Calibration single sensors
+			{
+//				double rate = 0.5;
+//				xd_r.topRows(3) = rate*tactile_data_(tactileSensorSelected_)*sensorDirections.col(tactileSensorSelected_);
+//				x_r.topRows(3) = x_r.topRows(3) + xd_r.topRows(3)*dt_;
+//				delta_x = ( xd_r.topRows(3)*dt_ ).norm();
+			}
 
 			delta_x = (x_r - prev_x_r).norm();
 			calibrationDistance_ += delta_x;
@@ -1567,45 +1571,65 @@ bool PR2adaptNeuroControllerClass::statusCB( ice_msgs::setBool::Request & req,
 }
 
 /// Service call to select sensor for Cailbration
-bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::setValue::Request & req,
-															ice_msgs::setValue::Response& resp )
+bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::tactileCalibration::Request & req,
+															ice_msgs::tactileCalibration::Response& resp )
 {
 
-	if(req.value <= 0)	// Stop calibration
+	if(req.activeSensor < 0)	// Stop calibration
 	{
-		tactileSensorSelected_ = -1;
 		calibrateSensors = false;
+		tactileSensorSelected_ = -1;
 
-		//resp.success = true;
+		for(int i=0; i<numTactileSensors_;i++)	// Fix weights
+		{
+			ARMAmodel_flexi_[i]->setUseFixedWeights(true);
+		}
+
+		resp.success = true;
 		return true;
 	}
-
-	// Start calibration of all sensors
-	if(req.value > 0)
+	else	// Start calibration
 	{
-		//tactileSensorSelected_ = req.value;
-		maxCalibrationDistance_ = req.value;
+		calibrateSensors = true;
+		tactileSensorSelected_ = req.activeSensor;
+
+		maxCalibrationDistance_ = req.distance;
 		calibrationDistance_ = 0.0;
 
-		X_m = affine2CartVec(x0_);
+		// Set start pose
+		CartVec start = affine2CartVec(x0_);	// Keep orientation
+		start(0) = req.start.position.x;
+		start(1) = req.start.position.y;
+		start(2) = req.start.position.z;
+
+		X_m = start;
 		Xd_m.setZero();
 		Xdd_m.setZero();
 
-		x_r = affine2CartVec(x0_);
+		x_r = start;
 		xd_r.setZero();
 		xdd_r.setZero();
 
-		//ARMAmodel_flexi_[tactileSensorSelected_]->setUseFixedWeights(false);
-		for(int i=0; i<numTactileSensors_;i++)
+		// Select number of sensors to calibrate
+		if(req.activeSensor < numTactileSensors_) // Single sensor
 		{
-			ARMAmodel_flexi_[i]->setUseFixedWeights(false);
+			ARMAmodel_flexi_[tactileSensorSelected_]->setUseFixedWeights(false);
 		}
-		calibrateSensors = true;
+		else	// All sensors
+		{
+			for(int i=0; i<numTactileSensors_;i++)
+			{
+				ARMAmodel_flexi_[i]->setUseFixedWeights(false);
+			}
+		}
 
 		// Capture data
-		experiment_ = PR2adaptNeuroControllerClass::B;
-		storage_index_ = 0;
-		recordData = true;
+		if(req.recordData)
+		{
+			experiment_ = PR2adaptNeuroControllerClass::B;
+			storage_index_ = 0;
+			recordData = true;
+		}
 	}
 
 	//resp.success = true;

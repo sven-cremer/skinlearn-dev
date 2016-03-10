@@ -42,6 +42,8 @@ add_service_files(DIRECTORY srv FILES
   setBool.srv
   setNNweights.srv
   getNNweights.srv
+  # sensors
+  tactileCalibration.srv
 )
 
 generate_messages(DEPENDENCIES
