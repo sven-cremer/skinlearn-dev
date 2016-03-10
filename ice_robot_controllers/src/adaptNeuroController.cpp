@@ -577,7 +577,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		/***************** INNER LOOP *****************/
 
 		// Neural Network
-
+/*
 		nnController.updateDelT( dt_ );
 
 		nnController.UpdateCart( X     ,
@@ -589,6 +589,26 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	                             qd    ,
 	                             t_r   ,			// Feedforward force [6x1]
 	                             force_c  );		// Output [6x1]
+
+*/
+		double time = loop_count_*dt_;
+//		qd(1) = 0.1*cos(0.5*time);
+//		qd(2) = 0.1*sin(0.5*time);
+		q_m(3) 		=  0.5  *cos(0.5*time) - 1.0;
+		qd_m(3)		= -0.25 *sin(0.5*time);
+		qdd_m(3)	= -0.125*cos(0.5*time);
+
+		tau.resize(num_Joints);
+		rbfnnController.update( dt_		,		// time step
+					 	 	 	q		,		// x1
+								qd		,		// x2
+								q_m		,		// xd
+								qd_m	,		// vd
+								qdd_m	,		// ad
+								tau  );
+		tau_ = tau;
+
+		//std::cout<<tau_<<"\n---\n";
 
 		// PD controller
 	/*
@@ -602,7 +622,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
 	*/
 
-		tau_ = tau_ + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
+//		tau_ = tau_ + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
 
 		/***************** NULLSPACE *****************/
 
@@ -792,7 +812,7 @@ void PR2adaptNeuroControllerClass::update()
 			pub_x_desi_.unlockAndPublish();
 		}
 
-		/*
+/*
 		if (pub_state_.trylock()) {
 			// Headers
 			pub_state_.msg_.header.stamp = last_time_;
@@ -828,7 +848,7 @@ void PR2adaptNeuroControllerClass::update()
 
 			pub_state_.unlockAndPublish();
 		}
-		*/
+*/
 
 		if (pub_ft_.trylock()) {
 			pub_ft_.msg_.header.stamp = last_time_;
@@ -2814,9 +2834,9 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	qd      .resize( num_Joints ) ;
 	qdd     .resize( num_Joints ) ;
 
-	q_m     .resize( num_Outputs ) ;
-	qd_m    .resize( num_Outputs ) ;
-	qdd_m   .resize( num_Outputs ) ;
+	q_m     .resize( num_Joints ) ;
+	qd_m    .resize( num_Joints ) ;
+	qdd_m   .resize( num_Joints ) ;
 
 	// desired Cartesian states
 	X_m     .resize( num_Outputs ) ;
@@ -2837,22 +2857,22 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	task_refModel_output.resize( num_Outputs ) ;
 	tau     .resize( num_Outputs ) ;
 
-	q        = Eigen::VectorXd::Zero( num_Joints ) ;
-	qd       = Eigen::VectorXd::Zero( num_Joints ) ;
-	qdd      = Eigen::VectorXd::Zero( num_Joints ) ;
-	q_m      = Eigen::VectorXd::Zero( num_Joints ) ;
-	qd_m     = Eigen::VectorXd::Zero( num_Joints ) ;
-	qdd_m    = Eigen::VectorXd::Zero( num_Joints ) ;
+	q        .setZero() ;
+	qd       .setZero() ;
+	qdd      .setZero() ;
+	q_m      .setZero() ;
+	qd_m     .setZero() ;
+	qdd_m    .setZero() ;
 
-	X_m      = Eigen::VectorXd::Zero( num_Outputs ) ;
-	Xd_m     = Eigen::VectorXd::Zero( num_Outputs ) ;
-	Xdd_m    = Eigen::VectorXd::Zero( num_Outputs ) ;
-	X        = Eigen::VectorXd::Zero( num_Outputs ) ;
-	Xd       = Eigen::VectorXd::Zero( num_Outputs ) ;
+	X_m      .setZero() ;
+	Xd_m     .setZero() ;
+	Xdd_m    .setZero() ;
+	X        .setZero() ;
+	Xd       .setZero() ;
 
-	p_X_m    = Eigen::VectorXd::Zero( num_Outputs ) ;
-	p_Xd_m   = Eigen::VectorXd::Zero( num_Outputs ) ;
-	p_Xdd_m  = Eigen::VectorXd::Zero( num_Outputs ) ;
+	p_X_m    .setZero() ;
+	p_Xd_m   .setZero() ;
+	p_Xdd_m  .setZero() ;
 
 	X_m(0)   = cartIniX     ;
 	X_m(1)   = cartIniY     ;
