@@ -7,7 +7,7 @@ sensor_0 : [-1,0,0]
 sensor_1 : [0,1,0]
 sensor_2 : [1,0,0]
 sensor_3 : [0,-1,0]
-max_calibration_distance: 10.0
+max_calibration_distance: 0.2
 
 loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRateFactor - 2)
 
@@ -67,7 +67,7 @@ externalRefTraj    : true
 useHumanIntent     : false
 intentEst_time     : 0.05
 intentEst_delT     : 0.1  # Propagation time
-intentEst_M        : 2.0  # M_i the mass of the intent admittance model
+intentEst_M        : 100.0  # M_i the mass of the intent admittance model
 
 # The params of the RLS estimator
 rls_lambda         : 0.98
@@ -149,8 +149,8 @@ m_S                   : 0.0
 m_D                   : 5.0
 
 # Params for M(s) of the RLS models
-task_mA               : 6.0
-task_mB               : 6.0
+task_mA               : 1.5
+task_mB               : 1.5
 
 # Params for MRAC Sim Human
 simHuman_a            : 0.1
