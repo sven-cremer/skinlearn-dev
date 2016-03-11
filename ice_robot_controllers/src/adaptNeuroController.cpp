@@ -298,7 +298,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			// Set velocity
 			p.x() = 0.0;
-			p.y() = -circleAmpl * (circle_rate * circleAmpl) * sin(circle_phase);
+			p.y() = -circleAmpl * (circle_rate * circleAmpl) * sin(circle_phase);	// TODO CHECK MATH! is phase = A*w*t ???
 			p.z() =  circleAmpl * (circle_rate * circleAmpl) * cos(circle_phase);
 			xd_des_.translation() = p;
 
@@ -599,12 +599,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		if(experiment_ == PR2adaptNeuroControllerClass::C && recordData)
 		{
 			circle_phase += circle_rate * dt_;				// w*t = w*(dt1+dt2+dt3+...)
-//			double time = loop_count_*dt_;
-	//		qd(1) = 0.1*cos(0.5*time);
-	//		qd(2) = 0.1*sin(0.5*time);
-			q_m(3) 		=  0.5  *cos(circle_phase) - 1.0;
-			qd_m(3)		= -0.25 *sin(circle_phase);
-			qdd_m(3)	= -0.125*cos(circle_phase);
+
+			q_m(3) 		=  -1.0 + circleAmpl * cos(circle_phase) - circleAmpl;
+			qd_m(3)		= -circleAmpl * circle_rate * sin(circle_phase);
+			qdd_m(3)	= -circleAmpl * circle_rate * circle_rate * cos(circle_phase);
 
 			rbfnnController.update( dt_		,		// time step
 									q		,		// x1
@@ -616,8 +614,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		}
 		if(experiment_ == PR2adaptNeuroControllerClass::C && !recordData)
 		{
+			q_m.setZero();
 			q_m(3) = -1.0;
-			tau = 10.0*(q_m-q);
+			tau = 50.0*(q_m-q);
 		}
 
 		tau_ = tau;
