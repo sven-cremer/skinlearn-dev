@@ -79,61 +79,71 @@ public:
 
         dT = 0.001;				// 1000 Hz by default
 
-        numNodes 	= 16;
-        numOutputs	= Joints;	// 7 by default
+        numOutputs = Joints;
 
-        // Initialize Parameters
-        W_.   resize(numOutputs, numNodes);
-        W_dot.resize(numOutputs, numNodes);
-        W_nxt.resize(numOutputs, numNodes);
-        W_.   setZero();
-        W_dot.setZero();
-        W_nxt.setZero();
+    	init( 16,			   // numNodes
+    	      5, 20,	       // K1, K2
+		      50, 1.0,	       // RBF var, mag
+    	      0.01, 50,	       // RBF sigma, gamma
+    	      0.01, 50,	       // TAN sigma, gamma
+    	      0.1);		       // b
 
-        S_.resize(numNodes);
-
-        rbf_var = 1.0;
-        rbf_mag = 1.0;
-
-        sigma = 0.01;
-        gamma = 50;
-        Gamma_.setIdentity();
-        Gamma_ *= gamma;
-
-        // If the centers are -1 or 1, then there are 2^(numOutputs*4)=2^28 possible combinations.
-        // This would require too many nodes.
-        Mu_.resize(NNinput,numNodes);
-        Mu_.setRandom();								// uniform dist between (-1,1)
-        Eigen::MatrixXd pos(NNinput,numNodes);
-        Eigen::MatrixXd neg(NNinput,numNodes);
-        pos.setOnes();
-        neg = -pos;
-        Mu_ = (Mu_.array() < 0).select(neg,pos);		// make elements -1 or +1
-
-        // Set Gains
-        K1.setIdentity();
-        K1 *= 5;
-        K2.setIdentity();
-        K2 *= 20;
-
-    	// Hysteresis nonlinearity
-        enableHysteresisNN = true;
-        beta.setZero();
-        beta_dot.setZero();
-        beta_nxt.setZero();
-    	b = 1;
-    	sigma_beta = 0.01;
-    	gamma_beta = 50;
-    	Gamma_beta_.setIdentity();
-    	Gamma_beta_ *= gamma_beta;
 	}
 
-	void init( double p_K1, double p_K2,
+	void init( int p_numNodes,
+			   double p_K1, double p_K2,
+			   double p_rbf_var, double p_rbf_mag,
 			   double p_sigma_w, double p_gamma_w,
 			   double p_sigma_b, double p_gamma_b,
-			   double b)
+			   double p_b)
 	{
+		// Set parameter values
+        numNodes 	= p_numNodes;
+        rbf_var 	= p_rbf_var;
+        rbf_mag 	= p_rbf_mag;
+        sigma 		= p_sigma_w;
+        gamma 		= p_gamma_w;
+    	sigma_beta 	= p_sigma_b;
+    	gamma_beta 	= p_gamma_b;
+    	b 			= p_b;
 
+    	 // Initialize RBF NN
+    	W_.   resize(numOutputs, numNodes);
+    	W_dot.resize(numOutputs, numNodes);
+    	W_nxt.resize(numOutputs, numNodes);
+    	W_.   setZero();
+    	W_dot.setZero();
+    	W_nxt.setZero();
+
+    	S_.resize(numNodes);
+
+    	Gamma_.setIdentity();
+    	Gamma_ *= gamma;
+
+    	// If the centers are -1 or 1, then there are 2^(numOutputs*4)=2^28 possible combinations.
+    	// This would require too many nodes.
+    	Mu_.resize(NNinput,numNodes);
+    	Mu_.setRandom();								// uniform dist between (-1,1)
+    	Eigen::MatrixXd pos(NNinput,numNodes);
+    	Eigen::MatrixXd neg(NNinput,numNodes);
+    	pos.setOnes();
+    	neg = -pos;
+    	Mu_ = (Mu_.array() < 0).select(neg,pos);		// make elements -1 or +1
+
+    	// Set Gains
+    	K1.setIdentity();
+    	K1 *= p_K1;
+    	K2.setIdentity();
+    	K2 *= p_K2;
+
+    	// Hysteresis nonlinearity
+    	enableHysteresisNN = true;
+    	beta.setZero();
+    	beta_dot.setZero();
+    	beta_nxt.setZero();
+
+    	Gamma_beta_.setIdentity();
+    	Gamma_beta_ *= gamma_beta;
 	}
 
 	void updateDelT( double p_dT )
@@ -144,6 +154,11 @@ public:
 	void setUpdateWeights(bool updateWeights_)
 	{
 		updateWeights = updateWeights_;
+	}
+
+	void setEnableHysteresisNN(bool para_enableHysteresisNN)
+	{
+		enableHysteresisNN = para_enableHysteresisNN;
 	}
 
 	void hyperbolicTangent(const Eigen::VectorXd & Z,	// input
@@ -211,6 +226,16 @@ public:
     	beta_nxt = beta_dot*dT + beta;
     	tau = tau - beta*tanh_;
 
+    	//std::cout<<"W_="<<W_<<"\n---\n";
+	}
+
+	double getRBFNorm()
+	{
+		return W_.norm();
+	}
+	double getTANHNorm()
+	{
+		return beta.norm();
 	}
 
 

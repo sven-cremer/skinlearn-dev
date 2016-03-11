@@ -14,7 +14,7 @@ PR2adaptNeuroControllerClass::PR2adaptNeuroControllerClass()
 PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 {
 	m_Thread.interrupt();		// Kill thread at one of the interruption points
-	for(int i=0; i<numTactileSensors_*tactile_dimensions_;i++)
+	for(int i=0; i<numTactileSensors_;i++)
 	{
 		delete ARMAmodel_flexi_[i];
 	}
@@ -85,6 +85,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
 	runExperimentB_srv_ = nh_.advertiseService("runExperimentB" , &PR2adaptNeuroControllerClass::runExperimentB   , this);
+	runExperimentC_srv_ = nh_.advertiseService("runExperimentC" , &PR2adaptNeuroControllerClass::runExperimentC   , this);
 
 	// NN weights
 	updateInnerNNweights_srv_  = nh_.advertiseService("updateInnerNNweights" , &PR2adaptNeuroControllerClass::updateInnerNNweights   , this);
@@ -108,6 +109,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	pubControllerFullData_   = nh_.advertise< ice_msgs::controllerFullData >( "controllerFullData"   , StoreLen);
 	pubExperimentDataA_	     = nh_.advertise< ice_msgs::experimentDataA    >( "experimentDataA"   , StoreLen);
 	pubExperimentDataB_	     = nh_.advertise< ice_msgs::experimentDataB    >( "experimentDataB"   , StoreLen);
+	pubExperimentDataC_	     = nh_.advertise< ice_msgs::experimentDataC    >( "experimentDataC"   , StoreLen);
 
 	storage_index_ = StoreLen;
 	// DATA COLLECTION END
@@ -591,21 +593,33 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	                             force_c  );		// Output [6x1]
 
 */
-		double time = loop_count_*dt_;
-//		qd(1) = 0.1*cos(0.5*time);
-//		qd(2) = 0.1*sin(0.5*time);
-		q_m(3) 		=  0.5  *cos(0.5*time) - 1.0;
-		qd_m(3)		= -0.25 *sin(0.5*time);
-		qdd_m(3)	= -0.125*cos(0.5*time);
 
-		tau.resize(num_Joints);
-		rbfnnController.update( dt_		,		// time step
-					 	 	 	q		,		// x1
-								qd		,		// x2
-								q_m		,		// xd
-								qd_m	,		// vd
-								qdd_m	,		// ad
-								tau  );
+		tau.setZero();
+
+		if(experiment_ == PR2adaptNeuroControllerClass::C && recordData)
+		{
+
+			double time = loop_count_*dt_;
+	//		qd(1) = 0.1*cos(0.5*time);
+	//		qd(2) = 0.1*sin(0.5*time);
+			q_m(3) 		=  0.5  *cos(0.25*time) - 1.0;
+			qd_m(3)		= -0.25 *sin(0.25*time);
+			qdd_m(3)	= -0.125*cos(0.25*time);
+
+			rbfnnController.update( dt_		,		// time step
+									q		,		// x1
+									qd		,		// x2
+									q_m		,		// xd
+									qd_m	,		// vd
+									qdd_m	,		// ad
+									tau  );
+		}
+		if(experiment_ == PR2adaptNeuroControllerClass::C && !recordData)
+		{
+			q_m(3) = -1.0;
+			tau = 0.2*(q_m-q);
+		}
+
 		tau_ = tau;
 
 		//std::cout<<tau_<<"\n---\n";
@@ -1247,7 +1261,14 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 
 void PR2adaptNeuroControllerClass::bufferData()
 {
-	if ((storage_index_ >= 0) && (storage_index_ < StoreLen) && experiment_ == PR2adaptNeuroControllerClass::A)
+	if( (storage_index_ < 0) || (storage_index_ >= StoreLen) )
+	{
+		recordData = false;
+		return;
+	}
+
+
+	if (experiment_ == PR2adaptNeuroControllerClass::A)
 	{
 		//                tf::PoseKDLToMsg(x_m_, modelCartPos_);
 		//                tf::PoseKDLToMsg(x_  , robotCartPos_);
@@ -1289,7 +1310,7 @@ void PR2adaptNeuroControllerClass::bufferData()
 		// Increment for the next cycle.
 		storage_index_ = storage_index_+1;
 	}
-	else if ((storage_index_ >= 0) && (storage_index_ < StoreLen) && experiment_ == PR2adaptNeuroControllerClass::B)
+	else if (experiment_ == PR2adaptNeuroControllerClass::B)
 	{
 		experimentDataB_msg_[storage_index_].dt                = dt_;
 		experimentDataB_msg_[storage_index_].outer_dt          = outer_delT;
@@ -1403,13 +1424,84 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataB_msg_[storage_index_].xdd_m.the   = Xdd_m(4);
 		experimentDataB_msg_[storage_index_].xdd_m.psi   = Xdd_m(5);
 
-		// Increment for the next cycle.
-		storage_index_ = storage_index_+1;
+	}
+	else if (experiment_ == PR2adaptNeuroControllerClass::C)
+	{
+		// Time
+		experimentDataC_msg_[storage_index_].dt                = dt_;
+		//experimentDataC_msg_[storage_index_].outer_dt          = outer_delT;
+
+		// NN norms
+		experimentDataC_msg_[storage_index_].RBFnorm           = rbfnnController.getRBFNorm();
+		experimentDataC_msg_[storage_index_].TANHnorm          = rbfnnController.getTANHNorm();
+
+		// Actual trajectory
+		experimentDataC_msg_[storage_index_].q.j0   = q(0);
+		experimentDataC_msg_[storage_index_].q.j1   = q(1);
+		experimentDataC_msg_[storage_index_].q.j2   = q(2);
+		experimentDataC_msg_[storage_index_].q.j3   = q(3);
+		experimentDataC_msg_[storage_index_].q.j4   = q(4);
+		experimentDataC_msg_[storage_index_].q.j5   = q(5);
+		experimentDataC_msg_[storage_index_].q.j6   = q(6);
+
+		experimentDataC_msg_[storage_index_].qd.j0   = qd(0);
+		experimentDataC_msg_[storage_index_].qd.j1   = qd(1);
+		experimentDataC_msg_[storage_index_].qd.j2   = qd(2);
+		experimentDataC_msg_[storage_index_].qd.j3   = qd(3);
+		experimentDataC_msg_[storage_index_].qd.j4   = qd(4);
+		experimentDataC_msg_[storage_index_].qd.j5   = qd(5);
+		experimentDataC_msg_[storage_index_].qd.j6   = qd(6);
+
+
+		// Reference trajectory
+		experimentDataC_msg_[storage_index_].q_d.j0   = q_m(0);
+		experimentDataC_msg_[storage_index_].q_d.j1   = q_m(1);
+		experimentDataC_msg_[storage_index_].q_d.j2   = q_m(2);
+		experimentDataC_msg_[storage_index_].q_d.j3   = q_m(3);
+		experimentDataC_msg_[storage_index_].q_d.j4   = q_m(4);
+		experimentDataC_msg_[storage_index_].q_d.j5   = q_m(5);
+		experimentDataC_msg_[storage_index_].q_d.j6   = q_m(6);
+
+		experimentDataC_msg_[storage_index_].qd_d.j0   = qd_m(0);
+		experimentDataC_msg_[storage_index_].qd_d.j1   = qd_m(1);
+		experimentDataC_msg_[storage_index_].qd_d.j2   = qd_m(2);
+		experimentDataC_msg_[storage_index_].qd_d.j3   = qd_m(3);
+		experimentDataC_msg_[storage_index_].qd_d.j4   = qd_m(4);
+		experimentDataC_msg_[storage_index_].qd_d.j5   = qd_m(5);
+		experimentDataC_msg_[storage_index_].qd_d.j6   = qd_m(6);
+
+		experimentDataC_msg_[storage_index_].qdd_d.j0   = qdd_m(0);
+		experimentDataC_msg_[storage_index_].qdd_d.j1   = qdd_m(1);
+		experimentDataC_msg_[storage_index_].qdd_d.j2   = qdd_m(2);
+		experimentDataC_msg_[storage_index_].qdd_d.j3   = qdd_m(3);
+		experimentDataC_msg_[storage_index_].qdd_d.j4   = qdd_m(4);
+		experimentDataC_msg_[storage_index_].qdd_d.j5   = qdd_m(5);
+		experimentDataC_msg_[storage_index_].qdd_d.j6   = qdd_m(6);
+
+		// Torque
+		experimentDataC_msg_[storage_index_].tau.j0   = tau(0);
+		experimentDataC_msg_[storage_index_].tau.j1   = tau(1);
+		experimentDataC_msg_[storage_index_].tau.j2   = tau(2);
+		experimentDataC_msg_[storage_index_].tau.j3   = tau(3);
+		experimentDataC_msg_[storage_index_].tau.j4   = tau(4);
+		experimentDataC_msg_[storage_index_].tau.j5   = tau(5);
+		experimentDataC_msg_[storage_index_].tau.j6   = tau(6);
+
+		experimentDataC_msg_[storage_index_].tau_sat.j0   = tau_sat(0);
+		experimentDataC_msg_[storage_index_].tau_sat.j1   = tau_sat(1);
+		experimentDataC_msg_[storage_index_].tau_sat.j2   = tau_sat(2);
+		experimentDataC_msg_[storage_index_].tau_sat.j3   = tau_sat(3);
+		experimentDataC_msg_[storage_index_].tau_sat.j4   = tau_sat(4);
+		experimentDataC_msg_[storage_index_].tau_sat.j5   = tau_sat(5);
+		experimentDataC_msg_[storage_index_].tau_sat.j6   = tau_sat(6);
 	}
 	else
 	{
-		recordData = false;
+		// TODO failure message
 	}
+
+	// Increment for the next cycle.
+	storage_index_ = storage_index_+1;
 }
 
 
@@ -1576,6 +1668,8 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 			pubExperimentDataA_.publish(experimentDataA_msg_[index]);
 		if(	experiment_ == PR2adaptNeuroControllerClass::B)
 			pubExperimentDataB_.publish(experimentDataB_msg_[index]);
+		if(	experiment_ == PR2adaptNeuroControllerClass::C)
+			pubExperimentDataC_.publish(experimentDataC_msg_[index]);
 	}
 
 	return true;
@@ -1738,6 +1832,32 @@ bool PR2adaptNeuroControllerClass::runExperimentB(	ice_msgs::setValue::Request &
 	}
 
 	x_des_ = x0_;
+
+	storage_index_ = 0;
+	recordData = true;
+
+	return true;
+}
+
+bool PR2adaptNeuroControllerClass::runExperimentC(	ice_msgs::setValue::Request & req,
+													ice_msgs::setValue::Response& resp )
+{
+	experiment_ = PR2adaptNeuroControllerClass::C;
+
+	/* Record the starting time. */
+	ros::Time started = ros::Time::now();
+
+	// Re-set NN
+//	rbfnnController.
+//	nnController.setUpdateWeights(false);
+//	Eigen::MatrixXd V_trans;
+//	Eigen::MatrixXd W_trans;
+//	//V_trans.setOnes( num_Hidden , num_Inputs + 1 ) ;
+//	V_trans.setRandom( num_Hidden , num_Inputs + 1 ) ;
+//	W_trans.setZero(   num_Outputs, num_Hidden     ) ;
+//	nnController.setInnerWeights(V_trans);
+//	nnController.setOuterWeights(W_trans);
+//	nnController.setUpdateWeights(true);
 
 	storage_index_ = 0;
 	recordData = true;
@@ -1996,6 +2116,9 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/mannequinThresPos", mannequinThresRot, 0.05);
 	nh_.param("/mannequinMode",     mannequinMode,     false);
 	nh_.param("/useHumanIntent",     useHumanIntent,    false);
+
+
+	experiment_ = PR2adaptNeuroControllerClass::C;		// TODO read from yaml
 
 	return true;
 }
@@ -2855,7 +2978,7 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	t_r     .resize( num_Outputs ) ;
 	task_ref.resize( num_Outputs ) ;
 	task_refModel_output.resize( num_Outputs ) ;
-	tau     .resize( num_Outputs ) ;
+	tau     .resize( num_Joints ) ;
 
 	q        .setZero() ;
 	qd       .setZero() ;

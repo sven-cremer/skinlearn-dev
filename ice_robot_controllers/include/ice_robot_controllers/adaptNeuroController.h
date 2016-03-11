@@ -47,6 +47,7 @@
 #include <ice_msgs/setInteger.h>
 #include <ice_msgs/experimentDataA.h>
 #include <ice_msgs/experimentDataB.h>
+#include <ice_msgs/experimentDataC.h>
 #include <ice_msgs/tactileArrayData.h>
 #include <ice_msgs/tactileCalibration.h>
 
@@ -68,9 +69,9 @@ public:
 	// See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 private:
-	enum { StoreLen = 30000 };
+	enum { StoreLen = 5000 };
 	enum { Joints = 7 };
-	enum Experiment{ A, B };
+	enum Experiment{ A, B, C };
 
 	// Definitions
 	typedef Eigen::Matrix<double, 7, 1> JointVec;
@@ -300,6 +301,7 @@ private:
 	ros::Publisher pubControllerFullData_  ;
 	ros::Publisher pubExperimentDataA_     ;
 	ros::Publisher pubExperimentDataB_     ;
+	ros::Publisher pubExperimentDataC_     ;
 
 	bool publishRTtopics;
 
@@ -317,6 +319,7 @@ private:
 	ice_msgs::controllerFullData msgControllerFullData [StoreLen];
 	ice_msgs::experimentDataA    experimentDataA_msg_  [StoreLen];
 	ice_msgs::experimentDataB    experimentDataB_msg_  [StoreLen];
+	ice_msgs::experimentDataC    experimentDataC_msg_  [StoreLen];
 
 	volatile int storage_index_;
 
@@ -514,10 +517,13 @@ private:
 
 	ros::ServiceServer runExperimentA_srv_;
 	ros::ServiceServer runExperimentB_srv_;
+	ros::ServiceServer runExperimentC_srv_;
 
 	bool runExperimentA(	ice_msgs::setValue::Request & req,
 						    ice_msgs::setValue::Response& resp );
 	bool runExperimentB(	ice_msgs::setValue::Request & req,
+						    ice_msgs::setValue::Response& resp );
+	bool runExperimentC(	ice_msgs::setValue::Request & req,
 						    ice_msgs::setValue::Response& resp );
 
 	Experiment experiment_;
