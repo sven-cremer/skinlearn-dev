@@ -598,13 +598,13 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		if(experiment_ == PR2adaptNeuroControllerClass::C && recordData)
 		{
-
-			double time = loop_count_*dt_;
+			circle_phase += circle_rate * dt_;				// w*t = w*(dt1+dt2+dt3+...)
+//			double time = loop_count_*dt_;
 	//		qd(1) = 0.1*cos(0.5*time);
 	//		qd(2) = 0.1*sin(0.5*time);
-			q_m(3) 		=  0.5  *cos(0.25*time) - 1.0;
-			qd_m(3)		= -0.25 *sin(0.25*time);
-			qdd_m(3)	= -0.125*cos(0.25*time);
+			q_m(3) 		=  0.5  *cos(circle_phase) - 1.0;
+			qd_m(3)		= -0.25 *sin(circle_phase);
+			qdd_m(3)	= -0.125*cos(circle_phase);
 
 			rbfnnController.update( dt_		,		// time step
 									q		,		// x1
@@ -617,7 +617,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		if(experiment_ == PR2adaptNeuroControllerClass::C && !recordData)
 		{
 			q_m(3) = -1.0;
-			tau = 0.2*(q_m-q);
+			tau = 10.0*(q_m-q);
 		}
 
 		tau_ = tau;
@@ -1858,7 +1858,18 @@ bool PR2adaptNeuroControllerClass::runExperimentC(	ice_msgs::setValue::Request &
 //	nnController.setInnerWeights(V_trans);
 //	nnController.setOuterWeights(W_trans);
 //	nnController.setUpdateWeights(true);
+	// Decide if NN should be reset
+	if(req.value < 0)
+	{
+		rbfnnController.resetWeights();
+		circle_rate = -req.value;
+	}
+	else
+	{
+		circle_rate = req.value;
+	}
 
+	circle_phase = 0;
 	storage_index_ = 0;
 	recordData = true;
 

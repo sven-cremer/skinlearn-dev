@@ -146,6 +146,16 @@ public:
     	Gamma_beta_ *= gamma_beta;
 	}
 
+	void resetWeights()
+	{
+    	W_.   setZero();
+    	W_dot.setZero();
+    	W_nxt.setZero();
+    	beta.setZero();
+    	beta_dot.setZero();
+    	beta_nxt.setZero();
+	}
+
 	void updateDelT( double p_dT )
 	{
 	  dT = p_dT;
