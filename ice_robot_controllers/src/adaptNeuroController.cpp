@@ -197,7 +197,7 @@ void PR2adaptNeuroControllerClass::starting()
 
 	// Set filter values
 	qdot_filtered_.setZero();
-	joint_vel_filter_ = 1.0;
+	joint_vel_filter_ = 0.01;
 
 	loop_count_ = 0;
 	recordData = false;
@@ -700,7 +700,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		// Get the current joint positions and velocities.
 		chain_.getPositions(q_);
-		chain_.getVelocities(qdot_);
+//		chain_.getVelocities(qdot_);
 
 		// Get the pose of the F/T sensor
 		if(forceTorqueOn)
@@ -718,11 +718,11 @@ void PR2adaptNeuroControllerClass::update()
 		//	kin_acc_->fk(q_, x_acc_);				TODO update value for outloop
 		//	kin_acc_->jac(q_, J_acc_);
 
-		// TODO Filter velocity values
-		//	chain_.getVelocities(qdot_raw_);
-		//	for (int i = 0; i < Joints; ++i)
-		//		qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
-		//	qdot_ = qdot_filtered_;
+		// TODO Filter velocity values with 2nd order butterworth
+		chain_.getVelocities(qdot_raw_);
+		for (int i = 0; i < Joints; ++i)
+			qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
+		qdot_ = qdot_filtered_;
 
 		xdot_ = J_ * qdot_;		// [6x7]*[7x1] -> [6x1]
 
