@@ -210,7 +210,7 @@ cartIniYaw           :  0.0
 
 circleRate            : 0.5 # angular velocity in rad/sec (v = r*w = A*w)
 circleLlim            : 0.0 # amplitude = (circleUlim - circleLlim)/2
-circleUlim            : 0.4
+circleUlim            : 0.8 #  = A/2
 
 nnNum_Inputs          : 44 
 nnNum_Outputs         : 6  # Cartesian

@@ -600,7 +600,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		{
 			circle_phase += circle_rate * dt_;				// w*t = w*(dt1+dt2+dt3+...)
 
-			q_m(3) 		=  -1.0 + circleAmpl * cos(circle_phase) - circleAmpl;
+			q_m(3) 		=  -1.0 + circleAmpl * cos(circle_phase) - circleAmpl/2;
 			qd_m(3)		= -circleAmpl * circle_rate * sin(circle_phase);
 			qdd_m(3)	= -circleAmpl * circle_rate * circle_rate * cos(circle_phase);
 
@@ -611,11 +611,17 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 									qd_m	,		// vd
 									qdd_m	,		// ad
 									tau  );
+			tau(0) *= 0.0;
+			tau(1) *= 0.0;
+			tau(2) *= 0.0; // FIXME temporary solution
+			tau(4) *= 0.0;
+			tau(5) *= 0.0;
+			tau(6) *= 0.0;
 		}
 		if(experiment_ == PR2adaptNeuroControllerClass::C && !recordData)
 		{
 			q_m.setZero();
-			q_m(3) = -1.0;
+			q_m(3) = -1.0 + circleAmpl/2;;
 			tau = 50.0*(q_m-q);
 		}
 
