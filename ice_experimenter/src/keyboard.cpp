@@ -26,6 +26,7 @@
 #include <ice_msgs/getState.h>
 #include <ice_msgs/twoLayerNN.h>
 #include <ice_msgs/setValue.h>
+#include <ice_msgs/tactileCalibration.h>
 #include <std_srvs/Empty.h>
 
 
@@ -161,7 +162,7 @@ int main(int argc, char** argv)
   ros::ServiceClient toggle_updateWeights_srv_ = nh.serviceClient<ice_msgs::setBool>("/pr2_adaptNeuroController/updateNNweights");
   ros::ServiceClient setNNWeights_srv_ = nh.serviceClient<ice_msgs::setNNweights>("/pr2_adaptNeuroController/setNNweights");
   ros::ServiceClient getNNWeights_srv_ = nh.serviceClient<ice_msgs::getNNweights>("/pr2_adaptNeuroController/getNNweights");
-  ros::ServiceClient setTactileCalibration_srv_ = nh.serviceClient<ice_msgs::setValue>("/tactile/calibration");
+  ros::ServiceClient setTactileCalibration_srv_ = nh.serviceClient<ice_msgs::tactileCalibration>("/tactile/calibration");
   ros::ServiceClient publishExpData_srv_ = nh.serviceClient<std_srvs::Empty>("/pr2_adaptNeuroController/publishExpData");
   ros::ServiceClient status_srv_ = nh.serviceClient<ice_msgs::setBool>("/tactile/status");
 
@@ -355,7 +356,7 @@ int main(int argc, char** argv)
       {
     	  bool calibrationRunning = false;
 
-    	  int activeSensor = 3;
+    	  int activeSensor = 2;
     	  string dataFile = "default";
     	  string dataDir = "~/test_rtp";		// TODO get package path
     	  string topic = "/pr2_adaptNeuroController/experimentDataB";
@@ -425,10 +426,41 @@ int main(int argc, char** argv)
             	 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
             	 curTrial++;
 
+
+            	 // Select sensor
+            	 ice_msgs::tactileCalibration tactileCalibration_msg;
+     	 		 tactileCalibration_msg.request.start.position.x = 0.70;			// Green position
+     	 		 tactileCalibration_msg.request.start.position.y = 0.35;
+     	 		 tactileCalibration_msg.request.start.position.z = -0.1;
+            	 tactileCalibration_msg.request.recordData = true;
+            	 tactileCalibration_msg.request.activeSensor = activeSensor;
+            	 switch(activeSensor)
+            	 {
+            	 	 case 2:	// Green -> blue (+x)
+            	 		tactileCalibration_msg.request.distance = 0.2;
+            	 		activeSensor = 3;	// Next sensor
+            	 		break;
+            	 	 case 3:	// Blue -> yellow (-y)
+            	 		tactileCalibration_msg.request.start.position.x += 0.2;
+            	 		tactileCalibration_msg.request.distance = 0.3;
+            	 		activeSensor = 0;	// Next sensor
+            	 	 case 0:	// Yellow -> red (-x)
+            	 		tactileCalibration_msg.request.start.position.x += 0.2;
+            	 		tactileCalibration_msg.request.start.position.y -= 0.3;
+            	 		tactileCalibration_msg.request.distance = 0.2;
+            	 		activeSensor = 1;	// Next sensor
+            	 		break;
+            	 	 case 1:	// Red -> green (+y)
+            	 		tactileCalibration_msg.request.start.position.y -= 0.3;
+            	 		tactileCalibration_msg.request.distance = 0.3;
+            	 		activeSensor = 2;	// Next sensor
+            	 		break;
+            	 	 default:
+            	 		ROS_ERROR("Unknow active sensor!");
+            	 }
+
             	 // Start calibration
-            	 ice_msgs::setValue setValue_msg;
-            	 setValue_msg.request.value = 0.2;
-            	 if (!setTactileCalibration_srv_.call(setValue_msg))
+            	 if (!setTactileCalibration_srv_.call(tactileCalibration_msg))
             	 {
             		 ROS_ERROR("Failed to call tactile calibration service!");
             	 }
