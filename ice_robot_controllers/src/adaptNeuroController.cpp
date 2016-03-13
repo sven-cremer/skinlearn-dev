@@ -197,7 +197,6 @@ void PR2adaptNeuroControllerClass::starting()
 
 	// Set filter values
 	qdot_filtered_.setZero();
-	joint_vel_filter_ = 0.01;
 
 	loop_count_ = 0;
 	recordData = false;
@@ -362,7 +361,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				intent_elapsed_ = robot_state_->getTime() ;
 //			}
 		}
-		if(calibrateSensors && false)	// TODO make x_r step, task model is inside RlsModel
+		if(calibrateSensors)	// TODO make x_r step, task model is inside RlsModel
 		{
 			// Generate x_r with xd_r ~ V
 			prev_x_r = x_r;
@@ -385,18 +384,28 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 					x_r  .topRows(3) +=  xd_r.topRows(3)*dt_;
 				}
 			}
-			else // TODO Calibration single sensors
+			else // Calibration single sensors
 			{
-//				double rate = 0.5;
-//				xd_r.topRows(3) = rate*tactile_data_(tactileSensorSelected_)*sensorDirections.col(tactileSensorSelected_);
-//				x_r.topRows(3) = x_r.topRows(3) + xd_r.topRows(3)*dt_;
-//				delta_x = ( xd_r.topRows(3)*dt_ ).norm();
+				if(tactile_data_(tactileSensorSelected_)>0 && !refTrajSetForCalibration)
+				{
+					xd_r .topRows(3) =  -calibrationVelocity_*sensorDirections.col(tactileSensorSelected_);
+					x_r  .topRows(3) += -maxCalibrationDistance_*sensorDirections.col(tactileSensorSelected_);
+					refTrajSetForCalibration = true;
+				}
+				/*
+				double rate = 0.5;
+				xdd_r.topRows(3) =
+				xd_r .topRows(3) = rate*tactile_data_(tactileSensorSelected_)*sensorDirections.col(tactileSensorSelected_);
+				x_r  .topRows(3) = x_r.topRows(3) + xd_r.topRows(3)*dt_;
+				delta_x = ( xd_r.topRows(3)*dt_ ).norm();
+				*/
 			}
 
-			delta_x = (x_r - prev_x_r).norm();
-			calibrationDistance_ += delta_x;
+//			delta_x = (x_r - prev_x_r).norm();
+//			calibrationDistance_ += delta_x;
+			calibrationDistance_ = ( x0_cali_.translation() - x_.translation() ).norm();
 
-			if(calibrationDistance_ > maxCalibrationDistance_)
+			if(calibrationDistance_ > maxCalibrationDistance_) // TODO && time > 1 sec
 			{
 				calibrateSensors = false;
 				xd_r.setZero();
@@ -701,7 +710,7 @@ void PR2adaptNeuroControllerClass::update()
 
 		// Get the current joint positions and velocities.
 		chain_.getPositions(q_);
-//		chain_.getVelocities(qdot_);
+		chain_.getVelocities(qdot_);
 
 		// Get the pose of the F/T sensor
 		if(forceTorqueOn)
@@ -720,10 +729,12 @@ void PR2adaptNeuroControllerClass::update()
 		//	kin_acc_->jac(q_, J_acc_);
 
 		// TODO Filter velocity values with 2nd order butterworth
+		/*
 		chain_.getVelocities(qdot_raw_);
 		for (int i = 0; i < Joints; ++i)
 			qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
 		qdot_ = qdot_filtered_;
+		*/
 
 		xdot_ = J_ * qdot_;		// [6x7]*[7x1] -> [6x1]
 
@@ -1705,7 +1716,7 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::tactileCalibr
 			ARMAmodel_flexi_[i]->setUseFixedWeights(true);
 		}
 
-		resp.success = true;
+		resp.success = false;
 		return true;
 	}
 	else	// Start calibration
@@ -1715,6 +1726,7 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::tactileCalibr
 
 		maxCalibrationDistance_ = req.distance;
 		calibrationDistance_ = 0.0;
+		calibrationVelocity_ = req.distance / req.time;
 
 		// Set start pose
 		CartVec start = affine2CartVec(x0_);	// Keep orientation
@@ -1729,6 +1741,9 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::tactileCalibr
 		x_r = start;
 		xd_r.setZero();
 		xdd_r.setZero();
+
+		x0_cali_ = CartVec2Affine(start);
+		refTrajSetForCalibration = false;
 
 		// Select number of sensors to calibrate
 		if(req.activeSensor < numTactileSensors_) // Single sensor
@@ -2350,6 +2365,10 @@ bool PR2adaptNeuroControllerClass::initRobot()
 	// Torque Saturation
 	sat_scaling = 1.0;
 	tau_sat.resize( 7 );		// num_Outputs
+
+	// Joint velocity filter
+	nh_.param("/joint_vel_filter", joint_vel_filter_,     1.0);
+
 
 	return true;
 }

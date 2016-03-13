@@ -61,6 +61,9 @@ b_filt: [0.0994, 0.0994]
 #a_filt: [1.0,-1.0526,0.0634]
 #b_filt: [0.4683, 0, -0.4683]
 
+# Filter for qdot values
+joint_vel_filter : 1.0
+
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
 # i.e. an admittance model is used to generate x_i from f_h the force from the FT sensor

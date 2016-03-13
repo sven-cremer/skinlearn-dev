@@ -129,6 +129,7 @@ private:
 
 	Eigen::Affine3d x_;				// Tip pose
 	Eigen::Affine3d x0_;			// Tip initial pose
+	Eigen::Affine3d x0_cali_;		// Tip initial pose for calibration
 
 	Eigen::Affine3d x_des_;			// Tip desired pose
 	Eigen::Affine3d xd_des_;		// Tip desired velocity
@@ -354,7 +355,9 @@ private:
 	int tactile_dimensions_;
 	Eigen::MatrixXd sensorDirections;
 	double calibrationDistance_;
+	double calibrationVelocity_;
 	double maxCalibrationDistance_;
+	bool refTrajSetForCalibration;
 	csl::outer_loop::RlsModel* ARMAmodel_flexi_combined_;
 
 	Eigen::MatrixXd weightsRLSmodelX ;

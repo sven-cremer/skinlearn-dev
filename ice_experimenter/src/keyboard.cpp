@@ -438,25 +438,29 @@ int main(int argc, char** argv)
             	 {
             	 	 case 2:	// Green -> blue (+x)
             	 		tactileCalibration_msg.request.distance = 0.2;
+            	 		tactileCalibration_msg.request.time = 4;
             	 		activeSensor = 3;	// Next sensor
             	 		break;
             	 	 case 3:	// Blue -> yellow (-y)
             	 		tactileCalibration_msg.request.start.position.x += 0.2;
             	 		tactileCalibration_msg.request.distance = 0.3;
+            	 		tactileCalibration_msg.request.time = 6;
             	 		activeSensor = 0;	// Next sensor
             	 	 case 0:	// Yellow -> red (-x)
             	 		tactileCalibration_msg.request.start.position.x += 0.2;
             	 		tactileCalibration_msg.request.start.position.y -= 0.3;
             	 		tactileCalibration_msg.request.distance = 0.2;
+            	 		tactileCalibration_msg.request.time = 4;
             	 		activeSensor = 1;	// Next sensor
             	 		break;
             	 	 case 1:	// Red -> green (+y)
             	 		tactileCalibration_msg.request.start.position.y -= 0.3;
             	 		tactileCalibration_msg.request.distance = 0.3;
+            	 		tactileCalibration_msg.request.time = 6;
             	 		activeSensor = 2;	// Next sensor
             	 		break;
             	 	 default:
-            	 		ROS_ERROR("Unknow active sensor!");
+            	 		ROS_ERROR("Unknown active sensor!");
             	 }
 
             	 // Start calibration
