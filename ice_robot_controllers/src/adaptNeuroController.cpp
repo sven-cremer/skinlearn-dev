@@ -579,7 +579,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		/***************** INNER LOOP *****************/
 
 		// Neural Network
-/*
+
 		nnController.updateDelT( dt_ );
 
 		nnController.UpdateCart( X     ,
@@ -592,7 +592,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	                             t_r   ,			// Feedforward force [6x1]
 	                             force_c  );		// Output [6x1]
 
-*/
+
+/* Experiment C
+ * RBF and TANH Neural Network
 
 		tau.setZero();
 
@@ -611,12 +613,12 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 									qd_m	,		// vd
 									qdd_m	,		// ad
 									tau  );
-			tau(0) *= 0.0;
-			tau(1) *= 0.0;
-			tau(2) *= 0.0; // FIXME temporary solution
-			tau(4) *= 0.0;
-			tau(5) *= 0.0;
-			tau(6) *= 0.0;
+			tau(0) *= 0.05;
+			tau(1) *= 0.05;
+			tau(2) *= 0.05; // FIXME temporary solution
+			tau(4) *= 0.05;
+			tau(5) *= 0.05;
+			tau(6) *= 0.05;
 		}
 		if(experiment_ == PR2adaptNeuroControllerClass::C && !recordData)
 		{
@@ -626,11 +628,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		}
 
 		tau_ = tau;
-
-		//std::cout<<tau_<<"\n---\n";
+*/
 
 		// PD controller
-	/*
+/*
 		// Calculate a Cartesian restoring force.
 		computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
 
@@ -639,9 +640,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		kd << 1.0,1.0,1.0,1.0,1.0,1.0;
 		// F    = -(       Kp * (x-x_dis)   +     Kd * (xdot - 0)    )
 		force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
-	*/
+*/
 
-//		tau_ = tau_ + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
+		tau_ = tau_ + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
 
 		/***************** NULLSPACE *****************/
 
@@ -867,7 +868,7 @@ void PR2adaptNeuroControllerClass::update()
 
 			pub_state_.unlockAndPublish();
 		}
-*/
+
 
 		if (pub_ft_.trylock()) {
 			pub_ft_.msg_.header.stamp = last_time_;
@@ -881,7 +882,7 @@ void PR2adaptNeuroControllerClass::update()
 			tf::wrenchEigenToMsg(wrench_filtered_, pub_ft_transformed_.msg_.wrench);
 			pub_ft_transformed_.unlockAndPublish();
 		}
-
+*/
 	}
 
 
@@ -2131,10 +2132,12 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/mannequinThresPos", mannequinThresPos, 0.05);
 	nh_.param("/mannequinThresPos", mannequinThresRot, 0.05);
 	nh_.param("/mannequinMode",     mannequinMode,     false);
-	nh_.param("/useHumanIntent",     useHumanIntent,    false);
+	nh_.param("/useHumanIntent",    useHumanIntent,   false);
 
-
-	experiment_ = PR2adaptNeuroControllerClass::C;		// TODO read from yaml
+	int tmp;
+	nh_.param("/experiment", tmp, 1);		// TODO check user input
+	experiment_ = (PR2adaptNeuroControllerClass::Experiment)tmp;
+	ROS_INFO("Experiment selected: %i",experiment_);
 
 	return true;
 }
