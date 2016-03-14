@@ -48,13 +48,13 @@ void displayMainMenu()
 	puts("Use '1' to turn controller ON");
 	puts("Use '2' to turn controller OFF");
 	puts("Use 'i' to initialize robot");
-	puts("Use 'o' to open  LEFT gripper");
-	puts("Use 'p' to close LEFT gripper");
-	puts("Use 'j' to open  RIGHT gripper");
-	puts("Use 'k' to close RIGHT gripper");
+	puts("Use 'o/p' to open/close LEFT gripper");
+	puts("Use 'j/k' to open/close RIGHT gripper");
+	puts(" ");
 	puts("Use 'w' to open NN weights menu");
 	puts("Use 'r' to open reference trajectory menu");
 	puts("Use 's' to start calibration experiment");
+	puts("Use 't' to test controller");
 	puts(" ");
 	puts("Use '-' to set variables");
 	puts(" ");
@@ -467,7 +467,7 @@ int main(int argc, char** argv)
             	 ice_msgs::tactileCalibration tactileCalibration_msg;
      	 		 tactileCalibration_msg.request.start.position.x = 0.70;			// Green position
      	 		 tactileCalibration_msg.request.start.position.y = 0.35;
-     	 		 tactileCalibration_msg.request.start.position.z = -0.1;
+     	 		 tactileCalibration_msg.request.start.position.z = -0.11;
             	 tactileCalibration_msg.request.recordData = true;
             	 tactileCalibration_msg.request.activeSensor = activeSensor;
             	 switch(activeSensor)
@@ -556,6 +556,17 @@ int main(int argc, char** argv)
 
            } // end while
            break;
+      }
+      /******************************** reference ****************************************/
+      case 't':
+      {
+    	  // Start capturing data
+
+    	  // Ask user to follow pattern
+
+    	  // Save results
+
+    	  break;
       }
       /******************************** QUIT ****************************************/
       case 'q':
