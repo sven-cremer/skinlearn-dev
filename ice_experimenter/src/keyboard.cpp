@@ -19,6 +19,9 @@
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 
+// PR2 utilities
+#include <apc_robot/pr2_manager.h>
+
 // Messages
 #include <ice_msgs/setBool.h>
 #include <ice_msgs/getNNweights.h>
@@ -45,9 +48,11 @@ void displayMainMenu()
 	puts("Use '1' to turn controller ON");
 	puts("Use '2' to turn controller OFF");
 	puts("Use 'i' to initialize robot");
+	puts("Use 'o' to open grippers");
+	puts("Use 'c' to close grippers");
 	puts("Use 'w' to open NN weights menu");
 	puts("Use 'r' to open reference trajectory menu");
-	puts("Use 'c' to open calibration experiment menu");
+	puts("Use 's' to start calibration experiment");
 	puts(" ");
 	puts("Use '-' to set variables");
 	puts(" ");
@@ -158,6 +163,8 @@ int main(int argc, char** argv)
 
   ros::NodeHandle nh;
 
+  PR2Manager pr2manager("pr2_adaptNeuroController");
+
   // ROS service clients
   ros::ServiceClient toggle_updateWeights_srv_ = nh.serviceClient<ice_msgs::setBool>("/pr2_adaptNeuroController/updateNNweights");
   ros::ServiceClient setNNWeights_srv_ = nh.serviceClient<ice_msgs::setNNweights>("/pr2_adaptNeuroController/setNNweights");
@@ -205,18 +212,33 @@ int main(int argc, char** argv)
       case '1':
       {
     	  // controller on
+    	  pr2manager.on(false);
     	  controller_active = true;
     	  break;
       }
       case '2':
       {
     	  // controller off
+    	  pr2manager.off(false);
     	  controller_active = false;
     	  break;
       }
       case 'i':
       {
     	  // init robot
+    	  pr2manager.robotInit(false);
+    	  controller_active = false;
+    	  break;
+      }
+      /******************************** Gripper  *****************************************/
+      case 'o':
+      {
+    	  pr2manager.openGrippers();
+    	  break;
+      }
+      case 'c':
+      {
+    	  pr2manager.closeGrippers();
     	  break;
       }
       /******************************** NN weights ****************************************/
@@ -352,7 +374,7 @@ int main(int argc, char** argv)
     	  break;
       }
       /******************************** calibration ****************************************/
-      case 'c':
+      case 's':
       {
     	  bool calibrationRunning = false;
 

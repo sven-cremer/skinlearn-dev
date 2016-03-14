@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   ice_msgs
   rosbag
   roscpp
+  apc_robot
 )
 
 ## System dependencies are found with CMake's conventions
@@ -27,7 +28,7 @@ find_package(Boost REQUIRED COMPONENTS thread)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ice_experimenter
-#  CATKIN_DEPENDS cmake_modules ice_msgs rosbag roscpp
+#  CATKIN_DEPENDS cmake_modules ice_msgs rosbag roscpp apc_robot
 #  DEPENDS system_lib
 )
 
