@@ -386,7 +386,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 			else // Calibration single sensors
 			{
-				if(tactile_data_(tactileSensorSelected_)>0 ) //&& !refTrajSetForCalibration)
+				if(tactile_data_(tactileSensorSelected_)>0 || refTrajSetForCalibration)
 				{
 					xd_r .topRows(3) =  -calibrationVelocity_*sensorDirections.col(tactileSensorSelected_);
 					x_r  .topRows(3) += xd_r.topRows(3)*dt_;
