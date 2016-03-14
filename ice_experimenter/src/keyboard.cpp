@@ -48,8 +48,10 @@ void displayMainMenu()
 	puts("Use '1' to turn controller ON");
 	puts("Use '2' to turn controller OFF");
 	puts("Use 'i' to initialize robot");
-	puts("Use 'o' to open grippers");
-	puts("Use 'c' to close grippers");
+	puts("Use 'o' to open  LEFT gripper");
+	puts("Use 'p' to close LEFT gripper");
+	puts("Use 'j' to open  RIGHT gripper");
+	puts("Use 'k' to close RIGHT gripper");
 	puts("Use 'w' to open NN weights menu");
 	puts("Use 'r' to open reference trajectory menu");
 	puts("Use 's' to start calibration experiment");
@@ -233,12 +235,22 @@ int main(int argc, char** argv)
       /******************************** Gripper  *****************************************/
       case 'o':
       {
-    	  pr2manager.openGrippers();
+    	  pr2manager.openGrippers(PR2Manager::LEFT);
     	  break;
       }
-      case 'c':
+      case 'p':
       {
-    	  pr2manager.closeGrippers();
+    	  pr2manager.closeGrippers(PR2Manager::LEFT);
+    	  break;
+      }
+      case 'j':
+      {
+    	  pr2manager.openGrippers(PR2Manager::RIGHT);
+    	  break;
+      }
+      case 'k':
+      {
+    	  pr2manager.closeGrippers(PR2Manager::RIGHT);
     	  break;
       }
       /******************************** NN weights ****************************************/
