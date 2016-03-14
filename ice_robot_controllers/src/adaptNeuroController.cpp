@@ -487,7 +487,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			if(calibrateSensors)	// TODO: check if tactileSensorSelected_ within range
 			{
 				// Compute delta x_r
-				task_ref.topRows(3) = x_r.topRows(3) - prev_x_r.topRows(3);
+				task_ref.topRows(3) = x_r.topRows(3) - x_.translation();//- prev_x_r.topRows(3);
 
 				Xd_m  .setZero();
 				Xdd_m .setZero();

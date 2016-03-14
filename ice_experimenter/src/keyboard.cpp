@@ -446,6 +446,7 @@ int main(int argc, char** argv)
             	 		tactileCalibration_msg.request.distance = 0.3;
             	 		tactileCalibration_msg.request.time = 6;
             	 		activeSensor = 0;	// Next sensor
+            	 		break;
             	 	 case 0:	// Yellow -> red (-x)
             	 		tactileCalibration_msg.request.start.position.x += 0.2;
             	 		tactileCalibration_msg.request.start.position.y -= 0.3;
