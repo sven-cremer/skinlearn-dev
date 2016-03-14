@@ -6,9 +6,9 @@ port               : /dev/ttyACM0
 baud               : 2000000
 tactile_frame_id   : l_gripper_tool_frame
 num_tactile_sensors: 4
-sensor_0 : [-1,0,0]
+sensor_0 : [1,0,0]
 sensor_1 : [0,1,0]
-sensor_2 : [1,0,0]
+sensor_2 : [-1,0,0]
 sensor_3 : [0,-1,0]
 max_calibration_distance: 0.2
 

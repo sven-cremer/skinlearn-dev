@@ -388,9 +388,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			{
 				if(tactile_data_(tactileSensorSelected_)>0 || refTrajSetForCalibration)
 				{
-					xd_r .topRows(3) =  -calibrationVelocity_*sensorDirections.col(tactileSensorSelected_);
+					xd_r .topRows(3) =  calibrationVelocity_*sensorDirections.col(tactileSensorSelected_);
 					x_r  .topRows(3) += xd_r.topRows(3)*dt_;
 					refTrajSetForCalibration = true;
+
+					calibrationDistance_ = ( x0_cali_.translation() - x_.translation() ).norm();
 				}
 				/*
 				double rate = 0.5;
@@ -403,7 +405,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 //			delta_x = (x_r - prev_x_r).norm();
 //			calibrationDistance_ += delta_x;
-			calibrationDistance_ = ( x0_cali_.translation() - x_.translation() ).norm();
 
 			if(calibrationDistance_ > maxCalibrationDistance_) // TODO && time > 1 sec
 			{
@@ -496,7 +497,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				for(int i=0; i<numTactileSensors_;i++)
 //				{
 					// Project into sensor axis to get -delta_X
-					tmp(4) = -task_ref.topRows(3).dot( sensorDirections.col(tactileSensorSelected_) );
+					tmp(4) = task_ref.topRows(3).dot( sensorDirections.col(tactileSensorSelected_) );
 
 					ARMAmodel_flexi_[tactileSensorSelected_]->updateDelT(outer_delT);
 
