@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+
 <launch>
 
    <rosparam file="$(find ice_robot_controllers)/config/pr2_controller.yaml"
@@ -6,14 +8,14 @@
    <rosparam file="$(find ice_robot_controllers)/config/l_ft_calib_data.yaml"
              command="load" />
 
-  <node name="unspawn_arms"
+  <!-- node name="unspawn_arms"
         pkg="pr2_controller_manager"
         type="unspawner"
-        args="l_arm_controller r_arm_controller" />
+        args="l_arm_controller r_arm_controller" /-->
 
    <node pkg="pr2_controller_manager"
          type="spawner"
-         args="pr2_adaptNeuroController"
+         args="--stopped pr2_adaptNeuroController"
          name="pr2_adaptNeuroController_spawner" />
 
 </launch>
