@@ -386,10 +386,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 			else // Calibration single sensors
 			{
-				if(tactile_data_(tactileSensorSelected_)>0 && !refTrajSetForCalibration)
+				if(tactile_data_(tactileSensorSelected_)>0 ) //&& !refTrajSetForCalibration)
 				{
 					xd_r .topRows(3) =  -calibrationVelocity_*sensorDirections.col(tactileSensorSelected_);
-					x_r  .topRows(3) += -maxCalibrationDistance_*sensorDirections.col(tactileSensorSelected_);
+					x_r  .topRows(3) += xd_r.topRows(3)*dt_;
 					refTrajSetForCalibration = true;
 				}
 				/*
@@ -487,36 +487,36 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			if(calibrateSensors)	// TODO: check if tactileSensorSelected_ within range
 			{
 				// Compute delta x_r
-				task_ref.topRows(3) = x_r.topRows(3) - x_.translation();//- prev_x_r.topRows(3);
+				task_ref.topRows(3) = x_r.topRows(3) - prev_x_r.topRows(3); //  - x_.translation();
 
 				Xd_m  .setZero();
 				Xdd_m .setZero();
 
 				CartVec tmp;
-				for(int i=0; i<numTactileSensors_;i++)
-				{
+//				for(int i=0; i<numTactileSensors_;i++)
+//				{
 					// Project into sensor axis to get -delta_X
-					tmp(4) = -task_ref.topRows(3).dot( sensorDirections.col(i) );
+					tmp(4) = -task_ref.topRows(3).dot( sensorDirections.col(tactileSensorSelected_) );
 
-					ARMAmodel_flexi_[i]->updateDelT(outer_delT);
+					ARMAmodel_flexi_[tactileSensorSelected_]->updateDelT(outer_delT);
 
-					ARMAmodel_flexi_[i]->updateARMA(
+					ARMAmodel_flexi_[tactileSensorSelected_]->updateARMA(
 							tmp                    (1) ,   // output: xd_m
 							Xd                     (0) ,
 							tmp                    (0) ,   // output: x_m
 							X                      (0) ,
 							tmp                    (2) ,   // output: xdd_m
-							tactile_data_      	   (i) ,   // input:  force or voltage
+							tactile_data_      	   (tactileSensorSelected_) ,   // input:  force or voltage
 							tmp                    (4) ,   // input:  x_r
 							tmp                    (3)  ); // output: x_d
 
 					// Lets assume we are estimating delta_x_m in the sensor direction
-					X_m  .topRows(3) += tmp(0)*sensorDirections.col(i);
-					Xd_m .topRows(3) += tmp(1)*sensorDirections.col(i); // or tmp(0)/delT   ?
-					Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(i); // or tmp(0)/delT^2 ?
+					X_m  .topRows(3) += tmp(0)*sensorDirections.col(tactileSensorSelected_);
+					Xd_m .topRows(3) += tmp(1)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT   ?
+					Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT^2 ?
 
-					task_refModel_output.topRows(3)	+=  tmp(3)*sensorDirections.col(i);
-				}
+					task_refModel_output.topRows(3)	+=  tmp(3)*sensorDirections.col(tactileSensorSelected_);
+//				}
 				// Save weights
 				for(int i=0; i<numTactileSensors_;i++)
 				{
