@@ -1,0 +1,23 @@
+
+numRBFnodes : 16
+#numTANHnodes : 7 = number of joints
+
+# Gains
+K1 : 5
+K2 : 20
+
+# RBF NN
+rbf_var : 50.0
+rbf_mag : 1.0
+sigma_rbf : 0.01
+gamma_rbf : 50
+
+# Hysteresis
+enableHysteresisNN : true
+b_tanh : 1
+sigma_tanh : 0.01
+gamma_tanh : 50
+
+# Observer
+obs_epsilon : 0.005
+obs_lambda : 5
