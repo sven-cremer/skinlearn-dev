@@ -356,7 +356,8 @@ int main(int argc, char** argv)
       {
     	  bool calibrationRunning = false;
 
-    	  int activeSensor = 2;
+    	  int activeSensor = 0;
+    	  int nextActiveSensor = 0;
     	  string dataFile = "default";
     	  string dataDir = "~/test_rtp";		// TODO get package path
     	  string topic = "/pr2_adaptNeuroController/experimentDataB";
@@ -428,6 +429,7 @@ int main(int argc, char** argv)
 
 
             	 // Select sensor
+            	 activeSensor = nextActiveSensor;
             	 ice_msgs::tactileCalibration tactileCalibration_msg;
      	 		 tactileCalibration_msg.request.start.position.x = 0.70;			// Green position
      	 		 tactileCalibration_msg.request.start.position.y = 0.35;
@@ -436,29 +438,29 @@ int main(int argc, char** argv)
             	 tactileCalibration_msg.request.activeSensor = activeSensor;
             	 switch(activeSensor)
             	 {
-            	 	 case 2:	// Green -> blue (+x)
+            	 	 case 0:	// Green -> blue (+x)
             	 		tactileCalibration_msg.request.distance = 0.2;
             	 		tactileCalibration_msg.request.time = 4;
-            	 		activeSensor = 3;	// Next sensor
+            	 		nextActiveSensor = 3;	// Next sensor
             	 		break;
             	 	 case 3:	// Blue -> yellow (-y)
             	 		tactileCalibration_msg.request.start.position.x += 0.2;
             	 		tactileCalibration_msg.request.distance = 0.3;
             	 		tactileCalibration_msg.request.time = 6;
-            	 		activeSensor = 0;	// Next sensor
+            	 		nextActiveSensor = 2;	// Next sensor
             	 		break;
-            	 	 case 0:	// Yellow -> red (-x)
+            	 	 case 2:	// Yellow -> red (-x)
             	 		tactileCalibration_msg.request.start.position.x += 0.2;
             	 		tactileCalibration_msg.request.start.position.y -= 0.3;
             	 		tactileCalibration_msg.request.distance = 0.2;
             	 		tactileCalibration_msg.request.time = 4;
-            	 		activeSensor = 1;	// Next sensor
+            	 		nextActiveSensor = 1;	// Next sensor
             	 		break;
             	 	 case 1:	// Red -> green (+y)
             	 		tactileCalibration_msg.request.start.position.y -= 0.3;
             	 		tactileCalibration_msg.request.distance = 0.3;
             	 		tactileCalibration_msg.request.time = 6;
-            	 		activeSensor = 2;	// Next sensor
+            	 		nextActiveSensor = 0;	// Next sensor
             	 		break;
             	 	 default:
             	 		ROS_ERROR("Unknown active sensor!");

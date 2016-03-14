@@ -358,6 +358,7 @@ private:
 	double calibrationVelocity_;
 	double maxCalibrationDistance_;
 	bool refTrajSetForCalibration;
+	bool calibrateSingelSensors;
 	csl::outer_loop::RlsModel* ARMAmodel_flexi_combined_;
 
 	Eigen::MatrixXd weightsRLSmodelX ;

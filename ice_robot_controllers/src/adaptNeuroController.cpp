@@ -367,7 +367,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			prev_x_r = x_r;
 
 			// Calibrate all sensors
-			if(tactileSensorSelected_ >= numTactileSensors_)
+			if(!calibrateSingelSensors)
 			{
 				for(int i=0; i<numTactileSensors_;i++)
 				{
@@ -2608,6 +2608,7 @@ bool PR2adaptNeuroControllerClass::initSensors()
 	// Tactile sensors
 	nh_.param("/num_tactile_sensors",     numTactileSensors_,     4);
 	tactileSensorSelected_ = -1;
+	calibrateSingelSensors = true;
 
 	if(useFlexiForce)
 	{
