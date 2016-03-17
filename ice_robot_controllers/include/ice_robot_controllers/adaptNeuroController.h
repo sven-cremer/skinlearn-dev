@@ -50,6 +50,7 @@
 #include <ice_msgs/experimentDataC.h>
 #include <ice_msgs/tactileArrayData.h>
 #include <ice_msgs/tactileCalibration.h>
+#include <ice_msgs/tactileFilterWeights.h>
 
 #include "geometry_msgs/Wrench.h"
 #include "geometry_msgs/WrenchStamped.h"
@@ -516,6 +517,12 @@ private:
 
 	bool tactileCalibrationCB(	ice_msgs::tactileCalibration::Request & req,
 						    	ice_msgs::tactileCalibration::Response& resp );
+
+	ros::ServiceServer tactileFilterWeights_srv_;
+
+	bool tactileFilterWeightsCB(	ice_msgs::tactileFilterWeights::Request & req,
+						    		ice_msgs::tactileFilterWeights::Response& resp );
+
 	int tactileSensorSelected_;
 	int numTactileSensors_;
 

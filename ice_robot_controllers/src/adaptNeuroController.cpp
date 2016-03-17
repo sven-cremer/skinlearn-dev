@@ -81,6 +81,8 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	}
 	tactileCalibration_srv_ = nh_.advertiseService("/tactile/calibration" , &PR2adaptNeuroControllerClass::tactileCalibrationCB   , this);
 	status_srv_ = nh_.advertiseService("/tactile/status" , &PR2adaptNeuroControllerClass::statusCB   , this);
+	tactileFilterWeights_srv_ = nh_.advertiseService("/tactile/filterWeights" , &PR2adaptNeuroControllerClass::tactileFilterWeightsCB       , this);
+
 
 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
@@ -468,8 +470,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			//	task_ref			-> Reference trajectory from human intent
 
 			//updateOuterLoop();
-
-
 
 			outer_delT = (robot_state_->getTime() - outer_elapsed_ ).toSec();
 
@@ -1772,6 +1772,54 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::tactileCalibr
 	return true;
 }
 
+/// Service call set tactile filter Weights
+bool PR2adaptNeuroControllerClass::tactileFilterWeightsCB(	ice_msgs::tactileFilterWeights::Request & req,
+															ice_msgs::tactileFilterWeights::Response& resp )
+{
+	if(req.changeWeights)	// Modify weights
+	{
+		Eigen::MatrixXd tmp;
+		tmp.resize(8,1);
+
+		tmp <<	req.setWeights.f0,
+				req.setWeights.f1,
+				req.setWeights.f2,
+				req.setWeights.f3,
+				req.setWeights.f4,
+				req.setWeights.f5,
+				req.setWeights.f6,
+				req.setWeights.f7;
+
+		for(int i=0; i<numTactileSensors_;i++)
+		{
+			ARMAmodel_flexi_[i]->setWeights(tmp);
+		}
+	}
+	else	// Return weights
+	{
+		if(0 <= req.sensor &&  req.sensor  < numTactileSensors_)
+		{
+			//Eigen::MatrixXd tmp;
+			//ARMAmodel_flexi_[i]->getWeights(tmp);
+
+			resp.getWeights.f0 = filterWeights_flexi_(0,req.sensor);
+			resp.getWeights.f1 = filterWeights_flexi_(1,req.sensor);
+			resp.getWeights.f2 = filterWeights_flexi_(2,req.sensor);
+			resp.getWeights.f3 = filterWeights_flexi_(3,req.sensor);
+			resp.getWeights.f4 = filterWeights_flexi_(4,req.sensor);
+			resp.getWeights.f5 = filterWeights_flexi_(5,req.sensor);
+			resp.getWeights.f6 = filterWeights_flexi_(6,req.sensor);
+			resp.getWeights.f7 = filterWeights_flexi_(7,req.sensor);
+		}
+		else
+		{
+			resp.success = false;
+		}
+	}
+
+	resp.success = true;
+	return true;
+}
 
 /// Service call to run an experiment
 bool PR2adaptNeuroControllerClass::runExperimentA(	ice_msgs::setValue::Request & req,
