@@ -1,0 +1,6 @@
+int32 sensor
+bool changeWeights
+ice_msgs/filterWeights setWeights
+---
+ice_msgs/filterWeights getWeights
+bool success
