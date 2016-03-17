@@ -30,6 +30,7 @@
 #include <ice_msgs/twoLayerNN.h>
 #include <ice_msgs/setValue.h>
 #include <ice_msgs/tactileCalibration.h>
+#include <ice_msgs/tactileFilterWeights.h>
 #include <std_srvs/Empty.h>
 
 
@@ -121,6 +122,7 @@ void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int cur
 		puts("");
 		puts("Use 'c' to capture data");
 		puts("Use 'p' to publish data");
+		puts("Use 'u' to use uncalibrated filter weights");
 		puts("");
 		puts("Use 'q' to quit and return to main menu");
 		puts(" ");
@@ -178,6 +180,8 @@ int main(int argc, char** argv)
   ros::ServiceClient publishExpData_srv_ = nh.serviceClient<std_srvs::Empty>("/pr2_adaptNeuroController/publishExpData");
   ros::ServiceClient captureData_srv_ = nh.serviceClient<std_srvs::Empty>("/pr2_adaptNeuroController/capture");
   ros::ServiceClient status_srv_ = nh.serviceClient<ice_msgs::setBool>("/tactile/status");
+  ros::ServiceClient tactileFilterWeights_srv_ = nh.serviceClient<ice_msgs::tactileFilterWeights>("/tactile/filterWeights");
+
 
   // ROS messages
   ice_msgs::setBool setBool_msgs_;
@@ -461,7 +465,7 @@ int main(int argc, char** argv)
 					 std_srvs::Empty empty_msgs;
 					 if (!captureData_srv_.call(empty_msgs))
 					 {
-						 ROS_ERROR("Failed to call publishing data service!");
+						 ROS_ERROR("Failed to call capture data service!");
 					 }
 					 break;
 				 }
@@ -479,6 +483,36 @@ int main(int argc, char** argv)
 				 case 'q':
 				 {
 					 stop_menu2 = true;
+					 break;
+				 }
+				 case 'u':
+				 {
+					 // Getting filter weights
+					 ice_msgs::tactileFilterWeights fw_msg;
+					 fw_msg.request.changeWeights = false;
+					 fw_msg.request.sensor = 0;
+					 cout<<"Getting filter weights from sensor "<<fw_msg.request.sensor<<" ...\n";
+					 if (!tactileFilterWeights_srv_.call(fw_msg))
+					 {
+						 ROS_ERROR("Failed to call tactile/FilterWeights service!");
+					 }
+					 cout<<fw_msg.response.getWeights.f0 << ", " <<
+						   fw_msg.response.getWeights.f1 << ", " <<
+						   fw_msg.response.getWeights.f2 << ", " <<
+						   fw_msg.response.getWeights.f3 << ", " <<
+						   fw_msg.response.getWeights.f4 << ", " <<
+						   fw_msg.response.getWeights.f5 << ", " <<
+						   fw_msg.response.getWeights.f6 << ", " <<
+						   fw_msg.response.getWeights.f7 << ", " << "\n---\n";
+
+					 // Setting filter weights
+					 fw_msg.request.changeWeights = true;
+					 fw_msg.request.setWeights = fw_msg.response.getWeights;
+					 cout<<"GSetting filter weights for all sensors ... \n";
+					 if (!tactileFilterWeights_srv_.call(fw_msg))
+					 {
+						 ROS_ERROR("Failed to call tactile/FilterWeights service!");
+					 }
 					 break;
 				 }
 				 default:
