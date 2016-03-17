@@ -119,6 +119,9 @@ void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int cur
 		puts("Use 'd' to change datafile name");
 		puts("Use 's' to start calibration");
 		puts("");
+		puts("Use 'c' to capture data");
+		puts("Use 'p' to publish data");
+		puts("");
 		puts("Use 'q' to quit and return to main menu");
 		puts(" ");
 	}
@@ -173,6 +176,7 @@ int main(int argc, char** argv)
   ros::ServiceClient getNNWeights_srv_ = nh.serviceClient<ice_msgs::getNNweights>("/pr2_adaptNeuroController/getNNweights");
   ros::ServiceClient setTactileCalibration_srv_ = nh.serviceClient<ice_msgs::tactileCalibration>("/tactile/calibration");
   ros::ServiceClient publishExpData_srv_ = nh.serviceClient<std_srvs::Empty>("/pr2_adaptNeuroController/publishExpData");
+  ros::ServiceClient captureData_srv_ = nh.serviceClient<std_srvs::Empty>("/pr2_adaptNeuroController/capture");
   ros::ServiceClient status_srv_ = nh.serviceClient<ice_msgs::setBool>("/tactile/status");
 
   // ROS messages
@@ -390,6 +394,9 @@ int main(int argc, char** argv)
       {
     	  bool calibrationRunning = false;
 
+    	  double dx = 0.25;
+    	  double dy = 0.25;
+
     	  int activeSensor = 2;
     	  int nextActiveSensor = 2;
     	  string dataFile = "default";
@@ -426,8 +433,8 @@ int main(int argc, char** argv)
 					 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
 
 					 dataFile = string(cmd);				   // TODO: add package path
+					 break;
 				 }
-				 break;
 				 case 'r':
 				 {
 					 // Ask for number of trials
@@ -439,20 +446,46 @@ int main(int argc, char** argv)
 
 					 std::stringstream  linestream(cmd);
 					 linestream >> numTrials;				   // TODO: check user input
+					 break;
 				 }
-				 break;
 				 case 's':
 				 {
 					 calibrationRunning = true;
 					 cout<<"Starting calibration!\n";
+					 break;
 				 }
-				 break;
+				 case 'c':
+				 {
+					 // Capture data
+					 cout<<"Start capturing data ...";
+					 std_srvs::Empty empty_msgs;
+					 if (!captureData_srv_.call(empty_msgs))
+					 {
+						 ROS_ERROR("Failed to call publishing data service!");
+					 }
+					 break;
+				 }
+				 case 'p':
+				 {
+					 // Publish data
+					 cout<<"Publishing data ...";
+					 std_srvs::Empty empty_msgs;
+					 if (!publishExpData_srv_.call(empty_msgs))
+					 {
+						 ROS_ERROR("Failed to call publishing data service!");
+					 }
+					 break;
+				 }
 				 case 'q':
+				 {
 					 stop_menu2 = true;
 					 break;
+				 }
 				 default:
+				 {
 					 ROS_INFO_STREAM("Keycode not found: " << c);
 					 break;
+				 }
 				 } //end switch
 
         	 }
@@ -473,27 +506,27 @@ int main(int argc, char** argv)
             	 switch(activeSensor)
             	 {
             	 	 case 2:	// Green -> blue (+x)
-            	 		tactileCalibration_msg.request.distance = 0.2;
-            	 		tactileCalibration_msg.request.time = 4;
+            	 		tactileCalibration_msg.request.distance = dx;
+            	 		tactileCalibration_msg.request.time = 3;
             	 		nextActiveSensor = 3;	// Next sensor
             	 		break;
             	 	 case 3:	// Blue -> yellow (-y)
-            	 		tactileCalibration_msg.request.start.position.x += 0.2;
-            	 		tactileCalibration_msg.request.distance = 0.3;
-            	 		tactileCalibration_msg.request.time = 6;
+            	 		tactileCalibration_msg.request.start.position.x += dx;
+            	 		tactileCalibration_msg.request.distance = dy;
+            	 		tactileCalibration_msg.request.time = 3;
             	 		nextActiveSensor = 0;	// Next sensor
             	 		break;
             	 	 case 0:	// Yellow -> red (-x)
-            	 		tactileCalibration_msg.request.start.position.x += 0.2;
-            	 		tactileCalibration_msg.request.start.position.y -= 0.3;
-            	 		tactileCalibration_msg.request.distance = 0.2;
-            	 		tactileCalibration_msg.request.time = 4;
+            	 		tactileCalibration_msg.request.start.position.x += dx;
+            	 		tactileCalibration_msg.request.start.position.y -= dy;
+            	 		tactileCalibration_msg.request.distance = dx;
+            	 		tactileCalibration_msg.request.time = 3;
             	 		nextActiveSensor = 1;	// Next sensor
             	 		break;
             	 	 case 1:	// Red -> green (+y)
-            	 		tactileCalibration_msg.request.start.position.y -= 0.3;
-            	 		tactileCalibration_msg.request.distance = 0.3;
-            	 		tactileCalibration_msg.request.time = 6;
+            	 		tactileCalibration_msg.request.start.position.y -= dy;
+            	 		tactileCalibration_msg.request.distance = dy;
+            	 		tactileCalibration_msg.request.time = 3;
             	 		nextActiveSensor = 2;	// Next sensor
             	 		break;
             	 	 default:
