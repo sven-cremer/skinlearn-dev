@@ -461,7 +461,7 @@ int main(int argc, char** argv)
 				 case 'c':
 				 {
 					 // Capture data
-					 cout<<"Start capturing data ...";
+					 cout<<"Start capturing data ...\n";
 					 std_srvs::Empty empty_msgs;
 					 if (!captureData_srv_.call(empty_msgs))
 					 {
@@ -486,7 +486,7 @@ int main(int argc, char** argv)
 				 case 'p':
 				 {
 					 // Publish data
-					 cout<<"Publishing data ...";
+					 cout<<"Publishing data ...\n";
 					 std_srvs::Empty empty_msgs;
 					 if (!publishExpData_srv_.call(empty_msgs))
 					 {
@@ -548,7 +548,7 @@ int main(int argc, char** argv)
             	 ice_msgs::tactileCalibration tactileCalibration_msg;
      	 		 tactileCalibration_msg.request.start.position.x = 0.70;			// Green position
      	 		 tactileCalibration_msg.request.start.position.y = 0.35;
-     	 		 tactileCalibration_msg.request.start.position.z = -0.11;
+     	 		 tactileCalibration_msg.request.start.position.z = -0.125;
             	 tactileCalibration_msg.request.recordData = true;
             	 tactileCalibration_msg.request.activeSensor = activeSensor;
             	 switch(activeSensor)
@@ -596,7 +596,7 @@ int main(int argc, char** argv)
             	 system( cmd1.c_str() );
 
             	 // Check status
-            	 cout<<"Waiting for calibration run to complete ... ";
+            	 cout<<"Waiting for calibration run to complete ... \n";
             	 ice_msgs::setBool bool_msgs;
             	 bool_msgs.response.success = true;	// False when calibration is not longer runnign
             	 while(bool_msgs.response.success)
@@ -610,7 +610,7 @@ int main(int argc, char** argv)
             	 cout<<" done!\n";
 
             	 // Publish data
-            	 cout<<"Publishing data ...";
+            	 cout<<"Publishing data ... \n";
             	 std_srvs::Empty empty_msgs;
             	 if (!publishExpData_srv_.call(empty_msgs))
             	 {
