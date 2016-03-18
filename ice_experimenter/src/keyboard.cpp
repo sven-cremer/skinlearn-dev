@@ -467,6 +467,20 @@ int main(int argc, char** argv)
 					 {
 						 ROS_ERROR("Failed to call capture data service!");
 					 }
+
+					 // Check status
+//					 cout<<"Waiting for all data to be recorded ... ";
+//					 ice_msgs::setBool bool_msgs;
+//					 bool_msgs.response.success = true;	// False when calibration is not longer response
+//					 while(bool_msgs.response.success)
+//					 {
+//						 if(!status_srv_.call(bool_msgs))
+//						 {
+//							 ROS_ERROR("Failed to call status service!");
+//						 }
+//						 sleep(0.5);
+//					 }
+//					 cout<<"Recording complete!\n";
 					 break;
 				 }
 				 case 'p':
