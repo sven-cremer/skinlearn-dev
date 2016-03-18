@@ -1697,7 +1697,8 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 bool PR2adaptNeuroControllerClass::statusCB( ice_msgs::setBool::Request & req,
 											 ice_msgs::setBool::Response& resp )
 {
-	resp.success = calibrateSensors;
+	//resp.success = calibrateSensors;
+	resp.success = recordData;
 
 	return true;
 }
