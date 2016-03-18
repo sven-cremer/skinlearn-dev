@@ -91,18 +91,28 @@ class RlsModel
 
   void stackArmaIn( Eigen::MatrixXd & y_prev, Eigen::MatrixXd & u_in )
   {
-    // TODO parameterize this
+    // TODO Check if this was parameterized correctly!
     // Moves top to bottom rows are time series, columns are dimension
     // First in First out bottom most location nth row is dumped
 
-	  Uk_plus.block<4-1, 1>(1,0) = Uk.block<4-1, 1>(0,0);
-	  Uk_plus.block<1,1>(0,0) = - y_prev.transpose();
+	  Uk_plus.block<4-1, 1>(1,0) = Uk.block<4-1, 1>(0,0);	// Move down 3
+	  Uk_plus.block<1,1>(0,0) = - y_prev.transpose();		// Replace first
 
-	  Uk_plus.block<4-1, 1>(5,0) = Uk.block<4-1, 1>(4,0);
-	  Uk_plus.block<1,1>(4,0) = u_in.transpose();
+	  Uk_plus.block<4-1, 1>(5,0) = Uk.block<4-1, 1>(4,0);	// Move down 3
+	  Uk_plus.block<1,1>(4,0) = u_in.transpose();			// Replace first
 
 //	  std::cout<<"Uk_plus (old code):\n"<<Uk_plus<<"\n---\n";
-	  Uk_plus.setZero();
+
+	  Uk_plus(2,0) = 0;			// FIXME temporary make it a 2, 1 filter
+	  Uk_plus(3,0) = 0;
+
+	  Uk_plus(5,0) = 0;
+	  Uk_plus(6,0) = 0;
+	  Uk_plus(7,0) = 0;
+
+//	  std::cout<<"Uk_plus (modified):\n"<<Uk_plus<<"\n---\n";
+/*
+	Uk_plus.setZero();
 	// Update x_m
     Uk_plus.block(1,0,num_x_Fir-1,num_Dim) = Uk.block(0,0,num_x_Fir-1,num_Dim);	// Move down rows (overwrites last entry)
     Uk_plus.block(0,0,1,num_Dim) = - y_prev.transpose();						// Update first entry with new value(s)
@@ -116,9 +126,9 @@ class RlsModel
 		j++;
     }
 
-//	  std::cout<<"Uk_plus (new code):\n"<<Uk_plus<<"\n---\n";
-//	  std::cout<<"\n======\n";
-
+	  std::cout<<"Uk_plus (new code):\n"<<Uk_plus<<"\n---\n";
+	  std::cout<<"\n======\n";
+*/
     Uk = Uk_plus;
   }
 
