@@ -155,8 +155,8 @@ m_S                   : 0.0
 m_D                   : 5.0
 
 # Params for M(s) of the RLS models
-task_mA               : 1.5
-task_mB               : 1.5
+task_mA               : 0.7
+task_mB               : 0.7
 
 # Params for MRAC Sim Human
 simHuman_a            : 0.1

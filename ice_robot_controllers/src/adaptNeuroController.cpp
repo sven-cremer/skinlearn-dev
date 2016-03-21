@@ -396,6 +396,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 					x_d.topRows(3) = x0_cali_vec_.topRows(3);
 
 					X_m = x0_cali_vec_;	// TODO move?
+					calibrationCounter = 0;
 
 					refTrajSetForCalibration = true;
 					// Start data recording
@@ -421,6 +422,12 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			if(calibrationDistance_ > maxCalibrationDistance_) // TODO && time > 1 sec
 			{
+				calibrationCounter++;
+			}
+
+			if( calibrationCounter>333)
+			{
+
 				calibrateSensors = false;
 				refTrajSetForCalibration = false;
 //				xd_r.setZero();
@@ -524,14 +531,15 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //std::cout<<"ARMA:\n"<<tmp<<"\n---\n";
 				// Convert into global reference frame
 
-				if(tmp(2)>2)
-					tmp(2)=2;
-				if(tmp(2)<2)
-					tmp(2)=-2;
+				if(tmp(2)>1)
+					tmp(2)=1;
+				if(tmp(2)<1)
+					tmp(2)=-1;
 
 				X_m.topRows(3) = x0_cali_vec_.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(tactileSensorSelected_).cwiseAbs());
 				X_m.topRows(3) += tmp(1)*sensorDirections.col(tactileSensorSelected_);
-//				Xd_m .topRows(3) = tmp(2)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT   ?
+
+				Xd_m .topRows(3) = tmp(2)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT   ?
 //				Xdd_m.topRows(3) += tmp(3)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT^2 ?		// FIXME
 //std::cout<<"X_m:\n"<<X_m<<"\n---\n";
 				// Save weights
@@ -2692,6 +2700,7 @@ bool PR2adaptNeuroControllerClass::initSensors()
 	}
 
 	Vec3d_ones.setOnes();
+	calibrationCounter = -1;
 
 	return result;
 }

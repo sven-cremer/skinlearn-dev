@@ -356,6 +356,7 @@ private:
 	Eigen::VectorXd tactile_data_;
 	int tactile_dimensions_;
 	Eigen::MatrixXd sensorDirections;
+	int calibrationCounter;
 	double calibrationDistance_;
 	double calibrationVelocity_;
 	double maxCalibrationDistance_;
