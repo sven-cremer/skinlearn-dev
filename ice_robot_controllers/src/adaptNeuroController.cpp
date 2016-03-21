@@ -522,6 +522,12 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 							tmp(3)    												);  // output: xdd_m
 //std::cout<<"ARMA:\n"<<tmp<<"\n---\n";
 				// Convert into global reference frame
+
+				if(tmp(2)>10)
+					tmp(2)=10;
+				if(tmp(2)<10)
+					tmp(2)=-10;
+
 				X_m  .topRows(3) = tmp(1)*sensorDirections.col(tactileSensorSelected_);
 				Xd_m .topRows(3) = tmp(2)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT   ?
 //				Xdd_m.topRows(3) += tmp(3)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT^2 ?		// FIXME
