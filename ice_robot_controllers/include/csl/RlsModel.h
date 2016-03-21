@@ -391,7 +391,7 @@ public:
     param_qdd_m          = qdd_m(0)       ;		// xdd_m
   }
 
-  void updateARMA( Eigen::MatrixXd & param_qd_m          ,  // output: xd_m
+  void updateARMA( Eigen::MatrixXd & param_qd_m        ,  // output: xd_m
                    Eigen::MatrixXd & param_qd            ,
                    Eigen::MatrixXd & param_q_m           ,  // output: x_m
                    Eigen::MatrixXd & param_q             ,
@@ -519,6 +519,51 @@ public:
 //	}
 
   }
+
+  void runARMAupdate(double p_delT       ,  // input: delta T
+		  	  	  	   double & p_u        ,  // input:  force or voltage
+		               double & p_x_d      ,  // input:  x_d
+					   double & p_x_m      ,  // output: x_m
+		  	  	  	   double & p_xd_m     ,  // output: xd_m
+					   double & p_xdd_m    )  // output: xdd_m
+  {
+
+	  delT 		= p_delT;
+	  t_r(0)	= p_u   ;		// f_r
+	  ref_q_d(0)= p_x_d ;		// x_d
+
+	  // Store values
+	  prv_q_m  		= q_m ;		// x_m
+	  prv_qd_m 		= qd_m;		// xd_m
+
+	  // Desired is the task reference model (x_m -> x_d)
+	  Dk = ref_q_d;
+
+	  // Save input forces/torques in Uk
+	  stackArmaIn( prv_q_m, t_r );
+
+	  // Update filter weights using RLS
+	  if( !useFixedWeights )
+	  {
+		  rls_filter.Update( Wk, Uk, Dk, Pk );
+
+		  Wk = rls_filter.getEstimate();
+		  Pk = rls_filter.getCovariance();
+	  }
+
+	  // Compute x_m(t) = h(t)*theta(t)
+	  q_m   = Uk.transpose()*Wk  ;
+
+	  // Compute xd_m and xdd_m using backward difference (TODO better way to do this?)
+	  qd_m  = (q_m  - prv_q_m )/delT ;
+	  qdd_m = (qd_m - prv_qd_m)/delT ;
+
+	  // Return results
+	  p_x_m   = q_m  (0); 	// x_m
+	  p_xd_m  = qd_m (0); 	// xd_m
+	  p_xdd_m = qdd_m(0); 	// xdd_m
+  }
+
 };
 }
 }
