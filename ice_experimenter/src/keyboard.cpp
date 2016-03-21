@@ -18,6 +18,7 @@
 #include <ros/package.h>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
+#include <sound_play/sound_play.h>
 
 // PR2 utilities
 #include <apc_robot/pr2_manager.h>
@@ -182,6 +183,7 @@ int main(int argc, char** argv)
   ros::ServiceClient status_srv_ = nh.serviceClient<ice_msgs::setBool>("/tactile/status");
   ros::ServiceClient tactileFilterWeights_srv_ = nh.serviceClient<ice_msgs::tactileFilterWeights>("/tactile/filterWeights");
 
+  sound_play::SoundClient sc;
 
   // ROS messages
   ice_msgs::setBool setBool_msgs_;
@@ -587,6 +589,7 @@ int main(int argc, char** argv)
             		 ROS_ERROR("Failed to call tactile calibration service!");
             	 }
             	 cout<<"Started calibration with sensor "<<activeSensor<<"\n";
+            	 sc.say("Start!");
 
             	 // Save rtp file
             	 std::ostringstream convert;
@@ -607,6 +610,7 @@ int main(int argc, char** argv)
                 	 }
             		 sleep(0.5);
             	 }
+            	 sc.say("Done!");
             	 cout<<" done!\n";
 
             	 // Publish data
