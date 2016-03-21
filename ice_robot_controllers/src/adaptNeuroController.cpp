@@ -537,6 +537,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 			else if(false)		// FIXME
 			{
+				X_m   .setZero();		// Issue: should not be done before calibration
+				Xd_m  .setZero();
+				Xdd_m .setZero();
+
 				Eigen::Vector3d tmp;
 				for(int i=0;i<numTactileSensors_;i++)
 				{
@@ -546,17 +550,18 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 												  tmp(2),				// output: xdd_m
 												  tactile_data_(i) );	// input:  force or voltage
 
-					X_m  .topRows(3) += tmp(0)*sensorDirections.col(i);
-					Xd_m .topRows(3) += tmp(1)*sensorDirections.col(i);
-					Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(i);
+					X_m  .topRows(3) += (tmp(0)/numTactileSensors_)*sensorDirections.col(i);
+					Xd_m .topRows(3) += (tmp(1)/numTactileSensors_)*sensorDirections.col(i);
+					Xdd_m.topRows(3) += (tmp(2)/numTactileSensors_)*sensorDirections.col(i);
 				}
+
 				// Save weights
-				for(int i=0; i<numTactileSensors_;i++)
-				{
-					Eigen::MatrixXd tmp2;
-					ARMAmodel_flexi_[i]->getWeights(tmp2);
-					filterWeights_flexi_.col(i) = tmp2;
-				}
+//				for(int i=0; i<numTactileSensors_;i++)
+//				{
+//					Eigen::MatrixXd tmp2;
+//					ARMAmodel_flexi_[i]->getWeights(tmp2);
+//					filterWeights_flexi_.col(i) = tmp2;
+//				}
 			}
 
 			outer_elapsed_ = robot_state_->getTime() ;
