@@ -366,7 +366,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		if(calibrateSensors)	// TODO make x_r step, task model is inside RlsModel
 		{
 			// Generate x_r with xd_r ~ V
-			prev_x_r = x_r;
+			// prev_x_r = x_r;
 
 			// Calibrate all sensors
 			if(!calibrateSingelSensors)
@@ -388,12 +388,22 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 			else // Calibration single sensors
 			{
-				if(tactile_data_(tactileSensorSelected_)>0 || refTrajSetForCalibration)
+				// Wait for first contact before setting x_r
+				if(tactile_data_(tactileSensorSelected_)>0 && !refTrajSetForCalibration)
 				{
-					xd_r .topRows(3) =  calibrationVelocity_*sensorDirections.col(tactileSensorSelected_);
-					x_r  .topRows(3) += xd_r.topRows(3)*dt_;
-					refTrajSetForCalibration = true;
+					// Step function
+					CartVec start = affine2CartVec(x0_cali_);
+					x_r.topRows(3) = start.topRows(3) + maxCalibrationDistance_*sensorDirections.col(tactileSensorSelected_);
+					x_d.topRows(3) = start.topRows(3);
 
+					refTrajSetForCalibration = true;
+					// Start data recording
+					experiment_ = PR2adaptNeuroControllerClass::B;
+					storage_index_ = 0;
+					recordData = true;
+				}
+				if(refTrajSetForCalibration)
+				{
 					calibrationDistance_ = ( x0_cali_.translation() - x_.translation() ).norm();
 				}
 				/*
@@ -411,8 +421,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			if(calibrationDistance_ > maxCalibrationDistance_) // TODO && time > 1 sec
 			{
 				calibrateSensors = false;
-				xd_r.setZero();
-				xdd_r.setZero();
+				refTrajSetForCalibration = false;
+//				xd_r.setZero();
+//				xdd_r.setZero();
 				// Fix filter weights
 				for(int i=0; i<numTactileSensors_;i++)
 				{
@@ -485,39 +496,36 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //			sensor_2 : [-1,0]
 //			sensor_3 : [0,1]
 
-			if(calibrateSensors)	// TODO: check if tactileSensorSelected_ within range
+//			X_m   .setZero();
+//			Xd_m  .setZero();
+//			Xdd_m .setZero();
+
+			if(calibrateSensors  && refTrajSetForCalibration)	// TODO: check if tactileSensorSelected_ within range
 			{
-				// Compute delta x_r
-				task_ref.topRows(3) = x_r.topRows(3) - prev_x_r.topRows(3); //  - x_.translation();
+				Eigen::VectorXd tmp;
+				tmp.resize(4);
+				tmp.setZero();
 
-				Xd_m  .setZero();
-				Xdd_m .setZero();
+				// Compute x_d
+				prev_x_d = x_d;
+				x_d.topRows(3) = ( task_mA*outer_delT*x_r.topRows(3) + prev_x_d.topRows(3) ) / ( 1+task_mB*outer_delT );
 
-				CartVec tmp;
-//				for(int i=0; i<numTactileSensors_;i++)
-//				{
-					// Project into sensor axis to get -delta_X
-					tmp(4) = task_ref.topRows(3).dot( sensorDirections.col(tactileSensorSelected_) );
+				// Project into sensor axis to get -x_d
+				tmp(0) = x_d.topRows(3).dot( sensorDirections.col(tactileSensorSelected_) );
 
-					ARMAmodel_flexi_[tactileSensorSelected_]->updateDelT(outer_delT);
-
-					ARMAmodel_flexi_[tactileSensorSelected_]->updateARMA(
-							tmp                    (1) ,   // output: xd_m
-							Xd                     (0) ,
-							tmp                    (0) ,   // output: x_m
-							X                      (0) ,
-							tmp                    (2) ,   // output: xdd_m
-							tactile_data_      	   (tactileSensorSelected_) ,   // input:  force or voltage
-							tmp                    (4) ,   // input:  x_r
-							tmp                    (3)  ); // output: x_d
-
-					// Lets assume we are estimating delta_x_m in the sensor direction
-					X_m  .topRows(3) += tmp(0)*sensorDirections.col(tactileSensorSelected_);
-					Xd_m .topRows(3) += tmp(1)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT   ?
-					Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT^2 ?
-
-					task_refModel_output.topRows(3)	+=  tmp(3)*sensorDirections.col(tactileSensorSelected_);
-//				}
+				// Update ARMA model and get x_m
+				ARMAmodel_flexi_[tactileSensorSelected_]->runARMAupdate(outer_delT  ,  // input: delta T
+							tactile_data_(tactileSensorSelected_)        			,  // input:  force or voltage
+							tmp(0)      											,  // input:  x_d
+							tmp(1)      											,  // output: x_m
+							tmp(2)     												,  // output: xd_m
+							tmp(3)    												);  // output: xdd_m
+//std::cout<<"ARMA:\n"<<tmp<<"\n---\n";
+				// Convert into global reference frame
+				X_m  .topRows(3) = tmp(1)*sensorDirections.col(tactileSensorSelected_);
+				Xd_m .topRows(3) = tmp(2)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT   ?
+//				Xdd_m.topRows(3) += tmp(3)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT^2 ?		// FIXME
+//std::cout<<"X_m:\n"<<X_m<<"\n---\n";
 				// Save weights
 				for(int i=0; i<numTactileSensors_;i++)
 				{
@@ -525,36 +533,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 					ARMAmodel_flexi_[i]->getWeights(tmp2);
 					filterWeights_flexi_.col(i) = tmp2;
 				}
-//				task_ref(0) = delta_x; // + x_r ?
-//
-//				ARMAmodel_flexi_[tactileSensorSelected_]->updateDelT(outer_delT);
-//
-//				CartVec tmp;
-//				ARMAmodel_flexi_[tactileSensorSelected_]->updateARMA(
-//						tmp                    (1) ,   // output: xd_m
-//						Xd                     (0) ,
-//						tmp                    (0) ,   // output: x_m
-//						X                      (0) ,
-//						tmp                    (2) ,   // output: xdd_m
-//						tactile_data_      	   (tactileSensorSelected_) ,   // input:  force or voltage
-//						task_ref               (0) ,   // input:  x_r
-//						tmp                    (3)  ); // output: x_d
-//
-//				// Lets assume we are estimating delta_x_m in the sensor direction
-//				X_m  .topRows(3) = X_m.topRows(3) + tmp(0)*sensorDirections.col(tactileSensorSelected_);
-//				Xd_m .topRows(3) = tmp(1)*sensorDirections.col(tactileSensorSelected_); // Or tmp(0)/delT ?
-//				Xdd_m.topRows(3) = tmp(2)*sensorDirections.col(tactileSensorSelected_);
-//
-//				task_refModel_output.topRows(3)	+=  tmp(3)*sensorDirections.col(tactileSensorSelected_);
-//
-//				// Save weights
-//				Eigen::MatrixXd tmp2;
-//				ARMAmodel_flexi_[tactileSensorSelected_]->getWeights(tmp2);
-//				filterWeights_flexi_.col(tactileSensorSelected_) = tmp2;
+
 			}
-			else
+			else if(false)		// FIXME
 			{
-				CartVec tmp;
+				Eigen::Vector3d tmp;
 				for(int i=0;i<numTactileSensors_;i++)
 				{
 					ARMAmodel_flexi_[i]->updateDelT(outer_delT);
@@ -579,7 +562,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			outer_elapsed_ = robot_state_->getTime() ;
 
 			// Output variables:
-			//   task_refModel_output;		<- x_d
+			//   x_d;
 			//   X_m;
 			//   Xd_m;
 			//   Xdd_m;
@@ -1413,12 +1396,12 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataB_msg_[storage_index_].x_i.psi   = x_r(5);
 
 		// Task trajectory
-		experimentDataB_msg_[storage_index_].x_d.x     = task_refModel_output(0);
-		experimentDataB_msg_[storage_index_].x_d.y     = task_refModel_output(1);
-		experimentDataB_msg_[storage_index_].x_d.z     = task_refModel_output(2);  // = 0
-		experimentDataB_msg_[storage_index_].x_d.phi   = task_refModel_output(3);  // = 0
-		experimentDataB_msg_[storage_index_].x_d.the   = task_refModel_output(4);  // = 0
-		experimentDataB_msg_[storage_index_].x_d.psi   = task_refModel_output(5);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.x     = x_d(0);
+		experimentDataB_msg_[storage_index_].x_d.y     = x_d(1);
+		experimentDataB_msg_[storage_index_].x_d.z     = x_d(2);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.phi   = x_d(3);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.the   = x_d(4);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.psi   = x_d(5);  // = 0
 
 		// Model trajectory
 		experimentDataB_msg_[storage_index_].x_m.x     = X_m(0);
@@ -1697,8 +1680,8 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 bool PR2adaptNeuroControllerClass::statusCB( ice_msgs::setBool::Request & req,
 											 ice_msgs::setBool::Response& resp )
 {
-	//resp.success = calibrateSensors;
-	resp.success = recordData;
+	resp.success = calibrateSensors;
+	//resp.success = recordData;
 
 	return true;
 }
@@ -1761,12 +1744,12 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::tactileCalibr
 		}
 
 		// Capture data
-		if(req.recordData)
-		{
-			experiment_ = PR2adaptNeuroControllerClass::B;
-			storage_index_ = 0;
-			recordData = true;
-		}
+//		if(req.recordData)
+//		{
+//			experiment_ = PR2adaptNeuroControllerClass::B;
+//			storage_index_ = 0;
+//			recordData = true;
+//		}
 	}
 
 	//resp.success = true;
@@ -3099,6 +3082,9 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 
 	transformed_force = Eigen::Vector3d::Zero();
 	accData           = Eigen::Vector3d::Zero();
+
+	x_d                  = Eigen::VectorXd::Zero( num_Outputs ) ;
+	prev_x_d             = Eigen::VectorXd::Zero( num_Outputs ) ;
 
 	t_r                  = Eigen::VectorXd::Zero( num_Outputs ) ;
 	task_ref             = Eigen::VectorXd::Zero( num_Outputs ) ;
