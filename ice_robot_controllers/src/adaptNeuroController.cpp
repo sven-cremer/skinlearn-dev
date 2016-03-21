@@ -529,7 +529,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				if(tmp(2)<2)
 					tmp(2)=-2;
 
-				X_m.topRows(3) = x0_cali_vec_.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(tactileSensorSelected_));
+				X_m.topRows(3) = x0_cali_vec_.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(tactileSensorSelected_).cwiseAbs());
 				X_m.topRows(3) += tmp(1)*sensorDirections.col(tactileSensorSelected_);
 //				Xd_m .topRows(3) = tmp(2)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT   ?
 //				Xdd_m.topRows(3) += tmp(3)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT^2 ?		// FIXME
