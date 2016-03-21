@@ -368,6 +368,8 @@ private:
 	// Fixed filter weights or adaptive weights
 	bool useFixedWeights;
 
+	Eigen::Vector3d Vec3d_ones;
+
 	Eigen::VectorXd q;
 	Eigen::VectorXd qd;
 	Eigen::VectorXd qdd;
