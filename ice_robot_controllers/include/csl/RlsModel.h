@@ -103,12 +103,12 @@ class RlsModel
 
 //	  std::cout<<"Uk_plus (old code):\n"<<Uk_plus<<"\n---\n";
 
-	  Uk_plus(2,0) = 0;			// FIXME temporary make it a 2, 1 filter
-	  Uk_plus(3,0) = 0;
-
-	  Uk_plus(5,0) = 0;
-	  Uk_plus(6,0) = 0;
-	  Uk_plus(7,0) = 0;
+//	  Uk_plus(2,0) = 0;			// FIXME temporary make it a 2, 1 filter
+//	  Uk_plus(3,0) = 0;
+//
+//	  Uk_plus(5,0) = 0;
+//	  Uk_plus(6,0) = 0;
+//	  Uk_plus(7,0) = 0;
 
 //	  std::cout<<"Uk_plus (modified):\n"<<Uk_plus<<"\n---\n";
 /*
