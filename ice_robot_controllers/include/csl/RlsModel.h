@@ -527,10 +527,18 @@ public:
 		  	  	  	   double & p_xd_m     ,  // output: xd_m
 					   double & p_xdd_m    )  // output: xdd_m
   {
-
 	  delT 		= p_delT;
 	  t_r(0)	= p_u   ;		// f_r
 	  ref_q_d(0)= p_x_d ;		// x_d
+
+	  if( firstTime )
+	  {
+		  stackArmaIn( q_m, t_r );	// FIXME
+		  stackArmaIn( q_m, t_r );
+		  stackArmaIn( q_m, t_r );
+
+		  firstTime = false;
+	  }
 
 	  // Store values
 	  prv_q_m  		= q_m ;		// x_m
