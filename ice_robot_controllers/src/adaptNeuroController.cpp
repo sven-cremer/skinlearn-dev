@@ -392,11 +392,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				if(tactile_data_(tactileSensorSelected_)>0 && !refTrajSetForCalibration)
 				{
 					// Step function
-					CartVec start = affine2CartVec(x0_cali_);
-					x_r.topRows(3) = start.topRows(3) + maxCalibrationDistance_*sensorDirections.col(tactileSensorSelected_);
-					x_d.topRows(3) = start.topRows(3);
+					x_r.topRows(3) = x0_cali_vec_.topRows(3) + maxCalibrationDistance_*sensorDirections.col(tactileSensorSelected_);
+					x_d.topRows(3) = x0_cali_vec_.topRows(3);
 
-					X_m = start;	// TODO move?
+					X_m = x0_cali_vec_;	// TODO move?
 
 					refTrajSetForCalibration = true;
 					// Start data recording
@@ -530,7 +529,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				if(tmp(2)<2)
 					tmp(2)=-2;
 
-				X_m.topRows(3) = start.topRows(3) *(Vec3d_ones - sensorDirections.col(tactileSensorSelected_));
+				X_m.topRows(3) = x0_cali_vec_.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(tactileSensorSelected_));
 				X_m.topRows(3) += tmp(1)*sensorDirections.col(tactileSensorSelected_);
 //				Xd_m .topRows(3) = tmp(2)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT   ?
 //				Xdd_m.topRows(3) += tmp(3)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT^2 ?		// FIXME
@@ -1728,20 +1727,20 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::tactileCalibr
 		calibrationVelocity_ = req.distance / req.time;
 
 		// Set start pose
-		CartVec start = affine2CartVec(x0_);	// Keep orientation
-		start(0) = req.start.position.x;
-		start(1) = req.start.position.y;
-		start(2) = req.start.position.z;
+		x0_cali_vec_ = affine2CartVec(x0_);	// Keep orientation
+		x0_cali_vec_(0) = req.start.position.x;
+		x0_cali_vec_(1) = req.start.position.y;
+		x0_cali_vec_(2) = req.start.position.z;
 
-		X_m = start;
+		X_m = x0_cali_vec_;
 		Xd_m.setZero();
 		Xdd_m.setZero();
 
-		x_r = start;
+		x_r = x0_cali_vec_;
 		xd_r.setZero();
 		xdd_r.setZero();
 
-		x0_cali_ = CartVec2Affine(start);
+		x0_cali_ = CartVec2Affine(x0_cali_vec_);
 		refTrajSetForCalibration = false;
 
 		// Select number of sensors to calibrate

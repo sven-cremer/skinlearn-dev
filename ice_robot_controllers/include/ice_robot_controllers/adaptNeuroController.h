@@ -131,6 +131,7 @@ private:
 	Eigen::Affine3d x_;				// Tip pose
 	Eigen::Affine3d x0_;			// Tip initial pose
 	Eigen::Affine3d x0_cali_;		// Tip initial pose for calibration
+	CartVec x0_cali_vec_;
 
 	Eigen::Affine3d x_des_;			// Tip desired pose
 	Eigen::Affine3d xd_des_;		// Tip desired velocity
