@@ -551,11 +551,17 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				}
 
 			}
-			else if(false)		// FIXME
+			else if(tactileSensorSelected_==-1)
 			{
-				X_m   .setZero();		// Issue: should not be done before calibration
-				Xd_m  .setZero();
-				Xdd_m .setZero();
+//				for(int i=0;i<numTactileSensors_;i++)
+//				{
+//					if(tactile_data_(i)>0)
+//					{
+//						X_m   .setZero();		// Issue: should not be done before calibration
+//						Xd_m  .setZero();
+//						Xdd_m .setZero();
+//					}
+//				}
 
 				Eigen::Vector3d tmp;
 				for(int i=0;i<numTactileSensors_;i++)
@@ -566,9 +572,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 												  tmp(2),				// output: xdd_m
 												  tactile_data_(i) );	// input:  force or voltage
 
-					X_m  .topRows(3) += (tmp(0)/numTactileSensors_)*sensorDirections.col(i);
-					Xd_m .topRows(3) += (tmp(1)/numTactileSensors_)*sensorDirections.col(i);
-					Xdd_m.topRows(3) += (tmp(2)/numTactileSensors_)*sensorDirections.col(i);
+					X_m  .topRows(3) += tmp(0)*sensorDirections.col(i);
+					Xd_m .topRows(3) += tmp(1)*sensorDirections.col(i);
+					Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(i);
 				}
 
 				// Save weights
@@ -2661,7 +2667,7 @@ bool PR2adaptNeuroControllerClass::initSensors()
 
 	// Tactile sensors
 	nh_.param("/num_tactile_sensors",     numTactileSensors_,     4);
-	tactileSensorSelected_ = -1;
+	tactileSensorSelected_ = 0;
 	calibrateSingelSensors = true;
 
 	if(useFlexiForce)

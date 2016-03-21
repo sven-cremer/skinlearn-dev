@@ -123,6 +123,7 @@ void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int cur
 		puts("");
 		puts("Use 'c' to capture data");
 		puts("Use 'p' to publish data");
+		puts("Use 'f' to fix filter weights");
 		puts("Use 'u' to use uncalibrated filter weights");
 		puts("");
 		puts("Use 'q' to quit and return to main menu");
@@ -494,6 +495,18 @@ int main(int argc, char** argv)
 					 {
 						 ROS_ERROR("Failed to call publishing data service!");
 					 }
+					 break;
+				 }
+				 case 'f':
+				 {
+	            	 // Stop calibration
+					 cout<<"Fixing weights ...\n";
+					 ice_msgs::tactileCalibration tactileCalibration_msg;
+					 tactileCalibration_msg.request.activeSensor = -1;
+	            	 if (!setTactileCalibration_srv_.call(tactileCalibration_msg))
+	            	 {
+	            		 ROS_ERROR("Failed to call tactile calibration service!");
+	            	 }
 					 break;
 				 }
 				 case 'q':
