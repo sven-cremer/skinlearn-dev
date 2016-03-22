@@ -144,9 +144,13 @@ if(argc < 2)
 
 void initFilter()	// TODO read from parameter server
 {
+	// 1st order butterworth. low-pass 40 hz (fs 850)
+	float b_lpfilt[] = {0.1296,  0.1296};
+	float a_lpfilt[] = {1.0000, -0.7408};
+
 	// 1st order butterworth. low-pass 100 hz
-	float b_lpfilt[] = {0.2452,  0.2452};
-	float a_lpfilt[] = {1.0000, -0.5095};
+//	float b_lpfilt[] = {0.2452,  0.2452};
+//	float a_lpfilt[] = {1.0000, -0.5095};
 
 	// 1st order butterworth, fc=35Hz, fs=1000Hz
 //	float b_lpfilt[] = {0.0994,  0.0994};
