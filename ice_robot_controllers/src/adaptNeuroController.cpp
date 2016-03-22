@@ -406,7 +406,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				}
 				if(refTrajSetForCalibration)
 				{
-					calibrationDistance_ = ( x0_cali_.translation() - x_d.translation() ).norm();
+					calibrationDistance_ = ( x_d.topRows(3) - x0_cali_vec_.topRows(3) ).norm();
 				}
 				/*
 				double rate = 0.5;
@@ -426,7 +426,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //			}
 //
 //			if( calibrationCounter>333)
-//			{
+			{
 				calibrationCounter = 0;
 				calibrateSensors = false;
 				refTrajSetForCalibration = false;
@@ -584,6 +584,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //					ARMAmodel_flexi_[i]->getWeights(tmp2);
 //					filterWeights_flexi_.col(i) = tmp2;
 //				}
+
 			}
 
 			outer_elapsed_ = robot_state_->getTime() ;
