@@ -309,6 +309,11 @@ public:
 	useFixedWeights = param_useFixedWeights;
   }
 
+  void setFirstTime(bool param_firstTime)
+  {
+	  firstTime = param_firstTime;
+  }
+
   void updateFIR( double & param_qd_m           ,
                   double & param_qd             ,
                   double & param_q_m            ,
@@ -533,9 +538,9 @@ public:
 
 	  if( firstTime )
 	  {
-		  stackArmaIn( q_m, t_r );	// FIXME
-		  stackArmaIn( q_m, t_r );
-		  stackArmaIn( q_m, t_r );
+		  stackArmaIn( ref_q_d, t_r );	// FIXME
+		  stackArmaIn( ref_q_d, t_r );
+		  stackArmaIn( ref_q_d, t_r );
 
 		  firstTime = false;
 	  }
@@ -544,15 +549,16 @@ public:
 	  prv_q_m  		= q_m ;		// x_m
 	  prv_qd_m 		= qd_m;		// xd_m
 
-	  // Desired is the task reference model (x_m -> x_d)
-	  Dk = ref_q_d;
-
 	  // Save input forces/torques in Uk
 	  stackArmaIn( prv_q_m, t_r );
 
 	  // Update filter weights using RLS
 	  if( !useFixedWeights )
 	  {
+		  // Desired is the task reference model (x_m -> x_d)
+		  Dk = ref_q_d;
+
+		  // Perform RLS update
 		  rls_filter.Update( Wk, Uk, Dk, Pk );
 
 		  Wk = rls_filter.getEstimate();
