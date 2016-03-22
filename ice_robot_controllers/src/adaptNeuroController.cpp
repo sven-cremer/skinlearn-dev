@@ -420,12 +420,12 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //			delta_x = (x_r - prev_x_r).norm();
 //			calibrationDistance_ += delta_x;
 
-			if(calibrationDistance_ > maxCalibrationDistance_) // TODO && time > 1 sec
+			if(calibrationDistance_ > maxCalibrationDistance_*0.95)
 			{
 				calibrationCounter++;
 			}
 
-			if( calibrationCounter>333)
+			if( calibrationCounter>167)		// Wait 0.5 seconds extra
 			{
 				calibrationCounter = 0;
 				calibrateSensors = false;
@@ -530,15 +530,13 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 							tmp(3)    												);  // output: xdd_m
 //std::cout<<"ARMA:\n"<<tmp<<"\n---\n";
 				// Convert into global reference frame
-
-				if(tmp(2)>1)
-					tmp(2)=1;
-				if(tmp(2)<1)
-					tmp(2)=-1;
-
 				X_m.topRows(3) = x0_cali_vec_.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(tactileSensorSelected_).cwiseAbs());
 				X_m.topRows(3) += tmp(1)*sensorDirections.col(tactileSensorSelected_);
 
+//				if(tmp(2)>1)
+//					tmp(2)=1;
+//				if(tmp(2)<1)
+//					tmp(2)=-1;
 //				Xd_m .topRows(3) = tmp(2)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT   ?
 //				Xdd_m.topRows(3) += tmp(3)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT^2 ?		// FIXME
 //std::cout<<"X_m:\n"<<X_m<<"\n---\n";
@@ -551,40 +549,36 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				}
 
 			}
-			else if(tactileSensorSelected_==-1)
+			else if(tactileSensorSelected_==-1)		// Use fixed weights
 			{
-//				for(int i=0;i<numTactileSensors_;i++)
-//				{
-//					if(tactile_data_(i)>0)
-//					{
-//						X_m   .setZero();		// Issue: should not be done before calibration
-//						Xd_m  .setZero();
-//						Xdd_m .setZero();
-//					}
-//				}
+				Eigen::VectorXd tmp;
+				tmp.resize(4);
+				tmp.setZero();
 
-				Eigen::Vector3d tmp;
 				for(int i=0;i<numTactileSensors_;i++)
 				{
-					ARMAmodel_flexi_[i]->updateDelT(outer_delT);
-					ARMAmodel_flexi_[i]->useARMA( tmp(0),				// output: x_m
-												  tmp(1),				// output: xd_m
-												  tmp(2),				// output: xdd_m
-												  tactile_data_(i) );	// input:  force or voltage
+//					ARMAmodel_flexi_[i]->updateDelT(outer_delT);
+//					ARMAmodel_flexi_[i]->useARMA( tmp(0),				// output: x_m
+//												  tmp(1),				// output: xd_m
+//												  tmp(2),				// output: xdd_m
+//												  tactile_data_(i) );	// input:  force or voltage
+//					X_m.topRows(3) = tmp(0)*sensorDirections.col(i) + X_m.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(i).cwiseAbs());
 
-					X_m  .topRows(3) += tmp(0)*sensorDirections.col(i);
-					Xd_m .topRows(3) += tmp(1)*sensorDirections.col(i);
-					Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(i);
+
+					tmp(0) = X.topRows(3).dot( sensorDirections.col(i) );
+
+					ARMAmodel_flexi_[i]->runARMAupdate(outer_delT   ,  // input: delta T
+								tactile_data_(i)        			,  // input:  force or voltage
+								tmp(0)      						,  // input:  x_d
+								tmp(1)      						,  // output: x_m
+								tmp(2)     							,  // output: xd_m
+								tmp(3)    						    ); // output: xdd_m
+
+					X_m  .topRows(3) = tmp(1)*sensorDirections.col(i) + X_m.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(i).cwiseAbs());
+					//Xd_m .topRows(3) += tmp(1)*sensorDirections.col(i);
+					//Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(i);
 				}
-
-				// Save weights
-//				for(int i=0; i<numTactileSensors_;i++)
-//				{
-//					Eigen::MatrixXd tmp2;
-//					ARMAmodel_flexi_[i]->getWeights(tmp2);
-//					filterWeights_flexi_.col(i) = tmp2;
-//				}
-
+				std::cout<<"X_m:\n"<<X_m<<"\n---\n";
 			}
 
 			outer_elapsed_ = robot_state_->getTime() ;
@@ -1727,7 +1721,13 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::tactileCalibr
 		for(int i=0; i<numTactileSensors_;i++)	// Fix weights
 		{
 			ARMAmodel_flexi_[i]->setUseFixedWeights(true);
+			Eigen::MatrixXd tmp2;
+			ARMAmodel_flexi_[i]->getWeights(tmp2);
+			filterWeights_flexi_.col(i) = tmp2;
+			ARMAmodel_flexi_[i]->setFirstTime(true);
 		}
+
+		X_m   = x0_cali_vec_;
 
 		resp.success = false;
 		return true;
