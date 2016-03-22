@@ -406,7 +406,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				}
 				if(refTrajSetForCalibration)
 				{
-					calibrationDistance_ = ( x0_cali_.translation() - x_.translation() ).norm();
+					calibrationDistance_ = ( x0_cali_.translation() - x_d.translation() ).norm();
 				}
 				/*
 				double rate = 0.5;
@@ -421,13 +421,13 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //			calibrationDistance_ += delta_x;
 
 			if(calibrationDistance_ > maxCalibrationDistance_) // TODO && time > 1 sec
-			{
-				calibrationCounter++;
-			}
-
-			if( calibrationCounter>333)
-			{
-
+//			{
+//				calibrationCounter++;
+//			}
+//
+//			if( calibrationCounter>333)
+//			{
+				calibrationCounter = 0;
 				calibrateSensors = false;
 				refTrajSetForCalibration = false;
 //				xd_r.setZero();
