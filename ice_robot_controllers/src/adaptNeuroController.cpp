@@ -391,11 +391,15 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				// Wait for first contact before setting x_r
 				if(tactile_data_(tactileSensorSelected_)>0 && !refTrajSetForCalibration)
 				{
-					// Step function
-					x_r.topRows(3) = x0_cali_vec_.topRows(3) + maxCalibrationDistance_*sensorDirections.col(tactileSensorSelected_);
-					x_d.topRows(3) = x0_cali_vec_.topRows(3);
+					// Step function (global frame)
+//					x_r.topRows(3) = x0_cali_vec_.topRows(3) + maxCalibrationDistance_*sensorDirections.col(tactileSensorSelected_);
+//					x_d.topRows(3) = x0_cali_vec_.topRows(3);
+					// Step function (gripper frame)
+					x_r.topRows(3) = maxCalibrationDistance_*sensorDirections.col(tactileSensorSelected_);
+					x_d.topRows(3).setZero();
 
 					X_m = x0_cali_vec_;	// TODO move?
+					X_m.topRows(3).setZero();
 					calibrationCounter = 0;
 
 					refTrajSetForCalibration = true;
@@ -420,7 +424,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //			delta_x = (x_r - prev_x_r).norm();
 //			calibrationDistance_ += delta_x;
 
-			if(calibrationDistance_ > maxCalibrationDistance_*0.95)
+			if(calibrationDistance_ > maxCalibrationDistance_*0.95)	// TODO better threshold
 			{
 				calibrationCounter++;
 			}
@@ -520,6 +524,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 				// Project into sensor axis to get -x_d
 				tmp(0) = x_d.topRows(3).dot( sensorDirections.col(tactileSensorSelected_) );
+				tmp(0) = fabs( tmp(0) );	// FIXME make sure it's >0
 
 				// Update ARMA model and get x_m
 				ARMAmodel_flexi_[tactileSensorSelected_]->runARMAupdate(outer_delT  ,  // input: delta T
@@ -531,7 +536,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //std::cout<<"ARMA:\n"<<tmp<<"\n---\n";
 				// Convert into global reference frame
 				X_m.topRows(3) = x0_cali_vec_.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(tactileSensorSelected_).cwiseAbs());
-				X_m.topRows(3) += tmp(1)*sensorDirections.col(tactileSensorSelected_);
+				X_m.topRows(3) = x0_cali_vec_.topRows(3)+tmp(1)*sensorDirections.col(tactileSensorSelected_);
 
 //				if(tmp(2)>1)
 //					tmp(2)=1;
@@ -555,17 +560,20 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				tmp.resize(4);
 				tmp.setZero();
 
+				X_m.topRows(2) = X.topRows(2);	// z, orientation are fixed
+
 				for(int i=0;i<numTactileSensors_;i++)
 				{
-//					ARMAmodel_flexi_[i]->updateDelT(outer_delT);
-//					ARMAmodel_flexi_[i]->useARMA( tmp(0),				// output: x_m
-//												  tmp(1),				// output: xd_m
-//												  tmp(2),				// output: xdd_m
-//												  tactile_data_(i) );	// input:  force or voltage
-//					X_m.topRows(3) = tmp(0)*sensorDirections.col(i) + X_m.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(i).cwiseAbs());
 
-
-					tmp(0) = X.topRows(3).dot( sensorDirections.col(i) );
+					ARMAmodel_flexi_[i]->updateDelT(outer_delT);
+					ARMAmodel_flexi_[i]->useARMA( tmp(0),				// output: x_m
+												  tmp(1),				// output: xd_m
+												  tmp(2),				// output: xdd_m
+												  tactile_data_(i) );	// input:  force or voltage
+//std::cout<<"ARMA:\n"<<tmp(0)<<"\n---\n";
+					X_m.topRows(3) += tmp(0)*sensorDirections.col(i);
+/*
+					tmp(0) = X.topRows(3).dot( sensorDirections.col(i) );	// delta!!!
 
 					ARMAmodel_flexi_[i]->runARMAupdate(outer_delT   ,  // input: delta T
 								tactile_data_(i)        			,  // input:  force or voltage
@@ -577,8 +585,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 					X_m  .topRows(3) = tmp(1)*sensorDirections.col(i) + X_m.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(i).cwiseAbs());
 					//Xd_m .topRows(3) += tmp(1)*sensorDirections.col(i);
 					//Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(i);
+*/
 				}
-				std::cout<<"X_m:\n"<<X_m<<"\n---\n";
+				//std::cout<<"X_m:\n"<<X_m<<"\n---\n";
 			}
 
 			outer_elapsed_ = robot_state_->getTime() ;
@@ -1727,7 +1736,9 @@ bool PR2adaptNeuroControllerClass::tactileCalibrationCB(	ice_msgs::tactileCalibr
 			ARMAmodel_flexi_[i]->setFirstTime(true);
 		}
 
-		X_m   = x0_cali_vec_;
+		X_m   = affine2CartVec(x0_);
+		Xd_m.setZero();
+		Xdd_m.setZero();
 
 		resp.success = false;
 		return true;
