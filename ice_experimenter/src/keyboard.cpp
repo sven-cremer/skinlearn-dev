@@ -12,6 +12,7 @@
 #define foreach BOOST_FOREACH
 #include <termios.h>
 #include <signal.h>
+#include <Eigen/Core>
 
 // ROS
 #include <ros/ros.h>
@@ -410,6 +411,11 @@ int main(int argc, char** argv)
     	  string dataDir = "~/test_rtp";		// TODO get package path
     	  string topic = "/pr2_adaptNeuroController/experimentDataB";
 
+    	  Eigen::VectorXd weights;
+    	  Eigen::VectorXd avgWeights;
+    	  weights.resize(8);
+    	  avgWeights.resize(8);
+
     	  int curTrial = 0;
     	  int numTrials = 4;
 
@@ -516,28 +522,46 @@ int main(int argc, char** argv)
 				 }
 				 case 'u':
 				 {
+					 weights.setZero();
+					 avgWeights.setZero();
+
 					 // Getting filter weights
 					 ice_msgs::tactileFilterWeights fw_msg;
 					 fw_msg.request.changeWeights = false;
-					 fw_msg.request.sensor = 0;
-					 cout<<"Getting filter weights from sensor "<<fw_msg.request.sensor<<" ...\n";
-					 if (!tactileFilterWeights_srv_.call(fw_msg))
+					 for(int i=0;i<4;i++)
 					 {
-						 ROS_ERROR("Failed to call tactile/FilterWeights service!");
+						 fw_msg.request.sensor = 0;
+						 cout<<"Getting filter weights from sensor "<<fw_msg.request.sensor<<" ...\n";
+						 if (!tactileFilterWeights_srv_.call(fw_msg))
+						 {
+							 ROS_ERROR("Failed to call tactile/FilterWeights service!");
+						 }
+
+						 weights<<fw_msg.response.getWeights.f0,
+								  fw_msg.response.getWeights.f1 ,
+								  fw_msg.response.getWeights.f2 ,
+								  fw_msg.response.getWeights.f3 ,
+								  fw_msg.response.getWeights.f4 ,
+								  fw_msg.response.getWeights.f5 ,
+								  fw_msg.response.getWeights.f6 ,
+								  fw_msg.response.getWeights.f7 ;
+						 cout<<"Result: "<<weights.transpose()<<"\n---\n";
+
+						 avgWeights += weights;
 					 }
-					 cout<<fw_msg.response.getWeights.f0 << ", " <<
-						   fw_msg.response.getWeights.f1 << ", " <<
-						   fw_msg.response.getWeights.f2 << ", " <<
-						   fw_msg.response.getWeights.f3 << ", " <<
-						   fw_msg.response.getWeights.f4 << ", " <<
-						   fw_msg.response.getWeights.f5 << ", " <<
-						   fw_msg.response.getWeights.f6 << ", " <<
-						   fw_msg.response.getWeights.f7 << ", " << "\n---\n";
 
 					 // Setting filter weights
+					 avgWeights = avgWeights / 4;
 					 fw_msg.request.changeWeights = true;
-					 fw_msg.request.setWeights = fw_msg.response.getWeights;
-					 cout<<"GSetting filter weights for all sensors ... \n";
+					 fw_msg.request.setWeights.f0 = avgWeights(0);
+					 fw_msg.request.setWeights.f1 = avgWeights(1);
+					 fw_msg.request.setWeights.f2 = avgWeights(2);
+					 fw_msg.request.setWeights.f3 = avgWeights(3);
+					 fw_msg.request.setWeights.f4 = avgWeights(4);
+					 fw_msg.request.setWeights.f5 = avgWeights(5);
+					 fw_msg.request.setWeights.f6 = avgWeights(6);
+					 fw_msg.request.setWeights.f7 = avgWeights(7);
+					 cout<<"Setting filter weights for all sensors ... \n";
 					 if (!tactileFilterWeights_srv_.call(fw_msg))
 					 {
 						 ROS_ERROR("Failed to call tactile/FilterWeights service!");
