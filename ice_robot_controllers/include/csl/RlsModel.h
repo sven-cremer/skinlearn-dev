@@ -429,6 +429,14 @@ public:
                 double & param_qdd_m         ,  // output: xdd_m
                 double & param_t_r           )  // input:  force or voltage
   {
+	  if( firstTime )
+	  {
+		  Uk.setZero();
+		  q_m.setZero();
+		  qd_m.setZero();
+		  firstTime = false;
+	  }
+
     t_r(0) = param_t_r;
     // Assumption: delT has already been updated
 
@@ -538,10 +546,12 @@ public:
 
 	  if( firstTime )
 	  {
-		  stackArmaIn( ref_q_d, t_r );	// FIXME
-		  stackArmaIn( ref_q_d, t_r );
-		  stackArmaIn( ref_q_d, t_r );
-
+//		  stackArmaIn( ref_q_d, t_r );	// FIXME
+//		  stackArmaIn( ref_q_d, t_r );
+//		  stackArmaIn( ref_q_d, t_r );
+		  Uk.setZero();
+		  q_m.setZero();
+		  qd_m.setZero();
 		  firstTime = false;
 	  }
 
