@@ -363,10 +363,8 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				intent_elapsed_ = robot_state_->getTime() ;
 //			}
 		}
-		if(calibrateSensors)	// TODO make x_r step, task model is inside RlsModel
+		if(calibrateSensors)
 		{
-			// Generate x_r with xd_r ~ V
-			// prev_x_r = x_r;
 
 			// Calibrate all sensors
 			if(!calibrateSingelSensors)
@@ -394,59 +392,49 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 					// Step function (global frame)
 //					x_r.topRows(3) = x0_cali_vec_.topRows(3) + maxCalibrationDistance_*sensorDirections.col(tactileSensorSelected_);
 //					x_d.topRows(3) = x0_cali_vec_.topRows(3);
+
 					// Step function (gripper frame)
 					x_r.topRows(3) = maxCalibrationDistance_*sensorDirections.col(tactileSensorSelected_);
 					x_d.topRows(3).setZero();
 
-					X_m = x0_cali_vec_;	// TODO move?
-					X_m.topRows(3).setZero();
-					calibrationCounter = 0;
+					// Initialize model trajectory
+					X_m = x0_cali_vec_;
 
-					refTrajSetForCalibration = true;
 					// Start data recording
 					experiment_ = PR2adaptNeuroControllerClass::B;
 					storage_index_ = 0;
 					recordData = true;
+
+					// Set counter and flag
+					calibrationCounter = 0;
+					refTrajSetForCalibration = true;
 				}
+				// Update distance moved
 				if(refTrajSetForCalibration)
 				{
 					calibrationDistance_ = ( x_.translation() - x0_cali_.translation() ).norm();
 				}
-				/*
-				double rate = 0.5;
-				xdd_r.topRows(3) =
-				xd_r .topRows(3) = rate*tactile_data_(tactileSensorSelected_)*sensorDirections.col(tactileSensorSelected_);
-				x_r  .topRows(3) = x_r.topRows(3) + xd_r.topRows(3)*dt_;
-				delta_x = ( xd_r.topRows(3)*dt_ ).norm();
-				*/
 			}
 
-//			delta_x = (x_r - prev_x_r).norm();
-//			calibrationDistance_ += delta_x;
-
+			// Check if x_r has been reached
 			if(calibrationDistance_ > maxCalibrationDistance_*0.95)	// TODO better threshold
 			{
 				calibrationCounter++;
 			}
-
 			if( calibrationCounter>167)		// Wait 0.5 seconds extra
 			{
 				calibrationCounter = 0;
 				calibrateSensors = false;
 				refTrajSetForCalibration = false;
-//				xd_r.setZero();
-//				xdd_r.setZero();
+				recordData = false;
+
 				// Fix filter weights
 				for(int i=0; i<numTactileSensors_;i++)
 				{
 					ARMAmodel_flexi_[i]->setUseFixedWeights(true);
 				}
-				//ARMAmodel_flexi_[tactileSensorSelected_]->setUseFixedWeights(true);
-				recordData = false;
 			}
 		}
-
-
 
 		/***************** UPDATE LOOP VARIABLES *****************/
 
@@ -496,22 +484,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			outer_delT = (robot_state_->getTime() - outer_elapsed_ ).toSec();
 
-//			task_ref.topRows(3) = x_des_.translation();
-//			X_m.setZero();
-//			Xd_m.setZero();
-//			Xdd_m.setZero();
-//			task_refModel_output.setZero();
-
-			// Transform x_di
-//			sensor_0 : [1,0]
-//			sensor_1 : [0,-1]
-//			sensor_2 : [-1,0]
-//			sensor_3 : [0,1]
-
-//			X_m   .setZero();
-//			Xd_m  .setZero();
-//			Xdd_m .setZero();
-
 			if(calibrateSensors  && refTrajSetForCalibration)	// TODO: check if tactileSensorSelected_ within range
 			{
 				Eigen::VectorXd tmp;
@@ -522,7 +494,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				prev_x_d = x_d;
 				x_d.topRows(3) = ( task_mA*outer_delT*x_r.topRows(3) + prev_x_d.topRows(3) ) / ( 1+task_mB*outer_delT );
 
-				// Project into sensor axis to get -x_d
+				// Project into sensor axis to get x_d > 0
 				tmp(0) = x_d.topRows(3).dot( sensorDirections.col(tactileSensorSelected_) );
 				tmp(0) = fabs( tmp(0) );	// FIXME make sure it's >0
 
@@ -560,7 +532,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				tmp.resize(4);
 				tmp.setZero();
 
-				X_m.topRows(2) = X.topRows(2);	// z, orientation are fixed
+				X_m.topRows(2) = X.topRows(2);	// z, orientation are fixed <- works lika a mannequin mode!
 
 				for(int i=0;i<numTactileSensors_;i++)
 				{
