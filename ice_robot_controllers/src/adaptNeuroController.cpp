@@ -417,11 +417,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 
 			// Check if x_r has been reached
-			if(calibrationDistance_ > maxCalibrationDistance_*0.95)	// TODO better threshold
+			if(calibrationDistance_ > maxCalibrationDistance_ - 0.01)	// TODO better threshold
 			{
 				calibrationCounter++;
 			}
-			if( calibrationCounter>167)		// Wait 0.5 seconds extra
+			if( calibrationCounter>333)		// Wait 1.0 seconds extra
 			{
 				calibrationCounter = 0;
 				calibrateSensors = false;
@@ -1392,20 +1392,20 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataB_msg_[storage_index_].xd.psi  = Xd(5);
 
 		// Human intent
-		experimentDataB_msg_[storage_index_].x_i.x     = x_r(0);
-		experimentDataB_msg_[storage_index_].x_i.y     = x_r(1);
-		experimentDataB_msg_[storage_index_].x_i.z     = x_r(2);
-		experimentDataB_msg_[storage_index_].x_i.phi   = x_r(3);
-		experimentDataB_msg_[storage_index_].x_i.the   = x_r(4);
-		experimentDataB_msg_[storage_index_].x_i.psi   = x_r(5);
+		experimentDataB_msg_[storage_index_].x_i.x     = x0_cali_vec_(0) + x_r(0);
+		experimentDataB_msg_[storage_index_].x_i.y     = x0_cali_vec_(1) + x_r(1);
+		experimentDataB_msg_[storage_index_].x_i.z     = x0_cali_vec_(2) + x_r(2);
+		experimentDataB_msg_[storage_index_].x_i.phi   = x0_cali_vec_(3) + x_r(3);
+		experimentDataB_msg_[storage_index_].x_i.the   = x0_cali_vec_(4) + x_r(4);
+		experimentDataB_msg_[storage_index_].x_i.psi   = x0_cali_vec_(5) + x_r(5);
 
 		// Task trajectory
-		experimentDataB_msg_[storage_index_].x_d.x     = x_d(0);
-		experimentDataB_msg_[storage_index_].x_d.y     = x_d(1);
-		experimentDataB_msg_[storage_index_].x_d.z     = x_d(2);  // = 0
-		experimentDataB_msg_[storage_index_].x_d.phi   = x_d(3);  // = 0
-		experimentDataB_msg_[storage_index_].x_d.the   = x_d(4);  // = 0
-		experimentDataB_msg_[storage_index_].x_d.psi   = x_d(5);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.x     = x0_cali_vec_(0) + x_d(0);
+		experimentDataB_msg_[storage_index_].x_d.y     = x0_cali_vec_(1) + x_d(1);
+		experimentDataB_msg_[storage_index_].x_d.z     = x0_cali_vec_(2) + x_d(2);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.phi   = x0_cali_vec_(3) + x_d(3);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.the   = x0_cali_vec_(4) + x_d(4);  // = 0
+		experimentDataB_msg_[storage_index_].x_d.psi   = x0_cali_vec_(5) + x_d(5);  // = 0
 
 		// Model trajectory
 		experimentDataB_msg_[storage_index_].x_m.x     = X_m(0);
