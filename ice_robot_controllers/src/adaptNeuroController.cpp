@@ -507,8 +507,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 							tmp(3)    												);  // output: xdd_m
 //std::cout<<"ARMA:\n"<<tmp<<"\n---\n";
 				// Convert into global reference frame
-				X_m.topRows(3) = x0_cali_vec_.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(tactileSensorSelected_).cwiseAbs());
-				X_m.topRows(3) = x0_cali_vec_.topRows(3)+tmp(1)*sensorDirections.col(tactileSensorSelected_);
+//				X_m.topRows(3) = x0_cali_vec_.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(tactileSensorSelected_).cwiseAbs());
+//				X_m.topRows(3) = x0_cali_vec_.topRows(3)+tmp(1)*sensorDirections.col(tactileSensorSelected_);
+				X_m.topRows(3) = X.topRows(3)+tmp(1)*sensorDirections.col(tactileSensorSelected_);
 
 //				if(tmp(2)>1)
 //					tmp(2)=1;
