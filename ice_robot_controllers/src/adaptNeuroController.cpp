@@ -417,11 +417,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 
 			// Check if x_r has been reached
-			if(calibrationDistance_ > maxCalibrationDistance_ - 0.01)	// TODO better threshold
+			if(calibrationDistance_ > maxCalibrationDistance_ -0.01)	// TODO better threshold
 			{
 				calibrationCounter++;
 			}
-			if( calibrationCounter>333)		// Wait 1.0 seconds extra
+			if( calibrationCounter>666)		// Wait 2.0 seconds extra
 			{
 				calibrationCounter = 0;
 				calibrateSensors = false;
