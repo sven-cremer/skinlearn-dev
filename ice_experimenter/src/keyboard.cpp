@@ -585,7 +585,7 @@ int main(int argc, char** argv)
             	 // Select sensor
             	 activeSensor = nextActiveSensor;
             	 ice_msgs::tactileCalibration tactileCalibration_msg;
-     	 		 tactileCalibration_msg.request.start.position.x = 0.70;			// Green position
+     	 		 tactileCalibration_msg.request.start.position.x = 0.65;			// Green position
      	 		 tactileCalibration_msg.request.start.position.y = 0.35;
      	 		 tactileCalibration_msg.request.start.position.z = -0.125;
             	 tactileCalibration_msg.request.recordData = true;

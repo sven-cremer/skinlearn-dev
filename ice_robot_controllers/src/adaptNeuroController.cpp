@@ -421,7 +421,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			{
 				calibrationCounter++;
 			}
-			if( calibrationCounter>666)		// Wait 2.0 seconds extra
+			if( calibrationCounter>167)		// Wait 0.5 seconds extra
 			{
 				calibrationCounter = 0;
 				calibrateSensors = false;
