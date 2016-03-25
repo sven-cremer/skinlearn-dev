@@ -1789,6 +1789,7 @@ bool PR2adaptNeuroControllerClass::tactileFilterWeightsCB(	ice_msgs::tactileFilt
 		for(int i=0; i<numTactileSensors_;i++)
 		{
 			ARMAmodel_flexi_[i]->setWeights(tmp);
+			filterWeights_flexi_.col(i) = tmp;
 		}
 	}
 	else	// Return weights

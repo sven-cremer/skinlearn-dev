@@ -530,7 +530,7 @@ int main(int argc, char** argv)
 					 fw_msg.request.changeWeights = false;
 					 for(int i=0;i<4;i++)
 					 {
-						 fw_msg.request.sensor = 0;
+						 fw_msg.request.sensor = i;
 						 cout<<"Getting filter weights from sensor "<<fw_msg.request.sensor<<" ...\n";
 						 if (!tactileFilterWeights_srv_.call(fw_msg))
 						 {
@@ -566,6 +566,7 @@ int main(int argc, char** argv)
 					 {
 						 ROS_ERROR("Failed to call tactile/FilterWeights service!");
 					 }
+					 cout<<"Result: "<<avgWeights.transpose()<<"\n---\n";
 					 break;
 				 }
 				 default:
