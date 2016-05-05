@@ -340,7 +340,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				x_des_ = x_;
 //			}
 
-			if( fabs( xerr_(3) )> mannequinThresPos)	// Only change z
+			if( xerr_.norm() > mannequinThresPos)	// Only change z // fabs( xerr_(3) )
 			{
 				CartVec tmp;
 				tmp << 0.65, 0.35, x_.translation().z(), 1.57, 0.0, 0.0;
