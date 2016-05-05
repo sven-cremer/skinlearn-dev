@@ -450,8 +450,8 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		X = affine2CartVec(x_);
 		Xd = xdot_;				// FIXME make sure they are of same type
 
-//		// Reference trajectory
-//		X_m   = affine2CartVec(x_des_);
+		// Reference trajectory
+		X_m   = affine2CartVec(x_des_);
 //		Xd_m  = affine2CartVec(xd_des_);
 //		Xdd_m = affine2CartVec(xdd_des_);
 

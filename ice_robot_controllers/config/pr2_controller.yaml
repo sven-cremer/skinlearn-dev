@@ -16,7 +16,7 @@ loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRat
 
 useCurrentCartPose : false
 useNullspacePose   : true
-useFlexiForce      : true
+useFlexiForce      : false
 forceTorqueOn      : false
 accelerometerOn    : false
 useDigitalFilter   : false
@@ -24,7 +24,7 @@ useDigitalFilter   : false
 executeCircleTraj  : false
 numCircleTraj      : 3
 
-mannequinMode      : false
+mannequinMode      : true
 mannequinThresPos  : 0.05
 mannequinThresRot  : 0.05 # not used
 
@@ -33,7 +33,7 @@ publishRTtopics    : true
 # Specifically for MRAC
 useSimHuman        : false
 
-useOuterloop       : true
+useOuterloop       : false
 # Only one can be true
 useARMAmodel       : true
 useCTARMAmodel     : false
