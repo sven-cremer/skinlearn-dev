@@ -323,7 +323,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		{
 
 			// Compute error
-			computePoseError(x_, x_des_, xerr_);
+//			computePoseError(x_, x_des_, xerr_);
 	//		Eigen::Vector3d tmp1; tmp1 << xerr_.(0),xerr_.(1),xerr_.(2);
 	//		Eigen::Vector3d tmp2; tmp2 << xerr_.(3),xerr_.(4),xerr_.(5);
 	//		if(tmp1.norm() > mannequinThresPos)
@@ -340,7 +340,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				x_des_ = x_;
 //			}
 
-			if( xerr_.norm() > mannequinThresPos)	// Only change z // fabs( xerr_(3) )
+			if( fabs( x_.translation().z() -  x_des_.translation().z() ) > mannequinThresPos)	// Only change z //
 			{
 				CartVec tmp;
 				tmp << 0.65, 0.35, x_.translation().z(), 1.57, 0.0, 0.0;
