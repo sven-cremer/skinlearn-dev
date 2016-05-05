@@ -463,6 +463,8 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		// Reference trajectory
 		X_m   = affine2CartVec(x_des_);
+		Xd_m.setZero();
+		Xdd_m.setZero();
 //		Xd_m  = affine2CartVec(xd_des_);
 //		Xdd_m = affine2CartVec(xdd_des_);
 
