@@ -342,7 +342,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			if( fabs( xerr_(3) )> mannequinThresPos)	// Only change z
 			{
-				x_des_.translation().z() = x_.translation().z();
+				CartVec tmp;
+				tmp << 0.65, 0.35, x_.translation().z(), 1.57, 0.0, 0.0;
+				x_des_ = CartVec2Affine(tmp);
+
+				// x_des_.translation().z() = x_.translation().z();  <- oscillates?
 			}
 
 		}
