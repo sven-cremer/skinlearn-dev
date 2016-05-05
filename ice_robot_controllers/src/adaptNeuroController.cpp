@@ -334,10 +334,17 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	//		{
 	//			x_des_ = x_;
 	//		}
-			if(xerr_.norm() > mannequinThresPos)	// TODO: implement two threshold
+
+//			if(xerr_.norm() > mannequinThresPos)	// TODO: implement two threshold
+//			{
+//				x_des_ = x_;
+//			}
+
+			if( fabs( xerr_(3) )> mannequinThresPos)	// Only change z
 			{
-				x_des_ = x_;
+				x_des_.translation().z() = x_.translation().z();
 			}
+
 		}
 		if(useHumanIntent && loop_count_ > 3000)
 		{
