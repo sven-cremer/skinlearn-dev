@@ -171,8 +171,8 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 	force.resize(num_sensors);
 	force.setZero();
 
-//  std::cout<<"Result: "<<result<<"\n---\n";
     result = my_serial->readline(65536, "\n");
+//    std::cout<<"Result: "<<result<<"\n---\n";
 
     std::vector<std::string> strvec;
 
@@ -184,8 +184,8 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 //    	std::cout<<"strvec["<<i<<"]: "<<strvec[i].c_str()<<"\n";
 //    }
 
-    // Check data: #,...,#,#,\n
-    if(strvec.size() != num_sensors + 1)
+    // Check data: ID,#,...,#,#,\n
+    if(strvec.size() != num_sensors + 2)
     {
     	std::cout<<"Reading serial data failed (unexpected vector size: "<<strvec.size()<<")\n";
     	return false;
@@ -193,7 +193,7 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 
     for( unsigned int i=0; i<num_sensors; i++)
     {
-    	std::string str = strvec[i];
+    	std::string str = strvec[i+1];
 
     	if (std::string::npos != str.find_first_not_of("0123456789"))
     	{
