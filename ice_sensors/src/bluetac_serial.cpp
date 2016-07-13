@@ -114,6 +114,28 @@ public:
 			   r, 0, 0, -r;  // -y
 	}
 
+	if(num_sensors == 16)
+	{
+		//      x,  y,  z,
+		pos <<  3,  3,  0,
+				2,  3,  0,
+				1,  3,  0,
+				0,  3,  0,
+				3,  2,  0,
+				2,  2,  0,
+				1,  2,  0,
+				0,  2,  0,
+				3,  1,  0,
+				2,  1,  0,
+				1,  1,  0,
+				0,  1,  0,
+				3,  0,  0,
+				2,  0,  0,
+				1,  0,  0,
+				0,  0,  0;
+		pos = 0.30*pos;
+	}
+
 	firstRead=true;
 	forceScale = 1024;
 
@@ -123,7 +145,7 @@ public:
 
   ~TactileViz() { }
 
-  void publishRVizMarkerArray()
+  void publishRVizMarkerFlexiforce()
   {
 	  visualization_msgs::MarkerArray m_vizMarkerArray;
 	  visualization_msgs::Marker m_vizMarker;
@@ -147,6 +169,49 @@ public:
 		  m_vizMarker.pose.orientation.x = rot(i,1);
 		  m_vizMarker.pose.orientation.y = rot(i,2);
 		  m_vizMarker.pose.orientation.z = rot(i,3);
+
+		  if(force(i)>0.0)
+			  m_vizMarker.scale.x = -force(i);	// Show reactant force
+		  else
+			  m_vizMarker.scale.x = -0.01;
+		  m_vizMarker.scale.y = 0.02;
+		  m_vizMarker.scale.z = 0.02;
+
+		  m_vizMarker.color.a = 1.0;
+		  m_vizMarker.color.r = 1.0*   m_vizMarker.scale.x ;
+		  m_vizMarker.color.g = 1.0*(1-m_vizMarker.scale.x);
+		  m_vizMarker.color.b = 0.0;
+
+		  m_vizMarkerArray.markers.push_back(m_vizMarker);
+	  }
+
+	  m_tactileVizPub.publish( m_vizMarkerArray );
+  }
+
+  void publishRVizMarkerArray()
+  {
+	  visualization_msgs::MarkerArray m_vizMarkerArray;
+	  visualization_msgs::Marker m_vizMarker;
+
+	  m_vizMarker.header.frame_id = frame_id;
+	  m_vizMarker.header.stamp = ros::Time::now();
+	  m_vizMarker.ns = "vizFt";
+
+	  m_vizMarker.type = visualization_msgs::Marker::ARROW;
+	  m_vizMarker.action = visualization_msgs::Marker::ADD;
+
+	  for(int i =0; i < num_sensors; i++)
+	  {
+		  m_vizMarker.id = i;
+
+		  m_vizMarker.pose.position.x = pos(i,0);
+		  m_vizMarker.pose.position.y = pos(i,1);
+		  m_vizMarker.pose.position.z = pos(i,2);
+
+		  m_vizMarker.pose.orientation.w = 0.70711;
+		  m_vizMarker.pose.orientation.x = 0;
+		  m_vizMarker.pose.orientation.y = 0.70711;
+		  m_vizMarker.pose.orientation.z = 0;
 
 		  if(force(i)>0.0)
 			  m_vizMarker.scale.x = -force(i);	// Show reactant force
