@@ -87,7 +87,8 @@ firstRead=true;
   }
 
   // port, baudrate, timeout in milliseconds
-  my_serial = new serial::Serial(port, baud, serial::Timeout::simpleTimeout(1000));
+  my_serial = new serial::Serial( port, baud, serial::Timeout::simpleTimeout(1000),
+		  	  	  	  	  	  	  serial::eightbits, serial::parity_none, serial::stopbits_one, serial::flowcontrol_none );
 
   cout << "Is the serial port open?";
   if(my_serial->isOpen())
@@ -128,7 +129,8 @@ if(argc < 2)
 #endif
 
   // port, baudrate, timeout in milliseconds
-  my_serial = new serial::Serial(port, baud, serial::Timeout::simpleTimeout(1000));
+  my_serial = new serial::Serial( port, baud, serial::Timeout::simpleTimeout(1000),
+		  	  	  	  	  	  	  serial::eightbits, serial::parity_none, serial::stopbits_one, serial::flowcontrol_none );
 
   cout << "Is the serial port open?";
   if(my_serial->isOpen())
@@ -169,8 +171,8 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 	force.resize(num_sensors);
 	force.setZero();
 
-    result = my_serial->readline();
 //  std::cout<<"Result: "<<result<<"\n---\n";
+    result = my_serial->readline(65536, "\n");
 
     std::vector<std::string> strvec;
 
