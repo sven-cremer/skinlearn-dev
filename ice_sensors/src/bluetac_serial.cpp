@@ -322,6 +322,10 @@ public:
 		  publishTactileWrench();
 
 	  }
+	  if(num_sensors == 16)
+	  {
+		  publishRVizMarkerArray();
+	  }
 
 	  // Publish data array
 	  publishTactileData();
