@@ -14,4 +14,5 @@
 port               : /dev/ttyUSB0
 baud               : 115200
 num_sensors        : 16
+num_patches        : 8
 tactile_frame_id   : map

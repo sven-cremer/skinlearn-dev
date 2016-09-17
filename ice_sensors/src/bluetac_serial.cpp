@@ -4,6 +4,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <std_msgs/String.h>
 
+#include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
@@ -21,6 +22,9 @@
 class TactileViz
 {
   int num_sensors;
+  int num_patches;
+  int total_sensors;
+  int patch_idx;
 
   ros::NodeHandle  m_node;
   ros::Publisher   m_tactileVizPub;
@@ -59,6 +63,7 @@ public:
     std::string para_baud = "/baud";
 	std::string para_frame = "/tactile_frame_id";
 	std::string para_num_sensors = "/num_sensors";
+	std::string para_num_patches = "/num_patches";
 
     if (!m_node.getParam( para_port , port ))
     {
@@ -81,23 +86,31 @@ public:
     	ROS_WARN("Parameter not found: %s", para_num_sensors.c_str());
     	num_sensors = 4;
     }
+    if (!m_node.getParam( para_num_patches , num_patches))
+    {
+    	ROS_WARN("Parameter not found: %s", para_num_patches.c_str());
+    	num_patches = 4;
+    }
 
     ROS_INFO("Port:  %s",port.c_str());
     ROS_INFO("Baud:  %f",baud);
     ROS_INFO("Frame: %s",frame_id.c_str());
     ROS_INFO("Number of sensors: %d",num_sensors);
+    ROS_INFO("Number of patches: %d",num_patches);
 
-	force		.resize(num_sensors);
-	forceBias	.resize(num_sensors);
+    total_sensors = num_sensors*num_patches;
+
+	force		.resize(total_sensors);
+	forceBias	.resize(total_sensors);
 	force		.setZero();
-	forceBias	.setZero();
+	forceBias	.setOnes();
 
-	pos			.resize(num_sensors,3);
-	rot			.resize(num_sensors,4);
+	pos			.resize(total_sensors,3);
+	rot			.resize(total_sensors,4);
 	pos			.setZero();
 	rot			.setZero();
 
-	if(num_sensors == 4)
+	if(num_sensors == 4 && num_patches == 1)
 	{
 		//      x,  y,  z,      direction
 		pos <<  1,  0,  0,	 // -x
@@ -114,7 +127,7 @@ public:
 			   r, 0, 0, -r;  // -y
 	}
 
-	if(num_sensors == 16)
+	if(num_sensors == 16 && num_patches == 1)
 	{
 		//      x,  y,  z,
 		pos <<  3,  3,  0,
@@ -136,11 +149,89 @@ public:
 		pos = 0.30*pos;
 	}
 
+	if(num_sensors == 16 && num_patches == 8)
+	{
+		int idx = 0;
+		double z   = 0.0;
+
+		double r   = 0.05;                  // Radius of can
+		double dt  = -2*M_PI/num_patches;   // Patch delta theta (rotate counter-clockwise)
+		double p_l = 0.035;                 // Patch width
+		double s_dx = p_l / 4.0;            // Sensor separation
+
+		r = 3;
+		p_l = sqrt(2*r*r*(1-cos(dt)));
+		s_dx = p_l/4;
+
+		for(int j=0;j<num_patches;j++)
+		{
+			double y = 3.0;	// TODO sqrt(num_sensors)-1; do not hardcode
+
+			// Translation
+			Eigen::Vector3f trans_vec(r*cos(j*dt),r*sin(j*dt),0);
+			Eigen::Translation<float,3> trans(trans_vec);
+
+			// Rotation of sensor plane
+			Eigen::Matrix3f mat;
+			mat =   Eigen::AngleAxisf(j*dt, Eigen::Vector3f::UnitZ())
+			      * Eigen::AngleAxisf(0.5*M_PI, Eigen::Vector3f::UnitY());	// <- applied first
+			Eigen::Transform<float,3,Eigen::Affine> t(mat);
+
+			// Rotation such that x is the plane normal
+			Eigen::Matrix3f mat2;
+			mat2 =  Eigen::AngleAxisf(j*dt, Eigen::Vector3f::UnitZ());
+			Eigen::Quaternionf q(mat2);
+
+			for(int i=0;i<num_sensors;i++)
+			{
+				idx = senorIdx(j,i);
+
+				// Sensor position vector
+				Eigen::Vector3f vec;
+				vec(0) = 3-i%4;     // 3,2,1,0,3,2,...
+				vec(1) = y;         // 3,3,3,3,2,2,...
+				vec(2) = z;
+
+				if(i%4 == 3)
+					y--;
+
+				// Make 0,0,0 center of patch
+				vec(0) -= 1.5;	// TODO 0.5*y
+				vec(1) -= 1.5;
+
+				// Scale with sensor separation
+				vec *= s_dx;
+
+				// Apply transforms
+				vec = trans * t * vec;
+
+				// Save results
+				pos(idx,0) = vec(0);
+				pos(idx,1) = vec(1);
+				pos(idx,2) = vec(2);
+
+				rot(idx,0) = q.w();
+				rot(idx,1) = q.x();
+				rot(idx,2) = q.y();
+				rot(idx,3) = q.z();
+			}
+		}
+
+		//std::cout<<"Position:\n"<<pos<<"\n---\n";
+		//std::cout<<"Orientation:\n"<<rot<<"\n---\n";
+
+	}
+
 	firstRead=true;
-	forceScale = 1024;
+	forceScale = 1023;
 
     // Flexiforce sensors
-    tacSerial = new TactileSerial( port, baud, num_sensors );
+    tacSerial = new TactileSerial( port, baud, num_sensors, num_patches );
+  }
+
+  int senorIdx(int patch_idx, int sensor_idx)		// Patch: j=0..M-1, Sensors: i=0..N-1
+  {
+	  return (patch_idx*num_sensors+sensor_idx);	// Index: 0..N-1..2N-1..M*N-1
   }
 
   ~TactileViz() { }
@@ -200,7 +291,12 @@ public:
 	  m_vizMarker.type = visualization_msgs::Marker::ARROW;
 	  m_vizMarker.action = visualization_msgs::Marker::ADD;
 
-	  for(int i =0; i < num_sensors; i++)
+	  m_vizMarker.scale.y = 0.05;
+	  m_vizMarker.scale.z = 0.05;
+
+	  m_vizMarker.color.a = 1.0;
+
+	  for(int i =0; i < total_sensors; i++)
 	  {
 		  m_vizMarker.id = i;
 
@@ -208,22 +304,25 @@ public:
 		  m_vizMarker.pose.position.y = pos(i,1);
 		  m_vizMarker.pose.position.z = pos(i,2);
 
-		  m_vizMarker.pose.orientation.w = 0.70711;
-		  m_vizMarker.pose.orientation.x = 0;
-		  m_vizMarker.pose.orientation.y = 0.70711;
-		  m_vizMarker.pose.orientation.z = 0;
+		  m_vizMarker.pose.orientation.w = rot(i,0);
+		  m_vizMarker.pose.orientation.x = rot(i,1);
+		  m_vizMarker.pose.orientation.y = rot(i,2);
+		  m_vizMarker.pose.orientation.z = rot(i,3);
 
 		  if(force(i)>0.0)
-			  m_vizMarker.scale.x = -force(i);	// Show reactant force
+		  {
+			  m_vizMarker.scale.x = force(i);	// Arrow is always pointing along x
+			  m_vizMarker.color.r = 1.0*   m_vizMarker.scale.x ;
+			  m_vizMarker.color.g = 1.0*(1-m_vizMarker.scale.x);
+			  m_vizMarker.color.b = 0.0;
+		  }
 		  else
-			  m_vizMarker.scale.x = -0.01;
-		  m_vizMarker.scale.y = 0.02;
-		  m_vizMarker.scale.z = 0.02;
-
-		  m_vizMarker.color.a = 1.0;
-		  m_vizMarker.color.r = 1.0*   m_vizMarker.scale.x ;
-		  m_vizMarker.color.g = 1.0*(1-m_vizMarker.scale.x);
-		  m_vizMarker.color.b = 0.0;
+		  {
+			  m_vizMarker.color.r = 0.0;
+			  m_vizMarker.color.g = 0.0;
+			  m_vizMarker.color.b = 1.0;
+			  m_vizMarker.scale.x = -0.02;
+		  }
 
 		  m_vizMarkerArray.markers.push_back(m_vizMarker);
 	  }
@@ -294,11 +393,22 @@ public:
   void readAndPublish()
   {
 	  // Read data
-	  if(!tacSerial->getDataArrayFromSerialPort( force ))
+	  patch_idx = 0;
+	  if(!tacSerial->getDataArrayFromSerialPort( force, patch_idx ))
 	  {
-		  //std::cout<<"->Reading data failed!\n";
+		  std::cout<<"->Reading data failed!\n";
 		  return;
 	  }
+
+	  //std::cout<<patch_idx<<"\n";
+
+	  if(patch_idx%num_patches == num_patches-1)	// TODO make sure all values have been updated
+	  {
+		  //force = (force - forceBias) * (2.0 / 1023.0);
+		  force = force / forceScale;
+		  publishRVizMarkerArray();
+	  }
+/*
 	  // Remove bias
 	  force = force - forceBias;
 	  // Scale force
@@ -322,6 +432,7 @@ public:
 		  publishTactileWrench();
 
 	  }
+
 	  if(num_sensors == 16)
 	  {
 		  publishRVizMarkerArray();
@@ -329,17 +440,19 @@ public:
 
 	  // Publish data array
 	  publishTactileData();
+*/
   }
 
   void measureBias()
   {
 	  std::cout<<"#Estimating bias ...\n";
 
+	  int patch_idx;
 	  forceBias.setZero();
 	  int loops = 0;
 	  while(loops < 30)
 	  {
-		  if(tacSerial->getDataArrayFromSerialPort( force ))
+		  if(tacSerial->getDataArrayFromSerialPort( force, patch_idx ))
 		  {
 			  forceBias += force;
 			  loops++;
@@ -352,11 +465,12 @@ public:
 
   int go()
   {
-	  measureBias();
+	  //measureBias();
+	  //forceBias *= 400.0;
 	  while ( ros::ok() )
 	  {
 		  readAndPublish();
-		  ros::spinOnce();
+		  //ros::spinOnce();
 	  }
 	  return 0;
   }

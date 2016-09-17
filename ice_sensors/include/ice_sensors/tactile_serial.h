@@ -13,9 +13,9 @@
 
 // OS Specific sleep
 #ifdef _WIN32
-#include <windows.h>
+	#include <windows.h>
 #else
-#include <unistd.h>
+	#include <unistd.h>
 #endif
 
 #include "serial/serial.h"
@@ -33,6 +33,8 @@ class TactileSerial
 {
   enum { numSensors = 4 };
   int num_sensors;
+  int num_patches;
+  int total_sensors;
 
   string result;
   serial::Serial *my_serial;
@@ -73,13 +75,16 @@ void print_usage()
 
 public:
 
-TactileSerial(string port, unsigned long baud, int param_num_sensors)
+TactileSerial(string port, unsigned long baud, int param_num_sensors, int param_num_patches)
 {
 
 num_sensors = param_num_sensors;
+num_patches = param_num_patches;
+total_sensors = num_sensors*num_patches;
+
 initFilter();
 
-forceBias.resize(num_sensors);
+forceBias.resize(total_sensors);
 firstRead=true;
 
   if( port == "-e" ) {
@@ -165,11 +170,15 @@ void initFilter()	// TODO read from parameter server
 	}
 }
 
-bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
+bool getDataArrayFromSerialPort( Eigen::VectorXd & force, int & patch_idx  )
 {
 
-	force.resize(num_sensors);
-	force.setZero();
+	if(force.size() != total_sensors)
+	{
+		std::cerr<<"Reading serial data failed: force vector has unexpected length ("<<force.size()<<" instead of "<<total_sensors<<")\n";
+		return false;
+	}
+	//force.setZero();
 
     result = my_serial->readline(65536, "\n");
 //    std::cout<<"Result: "<<result<<"\n---\n";
@@ -179,21 +188,36 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
     boost::algorithm::split(strvec,result,boost::algorithm::is_any_of(","), boost::algorithm::token_compress_on);
 
     // Display output (for debugging)
-//    for( unsigned int i=0; i<strvec.size(); i++)
-//    {
-//    	std::cout<<"strvec["<<i<<"]: "<<strvec[i].c_str()<<"\n";
-//    }
+    /*
+    for( unsigned int i=0; i<strvec.size(); i++)
+    {
+    	std::cout<<"strvec["<<i<<"]: "<<strvec[i].c_str()<<"\n";
+    }
+    */
 
     // Check data: ID,#,...,#,#,\n
     if(strvec.size() != num_sensors + 2)
     {
-    	std::cout<<"Reading serial data failed (unexpected vector size: "<<strvec.size()<<")\n";
+    	std::cerr<<"Reading serial data failed: raw data has unexpected length ("<<strvec.size()<<" instead of "<<num_sensors + 2<<")\n";
     	return false;
     }
 
+    // Extract patch index
+    std::string str = strvec[0];
+    std::size_t tmp_idx = str.find_first_of("0123456789");
+    str = str[tmp_idx];
+    patch_idx = boost::lexical_cast<double>(str);	// 0,1,...,7
+
+    if(patch_idx < 0 || patch_idx > num_patches-1)
+    {
+    	std::cerr<<"Reading serial data failed: extracted wrong patch number ("<<patch_idx<<")\n";
+    	return false;
+    }
+
+    // Extract data
     for( unsigned int i=0; i<num_sensors; i++)
     {
-    	std::string str = strvec[i+1];
+    	str = strvec[i+1];
 
     	if (std::string::npos != str.find_first_not_of("0123456789"))
     	{
@@ -208,8 +232,8 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
     		}
     		str = tmp;
     	}
-    	force(i) = boost::lexical_cast<double>(str);
-//    	std::cout<<"force("<<i<<"): "<<force(i)<<"\n";
+    	force(patch_idx*num_sensors+i) = boost::lexical_cast<double>(str);
+    	//std::cout<<"force("<<patch_idx*num_sensors+i<<"): "<<force(patch_idx*num_sensors+i)<<"\n";
     }
 
 //    if(firstRead)
@@ -220,6 +244,7 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
 //	force = force + Eigen::VectorXd::Ones(numSensors) - forceBias;
 
     // Filter values
+    /*
     for( int i=0; i<num_sensors; i++)
     {
     	force(i) = sensorFilters[i]->getNextFilteredValue(force(i));
@@ -228,7 +253,7 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force  )
     		force(i) = 0;
     	}
     }
-
+	*/
     return true;
 }
 
