@@ -16,6 +16,6 @@
 
 #include "two_layer_nn.hpp"
 #include "one_layer_nn.hpp"
-#include "rbf_nn.hpp"
+//#include "rbf_nn.hpp"
 
 #endif /* NEURAL_NETWORK_HPP_ */
