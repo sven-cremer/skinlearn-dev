@@ -1450,8 +1450,8 @@ void PR2adaptNeuroControllerClass::bufferData()
 		//experimentDataC_msg_[storage_index_].outer_dt          = outer_delT;
 
 		// NN norms
-		experimentDataC_msg_[storage_index_].RBFnorm           = rbfnnController.getRBFNorm();
-		experimentDataC_msg_[storage_index_].TANHnorm          = rbfnnController.getTANHNorm();
+		//experimentDataC_msg_[storage_index_].RBFnorm           = rbfnnController.getRBFNorm();
+		//experimentDataC_msg_[storage_index_].TANHnorm          = rbfnnController.getTANHNorm();
 
 		// Actual trajectory
 		experimentDataC_msg_[storage_index_].q.j0   = q(0);
@@ -1941,7 +1941,7 @@ bool PR2adaptNeuroControllerClass::runExperimentC(	ice_msgs::setValue::Request &
 	// Decide if NN should be reset
 	if(req.value < 0)
 	{
-		rbfnnController.resetWeights();
+		//rbfnnController.resetWeights();
 		circle_rate = -req.value;
 	}
 	else

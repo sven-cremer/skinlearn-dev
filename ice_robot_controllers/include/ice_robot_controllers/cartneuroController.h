@@ -16,6 +16,7 @@
 #include "pr2_gripper_sensor_controller/acceleration_observer.h"
 
 // Math
+#include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <angles/angles.h>
 

@@ -62,7 +62,7 @@ add_library(digitalFilterLIB
 )
 add_library(ice_robot_controllers
   src/cartneuroController.cpp
-  #src/adaptNeuroController.cpp
+  src/adaptNeuroController.cpp
 )
 
 #add_library(outer_loop src/outer_loop.cpp)

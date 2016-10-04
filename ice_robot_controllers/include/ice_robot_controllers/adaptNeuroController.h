@@ -458,7 +458,7 @@ private:
 	//csl::neural_network::OneLayerNeuralNetworkController nnController;			// TODO make easier to change
 	csl::neural_network::TwoLayerNeuralNetworkController nnController;
 	//csl::neural_network::RBFNeuralNetworkController nnController;
-	csl::neural_network::RBFNeuralNetworkController rbfnnController;
+	//csl::neural_network::RBFNeuralNetworkController rbfnnController;
 
 	// NN END
 	/////////////////////////

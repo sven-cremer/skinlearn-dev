@@ -35,7 +35,7 @@ useSimHuman        : false
 
 useOuterloop       : false
 # Only one can be true
-useARMAmodel       : true
+useARMAmodel       : false
 useCTARMAmodel     : false
 useFIRmodel        : false
 useMRACmodel       : false
