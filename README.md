@@ -7,19 +7,21 @@ ROS packages being developed for the Intelligent Control and Estimation Library.
 Versions:
 
   * master (Groovy, rosbuild) - deprecated
-  * catkin-devel (Hydro, catkin) - work in progress
+  * catkin-devel (Indigo, catkin) - work in progress
 
-Ported packages:
+Working packages:
 
   * ice_msgs
   * ice_robot_controllers
+  * ice_experimenter
+  * ice_sensors
   * pr2_cart
 
 
 # Workspace setup
 Use the following steps to setup a ROS hydro workspace:
 
-    source /opt/ros/hydro/setup.bash
+    source /opt/ros/indigo/setup.bash
     mkdir ~/ice_ws/src -p
     cd ~/ice_ws/src
     catkin_init_workspace
@@ -32,11 +34,11 @@ Use the following steps to setup a ROS hydro workspace:
 # Install Dependencies
 The following needs to be installed:
 
-    sudo apt-get install ros-hydro-pr2-desktop
-    sudo apt-get install ros-hydro-pr2-gripper-sensor*
-    sudo apt-get install ros-hydro-cmake-modules
+    sudo apt-get install ros-indigo-pr2-desktop
+    sudo apt-get install ros-indigo-pr2-gripper-sensor*
+    sudo apt-get install ros-indigo-cmake-modules
 
-The ice_sensor package requires a Serial Communication Library:  
+The *ice_sensors* package requires the Serial Communication Library:  
 
     cd ~/ice_ws/src
     git clone https://github.com/wjwwood/serial.git
@@ -69,6 +71,32 @@ If the build fails due to the pr2 gripper sensor package, try compiling it from 
     cd ~/ice_ws/src
     git clone https://github.com/PR2/pr2_gripper_sensor.git -b hydro-devel
 
+# Demo 1: Tactile Sensors
+Make sure the sensor data can be read from the USB port:
+```
+sudo apt-get install gtkterm
+gtkterm
+```
+and do a ```shift+ctrl+s```. Choose the correct port parameters, i.e.
+```
+port: /dev/ttyUSB0
+baud: 115200
+```
+If data is being published, close *gtkterm* (note: only one program can read from the port). Adjust the parameters in */ice_sensors/config/tactileBox.yaml* and start the ROS driver/RVIZ using
+```
+roslaunch ice_sensors tactileBox.launch
+roslaunch ice_sensors rviz.launch
+```
+# Demo 2: Neuroadaptive controller
+The most up-to-date controller is inside the *adaptNeuroController* class. To test:
+```
+roslaunch ice_robot_controllers adaptNeuroController.launch
+rosrun ice_experimenter ice_experimenter
+```
+To use the speaker:
+```
+roslaunch ice_experimenter ice_experimenter.launch
+```
 
 # Running in Simulation
 Add the following settings to bashrc:  
