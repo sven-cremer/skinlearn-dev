@@ -2767,6 +2767,9 @@ bool PR2adaptNeuroControllerClass::initNN()
 
 	nnController.updateDelT( delT );
 
+	nnController.setUpdateWeights(true);
+	nnController.setUpdateInnerWeights(true);
+
 	return true;
 }
 
