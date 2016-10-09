@@ -134,22 +134,22 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	state_template.W.data.resize(num_Outputs*num_Hidden);
 	state_template.V.layout.dim.resize(2);
 	state_template.V.data.resize(num_Hidden*(num_Inputs+1));
-	pub_state_.init(nh_, "state", 10);
+	pub_state_.init(nh_, "state", 1);
 	pub_state_.lock();
 	pub_state_.msg_ = state_template;
 	pub_state_.unlock();
 
-	pub_x_desi_.init(nh_, "state/x_desi", 10);
+	pub_x_desi_.init(nh_, "tmp_data", 1);
 	pub_x_desi_.lock();
 	pub_x_desi_.msg_.header.frame_id = root_name;
 	pub_x_desi_.unlock();
 
-	pub_ft_.init(nh_, "ft/l_gripper",10);
+	pub_ft_.init(nh_, "ft/l_gripper",1);
 	pub_ft_.lock();
 	pub_ft_.msg_.header.frame_id = ft_frame_id;
 	pub_ft_.unlock();
 
-	pub_ft_transformed_.init(nh_, "ft/l_gripper_transformed",10);
+	pub_ft_transformed_.init(nh_, "ft/l_gripper_transformed",1);
 	pub_ft_transformed_.lock();
 	pub_ft_transformed_.msg_.header.frame_id = root_name;
 	pub_ft_transformed_.unlock();
@@ -854,30 +854,35 @@ void PR2adaptNeuroControllerClass::update()
 			pub_state_.msg_.x.header.stamp = last_time_;
 			pub_state_.msg_.x_desi_filtered.header.stamp = last_time_;
 			pub_state_.msg_.x_desi.header.stamp = last_time_;
+
 			// Pose
 			tf::poseEigenToMsg(x_, pub_state_.msg_.x.pose);
 			tf::poseEigenToMsg(CartVec2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
-			//	      tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
+			// tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
+
 			// Error
 			tf::twistEigenToMsg(xerr_, pub_state_.msg_.x_err);
+
 			// Twist
 			tf::twistEigenToMsg(xdot_, pub_state_.msg_.xd);
-			//	      tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
+			// tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
+
 			// Force
 			tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured, t_r
 			tf::wrenchEigenToMsg(force_c, pub_state_.msg_.force_c);
 
-			tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
-			tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
+			//tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
+			//tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
 
-			tf::matrixEigenToMsg(nnController.getInnerWeights(), pub_state_.msg_.V);
-			tf::matrixEigenToMsg(nnController.getOuterWeights(), pub_state_.msg_.W);
+			//tf::matrixEigenToMsg(nnController.getInnerWeights(), pub_state_.msg_.V);
+			//tf::matrixEigenToMsg(nnController.getOuterWeights(), pub_state_.msg_.W);
 
 			for (int j = 0; j < Joints; ++j) {
-				pub_state_.msg_.tau_posture[j] = nullspaceTorque[j];
-				pub_state_.msg_.tau_c[j] = tau[j];
-				pub_state_.msg_.q[j] = q_[j];
+				pub_state_.msg_.tau_posture[j] = nullspaceTorque(j);
+				pub_state_.msg_.tau_c[j] = tau_c_(j);
+				pub_state_.msg_.q[j] = q_(j);
 			}
+
 			pub_state_.msg_.W_norm = nnController.getInnerWeightsNorm();
 			pub_state_.msg_.V_norm = nnController.getOuterWeightsNorm();
 
