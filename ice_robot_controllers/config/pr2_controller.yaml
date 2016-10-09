@@ -270,9 +270,9 @@ nnNum_Joints          : 7  # DOF
 nn_Kv                 : 5 # not being used? see cartPos_Kd and cartPos_Kp insteads
 nn_lambda             : 20 # not being used?
 nn_kappa              : 0.25
-nn_Kz                 : 0.005 # not being used?
+nn_Kz                 : 0.5 # not being used?
 nn_Zb                 : 100 # not being used?
-nn_feedForwardForce   : 1.0 #25.0 # small because of jitter from FT measurments
+nn_feedForwardForce   : 0.0 #25.0 # small because of jitter from FT measurments
 nn_nnF                : 100 # -> W (outer)
 nn_nnG                : 200 # -> V (inner)
 nn_ON                 : 1
@@ -288,20 +288,20 @@ nn_ON                 : 1
 # nn_ON               : 1
 
 # Kd*(qd_m - qd) + Kp*(q_m - q)
-cartPos_Kp_x          : 20
-cartPos_Kp_y          : 20
-cartPos_Kp_z          : 20
-cartRot_Kp_x          : 2
-cartRot_Kp_y          : 2
-cartRot_Kp_z          : 2
+cartPos_Kp_x          : 10
+cartPos_Kp_y          : 10
+cartPos_Kp_z          : 10
+cartRot_Kp_x          : 5
+cartRot_Kp_y          : 5
+cartRot_Kp_z          : 5
 
-# Prevents motion if qd=0
-cartPos_Kd_x          : 0.1
-cartPos_Kd_y          : 0.1
-cartPos_Kd_z          : 0.1
-cartRot_Kd_x          : 0.05
-cartRot_Kd_y          : 0.05
-cartRot_Kd_z          : 0.05
+# Prevents motion if qd=0 (note: Kd>0 because of devision)
+cartPos_Kd_x          : 0.005
+cartPos_Kd_y          : 0.005
+cartPos_Kd_z          : 0.005
+cartRot_Kd_x          : 0.001
+cartRot_Kd_y          : 0.001
+cartRot_Kd_z          : 0.001
 
 #############################
 # Controller plugins        #

@@ -2737,9 +2737,10 @@ bool PR2adaptNeuroControllerClass::initNN()
 
 	// Filtered error
 	// r = (qd_m - qd) + lambda*(q_m - q);
-	// Kv*r
-	// Kd*(qd_m - qd) + Kp*(q_m - q) = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
-	// Kv = Kd | Kv*lambda = Kp ... lambda = Kp/Kv = Kp/Kd
+	// Kv*r = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
+	//        Kd*(qd_m - qd) +   Kp     *(q_m - q);
+	// Kd = Kv
+	// Kp = Kv*lambda ... lambda = Kp/Kv = Kp/Kd
 
 	p_Kv << cartPos_Kd_x ,
             cartPos_Kd_y ,
@@ -2748,19 +2749,12 @@ bool PR2adaptNeuroControllerClass::initNN()
             cartRot_Kd_y ,
             cartRot_Kd_z ;
 
-//	p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
-//                cartPos_Kp_y / cartPos_Kd_y ,
-//                cartPos_Kp_z / cartPos_Kd_z ,
-//                cartRot_Kp_x / cartRot_Kd_x ,
-//                cartRot_Kp_y / cartRot_Kd_y ,
-//                cartRot_Kp_z / cartRot_Kd_z ;
-
-	p_lambda << cartPos_Kp_x ,
-                cartPos_Kp_y ,
-                cartPos_Kp_z ,
-                cartRot_Kp_x ,
-                cartRot_Kp_y ,
-                cartRot_Kp_z ;
+	p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
+                cartPos_Kp_y / cartPos_Kd_y ,
+                cartPos_Kp_z / cartPos_Kd_z ,
+                cartRot_Kp_x / cartRot_Kd_x ,
+                cartRot_Kp_y / cartRot_Kd_y ,
+                cartRot_Kp_z / cartRot_Kd_z ;
 
 	nnController.init( kappa  ,
                        p_Kv     ,
