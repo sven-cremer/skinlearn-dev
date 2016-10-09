@@ -831,6 +831,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	if (publishRTtopics && loop_count_ % loopRateFactor == 0 )
 	{
+/*
 		//cartvec_tmp(1) = accData_vector_size;
 		//cartvec_tmp(2) = ftData_vector_size;
 		cartvec_tmp(1) = nnController.getOuterWeightsNorm();
@@ -845,8 +846,8 @@ void PR2adaptNeuroControllerClass::update()
 			pub_x_desi_.msg_.header.frame_id = "l_gripper_motor_accelerometer_link";
 			pub_x_desi_.unlockAndPublish();
 		}
+*/
 
-/*
 		if (pub_state_.trylock()) {
 			// Headers
 			pub_state_.msg_.header.stamp = last_time_;
@@ -883,7 +884,7 @@ void PR2adaptNeuroControllerClass::update()
 			pub_state_.unlockAndPublish();
 		}
 
-
+/*
 		if (pub_ft_.trylock()) {
 			pub_ft_.msg_.header.stamp = last_time_;
 			tf::wrenchEigenToMsg(wrench_compensated_, pub_ft_.msg_.wrench);
