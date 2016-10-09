@@ -317,6 +317,8 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			if(circle_phase > (2*3.14159)*numCircleTraj)
 			{
 				executeCircleTraj = false;
+				CartVec p = affine2CartVec(x_des_);
+				ROS_INFO("End pose: pos=[%f,%f,%f], rot=[%f,%f,%f]",p(0),p(1),p(2),p(3),p(4),p(5));
 			}
 		}
 		if(mannequinMode && loop_count_ > 3000) // Check if initialized
@@ -463,10 +465,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		// Reference trajectory
 		X_m   = affine2CartVec(x_des_);
-		Xd_m.setZero();
-		Xdd_m.setZero();
-//		Xd_m  = affine2CartVec(xd_des_);
-//		Xdd_m = affine2CartVec(xdd_des_);
+//		Xd_m.setZero();
+//		Xdd_m.setZero();
+		Xd_m  = affine2CartVec(xd_des_);
+		Xdd_m = affine2CartVec(xdd_des_);
 
 		/***************** FEEDFORWARD FORCE *****************/
 
@@ -831,10 +833,10 @@ void PR2adaptNeuroControllerClass::update()
 	{
 		//cartvec_tmp(1) = accData_vector_size;
 		//cartvec_tmp(2) = ftData_vector_size;
-		//cartvec_tmp(1) = nnController.getOuterWeightsNorm();
-		//cartvec_tmp(2) = nnController.getInnerWeightsNorm();
-		cartvec_tmp(1) = calibrationDistance_;
-		cartvec_tmp(2) = filterWeights_flexi_.norm();
+		cartvec_tmp(1) = nnController.getOuterWeightsNorm();
+		cartvec_tmp(2) = nnController.getInnerWeightsNorm();
+		//cartvec_tmp(1) = calibrationDistance_;
+		//cartvec_tmp(2) = filterWeights_flexi_.norm();
 
 		if (pub_x_desi_.trylock()) {
 			pub_x_desi_.msg_.header.stamp = last_time_;
@@ -1841,6 +1843,7 @@ bool PR2adaptNeuroControllerClass::runExperimentA(	ice_msgs::setValue::Request &
 	ros::Time started = ros::Time::now();
 
 	// Re-set NN
+	/*
 	nnController.setUpdateWeights(false);
 	Eigen::MatrixXd V_trans;
 	Eigen::MatrixXd W_trans;
@@ -1849,6 +1852,7 @@ bool PR2adaptNeuroControllerClass::runExperimentA(	ice_msgs::setValue::Request &
 	W_trans.setZero(   num_Outputs, num_Hidden     ) ;
 	nnController.setInnerWeights(V_trans);
 	nnController.setOuterWeights(W_trans);
+	*/
 	nnController.setUpdateWeights(true);
 
 	// Set circle rate and decide if the inner weights will be updated

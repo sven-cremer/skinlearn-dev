@@ -1,5 +1,5 @@
 # Data to be published
-experiment         : 1 # Experiment A=0, B=1, C=2
+experiment         : 0 # Experiment A=0, B=1, C=2
 
 # Flexiforce settings
 port               : /dev/ttyACM0
@@ -11,6 +11,7 @@ sensor_1 : [0,1,0]
 sensor_2 : [1,0,0]
 sensor_3 : [0,-1,0]
 max_calibration_distance: 0.2
+calibrateSensors   : false
 
 loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRateFactor - 2)
 
@@ -24,7 +25,7 @@ useDigitalFilter   : false
 executeCircleTraj  : false
 numCircleTraj      : 3
 
-mannequinMode      : true
+mannequinMode      : false
 mannequinThresPos  : 0.05
 mannequinThresRot  : 0.05 # not used
 
@@ -67,7 +68,7 @@ joint_vel_filter : 1.0
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
 # i.e. an admittance model is used to generate x_i from f_h the force from the FT sensor
-externalRefTraj    : true
+externalRefTraj    : false
 
 # Human intent estimation
 useHumanIntent     : false
@@ -205,6 +206,7 @@ cartIniZ             :  -0.10
 #cartIniX             :  0.75
 #cartIniY             :  0.35
 #cartIniZ             :  0.0
+#cartIniRoll          :  0.0
 cartIniRoll          :  1.57
 cartIniPitch         :  0.0
 cartIniYaw           :  0.0
