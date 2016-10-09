@@ -288,20 +288,20 @@ nn_ON                 : 1
 # nn_ON               : 1
 
 # Kd*(qd_m - qd) + Kp*(q_m - q)
-cartPos_Kp_x          : 120
-cartPos_Kp_y          : 120
-cartPos_Kp_z          : 120
-cartRot_Kp_x          : 10
-cartRot_Kp_y          : 10
-cartRot_Kp_z          : 10
+cartPos_Kp_x          : 20
+cartPos_Kp_y          : 20
+cartPos_Kp_z          : 20
+cartRot_Kp_x          : 2
+cartRot_Kp_y          : 2
+cartRot_Kp_z          : 2
 
 # Prevents motion if qd=0
-cartPos_Kd_x          : 10
-cartPos_Kd_y          : 10
-cartPos_Kd_z          : 10
-cartRot_Kd_x          : 3
-cartRot_Kd_y          : 3
-cartRot_Kd_z          : 3
+cartPos_Kd_x          : 0.1
+cartPos_Kd_y          : 0.1
+cartPos_Kd_z          : 0.1
+cartRot_Kd_x          : 0.05
+cartRot_Kd_y          : 0.05
+cartRot_Kd_z          : 0.05
 
 #############################
 # Controller plugins        #

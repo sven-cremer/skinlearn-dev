@@ -2748,12 +2748,19 @@ bool PR2adaptNeuroControllerClass::initNN()
             cartRot_Kd_y ,
             cartRot_Kd_z ;
 
-	p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
-                cartPos_Kp_y / cartPos_Kd_y ,
-                cartPos_Kp_z / cartPos_Kd_z ,
-                cartRot_Kp_x / cartRot_Kd_x ,
-                cartRot_Kp_y / cartRot_Kd_y ,
-                cartRot_Kp_z / cartRot_Kd_z ;
+//	p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
+//                cartPos_Kp_y / cartPos_Kd_y ,
+//                cartPos_Kp_z / cartPos_Kd_z ,
+//                cartRot_Kp_x / cartRot_Kd_x ,
+//                cartRot_Kp_y / cartRot_Kd_y ,
+//                cartRot_Kp_z / cartRot_Kd_z ;
+
+	p_lambda << cartPos_Kp_x ,
+                cartPos_Kp_y ,
+                cartPos_Kp_z ,
+                cartRot_Kp_x ,
+                cartRot_Kp_y ,
+                cartRot_Kp_z ;
 
 	nnController.init( kappa  ,
                        p_Kv     ,
