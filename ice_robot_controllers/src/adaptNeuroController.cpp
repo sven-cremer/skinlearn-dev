@@ -1505,13 +1505,13 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataC_msg_[storage_index_].qdd_d.j6   = qdd_m(6);
 
 		// Torque
-		experimentDataC_msg_[storage_index_].tau.j0   = tau(0);
-		experimentDataC_msg_[storage_index_].tau.j1   = tau(1);
-		experimentDataC_msg_[storage_index_].tau.j2   = tau(2);
-		experimentDataC_msg_[storage_index_].tau.j3   = tau(3);
-		experimentDataC_msg_[storage_index_].tau.j4   = tau(4);
-		experimentDataC_msg_[storage_index_].tau.j5   = tau(5);
-		experimentDataC_msg_[storage_index_].tau.j6   = tau(6);
+		experimentDataC_msg_[storage_index_].tau.j0   = tau_c_latest_(0);
+		experimentDataC_msg_[storage_index_].tau.j1   = tau_c_latest_(1);
+		experimentDataC_msg_[storage_index_].tau.j2   = tau_c_latest_(2);
+		experimentDataC_msg_[storage_index_].tau.j3   = tau_c_latest_(3);
+		experimentDataC_msg_[storage_index_].tau.j4   = tau_c_latest_(4);
+		experimentDataC_msg_[storage_index_].tau.j5   = tau_c_latest_(5);
+		experimentDataC_msg_[storage_index_].tau.j6   = tau_c_latest_(6);
 
 		experimentDataC_msg_[storage_index_].tau_sat.j0   = tau_sat(0);
 		experimentDataC_msg_[storage_index_].tau_sat.j1   = tau_sat(1);
@@ -3092,7 +3092,7 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	t_r     .resize( num_Outputs ) ;
 	task_ref.resize( num_Outputs ) ;
 	task_refModel_output.resize( num_Outputs ) ;
-	tau     .resize( num_Joints ) ;
+	//tau     .resize( num_Joints ) ;
 
 	q        .setZero() ;
 	qd       .setZero() ;
@@ -3136,7 +3136,7 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	prev_x_r             = Eigen::VectorXd::Zero( num_Outputs ) ;
 	delta_x				 = 0;
 	task_refModel_output = Eigen::VectorXd::Zero( num_Outputs ) ;
-	tau                  = Eigen::VectorXd::Zero( num_Outputs ) ;
+	//tau                  = Eigen::VectorXd::Zero( num_Outputs ) ;
 	force_c              = Eigen::VectorXd::Zero( num_Outputs ) ;
 
 	// Initial Reference

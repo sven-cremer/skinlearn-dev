@@ -402,7 +402,7 @@ private:
 	Eigen::VectorXd prev_x_r;
 	double delta_x;
 	Eigen::VectorXd task_refModel_output;
-	Eigen::VectorXd tau;
+	//Eigen::VectorXd tau;
 	Eigen::VectorXd force_c;
 	Eigen::VectorXd flexiForce;
 
