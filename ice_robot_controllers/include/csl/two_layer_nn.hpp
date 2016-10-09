@@ -187,14 +187,16 @@ public:
 
 			W_.setZero();
 			W_next_.setZero();
+//			W_.setRandom();
+//			W_next_.setRandom();
 
 			// Input weights should be randomly initialized
-			V_		.setRandom();
-			V_next_	.setRandom();
+//			V_		.setRandom();
+//			V_next_	.setRandom();
 //			V_ 		= 0.1*V_;
 //			V_next_ = 0.1*V_next_;
-//          V_.setOnes();
-//          V_next_.setOnes();
+          V_.setZero();
+          V_next_.setZero();
             
 			F.setIdentity();
 			G.setIdentity();
