@@ -25,7 +25,9 @@ namespace neural_network {
  * This class will implement a Neural Network Based controller using a two layer NN with sigmoid activation functions
  * TODO add more description
  */
-class TwoLayerNeuralNetworkController {
+class TwoLayerNeuralNetworkController
+{
+private:
 
 	bool updateWeights;
 	bool updateInnerWeights;
@@ -119,6 +121,7 @@ public:
                 100      ,
                 20       ,
                 1         );
+}
 
 	void changeNNstructure( int para_num_Inputs  ,
 			int para_num_Outputs ,
@@ -178,6 +181,11 @@ public:
 		   double p_Zb                ,
 		   double p_ffForce           ,
 		   double p_nnF               ,
+		   double p_nnG               ,
+		   double p_nn_ON              )
+	{
+		// Init Kv
+		if(p_Kv.rows() == num_Error && p_Kv.cols() == 1 )
 		{
 			Kv = p_Kv.asDiagonal();
 		}
