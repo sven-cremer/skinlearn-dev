@@ -24,7 +24,7 @@ class TactileViz
   int num_sensors;
   int num_patches;
   int total_sensors;
-  int patch_idx;
+  int data_idx;
 
   ros::NodeHandle  m_node;
   ros::Publisher   m_tactileVizPub;
@@ -393,16 +393,16 @@ public:
   void readAndPublish()
   {
 	  // Read data
-	  patch_idx = 0;
-	  if(!tacSerial->getDataArrayFromSerialPort( force, patch_idx ))
+	  data_idx = 0;
+	  if(!tacSerial->getDataArrayFromSerialPort( force, data_idx ))
 	  {
 		  std::cout<<"->Reading data failed!\n";
 		  return;
 	  }
 
-	  //std::cout<<patch_idx<<"\n";
+	  //std::cout<<data_idx<<"\n";
 
-	  if(patch_idx%num_patches == num_patches-1)	// TODO make sure all values have been updated
+	  if(data_idx == 31)	// TODO make sure all values have been updated
 	  {
 		  //force = (force - forceBias) * (2.0 / 1023.0);
 		  force = force / forceScale;

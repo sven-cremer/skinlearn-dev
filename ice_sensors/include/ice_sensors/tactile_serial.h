@@ -32,7 +32,9 @@ using std::vector;
 class TactileSerial
 {
   enum { numSensors = 4 };
-  int num_sensors;
+  int num_sensors_per_patch;
+  int num_sensors_per_mux;
+  int num_muxes;
   int num_patches;
   int total_sensors;
 
@@ -78,9 +80,12 @@ public:
 TactileSerial(string port, unsigned long baud, int param_num_sensors, int param_num_patches)
 {
 
-num_sensors = param_num_sensors;
+num_sensors_per_patch = param_num_sensors;
 num_patches = param_num_patches;
-total_sensors = num_sensors*num_patches;
+total_sensors = num_sensors_per_patch*num_patches;
+
+num_muxes = 4;	// TODO make a variable
+num_sensors_per_mux = (num_patches/num_muxes)*num_sensors_per_patch;	// 32
 
 initFilter();
 
@@ -163,14 +168,26 @@ void initFilter()	// TODO read from parameter server
 //	float b_lpfilt[] = {0.0994,  0.0994};
 //	float a_lpfilt[] = {1.0000, -0.8012};
 
-	for(int i=0; i < num_sensors; i++)
+	for(int i=0; i < num_sensors_per_patch; i++)
 	{
 		digitalFilter* tmpPtr = new digitalFilter(1, true, b_lpfilt, a_lpfilt);
 		sensorFilters.push_back(tmpPtr);
 	}
 }
 
-bool getDataArrayFromSerialPort( Eigen::VectorXd & force, int & patch_idx  )
+double extractNumberFromString(std::string str)
+{
+	std::string tmp;
+	std::size_t found = str.find_first_of("0123456789");
+	while (found!=std::string::npos)
+	{
+		tmp += str[found];
+		found =str.find_first_of("0123456789",found+1);
+	}
+	return boost::lexical_cast<double>(str);
+}
+
+bool getDataArrayFromSerialPort( Eigen::VectorXd & force, int & data_idx  )
 {
 
 	if(force.size() != total_sensors)
@@ -196,26 +213,37 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force, int & patch_idx  )
     */
 
     // Check data: ID,#,...,#,#,\n
-    if(strvec.size() != num_sensors + 2)
+    if(strvec.size() != num_muxes + 2)
     {
-    	std::cerr<<"Reading serial data failed: raw data has unexpected length ("<<strvec.size()<<" instead of "<<num_sensors + 2<<")\n";
+    	std::cerr<<"Reading serial data failed: raw data has unexpected length ("<<strvec.size()<<" instead of "<<num_muxes + 2<<")\n";
     	return false;
     }
 
-    // Extract patch index
-    std::string str = strvec[0];
-    std::size_t tmp_idx = str.find_first_of("0123456789");
-    str = str[tmp_idx];
-    patch_idx = boost::lexical_cast<double>(str);	// 0,1,...,7
+    // Extract sensor and patch index
+    int patch_idx;
+    int sensor_idx;
+    std::string str = strvec[0];								// CX or CXX
+    data_idx = (int)extractNumberFromString(str);
 
-    if(patch_idx < 0 || patch_idx > num_patches-1)
+    // Check range
+    if(data_idx < 0 || data_idx > num_sensors_per_mux-1)	// 0,...,31
     {
-    	std::cerr<<"Reading serial data failed: extracted wrong patch number ("<<patch_idx<<")\n";
+    	std::cerr<<"Reading serial data failed: extracted wrong sensor number ("<<sensor_idx<<")\n";
     	return false;
+    }
+    if(data_idx<num_sensors_per_patch)
+    {
+    	patch_idx = 0;
+    	sensor_idx = data_idx;
+    }
+    else
+    {
+    	patch_idx = 1;
+    	sensor_idx = data_idx - num_sensors_per_patch;
     }
 
     // Extract data
-    for( unsigned int i=0; i<num_sensors; i++)
+    for( unsigned int i=0; i<num_muxes; i++)
     {
     	str = strvec[i+1];
 
@@ -232,8 +260,9 @@ bool getDataArrayFromSerialPort( Eigen::VectorXd & force, int & patch_idx  )
     		}
     		str = tmp;
     	}
-    	force(patch_idx*num_sensors+i) = boost::lexical_cast<double>(str);
+    	force(patch_idx*num_sensors_per_patch+sensor_idx) = boost::lexical_cast<double>(str);
     	//std::cout<<"force("<<patch_idx*num_sensors+i<<"): "<<force(patch_idx*num_sensors+i)<<"\n";
+    	patch_idx +=2;
     }
 
 //    if(firstRead)
