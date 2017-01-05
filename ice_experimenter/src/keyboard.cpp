@@ -184,12 +184,13 @@ int main(int argc, char** argv)
 
   // Trajectory settings
   geometry_msgs::Point origin;
-  origin.x = 0.65;
-  origin.y = 0.35;
-  origin.z = 0.5;
+  origin.x = 0.38;
+  origin.y = 0.15;
+  origin.z = -0.10;
   TrajectoryGenerator tg;
-  tg.initGrid( 3, 3, 0.07, 0.07, origin);
-  std::string trajPathStr = "ACIGA";
+  tg.initGrid( 3, 3, 0.07, 0.08, origin);
+  //std::string trajPathStr = "ACIGA";
+  std::string trajPathStr = "AHCFIHDIEGA";
   std::vector<geometry_msgs::Point> trajPathVec = tg.str2Vec(trajPathStr);
 
   // Set controller names
@@ -450,7 +451,7 @@ int main(int argc, char** argv)
     		  pose.position = *iterator;
 
     		  //std::cout<<pose<<"\n";
-    		  arms.moveToPose(arm,pose,"base_link",false);
+    		  arms.moveToPose(arm,pose,"torso_lift_link",false);
     		  ros::Duration(3.0).sleep();
     	  }
     	  std::cout<<"Done!\n";
