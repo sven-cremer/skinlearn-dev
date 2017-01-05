@@ -23,6 +23,8 @@
 
 // PR2 utilities
 #include <apc_robot/pr2_manager.h>
+#include <apc_robot/apc_arms_cartesian.h>
+#include <trajectory_generator/trajectoryGenerator.h>
 
 // Messages
 #include <ice_msgs/setBool.h>
@@ -34,6 +36,7 @@
 #include <ice_msgs/tactileCalibration.h>
 #include <ice_msgs/tactileFilterWeights.h>
 #include <std_srvs/Empty.h>
+#include <geometry_msgs/PoseStamped.h>
 
 
 using namespace std;
@@ -53,6 +56,8 @@ void displayMainMenu()
 	puts("Use 'i' to initialize robot");
 	puts("Use 'o/p' to open/close LEFT gripper");
 	puts("Use 'j/k' to open/close RIGHT gripper");
+	puts(" ");
+	puts("Use 'u/h' to lift torso up/down");
 	puts(" ");
 	puts("Use 'w' to open NN weights menu");
 	puts("Use 'r' to open reference trajectory menu");
@@ -173,7 +178,20 @@ int main(int argc, char** argv)
 
   ros::NodeHandle nh;
 
-  PR2Manager pr2manager("pr2_adaptNeuroController");
+  PR2Manager pr2manager;
+  double torsoHeight = 0.05;
+  double deltaTorsoHeight = 0.01;
+
+  TrajectoryGenerator tg;
+
+  // Set controller names
+  std::vector<std::string> arm_controllers_default;
+  std::vector<std::string> arm_controllers_new;
+  arm_controllers_default.push_back("l_arm_controller");
+  arm_controllers_new.push_back("pr2_adaptNeuroController");
+  pr2manager.setControllers(arm_controllers_default, arm_controllers_new);
+
+  ArmsCartesian arms;
 
   // ROS service clients
   ros::ServiceClient toggle_updateWeights_srv_ = nh.serviceClient<ice_msgs::setBool>("/pr2_adaptNeuroController/updateNNweights");
@@ -241,6 +259,7 @@ int main(int argc, char** argv)
       {
     	  // init robot
     	  pr2manager.robotInit(false);
+    	  torsoHeight = 0.05;
     	  controller_active = false;
     	  break;
       }
@@ -265,6 +284,21 @@ int main(int argc, char** argv)
     	  pr2manager.closeGrippers(PR2Manager::RIGHT);
     	  break;
       }
+      /******************************** Torso  *****************************************/
+       case 'u':
+       {
+     	  if(torsoHeight<0.3)
+     		  torsoHeight += deltaTorsoHeight;
+     	  pr2manager.setTorso(torsoHeight);
+     	  break;
+       }
+       case 'h':
+       {
+    	  if(torsoHeight>0.0)
+    		  torsoHeight -= deltaTorsoHeight;
+     	  pr2manager.setTorso(torsoHeight);
+     	  break;
+       }
       /******************************** NN weights ****************************************/
       case 'w':
       {
@@ -417,7 +451,7 @@ int main(int argc, char** argv)
     	  avgWeights.resize(8);
 
     	  int curTrial = 0;
-    	  int numTrials = 4;
+    	  int numTrials = 3;
 
            bool stop_menu2 = false;
            while(!stop_menu2)
@@ -582,6 +616,14 @@ int main(int argc, char** argv)
             	 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
             	 curTrial++;
 
+            	 geometry_msgs::PoseStamped p;
+            	 p.header.stamp = ros::Time::now();
+            	 p.header.frame_id = "base_link";
+            	 p.pose.orientation.w = 1;
+
+            	 p.pose.position.x = 0.65;
+				 p.pose.position.y = 0.35;
+				 p.pose.position.z = 0.5;
 
             	 // Select sensor
             	 activeSensor = nextActiveSensor;

@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   apc_robot
   sound_play
+  trajectory_generator
 )
 
 ## System dependencies are found with CMake's conventions
