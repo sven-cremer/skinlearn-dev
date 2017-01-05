@@ -182,7 +182,15 @@ int main(int argc, char** argv)
   double torsoHeight = 0.05;
   double deltaTorsoHeight = 0.01;
 
+  // Trajectory settings
+  geometry_msgs::Point origin;
+  origin.x = 0.65;
+  origin.y = 0.35;
+  origin.z = 0.5;
   TrajectoryGenerator tg;
+  tg.initGrid( 3, 3, 0.07, 0.07, origin);
+  std::string trajPathStr = "ACIGA";
+  std::vector<geometry_msgs::Point> trajPathVec = tg.str2Vec(trajPathStr);
 
   // Set controller names
   std::vector<std::string> arm_controllers_default;
@@ -429,6 +437,23 @@ int main(int argc, char** argv)
       /******************************** reference ****************************************/
       case 'r':
       {
+    	  typedef std::vector<geometry_msgs::Point>::iterator it_type;
+
+    	  std::cout<<"Executing trajectory: "<<trajPathStr<<"\n";
+
+    	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
+    	  geometry_msgs::Pose pose;
+    	  pose.orientation.w = 1;
+
+    	  for(it_type iterator = trajPathVec.begin(); iterator != trajPathVec.end(); iterator++)
+    	  {
+    		  pose.position = *iterator;
+
+    		  //std::cout<<pose<<"\n";
+    		  arms.moveToPose(arm,pose,"base_link",false);
+    		  ros::Duration(3.0).sleep();
+    	  }
+    	  std::cout<<"Done!\n";
     	  break;
       }
       /******************************** calibration ****************************************/
