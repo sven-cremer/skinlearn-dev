@@ -194,6 +194,8 @@ int main(int argc, char** argv)
   std::string trajPathStr = "AHCFIHDIEGA";
   ice_msgs::setTrajectory traj_msg_;
   traj_msg_.request.x =tg.str2Vec(trajPathStr);
+  for(int i=0;i<traj_msg_.request.x.size();i++)
+	  traj_msg_.request.t.push_back(5.0);
 
   // Set controller names
   std::vector<std::string> arm_controllers_default;
@@ -213,6 +215,7 @@ int main(int argc, char** argv)
   ros::ServiceClient captureData_srv_ = nh.serviceClient<std_srvs::Empty>("/pr2_adaptNeuroController/capture");
   ros::ServiceClient status_srv_ = nh.serviceClient<ice_msgs::setBool>("/tactile/status");
   ros::ServiceClient tactileFilterWeights_srv_ = nh.serviceClient<ice_msgs::tactileFilterWeights>("/tactile/filterWeights");
+  ros::ServiceClient runExperiment_srv_ = nh.serviceClient<ice_msgs::setTrajectory>("/pr2_adaptNeuroController/runExperimentD");
 
   sound_play::SoundClient sc;
 
@@ -446,7 +449,13 @@ int main(int argc, char** argv)
 
     	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
 
+    	  // AdaptNeuroController
+    	  if (!runExperiment_srv_.call(traj_msg_))
+    	  {
+    		  ROS_ERROR("Failed to call runExperiment service!");
+    	  }
 
+    	  // JT Cartesian
     	  for(it_type iterator = traj_msg_.request.x.begin(); iterator != traj_msg_.request.x.end(); iterator++)
     	  {
     		  geometry_msgs::Pose pose = *iterator;

@@ -1,4 +1,5 @@
 Header header
 geometry_msgs/Pose[] x
+float64[] t
 ---
 bool success

@@ -51,6 +51,7 @@
 #include <ice_msgs/tactileArrayData.h>
 #include <ice_msgs/tactileCalibration.h>
 #include <ice_msgs/tactileFilterWeights.h>
+#include <ice_msgs/setTrajectory.h>
 
 #include "geometry_msgs/Wrench.h"
 #include "geometry_msgs/WrenchStamped.h"
@@ -72,7 +73,7 @@ public:
 private:
 	enum { StoreLen = 20000 };
 	enum { Joints = 7 };
-	enum Experiment{ A, B, C };
+	enum Experiment{ A, B, C, D, Done };
 
 	// Definitions
 	typedef Eigen::Matrix<double, 7, 1> JointVec;
@@ -536,6 +537,7 @@ private:
 	ros::ServiceServer runExperimentA_srv_;
 	ros::ServiceServer runExperimentB_srv_;
 	ros::ServiceServer runExperimentC_srv_;
+	ros::ServiceServer runExperimentD_srv_;
 
 	bool runExperimentA(	ice_msgs::setValue::Request & req,
 						    ice_msgs::setValue::Response& resp );
@@ -543,6 +545,10 @@ private:
 						    ice_msgs::setValue::Response& resp );
 	bool runExperimentC(	ice_msgs::setValue::Request & req,
 						    ice_msgs::setValue::Response& resp );
+	bool runExperimentD(	ice_msgs::setTrajectory::Request & req,
+						    ice_msgs::setTrajectory::Response& resp );
+
+	ice_msgs::setTrajectory traj_msgs_;
 
 	Experiment experiment_;
 

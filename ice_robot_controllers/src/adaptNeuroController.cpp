@@ -88,6 +88,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
 	runExperimentB_srv_ = nh_.advertiseService("runExperimentB" , &PR2adaptNeuroControllerClass::runExperimentB   , this);
 	runExperimentC_srv_ = nh_.advertiseService("runExperimentC" , &PR2adaptNeuroControllerClass::runExperimentC   , this);
+	runExperimentD_srv_ = nh_.advertiseService("runExperimentD" , &PR2adaptNeuroControllerClass::runExperimentD   , this);
 
 	// NN weights
 	updateInnerNNweights_srv_  = nh_.advertiseService("updateInnerNNweights" , &PR2adaptNeuroControllerClass::updateInnerNNweights   , this);
@@ -217,7 +218,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		// 1) Wait
 		while(!runComputations)
 		{
-			boost::this_thread::sleep(boost::posix_time::milliseconds(0.005));
+			boost::this_thread::sleep(boost::posix_time::milliseconds(0.001));
 		}
 
 		// 2) Do Computations
@@ -449,6 +450,41 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 		}
 
+		if(experiment_ == PR2adaptNeuroControllerClass::D)
+		{
+			// Check if it is time to update desired position
+			if(traj_msgs_.request.header.stamp < ros::Time::now())
+			{
+				int index = traj_msgs_.request.header.seq;
+
+				// Check if all poses have been reached
+				if(index > traj_msgs_.request.x.size())
+				{
+					experiment_ = PR2adaptNeuroControllerClass::Done;
+				}
+				else
+				{
+					CartVec tmp;
+					tmp(0) = traj_msgs_.request.x[index].position.x;
+					tmp(1) = traj_msgs_.request.x[index].position.y;
+					tmp(2) = traj_msgs_.request.x[index].position.z;
+
+					Eigen::Quaterniond q( traj_msgs_.request.x[index].orientation.w,
+					                      traj_msgs_.request.x[index].orientation.x,
+					                      traj_msgs_.request.x[index].orientation.y,
+					                      traj_msgs_.request.x[index].orientation.z);
+
+					tmp.bottomRows(3) = quaternion2Euler( q );
+
+					std::cout<<"ExpD pose #"<<index<<": "<<tmp.transpose()<<"\n";
+
+					x_des_ = CartVec2Affine(tmp);
+
+					traj_msgs_.request.header.stamp = ros::Time::now() + ros::Duration(traj_msgs_.request.t[index]);
+					traj_msgs_.request.header.seq++;
+				}
+			}
+		}
 		/***************** UPDATE LOOP VARIABLES *****************/
 
 		JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
@@ -465,10 +501,15 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		// Reference trajectory
 		X_m   = affine2CartVec(x_des_);
-//		Xd_m.setZero();
-//		Xdd_m.setZero();
-		Xd_m  = affine2CartVec(xd_des_);
-		Xdd_m = affine2CartVec(xdd_des_);
+		Xd_m.setZero();
+		Xdd_m.setZero();
+//		Xd_m  = affine2CartVec(xd_des_);
+//		Xdd_m = affine2CartVec(xdd_des_);
+
+		// TODO
+		X_m(3) = 1.57; Xd_m(3) = 0.0; Xdd_m(3) = 0.0;
+		X_m(4) = 0.0;  Xd_m(4) = 0.0; Xdd_m(4) = 0.0;
+		X_m(5) = 0.0;  Xd_m(5) = 0.0; Xdd_m(5) = 0.0;
 
 		/***************** FEEDFORWARD FORCE *****************/
 
@@ -1960,6 +2001,28 @@ bool PR2adaptNeuroControllerClass::runExperimentC(	ice_msgs::setValue::Request &
 	}
 
 	circle_phase = 0;
+	storage_index_ = 0;
+	recordData = true;
+
+	return true;
+}
+
+bool PR2adaptNeuroControllerClass::runExperimentD(	ice_msgs::setTrajectory::Request & req,
+													ice_msgs::setTrajectory::Response& resp )
+{
+	experiment_ = PR2adaptNeuroControllerClass::D;
+
+	/* Record the starting time. */
+	ros::Time started = ros::Time::now();
+
+	// Re-set NN
+
+	// Set trajectory
+	traj_msgs_.request = req;
+
+	traj_msgs_.request.header.seq = 0;						// Use as index
+	traj_msgs_.request.header.stamp = ros::Time::now()+ros::Duration(traj_msgs_.request.t[0]);	// Use time for trajectory execution
+
 	storage_index_ = 0;
 	recordData = true;
 
