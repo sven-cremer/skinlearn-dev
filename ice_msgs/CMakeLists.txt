@@ -35,6 +35,7 @@ add_service_files(DIRECTORY srv FILES
   saveControllerData.srv
   setCartPose.srv
   setCircleRate.srv
+  setTrajectory.srv
   # pr2_cart
   getState.srv
   setCarteDofMatrix.srv
