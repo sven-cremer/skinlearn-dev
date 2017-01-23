@@ -138,7 +138,8 @@ wrench:
 start_time: {secs: 0, nsecs: 0}
 duration: {secs: 10, nsecs: 0}" 
 ```
-*Note*: The simulated robot behaves differently from the real PR2. Maybe the F/T sensors change the kinematics and have to be added to the Gazebo model. 
+*Note*: The simulated robot behaves differently from the real PR2. Maybe the F/T sensors change the kinematics and have to be added to the Gazebo model.
+
 # Collecting data
 Starting Experiment A after modifying *pr2_controller.yaml*:
 ```
@@ -151,3 +152,10 @@ rostopic echo -p /pr2_adaptNeuroController/experimentDataA > datafile.rtp
 rosservice call /pr2_adaptNeuroController/publishExpData "{}"
 ```
 In  future, the *ice_experimenter* will automatically save the data in a rosbag.
+
+# Topics
+```
+rostopic list | grep pr2_adapt
+rostopic echo /pr2_adaptNeuroController/state/x -c
+rostopic echo /pr2_adaptNeuroController/state/x_desi -c
+```
