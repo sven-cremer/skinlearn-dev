@@ -36,6 +36,7 @@
 #include <ice_msgs/tactileCalibration.h>
 #include <ice_msgs/tactileFilterWeights.h>
 #include <std_srvs/Empty.h>
+#include <ice_msgs/setTrajectory.h>
 #include <geometry_msgs/PoseStamped.h>
 
 
@@ -191,7 +192,8 @@ int main(int argc, char** argv)
   tg.initGrid( 3, 3, 0.07, 0.08, origin);
   //std::string trajPathStr = "ACIGA";
   std::string trajPathStr = "AHCFIHDIEGA";
-  std::vector<geometry_msgs::Point> trajPathVec = tg.str2Vec(trajPathStr);
+  ice_msgs::setTrajectory traj_msg_;
+  traj_msg_.request.x =tg.str2Vec(trajPathStr);
 
   // Set controller names
   std::vector<std::string> arm_controllers_default;
@@ -438,17 +440,16 @@ int main(int argc, char** argv)
       /******************************** reference ****************************************/
       case 'r':
       {
-    	  typedef std::vector<geometry_msgs::Point>::iterator it_type;
+    	  typedef std::vector<geometry_msgs::Pose>::iterator it_type;
 
     	  std::cout<<"Executing trajectory: "<<trajPathStr<<"\n";
 
     	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
-    	  geometry_msgs::Pose pose;
-    	  pose.orientation.w = 1;
 
-    	  for(it_type iterator = trajPathVec.begin(); iterator != trajPathVec.end(); iterator++)
+
+    	  for(it_type iterator = traj_msg_.request.x.begin(); iterator != traj_msg_.request.x.end(); iterator++)
     	  {
-    		  pose.position = *iterator;
+    		  geometry_msgs::Pose pose = *iterator;
 
     		  //std::cout<<pose<<"\n";
     		  arms.moveToPose(arm,pose,"torso_lift_link",false);
