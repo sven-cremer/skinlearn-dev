@@ -739,6 +739,16 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	}
 }
 
+/* wrap x -> [0,max) */
+double wrapMax(double x, double max)
+{
+    return fmod(max + fmod(x, max), max);
+}
+/* wrap x -> [min,max) */
+double wrapMinMax(double x, double min, double max)
+{
+    return min + wrapMax(x - min, max - min);
+}
 
 /// Controller update loop in realtime
 void PR2adaptNeuroControllerClass::update()
@@ -755,6 +765,10 @@ void PR2adaptNeuroControllerClass::update()
 		// Get the current joint positions and velocities.
 		chain_.getPositions(q_);
 		chain_.getVelocities(qdot_);
+
+		// Wrap continuous joints
+		q_(4) = wrapMinMax(q_(4), -M_PI, +M_PI);
+		q_(6) = wrapMinMax(q_(6), -M_PI, +M_PI);
 
 		// Get the pose of the F/T sensor
 		if(forceTorqueOn)
@@ -2384,12 +2398,17 @@ bool PR2adaptNeuroControllerClass::initRobot()
 	q_upper(5) = urdf_model.getJoint("l_wrist_flex_joint"    )->limits->upper;
 	q_upper(6) = urdf_model.getJoint("l_wrist_roll_joint"    )->limits->upper;
 
-	// Since two joints are continuous TODO describe why?
-	q_upper(4) =   6.28 ;
-	q_upper(6) =   6.28 ;
+	for(int i=0;i<num_Joints;i++)
+	{
+		std::cout<<"Joint "<<i<<": ["<<q_lower(i)<<", "<<q_upper(i)<<"]\n";
+	}
 
-	q_lower(4) = - 6.28 ;
-	q_lower(6) = - 6.28 ;
+	// The forearm and wrist roll joints are continuous and have no actual limits
+	q_upper(4) =   M_PI ;
+	q_upper(6) =   M_PI ;
+
+	q_lower(4) = - M_PI ;
+	q_lower(6) = - M_PI ;
 
 	qnom(0) = ( q_upper(0) - q_lower(0) ) / 2 ;
 	qnom(1) = ( q_upper(1) - q_lower(1) ) / 2 ;
