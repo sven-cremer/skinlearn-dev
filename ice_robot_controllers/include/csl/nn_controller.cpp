@@ -5,6 +5,7 @@
  *      Author: Sven Cremer
  *
  *      Neuroadaptive controller based on Isura Ranatunga's TwoLayerNeuralNetworkController class.
+ *      This class implements both one and two layer NNs with different activation functions.
  */
 
 #ifndef NNCONTROLLER_H_
@@ -15,35 +16,35 @@
 #include <Eigen/Eigenvalues>
 
 namespace csl {
-
 namespace neural_network {
 
-/*
- * This class will implement a Neural Network Based controller using a two layer NN with sigmoid activation functions
- * TODO add more description
- */
 class NNController
 {
 
 public:
 
-	enum ActFcn {Sigmoid, RBF};
-	enum Layers {Single, Two};
+	enum ActFcn {Sigmoid, RBF}; // TODO implement RBF
+	enum Layers {One, Two};		// TODO implement One layer
 
 private:
 
-	NNController::ActFcn actF;
+	double dt;					// Controller update rate
 
-	int bias;		// Bias unit, 0 (none) or 1
+	// Flags
+	bool nn_ON;					// Use fhat from NN
+	bool robust_ON;				// Use robustifying term
 	bool updateWeights;
 	bool updateInnerWeights;
+	NNController::ActFcn actF;	// Selected activtion function
+	NNController::Layers lay;	// Number of NN layers
 
-	int num_Inputs  ; // n Size of the inputs
-	int num_Outputs ; // m Size of the outputs
-	int num_Hidden  ; // l Size of the hidden layer
-	int num_Error   ; // filtered error
-	int num_Joints  ; // number of joints.
-	int num_Dim		; // size of input and output signals, i.e. number of Cartesian coordinates
+	// NN variables
+	int bias;					// Use bias unit; 0 (none) or 1
+	int num_Inputs  ; 			// Number of input nodes
+	int num_Outputs ; 			// Number of output nodes
+	int num_Hidden  ; 			// Size of the hidden layer
+	int num_Joints  ; 			// Number of joints
+	int num_Dim		; 			// Size of input and output signals, i.e. number of Cartesian coordinates
 
 	Eigen::MatrixXd V_;			// Inner layer
 	Eigen::MatrixXd W_;			// Outer layer
@@ -52,13 +53,10 @@ private:
 	Eigen::MatrixXd V_trans;
 	Eigen::MatrixXd W_trans;
 
-	Eigen::MatrixXd Z;	// Combined weight matrix
+	Eigen::MatrixXd Z;			// Combined weight matrix
 
-	Eigen::MatrixXd G;	// Positive definite design matrix for inner layer (V)
-	Eigen::MatrixXd F;	// Positive definite design matrix for outer layer (W)
-
-	Eigen::VectorXd x;	// NN input vector
-	Eigen::VectorXd y;	// NN output vector
+	Eigen::VectorXd phi;		// NN input vector
+	Eigen::VectorXd fhat;		// NN output vector
 
 	Eigen::VectorXd sigma;		// Activation function output
 	Eigen::MatrixXd sigmaPrime;	// Derivative of activation function
@@ -66,34 +64,39 @@ private:
 
 	Eigen::VectorXd sigmaPrimeTrans_W_r; // For temporary storing result
 
-	Eigen::VectorXd r;	// Sliding mode error
-	Eigen::VectorXd vRobust;
-
-	double kappa;
-	Eigen::MatrixXd Kv;
-	Eigen::MatrixXd lambda;
-	double Kz;
-	double Zb;
-	double nnF;
-	double nnG;
-	double nn_ON;
-
-	double feedForwardForce;
-
-	double delT; // Time step
+	// Controller variables
+	Eigen::VectorXd e;			// Error signal
+	Eigen::VectorXd ed;			// Error signal derivative
+	Eigen::VectorXd r;			// Sliding mode error
+	Eigen::VectorXd v;	        // Robustifying term
+	Eigen::MatrixXd Kv;			// "Derivative" term, i.e. Kv*r= Kv*ed + Kv*lam*e
+	Eigen::MatrixXd La;		    // "Proportional" term
+	Eigen::MatrixXd G;			// Positive definite design matrix for inner layer (V)
+	Eigen::MatrixXd F;			// Positive definite design matrix for outer layer (W)
+	double kappa;				// Gain of e-modification terms
+	double Kz;					// Gain of robustifying term
+	double Zb;					// Bound for NN weight error part of robustifying term
 
 public:
 
 	/*** Constructor methods ***/
 
-	NNController(int nJoints, int nDim, int nHidden, NNController::ActFcn a = NNController::Sigmoid)
+	NNController(int nJoints, int nDim, int nHidden,
+			     NNController::ActFcn a = NNController::Sigmoid,
+				 NNController::Layers l = NNController::Two)
 	{
 
 		actF = a;
+		lay  = l;
+
+		dt = 0.001; // 1000 Hz
+
+		nn_ON              = true;
+		robust_ON          = true;
+		updateWeights      = true;
+		updateInnerWeights = true;
 
 		bias = 1;
-		updateWeights = true;
-		updateInnerWeights = true;
 
 		num_Joints  = nJoints;
 		num_Dim     = nDim;
@@ -105,44 +108,23 @@ public:
 			num_Inputs = num_Joints*2 + num_Dim*5;
 		}
 
-		initNN();
+		paramResize();
 
-		delT = 0.001; /// 1000 Hz by default
+		// Set default parameter values
+		Eigen::MatrixXd p_Kv;
+		Eigen::MatrixXd p_la;
 
-		Eigen::MatrixXd p_Kv     ;
-		Eigen::MatrixXd p_lambda ;
+		p_Kv.setOnes(num_Dim,1);
+		p_la.setOnes(num_Dim,1);
 
-		p_Kv                  .resize( 7, 1 ) ;
-		p_lambda              .resize( 7, 1 ) ;
+		p_Kv *= 2;
+		p_la *= 20;
 
-		p_Kv << 10 ,
-				10 ,
-				10 ,
-				10 ,
-				10 ,
-				10 ,
-				10 ;
+		paramInit(p_Kv, p_la, 0.01, 0.05, 100, 100, 10, 0.01);
 
-		p_lambda << 0.5 ,
-				0.5 ,
-				0.5 ,
-				0.5 ,
-				0.5 ,
-				0.5 ,
-				0.5 ;
-
-		init( 0.07     ,
-				p_Kv     ,
-				p_lambda ,
-				0        ,
-				100      ,
-				1        ,
-				100      ,
-				20       ,
-				1         );
 	}
 
-	void initNN()	// TODO make private
+	void paramResize()	// TODO make private
 	{
 
 		V_        .resize( num_Inputs + bias           , num_Hidden               ) ;
@@ -157,147 +139,121 @@ public:
 		G         .resize( num_Inputs + bias           , num_Inputs + bias        ) ;
 		F         .resize( num_Hidden + bias           , num_Hidden + bias        ) ;
 
-
-		x                   .resize( num_Inputs + bias) ;
-		y                   .resize( num_Outputs      ) ;
+		phi                 .resize( num_Inputs + bias) ;
+		fhat                .resize( num_Outputs      ) ;
 
 		hiddenLayerIn       .resize( num_Hidden       ) ;
 		sigma               .resize( num_Hidden       ) ;
 		sigmaPrime          .resize( num_Hidden, num_Hidden ) ;
 
-		sigmaPrimeTrans_W_r .resize( num_Hidden     ) ;
+		sigmaPrimeTrans_W_r .resize( num_Hidden       ) ;
 
-		r                   .resize( num_Error      ) ;
-		vRobust             .resize( num_Outputs    ) ;
+		e                   .resize( num_Dim          ) ;
+		ed                  .resize( num_Dim          ) ;
+		r                   .resize( num_Dim          ) ;
+		v                   .resize( num_Dim          ) ;
 
-		F.setIdentity();
-		G.setIdentity();
-
-		// TODO initialize weights randomly
-		W_.setZero();
-		W_next_.setZero();
-		V_.setZero();
-		V_next_.setZero();
-
-		// Very important
-		Z.setZero();
+		Kv                  .resize( num_Dim, num_Dim ) ;
+		La                  .resize( num_Dim, num_Dim ) ;
 
 	}
 
-	void init( double p_kappa             ,
-	           Eigen::MatrixXd & p_Kv     ,
-	           Eigen::MatrixXd & p_lambda ,
-		   double p_Kz                ,
-		   double p_Zb                ,
-		   double p_ffForce           ,
-		   double p_nnF               ,
-		   double p_nnG               ,
-		   double p_nn_ON              )
+	void paramInit( Eigen::MatrixXd & p_Kv,
+                    Eigen::MatrixXd & p_La,
+                    double p_kappa,
+                    double p_Kz,
+                    double p_Zb,
+					double p_G,
+					double p_F,
+					double weightsLimit)
 	{
-		// Init Kv
-		if(p_Kv.rows() == num_Error && p_Kv.cols() == 1 )
+		// Initialize Kv
+		if(p_Kv.rows() == num_Dim && p_Kv.cols() == 1 )
 		{
 			Kv = p_Kv.asDiagonal();
 		}
-		else if (p_Kv.rows() == num_Error && p_Kv.cols() == num_Error )
+		else if (p_Kv.rows() == num_Dim && p_Kv.cols() == num_Dim )
 		{
 			Kv = p_Kv;
 		}
 		else
 		{
-			std::cerr<<"Error in NNController::init";
+			std::cerr<<"Failed to initialize Kv!\n";
 			Kv.setZero();
 		}
 
-		// Init Lambda
-		if(p_lambda.rows() == num_Error && p_lambda.cols() == 1 )
+		// Initialize Lambda
+		if(p_La.rows() == num_Dim && p_La.cols() == 1 )
 		{
-			lambda = p_lambda.asDiagonal();
+			La = p_La.asDiagonal();
 		}
-		else if (p_lambda.rows() == num_Error && p_lambda.cols() == num_Error )
+		else if (p_La.rows() == num_Dim && p_La.cols() == num_Dim )
 		{
-			lambda = p_lambda;
+			La = p_La;
 		}
 		else
 		{
-			std::cerr<<"Error in NNController::init";
-			lambda.setZero();
+			std::cerr<<"Failed to initialize Lambda!\n";
+			La.setZero();
 		}
 
-		std::cout<<"Kv:\n"<<Kv<<"\n---\n";
-		std::cout<<"Kv*lambda:\n"<<Kv*lambda<<"\n---\n";
+		kappa = p_kappa;
+		Kz    = p_Kz;
+		Zb    = p_Zb;
 
-		kappa            = p_kappa   ;
-		Kz               = p_Kz      ;
-		Zb               = p_Zb      ;
-		feedForwardForce = p_ffForce ;
-		nnF              = p_nnF     ;
-		nnG              = p_nnG     ;
-		nn_ON            = p_nn_ON   ;
+		G.setIdentity();
+		F.setIdentity();
+		G *= p_G;
+		F *= p_F;
 
-		F = nnF*F;
-		G = nnG*G;
+		// Initialize weights randomly
+		W_.setRandom();		// Range is [-1:1]
+		V_.setRandom();
 
+		W_ *= weightsLimit;
+		V_ *= weightsLimit;
+
+		W_next_ = W_;
+		V_next_ = V_;
+		W_trans = W_.transpose();
+		V_trans = V_.transpose();
+
+		Z.setZero();	// Important since the update function only modifies a part of the matrix
+		v.setZero();
+
+		//std::cout<<"Kv:\n"<<Kv<<"\n---\n";
+		//std::cout<<"Kv*lambda:\n"<<Kv*La<<"\n---\n";
 	}
 
-	void updateDelT( double p_delT )
-	{
-		delT = p_delT;
-	}
+	/*** Get and set methods ***/
 
-	inline void UpdateCart( Eigen::VectorXd & X     ,
-	                 Eigen::VectorXd & Xd    ,
-	                 Eigen::VectorXd & X_m   ,
-	                 Eigen::VectorXd & Xd_m  ,
-	                 Eigen::VectorXd & Xdd_m ,
-	                 Eigen::VectorXd & q     ,
-	                 Eigen::VectorXd & qd    ,
-	                 Eigen::VectorXd & t_r   ,
-	                 Eigen::VectorXd & tau    );
+	double getInnerWeightsNorm()		{	return V_.norm();	}
+	double getOuterWeightsNorm()		{	return W_.norm();	}
+	Eigen::MatrixXd	getInnerWeights()	{	return V_;			}
+	Eigen::MatrixXd	getOuterWeights()	{	return W_trans;		}
+	Eigen::VectorXd	getNNoutput()		{	return fhat;		}
 
-	inline void UpdateJoint( Eigen::VectorXd & q     ,
-                          Eigen::VectorXd & qd    ,
-                          Eigen::VectorXd & q_m   ,
-                          Eigen::VectorXd & qd_m  ,
-                          Eigen::VectorXd & qdd_m ,
-                          Eigen::VectorXd & t_r   ,
-                          Eigen::VectorXd & tau    );
-
-	inline void Update( Eigen::VectorXd & q    ,
-                     Eigen::VectorXd & qd   ,
-                     Eigen::VectorXd & q_m  ,
-                     Eigen::VectorXd & qd_m ,
-                     Eigen::VectorXd & t_r  ,
-                     Eigen::VectorXd & tau   );
-
-	Eigen::VectorXd activation( Eigen::VectorXd z);
-	Eigen::VectorXd activationPrime( Eigen::VectorXd z);
-
-	double getInnerWeightsNorm()
+	void setTimeStep(double p_dt)
 	{
-		return V_.norm();
+		dt = p_dt;
 	}
-	double getOuterWeightsNorm()
+	bool setInnerWeights(Eigen::MatrixXd p_V)
 	{
-		return W_.norm();
+		if( p_V.rows() == (num_Inputs + bias) && p_V.cols() == num_Hidden )
+		{
+			V_next_ = p_V;
+			return true;
+		}
+		return false;
 	}
-	Eigen::MatrixXd	getInnerWeights()   // TODO return V_ instead
+	bool setOuterWeights(Eigen::MatrixXd p_W)
 	{
-		return V_trans;
-	}
-	Eigen::MatrixXd	getOuterWeights()   // TODO return W_ instead
-	{
-		return W_trans;
-	}
-	void setInnerWeights(Eigen::MatrixXd V_trans_)	// TODO check size
-	{
-		V_next_ = V_trans_.transpose();
-		V_ = V_trans_.transpose();
-	}
-	void setOuterWeights(Eigen::MatrixXd W_trans_)
-	{
-		W_next_ = W_trans_.transpose();
-		W_ = W_trans_.transpose();
+		if( p_W.rows() == (num_Hidden + bias) && p_W.cols() == num_Outputs )
+		{
+			W_next_ = p_W;
+			return true;
+		}
+		return false;
 	}
 	void setUpdateWeights(bool p_updateWeights)
 	{
@@ -308,69 +264,83 @@ public:
 		updateInnerWeights = p_updateInnerWeights;
 	}
 
+	/*** Computational methods ***/
+
+	Eigen::VectorXd activation( Eigen::VectorXd z);
+	Eigen::VectorXd activationPrime( Eigen::VectorXd z);
+
+	// Computes fc = -Kv*r + fhat and updates NN
+    void Update( double dt,
+                 Eigen::VectorXd & fc);
+
+	void UpdateCart( Eigen::VectorXd & q,
+                     Eigen::VectorXd & qd,
+                     Eigen::VectorXd & x,
+                     Eigen::VectorXd & xd,
+                     Eigen::VectorXd & x_m,
+                     Eigen::VectorXd & xd_m,
+                     Eigen::VectorXd & xdd_m,
+                     double dt,
+                     Eigen::VectorXd & fc);
+
+	void UpdateJoint( Eigen::VectorXd & q,
+                      Eigen::VectorXd & qd,
+                      Eigen::VectorXd & q_m,
+                      Eigen::VectorXd & qd_m,
+                      Eigen::VectorXd & qdd_m,
+					  double dt,
+                      Eigen::VectorXd & fc);
+
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
-void NNController::UpdateCart( Eigen::VectorXd & X     ,
-                                                  Eigen::VectorXd & Xd    ,
-                                                  Eigen::VectorXd & X_m   ,
-                                                  Eigen::VectorXd & Xd_m  ,
-                                                  Eigen::VectorXd & Xdd_m ,
-                                                  Eigen::VectorXd & q     ,
-                                                  Eigen::VectorXd & qd    ,
-                                                  Eigen::VectorXd & t_r   ,
-                                                  Eigen::VectorXd & tau    )
+void NNController::UpdateCart( Eigen::VectorXd & q,
+                               Eigen::VectorXd & qd,
+                               Eigen::VectorXd & x,
+                               Eigen::VectorXd & xd,
+                               Eigen::VectorXd & x_m,
+                               Eigen::VectorXd & xd_m,
+                               Eigen::VectorXd & xdd_m,
+                               double dt,
+                               Eigen::VectorXd & fc)
 {
-        // NN Input Vector
-        x <<           1 ,
-            (  X_m -  X) , //   q( 0 ) ;
-            ( Xd_m - Xd) , //  qd( 0 ) ;
-                    X_m  ,
-                   Xd_m  ,
-                  Xdd_m  ,
-                      q  ,
-                     qd  ;
+	// Update error signals
+	e  = x_m  - x;
+	ed = xd_m - xd;
 
-        // x is global so not passed
-        Update( X    ,
-                Xd   ,
-                X_m  ,
-                Xd_m ,
-                t_r  ,
-                tau   );
+	// Update NN input vector
+	if(bias == 1)
+		phi << 1;
+
+	phi << q, qd, e, ed, x_m, xd_m, xdd_m;
+
+	Update(dt, fc);
 }
 
-void NNController::UpdateJoint( Eigen::VectorXd & q     ,
-					           Eigen::VectorXd & qd    ,
-					           Eigen::VectorXd & q_m   ,
-                                                   Eigen::VectorXd & qd_m  ,
-					           Eigen::VectorXd & qdd_m ,
-					           Eigen::VectorXd & t_r   ,
-					           Eigen::VectorXd & tau    )
+void NNController::UpdateJoint( Eigen::VectorXd & q,
+                                Eigen::VectorXd & qd,
+                                Eigen::VectorXd & q_m,
+                                Eigen::VectorXd & qd_m,
+                                Eigen::VectorXd & qdd_m,
+                                double dt,
+                                Eigen::VectorXd & fc)
 {
-	// NN Input Vector
-        x <<           1 ,
-            (  q_m -  q) , //   q( 0 ) ;
-            ( qd_m - qd) , //  qd( 0 ) ;
-                    q_m  ,
-                   qd_m  ,
-                  qdd_m  ;
+	// Update error signals
+	e  = q_m  - q;
+	ed = qd_m - qd;
 
-        Update( q    ,
-                qd   ,
-                q_m  ,
-                qd_m ,
-                t_r  ,
-                tau   );
+	// Update NN input vector
+	if(bias == 1)
+		phi << 1;
+
+	phi << e, ed, q_m, qd_m, qdd_m;		// TODO check if q, qd are needed
+
+	Update(dt, fc);
 }
 
-void NNController::Update( Eigen::VectorXd & q    ,
-                                              Eigen::VectorXd & qd   ,
-                                              Eigen::VectorXd & q_m  ,
-                                              Eigen::VectorXd & qd_m ,
-                                              Eigen::VectorXd & t_r  ,
-                                              Eigen::VectorXd & tau   )
+void NNController::Update( double dt,
+                           Eigen::VectorXd & fc)
 {
 	W_ = W_next_;
 	V_ = V_next_;
@@ -378,39 +348,44 @@ void NNController::Update( Eigen::VectorXd & q    ,
 	W_trans = W_.transpose();
 	V_trans = V_.transpose();
 
-	// Filtered error
-	r = (qd_m - qd) + lambda*(q_m - q);
-	//r_tran = r.transpose();
+	// Sliding mode
+	r = ed + La*e;
 
-	// Robust term
-	Z.block(0,0,num_Hidden,num_Outputs) = W_;
-	Z.block(num_Hidden,num_Outputs,num_Inputs+1,num_Hidden) = V_;
-	vRobust = - Kz*(Z.norm() + Zb)*r;
+	// Robustifying term
+	if(robust_ON)
+	{
+		Z.block(0,0,num_Hidden+bias,num_Outputs) = W_;
+		Z.block(num_Hidden+bias,num_Outputs,num_Inputs+bias,num_Hidden) = V_;
+		v = - Kz*(Z.norm() + Zb)*r;
+	}
 
-	hiddenLayerIn = V_trans*x;
+	hiddenLayerIn = V_trans*phi;
 	sigma = activation(hiddenLayerIn);
-	y = W_trans*sigma;
+	fhat = W_trans*sigma;
 
-	// control torques
-	tau = Kv*r + nn_ON*( y - vRobust ) - feedForwardForce*t_r ;
-	//	tau = (qd_m - qd) + 100*(q_m - q);
+	// Control signal
+	if(nn_ON)
+		fc = Kv*r + fhat - v;
+	else
+		fc = Kv*r;
+
+	std::cout<<"Z: \n"<<Z<<"\n";	// TODO check
 
 	if(!updateWeights)
 		return;
-
 	//
 	sigmaPrime = activationPrime(hiddenLayerIn);
 
-	// Wk+1                  = Wk                  +  Wkdot                                                                                                          * dt
-	W_next_ = W_ + (F*sigma*r.transpose() - F*sigmaPrime*V_trans*x*r.transpose() - kappa*F*r.norm()*W_) * delT;
+	// Wk+1 = Wk +  Wkdot * dt
+	W_next_ = W_ + (F*sigma*r.transpose() - F*sigmaPrime*V_trans*phi*r.transpose() - kappa*F*r.norm()*W_) * dt;
 
 	if(!updateInnerWeights)
 		return;
 
 	sigmaPrimeTrans_W_r = sigmaPrime.transpose()*W_*r;      // make sigmaPrimeTrans_W_r_tran = r_tran*sigmaPrime*W_trans
 
-	// Vk+1                  = Vk                  +  Vkdot                                                                                      			 * dt
-	V_next_ = V_ + (G*x*sigmaPrimeTrans_W_r.transpose() - kappa*G*r.norm()*V_) * delT;
+	// Vk+1 = Vk +  Vkdot * dt
+	V_next_ = V_ + (G*phi*sigmaPrimeTrans_W_r.transpose() - kappa*G*r.norm()*V_) * dt;
 
 }
 
