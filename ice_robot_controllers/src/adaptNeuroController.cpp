@@ -18,6 +18,7 @@ PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 	{
 		delete ARMAmodel_flexi_[i];
 	}
+	delete ptrNNController;
 }
 
 /// Controller initialization in non-realtime
@@ -485,6 +486,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				}
 			}
 		}
+
 		/***************** UPDATE LOOP VARIABLES *****************/
 
 		JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
@@ -633,18 +635,12 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		// Neural Network
 
-		nnController.updateDelT( dt_ );
+		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_c);
 
-		nnController.UpdateCart( X     ,
-	                             Xd    ,
-	                             X_m   ,
-	                             Xd_m  ,
-	                             Xdd_m ,
-	                             q     ,
-	                             qd    ,
-	                             t_r   ,			// Feedforward force [6x1]
-	                             force_c  );		// Output [6x1]
-
+		if(fFForce)
+		{
+			force_c -= t_r;		// Feedforward force [6x1] (f_human?)
+		}
 
 /* Experiment C
  * RBF and TANH Neural Network
@@ -926,11 +922,11 @@ void PR2adaptNeuroControllerClass::update()
 			tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured, t_r
 			tf::wrenchEigenToMsg(force_c, pub_state_.msg_.force_c);
 
-			//tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
-			//tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
+			tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
+			tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
 
-			//tf::matrixEigenToMsg(nnController.getInnerWeights(), pub_state_.msg_.V);
-			//tf::matrixEigenToMsg(nnController.getOuterWeights(), pub_state_.msg_.W);
+			tf::matrixEigenToMsg(ptrNNController->getInnerWeights(), pub_state_.msg_.V);
+			tf::matrixEigenToMsg(ptrNNController->getOuterWeights(), pub_state_.msg_.W);
 
 			for (int j = 0; j < Joints; ++j) {
 				pub_state_.msg_.tau_posture[j] = nullspaceTorque(j);
@@ -938,8 +934,8 @@ void PR2adaptNeuroControllerClass::update()
 				pub_state_.msg_.q[j] = q_(j);
 			}
 
-			pub_state_.msg_.W_norm = nnController.getInnerWeightsNorm();
-			pub_state_.msg_.V_norm = nnController.getOuterWeightsNorm();
+			pub_state_.msg_.W_norm = ptrNNController->getInnerWeightsNorm();
+			pub_state_.msg_.V_norm = ptrNNController->getOuterWeightsNorm();
 
 			pub_state_.unlockAndPublish();
 		}
@@ -1362,8 +1358,8 @@ void PR2adaptNeuroControllerClass::bufferData()
 //	    experimentDataA_msg_[index].net.num_Inputs = num_Inputs;
 //		experimentDataA_msg_[index].net.num_Hidden = num_Hidden;
 //		experimentDataA_msg_[index].net.num_Outputs = num_Outputs;
-		experimentDataA_msg_[storage_index_].Wnorm = nnController.getOuterWeightsNorm();
-		experimentDataA_msg_[storage_index_].Vnorm = nnController.getInnerWeightsNorm();
+		experimentDataA_msg_[storage_index_].Wnorm = ptrNNController->getOuterWeightsNorm();
+		experimentDataA_msg_[storage_index_].Vnorm = ptrNNController->getInnerWeightsNorm();
 
 		// Actual trajectory
 		experimentDataA_msg_[storage_index_].x_x     = X(0);
@@ -1397,8 +1393,8 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataB_msg_[storage_index_].outer_dt          = outer_delT;
 
 		// Neural network
-		experimentDataB_msg_[storage_index_].Wnorm = nnController.getOuterWeightsNorm();
-		experimentDataB_msg_[storage_index_].Vnorm = nnController.getInnerWeightsNorm();
+		experimentDataB_msg_[storage_index_].Wnorm = ptrNNController->getOuterWeightsNorm();
+		experimentDataB_msg_[storage_index_].Vnorm = ptrNNController->getInnerWeightsNorm();
 
 		// Filter weights
 //		tf::matrixEigenToMsg(weightsRLSmodelX, experimentDataB_msg_[storage_index_].filterWeightsX);
@@ -1661,41 +1657,13 @@ bool PR2adaptNeuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate:
 	cartDesPitch      = req.msg.cartDesPitch       ;
 	cartDesYaw        = req.msg.cartDesYaw         ;
 
-	nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
-                                    num_Outputs ,   // num_Outputs
-                                    num_Hidden  ,   // num_Hidden
-                                    num_Error   ,   // num_Error
-                                    num_Joints   ); // num_Joints
+	// Update NN
+	delete ptrNNController;
 
-	Eigen::MatrixXd p_Kv     ;
-	Eigen::MatrixXd p_lambda ;
-
-	p_Kv     .resize( 6, 1 ) ;
-	p_lambda .resize( 6, 1 ) ;
-
-	p_Kv << cartPos_Kd_x ,
-			cartPos_Kd_y ,
-			cartPos_Kd_z ,
-			cartRot_Kd_x ,
-			cartRot_Kd_y ,
-			cartRot_Kd_z ;
-
-	p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
-			cartPos_Kp_y / cartPos_Kd_y ,
-			cartPos_Kp_z / cartPos_Kd_z ,
-			cartRot_Kp_x / cartRot_Kd_x ,
-			cartRot_Kp_y / cartRot_Kd_y ,
-			cartRot_Kp_z / cartRot_Kd_z ;
-
-	nnController.init( kappa    ,
-			p_Kv     ,
-			p_lambda ,
-			Kz       ,
-			Zb       ,
-			fFForce  ,
-			nnF      ,
-			nnG      ,
-			nn_ON     );
+	if( !initNN() )
+	{
+		ROS_ERROR("initNN() failed!");
+	}
 
 	// MRAC
 	outerLoopMRACmodelX.updateAB( task_mA,
@@ -1914,17 +1882,17 @@ bool PR2adaptNeuroControllerClass::runExperimentA(	ice_msgs::setValue::Request &
 	nnController.setInnerWeights(V_trans);
 	nnController.setOuterWeights(W_trans);
 	*/
-	nnController.setUpdateWeights(true);
+	ptrNNController->setUpdateWeights(true);
 
 	// Set circle rate and decide if the inner weights will be updated
 	if(req.value > 0)
 	{
-		nnController.setUpdateInnerWeights(true);
+		ptrNNController->setUpdateInnerWeights(true);
 		circle_rate = req.value;
 	}
 	else
 	{
-		nnController.setUpdateInnerWeights(false);
+		ptrNNController->setUpdateInnerWeights(false);
 		circle_rate = -req.value;
 	}
 	// Start circle traj
@@ -1949,25 +1917,19 @@ bool PR2adaptNeuroControllerClass::runExperimentB(	ice_msgs::setValue::Request &
 	/* Record the starting time. */
 	ros::Time started = ros::Time::now();
 
-	// Re-set NN
-	nnController.setUpdateWeights(false);
-	Eigen::MatrixXd V_trans;
-	Eigen::MatrixXd W_trans;
-	//V_trans.setOnes( num_Hidden , num_Inputs + 1 ) ;
-	V_trans.setRandom( num_Hidden , num_Inputs + 1 ) ;
-	W_trans.setZero(   num_Outputs, num_Hidden     ) ;
-	nnController.setInnerWeights(V_trans);
-	nnController.setOuterWeights(W_trans);
-	nnController.setUpdateWeights(true);
+	// Reset NN
+	ptrNNController->setUpdateWeights(false);
+	ptrNNController->resetWeights(0.01);
+	ptrNNController->setUpdateWeights(true);
 
 	// Decide if the inner weights will be updated
 	if(req.value > 0)
 	{
-		nnController.setUpdateInnerWeights(true);
+		ptrNNController->setUpdateInnerWeights(true);
 	}
 	else
 	{
-		nnController.setUpdateInnerWeights(false);
+		ptrNNController->setUpdateInnerWeights(false);
 	}
 
 	// Start with fixed ARMA weights
@@ -2165,7 +2127,7 @@ bool PR2adaptNeuroControllerClass::updateInnerNNweights( ice_msgs::setBool::Requ
 		                                            ice_msgs::setBool::Response& resp )
 {
 
-	nnController.setUpdateInnerWeights(req.variable);
+	ptrNNController->setUpdateInnerWeights(req.variable);
 	resp.success = true;
 
 	return true;
@@ -2174,7 +2136,7 @@ bool PR2adaptNeuroControllerClass::updateNNweights( ice_msgs::setBool::Request& 
 		                                            ice_msgs::setBool::Response& resp )
 {
 
-	nnController.setUpdateWeights(req.variable);
+	ptrNNController->setUpdateWeights(req.variable);
 	resp.success = true;
 
 	return true;
@@ -2189,33 +2151,33 @@ bool PR2adaptNeuroControllerClass::setNNweights( ice_msgs::setNNweights::Request
     }
     else
     {
-    	Eigen::MatrixXd V_trans;
-    	Eigen::MatrixXd W_trans;
-		V_trans.resize( num_Hidden , num_Inputs + 1 ) ;
-		W_trans.resize( num_Outputs, num_Hidden     ) ;
+    	Eigen::MatrixXd V_;
+    	Eigen::MatrixXd W_;
+		V_.resize( num_Inputs + 1, num_Hidden ) ;
+		W_.resize( num_Hidden + 1, num_Outputs ) ;
 
 		int i = 0;
-		for(int r=0;r<num_Hidden;r++)
+		for(int r=0;r<num_Inputs + 1;r++)
 		{
-			for(int c=0;c<num_Inputs + 1;c++)
+			for(int c=0;c<num_Hidden;c++)
 			{
-				V_trans(r,c) = req.net.V.data[i];
+				V_(r,c) = req.net.V.data[i];
 				i++;
 			}
 		}
 
 		i=0;
-		for(int r=0;r<num_Outputs;r++)
+		for(int r=0;r<num_Hidden+1;r++)
 		{
-			for(int c=0;c<num_Hidden;c++)
+			for(int c=0;c<num_Outputs;c++)
 			{
-				W_trans(r,c) = req.net.W.data[i];
+				W_(r,c) = req.net.W.data[i];
 				i++;
 			}
 		}
 
-		nnController.setInnerWeights(V_trans);
-		nnController.setOuterWeights(W_trans);
+		ptrNNController->setInnerWeights(V_);
+		ptrNNController->setOuterWeights(W_);
 
 		resp.success = true;
     }
@@ -2224,8 +2186,8 @@ bool PR2adaptNeuroControllerClass::setNNweights( ice_msgs::setNNweights::Request
 bool PR2adaptNeuroControllerClass::getNNweights( ice_msgs::getNNweights::Request& req,
 		                                         ice_msgs::getNNweights::Response& resp )
 {
-    tf::matrixEigenToMsg(nnController.getInnerWeights(), resp.net.V);
-    tf::matrixEigenToMsg(nnController.getOuterWeights(), resp.net.W);
+    tf::matrixEigenToMsg(ptrNNController->getInnerWeights(), resp.net.V);
+    tf::matrixEigenToMsg(ptrNNController->getOuterWeights(), resp.net.W);
     resp.net.num_Inputs = num_Inputs;
     resp.net.num_Hidden = num_Hidden;
     resp.net.num_Outputs = num_Outputs;
@@ -2805,11 +2767,7 @@ bool PR2adaptNeuroControllerClass::initSensors()
 bool PR2adaptNeuroControllerClass::initNN()
 {
 
-	nnController.changeNNstructure( num_Inputs  ,   // num_Inputs
-                                    num_Outputs ,   // num_Outputs
-                                    num_Hidden  ,   // num_Hidden
-                                    num_Error   ,   // num_Error
-                                    num_Outputs );  // num_Joints = num_Outputs for cart space
+	ptrNNController = new csl::neural_network::NNController(num_Joints, num_Outputs, num_Hidden);
 
 	Eigen::MatrixXd p_Kv     ;
 	Eigen::MatrixXd p_lambda ;
@@ -2838,20 +2796,14 @@ bool PR2adaptNeuroControllerClass::initNN()
                 cartRot_Kp_y / cartRot_Kd_y ,
                 cartRot_Kp_z / cartRot_Kd_z ;
 
-	nnController.init( kappa  ,
-                       p_Kv     ,
-                       p_lambda ,
-                       Kz     ,
-                       Zb     ,
-                       fFForce,
-                       nnF    ,
-                       nnG    ,
-                       nn_ON   );
+	double weightsLimit = 0.01;
 
-	nnController.updateDelT( delT );
+	ptrNNController->paramInit(p_Kv,p_lambda,kappa,Kz,Zb,nnG,nnF,weightsLimit);
 
-	nnController.setUpdateWeights(true);
-	nnController.setUpdateInnerWeights(true);
+	ptrNNController->setFlagNN(nn_ON);
+	ptrNNController->setUpdateRate(delT);
+	ptrNNController->setUpdateWeights(true);
+	ptrNNController->setUpdateInnerWeights(true);
 
 	return true;
 }

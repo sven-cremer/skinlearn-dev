@@ -29,7 +29,8 @@
 #include <kdl/jntarray.hpp>
 
 // Inner and outer loops
-#include "csl/neural_network.hpp"
+//#include "csl/neural_network.hpp"
+#include "csl/nn_controller.cpp"
 #include "csl/outer_loop.h"
 
 // ROS messages
@@ -457,9 +458,10 @@ private:
 	double fFForce;
 
 	//csl::neural_network::OneLayerNeuralNetworkController nnController;			// TODO make easier to change
-	csl::neural_network::TwoLayerNeuralNetworkController nnController;
+	//csl::neural_network::TwoLayerNeuralNetworkController nnController;
 	//csl::neural_network::RBFNeuralNetworkController nnController;
 	//csl::neural_network::RBFNeuralNetworkController rbfnnController;
+	csl::neural_network::NNController* ptrNNController;
 
 	// NN END
 	/////////////////////////
