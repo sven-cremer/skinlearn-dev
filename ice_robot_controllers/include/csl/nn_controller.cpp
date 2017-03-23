@@ -24,8 +24,17 @@ namespace neural_network {
  */
 class NNController
 {
+
+public:
+
+	enum ActFcn {Sigmoid, RBF};
+	enum Layers {Single, Two};
+
 private:
 
+	NNController::ActFcn actF;
+
+	int bias;		// Bias unit, 0 (none) or 1
 	bool updateWeights;
 	bool updateInnerWeights;
 
@@ -34,30 +43,31 @@ private:
 	int num_Hidden  ; // l Size of the hidden layer
 	int num_Error   ; // filtered error
 	int num_Joints  ; // number of joints.
+	int num_Dim		; // size of input and output signals, i.e. number of Cartesian coordinates
 
-	Eigen::MatrixXd V_;
-	Eigen::MatrixXd W_;
+	Eigen::MatrixXd V_;			// Inner layer
+	Eigen::MatrixXd W_;			// Outer layer
 	Eigen::MatrixXd V_next_;
 	Eigen::MatrixXd W_next_;
-
 	Eigen::MatrixXd V_trans;
 	Eigen::MatrixXd W_trans;
-	Eigen::MatrixXd G;
-	Eigen::MatrixXd F;
-	Eigen::MatrixXd L;
-	Eigen::MatrixXd Z;
 
-	Eigen::MatrixXd x;
-	Eigen::MatrixXd y;
-	Eigen::MatrixXd hiddenLayer_out;
-	Eigen::MatrixXd hiddenLayerIdentity;
-	Eigen::MatrixXd hiddenLayer_in;
-	Eigen::MatrixXd outputLayer_out;
-	Eigen::MatrixXd sigmaPrime;
-	Eigen::MatrixXd r;
-	Eigen::MatrixXd r_tran;
-	Eigen::MatrixXd vRobust;
-	Eigen::MatrixXd sigmaPrimeTrans_W_r;
+	Eigen::MatrixXd Z;	// Combined weight matrix
+
+	Eigen::MatrixXd G;	// Positive definite design matrix for inner layer (V)
+	Eigen::MatrixXd F;	// Positive definite design matrix for outer layer (W)
+
+	Eigen::VectorXd x;	// NN input vector
+	Eigen::VectorXd y;	// NN output vector
+
+	Eigen::VectorXd sigma;		// Activation function output
+	Eigen::MatrixXd sigmaPrime;	// Derivative of activation function
+	Eigen::VectorXd hiddenLayerIn; // Input to the hidden layer
+
+	Eigen::VectorXd sigmaPrimeTrans_W_r; // For temporary storing result
+
+	Eigen::VectorXd r;	// Sliding mode error
+	Eigen::VectorXd vRobust;
 
 	double kappa;
 	Eigen::MatrixXd Kv;
@@ -74,16 +84,28 @@ private:
 
 public:
 
-	NNController()
-{
+	/*** Constructor methods ***/
+
+	NNController(int nJoints, int nDim, int nHidden, NNController::ActFcn a = NNController::Sigmoid)
+	{
+
+		actF = a;
+
+		bias = 1;
 		updateWeights = true;
 		updateInnerWeights = true;
 
-          changeNNstructure( 35 ,   // num_Inputs
-                             7  ,   // num_Outputs
-                             10 ,   // num_Hidden
-                             7  ,   // num_Error
-                             7   ); // num_Joints
+		num_Joints  = nJoints;
+		num_Dim     = nDim;
+		num_Hidden  = nHidden;
+		num_Outputs = nDim;
+
+		if(true) // Determine size of NN input vector
+		{
+			num_Inputs = num_Joints*2 + num_Dim*5;
+		}
+
+		initNN();
 
 		delT = 0.001; /// 1000 Hz by default
 
@@ -93,74 +115,65 @@ public:
 		p_Kv                  .resize( 7, 1 ) ;
 		p_lambda              .resize( 7, 1 ) ;
 
-          p_Kv << 10 ,
-                  10 ,
-                  10 ,
-                  10 ,
-                  10 ,
-                  10 ,
-                  10 ;
+		p_Kv << 10 ,
+				10 ,
+				10 ,
+				10 ,
+				10 ,
+				10 ,
+				10 ;
 
-          p_lambda << 0.5 ,
-                      0.5 ,
-                      0.5 ,
-                      0.5 ,
-                      0.5 ,
-                      0.5 ,
-                      0.5 ;
+		p_lambda << 0.5 ,
+				0.5 ,
+				0.5 ,
+				0.5 ,
+				0.5 ,
+				0.5 ,
+				0.5 ;
 
-          init( 0.07     ,
-                p_Kv     ,
-                p_lambda ,
-                0        ,
-                100      ,
-                1        ,
-                100      ,
-                20       ,
-                1         );
-}
+		init( 0.07     ,
+				p_Kv     ,
+				p_lambda ,
+				0        ,
+				100      ,
+				1        ,
+				100      ,
+				20       ,
+				1         );
+	}
 
-	void changeNNstructure( int para_num_Inputs  ,
-			int para_num_Outputs ,
-			int para_num_Hidden  ,
-			int para_num_Error   ,
-			int para_num_Joints   )
+	void initNN()	// TODO make private
 	{
-		num_Inputs  = para_num_Inputs  ;
-		num_Outputs = para_num_Outputs ;
-		num_Hidden  = para_num_Hidden  ;
-		num_Error   = para_num_Error   ;
-		num_Joints  = para_num_Joints  ;
 
-		V_        .resize( num_Inputs + 1              , num_Hidden               ) ;
-		W_        .resize( num_Hidden                  , num_Outputs              ) ;
-		V_next_   .resize( num_Inputs + 1              , num_Hidden               ) ;
-		W_next_   .resize( num_Hidden                  , num_Outputs              ) ;
+		V_        .resize( num_Inputs + bias           , num_Hidden               ) ;
+		W_        .resize( num_Hidden + bias           , num_Outputs              ) ;
+		V_next_   .resize( num_Inputs + bias           , num_Hidden               ) ;
+		W_next_   .resize( num_Hidden + bias           , num_Outputs              ) ;
+		V_trans   .resize( num_Hidden                  , num_Inputs + bias        ) ;
+		W_trans   .resize( num_Outputs                 , num_Hidden + bias        ) ;
 
-		V_trans   .resize( num_Hidden                  , num_Inputs + 1           ) ;
-		W_trans   .resize( num_Outputs                 , num_Hidden               ) ;
-		G         .resize( num_Inputs + 1              , num_Inputs + 1           ) ;
-		F         .resize( num_Hidden                  , num_Hidden               ) ;
-		L         .resize( num_Outputs                 , num_Outputs              ) ;
-		Z         .resize( num_Hidden + num_Inputs + 1 , num_Hidden + num_Outputs ) ;
+		Z         .resize( num_Hidden + num_Inputs + 2*bias , num_Hidden + num_Outputs ) ;
 
-		x                   .resize( num_Inputs + 1, 1          ) ;
-		y                   .resize( num_Outputs   , 1          ) ;
-		hiddenLayer_out     .resize( num_Hidden    , 1          ) ;
-		hiddenLayerIdentity .resize( num_Hidden    , num_Hidden ) ;
-		hiddenLayer_in      .resize( num_Hidden    , 1          ) ;
-		outputLayer_out     .resize( num_Outputs   , 1          ) ;
-		sigmaPrime          .resize( num_Hidden    , num_Hidden ) ;
-		r                   .resize( num_Error     , 1          ) ;
-		r_tran              .resize( 1             , num_Error  ) ;
-		vRobust             .resize( num_Outputs   , 1          ) ;
-		sigmaPrimeTrans_W_r .resize( num_Hidden    , 1          ) ;
+		G         .resize( num_Inputs + bias           , num_Inputs + bias        ) ;
+		F         .resize( num_Hidden + bias           , num_Hidden + bias        ) ;
 
-		hiddenLayerIdentity.setIdentity();
+
+		x                   .resize( num_Inputs + bias) ;
+		y                   .resize( num_Outputs      ) ;
+
+		hiddenLayerIn       .resize( num_Hidden       ) ;
+		sigma               .resize( num_Hidden       ) ;
+		sigmaPrime          .resize( num_Hidden, num_Hidden ) ;
+
+		sigmaPrimeTrans_W_r .resize( num_Hidden     ) ;
+
+		r                   .resize( num_Error      ) ;
+		vRobust             .resize( num_Outputs    ) ;
+
 		F.setIdentity();
 		G.setIdentity();
-		L.setIdentity();
 
+		// TODO initialize weights randomly
 		W_.setZero();
 		W_next_.setZero();
 		V_.setZero();
@@ -257,8 +270,8 @@ public:
                      Eigen::VectorXd & t_r  ,
                      Eigen::VectorXd & tau   );
 
-	inline Eigen::MatrixXd
-	sigmoid( Eigen::MatrixXd & z ) const;
+	Eigen::VectorXd activation( Eigen::VectorXd z);
+	Eigen::VectorXd activationPrime( Eigen::VectorXd z);
 
 	double getInnerWeightsNorm()
 	{
@@ -367,18 +380,16 @@ void NNController::Update( Eigen::VectorXd & q    ,
 
 	// Filtered error
 	r = (qd_m - qd) + lambda*(q_m - q);
-	r_tran = r.transpose();
+	//r_tran = r.transpose();
 
 	// Robust term
 	Z.block(0,0,num_Hidden,num_Outputs) = W_;
 	Z.block(num_Hidden,num_Outputs,num_Inputs+1,num_Hidden) = V_;
 	vRobust = - Kz*(Z.norm() + Zb)*r;
 
-	hiddenLayer_in = V_trans*x;
-	hiddenLayer_out = sigmoid(hiddenLayer_in);
-	outputLayer_out = W_trans*hiddenLayer_out;
-
-	y = outputLayer_out;
+	hiddenLayerIn = V_trans*x;
+	sigma = activation(hiddenLayerIn);
+	y = W_trans*sigma;
 
 	// control torques
 	tau = Kv*r + nn_ON*( y - vRobust ) - feedForwardForce*t_r ;
@@ -388,10 +399,10 @@ void NNController::Update( Eigen::VectorXd & q    ,
 		return;
 
 	//
-	sigmaPrime = hiddenLayer_out.asDiagonal()*( hiddenLayerIdentity - hiddenLayerIdentity*hiddenLayer_out.asDiagonal() );
+	sigmaPrime = activationPrime(hiddenLayerIn);
 
 	// Wk+1                  = Wk                  +  Wkdot                                                                                                          * dt
-	W_next_ = W_ + (F*hiddenLayer_out*r_tran - F*sigmaPrime*V_trans*x*r_tran - kappa*F*r.norm()*W_) * delT;
+	W_next_ = W_ + (F*sigma*r.transpose() - F*sigmaPrime*V_trans*x*r.transpose() - kappa*F*r.norm()*W_) * delT;
 
 	if(!updateInnerWeights)
 		return;
@@ -403,19 +414,64 @@ void NNController::Update( Eigen::VectorXd & q    ,
 
 }
 
-Eigen::MatrixXd
-NNController::sigmoid( Eigen::MatrixXd & z ) const
+Eigen::VectorXd NNController::activation( Eigen::VectorXd z)
 {
-	// FIXME improve this
-	for(uint i=0;i<z.size();i++)
+	int N = z.size();
+
+	Eigen::VectorXd y;
+	y.resize(N);
+
+	switch(actF)
 	{
-		z(i) = 1.0/(1.0 + exp(-(double)z(i)));
+	case NNController::Sigmoid:
+	{
+		for(int i=0;i<N;i++)
+		{
+			y(i) = 1.0/(1.0 + exp(-(double)z(i)));
+		}
+		break;
 	}
-	return z;
+	case NNController::RBF:
+//	{
+//		break;
+//	}
+	default:
+		std::cerr<<"NNController: activation function not implemented!\n";
+		break;
+	}
+
+	return y;
 }
 
+Eigen::VectorXd NNController::activationPrime( Eigen::VectorXd z)
+{
+	int N = z.size();
+
+	Eigen::VectorXd y;
+	y.resize(N);
+
+	switch(actF)
+	{
+	case NNController::Sigmoid:
+	{
+		Eigen::VectorXd s = activation(z);
+		Eigen::MatrixXd S = s.asDiagonal();
+		y = S - S*S;
+		break;
+	}
+	case NNController::RBF:
+//	{
+//		break;
+//	}
+	default:
+		std::cerr<<"NNController: activationPrime function not implemented!\n";
+		break;
+	}
+
+	return y;
 }
 
-}
+} // end namespace neural_network
+} // end namespace csl
 
 #endif /* NNCONTROLLER_H_ */
