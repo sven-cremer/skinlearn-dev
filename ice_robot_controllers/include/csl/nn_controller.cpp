@@ -28,7 +28,7 @@ public:
 
 private:
 
-	double dt;					// Controller update rate
+	double updateRate;			// Controller update rate in seconds
 
 	// Flags
 	bool nn_ON;					// Use fhat from NN
@@ -86,14 +86,14 @@ public:
 	/*** Constructor methods ***/
 
 	NNController(int nJoints, int nDim, int nHidden,
-			     NNController::ActFcn a = NNController::Sigmoid,
+			     NNController::ActFcn a = NNController::RBF,
 				 NNController::Layers l = NNController::Two)
 	{
 
 		actF = a;
 		lay  = l;
 
-		dt = 0.001; // 1000 Hz
+		updateRate = 0.001; // 1000 Hz
 
 		nn_ON              = true;
 		robust_ON          = true;
@@ -107,7 +107,7 @@ public:
 		num_Hidden  = nHidden;
 		num_Outputs = nDim;
 
-		if(true) // Determine size of NN input vector
+		if(true) // Determine size of NN input vector (Joint: 5*num_Joints)
 		{
 			num_Inputs = num_Joints*2 + num_Dim*5;
 		}
@@ -172,6 +172,20 @@ public:
 
 	}
 
+	void resetWeights(double weightsLimit)
+	{
+		W_.setRandom();		// Range is [-1:1]
+		V_.setRandom();
+
+		W_ *= weightsLimit;
+		V_ *= weightsLimit;
+
+		W_next_ = W_;
+		V_next_ = V_;
+		W_trans = W_.transpose();
+		V_trans = V_.transpose();
+	}
+
 	void paramInit( Eigen::MatrixXd & p_Kv,
                     Eigen::MatrixXd & p_La,
                     double p_kappa,
@@ -221,16 +235,7 @@ public:
 		F *= p_F;
 
 		// Initialize weights randomly
-		W_.setRandom();		// Range is [-1:1]
-		V_.setRandom();
-
-		W_ *= weightsLimit;
-		V_ *= weightsLimit;
-
-		W_next_ = W_;
-		V_next_ = V_;
-		W_trans = W_.transpose();
-		V_trans = V_.transpose();
+		resetWeights(weightsLimit);
 
 		Z.setZero();	// Important since the update function only modifies a part of the matrix
 		v.setZero();
@@ -248,14 +253,11 @@ public:
 	Eigen::VectorXd	getNNoutput()		{	return fhat;		}
 	Eigen::VectorXd	getRBFmu()			{	return rbf_mu;		}
 
-	void setTimeStep(double p_dt)
-	{
-		dt = p_dt;
-	}
-	void setRBFbeta(double p_beta)
-	{
-		rbf_beta = p_beta;
-	}
+
+	void setFlagNN(bool b)				{	nn_ON = b;			}
+	void setFlagRobust(bool b)			{	robust_ON = b;		}
+	void setUpdateRate(double r)		{	updateRate = r;		}
+	void setRBFbeta(double b)			{	nn_ON = b;			}
 	bool setInnerWeights(Eigen::MatrixXd p_V)
 	{
 		if( p_V.rows() == (num_Inputs + bias) && p_V.cols() == num_Hidden )
@@ -330,9 +332,9 @@ void NNController::UpdateCart( Eigen::VectorXd & q,
 
 	// Update NN input vector
 	if(bias == 1)
-		phi << 1;
-
-	phi << q, qd, e, ed, x_m, xd_m, xdd_m;
+		phi << 1, q, qd, e, ed, x_m, xd_m, xdd_m;
+	else
+		phi << q, qd, e, ed, x_m, xd_m, xdd_m;
 
 	Update(dt, fc);
 }
@@ -351,9 +353,9 @@ void NNController::UpdateJoint( Eigen::VectorXd & q,
 
 	// Update NN input vector
 	if(bias == 1)
-		phi << 1;
-
-	phi << e, ed, q_m, qd_m, qdd_m;		// TODO check if q, qd are needed
+		phi << 1, e, ed, q_m, qd_m, qdd_m;
+	else
+		phi << e, ed, q_m, qd_m, qdd_m;		// TODO check if q, qd are needed
 
 	Update(dt, fc);
 }
@@ -388,9 +390,7 @@ void NNController::Update( double dt,
 	else
 		fc = Kv*r;
 
-	std::cout<<"Z: \n"<<Z<<"\n";	// TODO check
-
-	if(!updateWeights)
+	if(!updateWeights)	// TODO check if it's time to update
 		return;
 	//
 	sigmaPrime = activationPrime(hiddenLayerIn);
@@ -410,16 +410,19 @@ void NNController::Update( double dt,
 
 Eigen::VectorXd NNController::activation( Eigen::VectorXd z)
 {
-	int N = z.size();
+	if( z.size() != num_Hidden)
+	{
+		std::cerr<<"Activation input vector has the wrong dimensions!\n";
+	}
 
 	Eigen::VectorXd y;
-	y.resize(N+bias);
+	y.resize(num_Hidden+bias);
 
 	switch(actF)
 	{
 	case NNController::Sigmoid:
 	{
-		for(int i=0;i<N;i++)
+		for(int i=0;i<num_Hidden;i++)
 		{
 			y(i) = 1.0/(1.0 + exp(-(double)z(i)));
 		}
@@ -429,7 +432,7 @@ Eigen::VectorXd NNController::activation( Eigen::VectorXd z)
 	{
 		Eigen::VectorXd d;
 		double x;
-		for(int i=0;i<N;i++)
+		for(int i=0;i<num_Hidden;i++)
 		{
 			d = z - rbf_mu.col(i);
 			x = d.transpose() * d;
@@ -444,7 +447,7 @@ Eigen::VectorXd NNController::activation( Eigen::VectorXd z)
 
 	if(bias == 1)
 	{
-		y(N+bias) = 1;
+		y(num_Hidden) = 1;	// num_Hidden + bias - 1
 	}
 
 	return y;
@@ -452,10 +455,13 @@ Eigen::VectorXd NNController::activation( Eigen::VectorXd z)
 
 Eigen::MatrixXd NNController::activationPrime( Eigen::VectorXd z)
 {
-	int N = z.size();
+	if( z.size() != num_Hidden)
+	{
+		std::cerr<<"ActivationPrime input vector has the wrong dimensions!\n";
+	}
 
 	Eigen::MatrixXd y;
-	y.setZero(N+bias,N+bias);	// The last row will be zero if there is a bias unit.
+	y.setZero(num_Hidden+bias,num_Hidden);	// The last row will be zero if there is a bias unit.
 
 	switch(actF)
 	{
@@ -463,19 +469,19 @@ Eigen::MatrixXd NNController::activationPrime( Eigen::VectorXd z)
 	{
 		Eigen::VectorXd s = activation(z);
 		Eigen::MatrixXd S = s.asDiagonal();
-		y.block(0,0,N,N) = S - S*S;
+		y.block(0,0,num_Hidden,num_Hidden) = S - S*S;
 		break;
 	}
 	case NNController::RBF:
 	{
 		Eigen::VectorXd d;
 		double x;
-		for(int i=0;i<N;i++)
+		for(int i=0;i<num_Hidden;i++)
 		{
 			d = z - rbf_mu.col(i);
 			x = d.transpose() * d;
 			d = d.cwiseAbs();
-			y.block(0,i,N,1) =  -2*rbf_beta*d* exp( - rbf_beta * x );
+			y.block(0,i,num_Hidden,1) =  -2*rbf_beta*d* exp( - rbf_beta * x );
 		}
 		break;
 	}
