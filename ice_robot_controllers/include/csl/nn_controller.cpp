@@ -23,7 +23,7 @@ class NNController
 
 public:
 
-	enum ActFcn {Sigmoid, RBF}; // TODO implement RBF
+	enum ActFcn {Sigmoid, RBF};
 	enum Layers {One, Two};		// TODO implement One layer
 
 private:
@@ -77,6 +77,10 @@ private:
 	double Kz;					// Gain of robustifying term
 	double Zb;					// Bound for NN weight error part of robustifying term
 
+	// RBF variables
+	double rbf_beta;			// RBF beta = 1/(2*sigma^2); fixed for each node instead of Eigen::VectorXd
+	Eigen::MatrixXd rbf_mu;		// RBF center for each hidden layer node [num_Hidden x num_Hidden]
+
 public:
 
 	/*** Constructor methods ***/
@@ -121,6 +125,16 @@ public:
 		p_la *= 20;
 
 		paramInit(p_Kv, p_la, 0.01, 0.05, 100, 100, 10, 0.01);
+
+		// RBF
+		rbf_beta = 1.0;
+    	rbf_mu.resize(num_Hidden, num_Hidden);
+    	rbf_mu.setRandom();								// Uniform dist between (-1,1)
+    	Eigen::MatrixXd pos(num_Hidden,num_Hidden);
+    	Eigen::MatrixXd neg(num_Hidden,num_Hidden);
+    	pos.setOnes();
+    	neg = -pos;
+    	rbf_mu = (rbf_mu.array() < 0).select(neg,pos);	// Make elements -1 or +1
 
 	}
 
@@ -232,10 +246,15 @@ public:
 	Eigen::MatrixXd	getInnerWeights()	{	return V_;			}
 	Eigen::MatrixXd	getOuterWeights()	{	return W_trans;		}
 	Eigen::VectorXd	getNNoutput()		{	return fhat;		}
+	Eigen::VectorXd	getRBFmu()			{	return rbf_mu;		}
 
 	void setTimeStep(double p_dt)
 	{
 		dt = p_dt;
+	}
+	void setRBFbeta(double p_beta)
+	{
+		rbf_beta = p_beta;
 	}
 	bool setInnerWeights(Eigen::MatrixXd p_V)
 	{
@@ -267,7 +286,7 @@ public:
 	/*** Computational methods ***/
 
 	Eigen::VectorXd activation( Eigen::VectorXd z);
-	Eigen::VectorXd activationPrime( Eigen::VectorXd z);
+	Eigen::MatrixXd activationPrime( Eigen::VectorXd z);
 
 	// Computes fc = -Kv*r + fhat and updates NN
     void Update( double dt,
@@ -394,7 +413,7 @@ Eigen::VectorXd NNController::activation( Eigen::VectorXd z)
 	int N = z.size();
 
 	Eigen::VectorXd y;
-	y.resize(N);
+	y.resize(N+bias);
 
 	switch(actF)
 	{
@@ -407,23 +426,36 @@ Eigen::VectorXd NNController::activation( Eigen::VectorXd z)
 		break;
 	}
 	case NNController::RBF:
-//	{
-//		break;
-//	}
+	{
+		Eigen::VectorXd d;
+		double x;
+		for(int i=0;i<N;i++)
+		{
+			d = z - rbf_mu.col(i);
+			x = d.transpose() * d;
+			y(i) = exp( - rbf_beta * x );
+		}
+		break;
+	}
 	default:
 		std::cerr<<"NNController: activation function not implemented!\n";
 		break;
 	}
 
+	if(bias == 1)
+	{
+		y(N+bias) = 1;
+	}
+
 	return y;
 }
 
-Eigen::VectorXd NNController::activationPrime( Eigen::VectorXd z)
+Eigen::MatrixXd NNController::activationPrime( Eigen::VectorXd z)
 {
 	int N = z.size();
 
-	Eigen::VectorXd y;
-	y.resize(N);
+	Eigen::MatrixXd y;
+	y.setZero(N+bias,N+bias);	// The last row will be zero if there is a bias unit.
 
 	switch(actF)
 	{
@@ -431,13 +463,22 @@ Eigen::VectorXd NNController::activationPrime( Eigen::VectorXd z)
 	{
 		Eigen::VectorXd s = activation(z);
 		Eigen::MatrixXd S = s.asDiagonal();
-		y = S - S*S;
+		y.block(0,0,N,N) = S - S*S;
 		break;
 	}
 	case NNController::RBF:
-//	{
-//		break;
-//	}
+	{
+		Eigen::VectorXd d;
+		double x;
+		for(int i=0;i<N;i++)
+		{
+			d = z - rbf_mu.col(i);
+			x = d.transpose() * d;
+			d = d.cwiseAbs();
+			y.block(0,i,N,1) =  -2*rbf_beta*d* exp( - rbf_beta * x );
+		}
+		break;
+	}
 	default:
 		std::cerr<<"NNController: activationPrime function not implemented!\n";
 		break;
