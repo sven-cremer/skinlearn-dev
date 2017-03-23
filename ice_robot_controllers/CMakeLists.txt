@@ -77,6 +77,8 @@ add_dependencies(ice_robot_controllers pr2_gripper_sensor_msgs_generate_messages
 add_dependencies(ice_robot_controllers ${ice_robot_controllers_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 pr2_enable_rpath(ice_robot_controllers)
 
+add_library(nn_controller include/csl/nn_controller.cpp)
+target_link_libraries(nn_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 #############
 ## Install ##
