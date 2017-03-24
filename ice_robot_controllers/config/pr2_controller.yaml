@@ -10,7 +10,7 @@ experiment         : 0 # Experiment A=0, B=1, C=2
 loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRateFactor - 2)
 
 useCurrentCartPose : false
-useNullspacePose   : true
+useNullspacePose   : false
 useDigitalFilter   : false
 
 publishRTtopics    : true
@@ -238,7 +238,7 @@ cartIniZ             :  -0.10
 #cartIniX             :  0.75
 #cartIniY             :  0.35
 #cartIniZ             :  0.0
-#cartIniRoll          :  0.0
+#cartIniRoll          :  0.0          # For Gazebo simulations
 cartIniRoll          :  1.57
 cartIniPitch         :  0.0
 cartIniYaw           :  0.0
@@ -259,7 +259,7 @@ cartIniYaw           :  0.0
 
 nnNum_Inputs          : 44 
 nnNum_Outputs         : 6  # Cartesian
-nnNum_Hidden          : 12
+nnNum_Hidden          : 150
 nnNum_Error           : 6  
 nnNum_Joints          : 7  # DOF
 
@@ -267,15 +267,15 @@ nnNum_Joints          : 7  # DOF
 # r = (qd_m - qd) + lambda*(q_m - q);
 # Kv*r
 
-nn_Kv                 : 5 # not being used? see cartPos_Kd and cartPos_Kp insteads
+nn_Kv                 : 10 # not being used? see cartPos_Kd and cartPos_Kp insteads
 nn_lambda             : 20 # not being used?
-nn_kappa              : 0.25
-nn_Kz                 : 0.005 # not being used?
+nn_kappa              : 0.1
+nn_Kz                 : 0.01 # not being used?
 nn_Zb                 : 100 # not being used?
 nn_feedForwardForce   : 0.0 #25.0 # small because of jitter from FT measurments
-nn_nnF                : 100 # -> W (outer)
-nn_nnG                : 200 # -> V (inner)
-nn_ON                 : 0
+nn_nnF                : 0.02 # -> W (outer)
+nn_nnG                : 0.1 # -> V (inner)
+nn_ON                 : 1
 
 # nn_Kv               : 5
 # nn_lambda           : 20
@@ -288,20 +288,20 @@ nn_ON                 : 0
 # nn_ON               : 1
 
 # Kd*(qd_m - qd) + Kp*(q_m - q)
-cartPos_Kp_x          : 60
-cartPos_Kp_y          : 60
-cartPos_Kp_z          : 60
-cartRot_Kp_x          : 10
-cartRot_Kp_y          : 10
-cartRot_Kp_z          : 10
+cartPos_Kp_x          : 2.0
+cartPos_Kp_y          : 2.0
+cartPos_Kp_z          : 2.0
+cartRot_Kp_x          : 0.1
+cartRot_Kp_y          : 0.1
+cartRot_Kp_z          : 0.1
 
 # Prevents motion if qd=0 (note: Kd>0 because of devision)
-cartPos_Kd_x          : 10
-cartPos_Kd_y          : 10
-cartPos_Kd_z          : 10
-cartRot_Kd_x          : 3
-cartRot_Kd_y          : 3
-cartRot_Kd_z          : 3
+cartPos_Kd_x          : 0.05
+cartPos_Kd_y          : 0.05
+cartPos_Kd_z          : 0.05
+cartRot_Kd_x          : 0.01
+cartRot_Kd_y          : 0.01
+cartRot_Kd_z          : 0.01
 
 #############################
 # Controller plugins        #
