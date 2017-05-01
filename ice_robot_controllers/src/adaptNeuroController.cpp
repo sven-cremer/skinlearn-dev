@@ -2065,7 +2065,9 @@ bool PR2adaptNeuroControllerClass::toggleFixedWeights( ice_msgs::fixedWeightTogg
 	// XOR to toggle
 	useFixedWeights =  ( useFixedWeights || true ) && !( useFixedWeights && true );
 	resp.useFixedWeights = useFixedWeights ;
+
 	// Filter Weights
+	/* TODO
 	resp.w0 = filtW0 ; // outerLoopWk(0,0) ;
 	resp.w1 = filtW1 ; // outerLoopWk(1,0) ;
 	resp.w2 = filtW2 ; // outerLoopWk(2,0) ;
@@ -2083,6 +2085,7 @@ bool PR2adaptNeuroControllerClass::toggleFixedWeights( ice_msgs::fixedWeightTogg
 	outerLoopWk(5,0) = filtW5 ;
 	outerLoopWk(6,0) = filtW6 ;
 	outerLoopWk(7,0) = filtW7 ;
+	*/
 
 	if( useFixedWeights )
 	{
@@ -2890,132 +2893,21 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	if (!nh_.getParam( para_forceCutOffY , forceCutOffY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffY.c_str()) ; return false; }
 	if (!nh_.getParam( para_forceCutOffZ , forceCutOffZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffZ.c_str()) ; return false; }
 
-
-	// TODO make filter weights vectors
-	std::string para_filtW0        = "/filtW0"        ;
-	std::string para_filtW1        = "/filtW1"        ;
-	std::string para_filtW2        = "/filtW2"        ;
-	std::string para_filtW3        = "/filtW3"        ;
-	std::string para_filtW4        = "/filtW4"        ;
-	std::string para_filtW5        = "/filtW5"        ;
-	std::string para_filtW6        = "/filtW6"        ;
-	std::string para_filtW7        = "/filtW7"        ;
-
-	std::string para_flex_1_filtW0 = "/flex_1_filtW0" ;
-	std::string para_flex_1_filtW1 = "/flex_1_filtW1" ;
-	std::string para_flex_1_filtW2 = "/flex_1_filtW2" ;
-	std::string para_flex_1_filtW3 = "/flex_1_filtW3" ;
-	std::string para_flex_1_filtW4 = "/flex_1_filtW4" ;
-	std::string para_flex_1_filtW5 = "/flex_1_filtW5" ;
-	std::string para_flex_1_filtW6 = "/flex_1_filtW6" ;
-	std::string para_flex_1_filtW7 = "/flex_1_filtW7" ;
-
-	std::string para_flex_2_filtW0 = "/flex_2_filtW0" ;
-	std::string para_flex_2_filtW1 = "/flex_2_filtW1" ;
-	std::string para_flex_2_filtW2 = "/flex_2_filtW2" ;
-	std::string para_flex_2_filtW3 = "/flex_2_filtW3" ;
-	std::string para_flex_2_filtW4 = "/flex_2_filtW4" ;
-	std::string para_flex_2_filtW5 = "/flex_2_filtW5" ;
-	std::string para_flex_2_filtW6 = "/flex_2_filtW6" ;
-	std::string para_flex_2_filtW7 = "/flex_2_filtW7" ;
-
-	std::string para_flex_3_filtW0 = "/flex_3_filtW0" ;
-	std::string para_flex_3_filtW1 = "/flex_3_filtW1" ;
-	std::string para_flex_3_filtW2 = "/flex_3_filtW2" ;
-	std::string para_flex_3_filtW3 = "/flex_3_filtW3" ;
-	std::string para_flex_3_filtW4 = "/flex_3_filtW4" ;
-	std::string para_flex_3_filtW5 = "/flex_3_filtW5" ;
-	std::string para_flex_3_filtW6 = "/flex_3_filtW6" ;
-	std::string para_flex_3_filtW7 = "/flex_3_filtW7" ;
-
-	std::string para_flex_4_filtW0 = "/flex_4_filtW0" ;
-	std::string para_flex_4_filtW1 = "/flex_4_filtW1" ;
-	std::string para_flex_4_filtW2 = "/flex_4_filtW2" ;
-	std::string para_flex_4_filtW3 = "/flex_4_filtW3" ;
-	std::string para_flex_4_filtW4 = "/flex_4_filtW4" ;
-	std::string para_flex_4_filtW5 = "/flex_4_filtW5" ;
-	std::string para_flex_4_filtW6 = "/flex_4_filtW6" ;
-	std::string para_flex_4_filtW7 = "/flex_4_filtW7" ;
-
-	filtW0 = 0.0 ;  flex_1_filtW0 = 0.0 ;  flex_2_filtW0 = 0.0 ;  flex_3_filtW0 = 0.0 ;  flex_4_filtW0 = 0.0 ;
-	filtW1 = 0.0 ;  flex_1_filtW1 = 0.0 ;  flex_2_filtW1 = 0.0 ;  flex_3_filtW1 = 0.0 ;  flex_4_filtW1 = 0.0 ;
-	filtW2 = 0.0 ;  flex_1_filtW2 = 0.0 ;  flex_2_filtW2 = 0.0 ;  flex_3_filtW2 = 0.0 ;  flex_4_filtW2 = 0.0 ;
-	filtW3 = 0.0 ;  flex_1_filtW3 = 0.0 ;  flex_2_filtW3 = 0.0 ;  flex_3_filtW3 = 0.0 ;  flex_4_filtW3 = 0.0 ;
-	filtW4 = 0.0 ;  flex_1_filtW4 = 0.0 ;  flex_2_filtW4 = 0.0 ;  flex_3_filtW4 = 0.0 ;  flex_4_filtW4 = 0.0 ;
-	filtW5 = 0.0 ;  flex_1_filtW5 = 0.0 ;  flex_2_filtW5 = 0.0 ;  flex_3_filtW5 = 0.0 ;  flex_4_filtW5 = 0.0 ;
-	filtW6 = 0.0 ;  flex_1_filtW6 = 0.0 ;  flex_2_filtW6 = 0.0 ;  flex_3_filtW6 = 0.0 ;  flex_4_filtW6 = 0.0 ;
-	filtW7 = 0.0 ;  flex_1_filtW7 = 0.0 ;  flex_2_filtW7 = 0.0 ;  flex_3_filtW7 = 0.0 ;  flex_4_filtW7 = 0.0 ;
-
-	if (!nh_.getParam( para_filtW0        , filtW0        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW0       .c_str()) ; return false; }
-	if (!nh_.getParam( para_filtW1        , filtW1        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW1       .c_str()) ; return false; }
-	if (!nh_.getParam( para_filtW2        , filtW2        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW2       .c_str()) ; return false; }
-	if (!nh_.getParam( para_filtW3        , filtW3        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW3       .c_str()) ; return false; }
-	if (!nh_.getParam( para_filtW4        , filtW4        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW4       .c_str()) ; return false; }
-	if (!nh_.getParam( para_filtW5        , filtW5        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW5       .c_str()) ; return false; }
-	if (!nh_.getParam( para_filtW6        , filtW6        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW6       .c_str()) ; return false; }
-	if (!nh_.getParam( para_filtW7        , filtW7        )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_filtW7       .c_str()) ; return false; }
-
-	if (!nh_.getParam( para_flex_1_filtW0 , flex_1_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW0.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_1_filtW1 , flex_1_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW1.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_1_filtW2 , flex_1_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW2.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_1_filtW3 , flex_1_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW3.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_1_filtW4 , flex_1_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW4.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_1_filtW5 , flex_1_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW5.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_1_filtW6 , flex_1_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW6.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_1_filtW7 , flex_1_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_1_filtW7.c_str()) ; return false; }
-
-	if (!nh_.getParam( para_flex_2_filtW0 , flex_2_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW0.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_2_filtW1 , flex_2_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW1.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_2_filtW2 , flex_2_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW2.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_2_filtW3 , flex_2_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW3.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_2_filtW4 , flex_2_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW4.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_2_filtW5 , flex_2_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW5.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_2_filtW6 , flex_2_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW6.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_2_filtW7 , flex_2_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_2_filtW7.c_str()) ; return false; }
-
-	if (!nh_.getParam( para_flex_3_filtW0 , flex_3_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW0.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_3_filtW1 , flex_3_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW1.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_3_filtW2 , flex_3_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW2.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_3_filtW3 , flex_3_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW3.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_3_filtW4 , flex_3_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW4.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_3_filtW5 , flex_3_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW5.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_3_filtW6 , flex_3_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW6.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_3_filtW7 , flex_3_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_3_filtW7.c_str()) ; return false; }
-
-	if (!nh_.getParam( para_flex_4_filtW0 , flex_4_filtW0 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW0.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_4_filtW1 , flex_4_filtW1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW1.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_4_filtW2 , flex_4_filtW2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW2.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_4_filtW3 , flex_4_filtW3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW3.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_4_filtW4 , flex_4_filtW4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW4.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_4_filtW5 , flex_4_filtW5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW5.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_4_filtW6 , flex_4_filtW6 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW6.c_str()) ; return false; }
-	if (!nh_.getParam( para_flex_4_filtW7 , flex_4_filtW7 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_flex_4_filtW7.c_str()) ; return false; }
-
-
 	outerLoopWk.resize(8,1);
 	outerLoopWk_flexi_0.resize(8,1);
 	outerLoopWk_flexi_1.resize(8,1);
 	outerLoopWk_flexi_2.resize(8,1);
 	outerLoopWk_flexi_3.resize(8,1);
 
+	outerLoopWk.setZero();
+	outerLoopWk_flexi_0.setZero();
+	outerLoopWk_flexi_1.setZero();
+	outerLoopWk_flexi_2.setZero();
+	outerLoopWk_flexi_3.setZero();
 
 	if( useFIRmodel || useARMAmodel || useCTARMAmodel)
 	{
-		outerLoopWk(0,0) = filtW0 ; outerLoopWk_flexi_0(0,0) = flex_1_filtW0 ; outerLoopWk_flexi_1(0,0) = flex_2_filtW0 ; outerLoopWk_flexi_2(0,0) = flex_3_filtW0 ; outerLoopWk_flexi_3(0,0) = flex_4_filtW0 ;
-		outerLoopWk(1,0) = filtW1 ; outerLoopWk_flexi_0(1,0) = flex_1_filtW1 ; outerLoopWk_flexi_1(1,0) = flex_2_filtW1 ; outerLoopWk_flexi_2(1,0) = flex_3_filtW1 ; outerLoopWk_flexi_3(1,0) = flex_4_filtW1 ;
-		outerLoopWk(2,0) = filtW2 ; outerLoopWk_flexi_0(2,0) = flex_1_filtW2 ; outerLoopWk_flexi_1(2,0) = flex_2_filtW2 ; outerLoopWk_flexi_2(2,0) = flex_3_filtW2 ; outerLoopWk_flexi_3(2,0) = flex_4_filtW2 ;
-		outerLoopWk(3,0) = filtW3 ; outerLoopWk_flexi_0(3,0) = flex_1_filtW3 ; outerLoopWk_flexi_1(3,0) = flex_2_filtW3 ; outerLoopWk_flexi_2(3,0) = flex_3_filtW3 ; outerLoopWk_flexi_3(3,0) = flex_4_filtW3 ;
-		outerLoopWk(4,0) = filtW4 ; outerLoopWk_flexi_0(4,0) = flex_1_filtW4 ; outerLoopWk_flexi_1(4,0) = flex_2_filtW4 ; outerLoopWk_flexi_2(4,0) = flex_3_filtW4 ; outerLoopWk_flexi_3(4,0) = flex_4_filtW4 ;
-		outerLoopWk(5,0) = filtW5 ; outerLoopWk_flexi_0(5,0) = flex_1_filtW5 ; outerLoopWk_flexi_1(5,0) = flex_2_filtW5 ; outerLoopWk_flexi_2(5,0) = flex_3_filtW5 ; outerLoopWk_flexi_3(5,0) = flex_4_filtW5 ;
-		outerLoopWk(6,0) = filtW6 ; outerLoopWk_flexi_0(6,0) = flex_1_filtW6 ; outerLoopWk_flexi_1(6,0) = flex_2_filtW6 ; outerLoopWk_flexi_2(6,0) = flex_3_filtW6 ; outerLoopWk_flexi_3(6,0) = flex_4_filtW6 ;
-		outerLoopWk(7,0) = filtW7 ; outerLoopWk_flexi_0(7,0) = flex_1_filtW7 ; outerLoopWk_flexi_1(7,0) = flex_2_filtW7 ; outerLoopWk_flexi_2(7,0) = flex_3_filtW7 ; outerLoopWk_flexi_3(7,0) = flex_4_filtW7 ;
-	}else
-	{
-		outerLoopWk.setZero();
-		outerLoopWk_flexi_0.setZero();
-		outerLoopWk_flexi_1.setZero();
-		outerLoopWk_flexi_2.setZero();
-		outerLoopWk_flexi_3.setZero();
+		// TODO Initialize filter from parameter server using vectors
 	}
 
 	int numIrlSamples = 100;

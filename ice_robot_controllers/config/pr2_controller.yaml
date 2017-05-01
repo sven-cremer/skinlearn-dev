@@ -144,63 +144,9 @@ mrac_P_h           : 1
 
 fixedFilterWeights : false
 
-# ARMA parameters
-filtW0                : -1.8775  #-1.8136 #-2.3646
-filtW1                :  1.2729  # 1.3171 # 1.9237
-filtW2                : -0.0578  #-0.4726 #-0.3255
-filtW3                : -0.3269  #-0.0082 #-0.1816
-filtW4                :  0.0018  # 0.0032 # 0.0049
-filtW5                :  0.0001  #-0.0010 #-0.0018
-filtW6                : -0.0013  #-0.0007 #-0.0018
-filtW7                :  0.0002  #-0.0009 # 0.0014
-
-# ARMA parameters for flexiforce          
-flex_1_filtW0         :  0.0
-flex_1_filtW1         :  0.0
-flex_1_filtW2         :  0.0
-flex_1_filtW3         :  0.0
-flex_1_filtW4         :  0.0
-flex_1_filtW5         :  0.0
-flex_1_filtW6         :  0.0
-flex_1_filtW7         :  0.0
-                        
-flex_2_filtW0         : -0.6283
-flex_2_filtW1         : -0.3757
-flex_2_filtW2         :  0.1192
-flex_2_filtW3         : -0.1512
-flex_2_filtW4         :  0.0063
-flex_2_filtW5         : -0.0017
-flex_2_filtW6         : -0.0030
-flex_2_filtW7         :  0.0026
-                      
-flex_3_filtW0         :  0.0
-flex_3_filtW1         :  0.0
-flex_3_filtW2         :  0.0
-flex_3_filtW3         :  0.0
-flex_3_filtW4         :  0.0
-flex_3_filtW5         :  0.0
-flex_3_filtW6         :  0.0
-flex_3_filtW7         :  0.0
-                        
-flex_4_filtW0         : -0.7185
-flex_4_filtW1         :  0.1265
-flex_4_filtW2         : -0.1395
-flex_4_filtW3         : -0.2230
-flex_4_filtW4         : -0.0009
-flex_4_filtW5         :  0.0003
-flex_4_filtW6         : -0.0001
-flex_4_filtW7         :  0.0013
-
 #############################
 # Robot Pose                #
 #############################
-
-#cartIniX              :  0.7
-#cartIniY              :  0.15
-#cartIniZ              : -0.1
-#cartIniRoll           :  0.0
-#cartIniPitch          :  0.0
-#cartIniYaw            :  0.0
 
 cartDesX              :  0.7
 cartDesY              :  0.3
@@ -209,35 +155,11 @@ cartDesRoll           :  0.0
 cartDesPitch          :  0.0
 cartDesYaw            :  0.0
 
-cartDes2X             :  0.9
-cartDes2Y             :  0.3
-cartDes2Z             : -0.1
-cartDes2Roll          :  0.0
-cartDes2Pitch         :  0.0
-cartDes2Yaw           :  0.0
-
-cartDes3X             :  0.9
-cartDes3Y             :  0.0
-cartDes3Z             : -0.1
-cartDes3Roll          :  0.0
-cartDes3Pitch         :  0.0
-cartDes3Yaw           :  0.0
-
-## Initial Position
-# lCartIniX           :  0.8
-# lCartIniY           :  0.05
-# lCartIniZ           :  0.0
-# lCartIniRoll        :  1.57079633
-# lCartIniPitch       :  0.0
-# lCartIniYaw         : -1.57079633
-
+## Initial Position (torso frame)
 cartIniX             :  0.65
 cartIniY             :  0.35
 cartIniZ             :  -0.10
 
-#cartIniX             :  0.75
-#cartIniY             :  0.35
-#cartIniZ             :  0.0
 #cartIniRoll          :  0.0          # For Gazebo simulations
 cartIniRoll          :  1.57
 cartIniPitch         :  0.0
@@ -259,7 +181,7 @@ cartIniYaw           :  0.0
 
 nnNum_Inputs          : 44 
 nnNum_Outputs         : 6  # Cartesian
-nnNum_Hidden          : 150
+nnNum_Hidden          : 65
 nnNum_Error           : 6  
 nnNum_Joints          : 7  # DOF
 
