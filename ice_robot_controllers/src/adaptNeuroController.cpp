@@ -2384,45 +2384,23 @@ bool PR2adaptNeuroControllerClass::initRobot()
 	qnom(6) = ( q_upper(6) - q_lower(6) ) / 2 ;
 
 	// Load Cartesian gains
-	std::string para_cartPos_Kp_x = "/cartPos_Kp_x";
-	std::string para_cartPos_Kp_y = "/cartPos_Kp_y";
-	std::string para_cartPos_Kp_z = "/cartPos_Kp_z";
-	std::string para_cartPos_Kd_x = "/cartPos_Kd_x";
-	std::string para_cartPos_Kd_y = "/cartPos_Kd_y";
-	std::string para_cartPos_Kd_z = "/cartPos_Kd_z";
+	loadROSparam("/cartPos_Kp_x", cartPos_Kp_x, 0.0);
+	loadROSparam("/cartPos_Kp_y", cartPos_Kp_y, 0.0);
+	loadROSparam("/cartPos_Kp_z", cartPos_Kp_z, 0.0);
+	loadROSparam("/cartPos_Kd_x", cartPos_Kd_x, 0.0);
+	loadROSparam("/cartPos_Kd_y", cartPos_Kd_y, 0.0);
+	loadROSparam("/cartPos_Kd_z", cartPos_Kd_z, 0.0);
 
-	std::string para_cartRot_Kp_x = "/cartRot_Kp_x";
-	std::string para_cartRot_Kp_y = "/cartRot_Kp_y";
-	std::string para_cartRot_Kp_z = "/cartRot_Kp_z";
-	std::string para_cartRot_Kd_x = "/cartRot_Kd_x";
-	std::string para_cartRot_Kd_y = "/cartRot_Kd_y";
-	std::string para_cartRot_Kd_z = "/cartRot_Kd_z";
-
-	cartPos_Kp_x = 0 ; cartRot_Kp_x = 0 ;
-	cartPos_Kp_y = 0 ; cartRot_Kp_y = 0 ;
-	cartPos_Kp_z = 0 ; cartRot_Kp_z = 0 ;
-	cartPos_Kd_x = 0 ; cartRot_Kd_x = 0 ;
-	cartPos_Kd_y = 0 ; cartRot_Kd_y = 0 ;
-	cartPos_Kd_z = 0 ; cartRot_Kd_z = 0 ;
-
-	if (!nh_.getParam( para_cartPos_Kp_x , cartPos_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_x.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartPos_Kp_y , cartPos_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_y.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartPos_Kp_z , cartPos_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kp_z.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartPos_Kd_x , cartPos_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_x.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartPos_Kd_y , cartPos_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_y.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartPos_Kd_z , cartPos_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartPos_Kd_z.c_str()) ; return false; }
-
-	if (!nh_.getParam( para_cartRot_Kp_x , cartRot_Kp_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_x.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartRot_Kp_y , cartRot_Kp_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_y.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartRot_Kp_z , cartRot_Kp_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kp_z.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartRot_Kd_x , cartRot_Kd_x )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_x.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartRot_Kd_y , cartRot_Kd_y )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_y.c_str()) ; return false; }
-	if (!nh_.getParam( para_cartRot_Kd_z , cartRot_Kd_z )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartRot_Kd_z.c_str()) ; return false; }
-
+	loadROSparam("/cartRot_Kp_x", cartRot_Kp_x, 0.0);
+	loadROSparam("/cartRot_Kp_y", cartRot_Kp_y, 0.0);
+	loadROSparam("/cartRot_Kp_z", cartRot_Kp_z, 0.0);
+	loadROSparam("/cartRot_Kd_x", cartRot_Kd_x, 0.0);
+	loadROSparam("/cartRot_Kd_y", cartRot_Kd_y, 0.0);
+	loadROSparam("/cartRot_Kd_z", cartRot_Kd_z, 0.0);
 
 	// Posture control
-	if (!nh_.getParam( "/k_posture", k_posture)){ ROS_ERROR("Failed to load parameter: %s !)", "/k_posture" ) ;  k_posture = 1.0; }
-	if (!nh_.getParam( "/jacobian_inverse_damping", k_posture)){ ROS_ERROR("Failed to load parameter: %s !)", "/jacobian_inverse_damping" ) ;  jacobian_inverse_damping = 0.0; }
+	loadROSparam("/k_posture", k_posture, 1.0);
+	loadROSparam("/jacobian_inverse_damping", jacobian_inverse_damping, 0.0);
 
 	for (int i = 0; i < Joints; ++i)
 	{
@@ -2431,6 +2409,11 @@ bool PR2adaptNeuroControllerClass::initRobot()
 		if (!nh_.getParam( "/joint_feedforward/" + tmp, joint_dd_ff_[i] )){ ROS_ERROR("Failed to load /joint_feedforward!"); joint_dd_ff_[i]=0.0; }
 		if (!nh_.getParam( "/posture/" + tmp, 			q_posture_[i]   )){ ROS_ERROR("Failed to load /posture!");           q_posture_[i]=0.0; }
 		if (!nh_.getParam( "/saturation/" + tmp, 		saturation_[i]  )){ ROS_ERROR("Failed to load /saturation!"); 		 saturation_[i]=0.0; }
+
+		// TODO check
+//		loadROSparam("/joint_feedforward/" + tmp, joint_dd_ff_[i], 0.0);
+//		loadROSparam("/posture/" + tmp,           q_posture_[i],   0.0);
+//		loadROSparam("/saturation/" + tmp,        saturation_[i],  0.0);
 	}
 
 	/* Sensors */
@@ -2502,67 +2485,29 @@ bool PR2adaptNeuroControllerClass::initTrajectories()
 	xdd_des_ = CartVec2Affine(tmp); // Acceleration
 
 	// Rate for circle trajectory
-	circle_rate = 3  ;
-	circleLlim  = 0  ;
-	circleUlim  = 1.5;
-
-	std::string para_circleRate  = "/circleRate" ;
-	std::string para_circleLlim  = "/circleLlim" ;
-	std::string para_circleUlim  = "/circleUlim" ;
-
-	if (!nh_.getParam( para_circleRate , circle_rate )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleRate .c_str()) ; success = false; }
-	if (!nh_.getParam( para_circleLlim , circleLlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleLlim .c_str()) ; success = false; }
-	if (!nh_.getParam( para_circleUlim , circleUlim  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_circleUlim .c_str()) ; success = false; }
+	loadROSparam("/circleRate", circle_rate, 3.0);
+	loadROSparam("/circleLlim", circleLlim,  0.0);
+	loadROSparam("/circleUlim", circleUlim,  1.5);
 
 	loopsCircleTraj = 0;
 	circleAmpl = (circleUlim - circleLlim)/2 ;
 	circle_velocity = circle_rate*circleAmpl;
 
-	// Desired cartesian pose
-	cartDesX     = 0.0 ;
-	cartDesY     = 0.0 ;
-	cartDesZ     = 0.0 ;
-	cartDesRoll  = 0.0 ;
-	cartDesPitch = 0.0 ;
-	cartDesYaw   = 0.0 ;
-
-	std::string para_cartDesX     = "/cartDesX";
-	std::string para_cartDesY     = "/cartDesY";
-	std::string para_cartDesZ     = "/cartDesZ";
-	std::string para_cartDesRoll  = "/cartDesRoll";
-	std::string para_cartDesPitch = "/cartDesPitch";
-	std::string para_cartDesYaw   = "/cartDesYaw";
-
-	if (!nh_.getParam( para_cartDesX     , cartDesX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesX    .c_str()) ; success = false; }
-	if (!nh_.getParam( para_cartDesY     , cartDesY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesY    .c_str()) ; success = false; }
-	if (!nh_.getParam( para_cartDesZ     , cartDesZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesZ    .c_str()) ; success = false; }
-	if (!nh_.getParam( para_cartDesRoll  , cartDesRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesRoll .c_str()) ; success = false; }
-	if (!nh_.getParam( para_cartDesPitch , cartDesPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesPitch.c_str()) ; success = false; }
-	if (!nh_.getParam( para_cartDesYaw   , cartDesYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartDesYaw  .c_str()) ; success = false; }
-
+	// Desired Cartesian pose
+	loadROSparam("/cartDesX"    , cartDesX    , 0.0);
+	loadROSparam("/cartDesY"    , cartDesY    , 0.0);
+	loadROSparam("/cartDesZ"    , cartDesZ    , 0.0);
+	loadROSparam("/cartDesRoll" , cartDesRoll , 0.0);
+	loadROSparam("/cartDesPitch", cartDesPitch, 0.0);
+	loadROSparam("/cartDesYaw"  , cartDesYaw  , 0.0);
 
 	// Initial cartesian pose
-	cartIniX     = 0.7 ;
-	cartIniY     = 0.3 ;
-	cartIniZ     = 0.1 ;
-	cartIniRoll  = 0.0 ;
-	cartIniPitch = 0.0 ;
-	cartIniYaw   = 0.0 ;
-
-	std::string para_cartIniX     = "/cartIniX";
-	std::string para_cartIniY     = "/cartIniY";
-	std::string para_cartIniZ     = "/cartIniZ";
-	std::string para_cartIniRoll  = "/cartIniRoll";
-	std::string para_cartIniPitch = "/cartIniPitch";
-	std::string para_cartIniYaw   = "/cartIniYaw";
-
-	if (!nh_.getParam( para_cartIniX     , cartIniX     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniX.c_str()) ; success = false; }
-	if (!nh_.getParam( para_cartIniY     , cartIniY     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniY.c_str()) ; success = false; }
-	if (!nh_.getParam( para_cartIniZ     , cartIniZ     )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniZ.c_str()) ; success = false; }
-	if (!nh_.getParam( para_cartIniRoll  , cartIniRoll  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniRoll .c_str()) ; success = false; }
-	if (!nh_.getParam( para_cartIniPitch , cartIniPitch )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniPitch.c_str()) ; success = false; }
-	if (!nh_.getParam( para_cartIniYaw   , cartIniYaw   )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_cartIniYaw  .c_str()) ; success = false; }
-
+	loadROSparam("/cartIniX"    , cartIniX    , 0.7);
+	loadROSparam("/cartIniY"    , cartIniY    , 0.3);
+	loadROSparam("/cartIniZ"    , cartIniZ    , 0.1);
+	loadROSparam("/cartIniRoll" , cartIniRoll , 0.0);
+	loadROSparam("/cartIniPitch", cartIniPitch, 0.0);
+	loadROSparam("/cartIniYaw"  , cartIniYaw  , 0.0);
 
 	return success;
 }
@@ -2816,82 +2761,35 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 {
 	bool result=true;
 
+	loadROSparam("/m_M", m_M, 1.0);
+	loadROSparam("/m_S", m_S, 0.0);
+	loadROSparam("/m_D", m_D, 5.0);
 
-	std::string para_m_M = "/m_M" ;
-	std::string para_m_S = "/m_S" ;
-	std::string para_m_D = "/m_D" ;
-
-	if (!nh_.getParam( para_m_M , m_M )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_M .c_str()) ; return false; }
-	if (!nh_.getParam( para_m_S , m_S )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_S .c_str()) ; return false; }
-	if (!nh_.getParam( para_m_D , m_D )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_m_D .c_str()) ; return false; }
-
-	std::string para_task_mA = "/task_mA" ;
-	std::string para_task_mB = "/task_mB" ;
-
-	if (!nh_.getParam( para_task_mA , task_mA )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_task_mA .c_str()) ; return false; }
-	if (!nh_.getParam( para_task_mB , task_mB )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_task_mB .c_str()) ; return false; }
+	loadROSparam("/task_mA", task_mA, 0.7);
+	loadROSparam("/task_mB", task_mB, 0.7);
 
 
 
-	useCurrentCartPose = false ;
-	std::string para_useCurrentCartPose     = "/useCurrentCartPose";
-	if (!nh_.getParam( para_useCurrentCartPose, useCurrentCartPose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCurrentCartPose.c_str()) ; return false; }
+	loadROSparam("/useCurrentCartPose", useCurrentCartPose, false);
+	loadROSparam("/useQuaternions",     useQuaternions, true);
+	loadROSparam("/useNullspacePose",   useNullspacePose, false);
 
-	useNullspacePose = true ;
-	std::string para_useNullspacePose     = "/useNullspacePose";
-	if (!nh_.getParam( para_useNullspacePose, useNullspacePose )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useNullspacePose.c_str()) ; return false; }
+	loadROSparam("/useARMAmodel",   useARMAmodel, false);
+	loadROSparam("/useCTARMAmodel", useCTARMAmodel, false);
+	loadROSparam("/useFIRmodel",    useFIRmodel, false);
+	loadROSparam("/useMRACmodel",   useMRACmodel, false);
+	loadROSparam("/useMSDmodel",    useMSDmodel, false);
+	loadROSparam("/useIRLmodel",    useIRLmodel, false);
+	loadROSparam("/useDirectmodel", useDirectmodel, false);
 
-	useARMAmodel = false ;
-	std::string para_useARMAmodel = "/useARMAmodel";
-	if (!nh_.getParam( para_useARMAmodel, useARMAmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useARMAmodel.c_str()) ; return false; }
+	loadROSparam("/externalRefTraj", externalRefTraj, true);
 
-	useCTARMAmodel = false ;
-	std::string para_useCTARMAmodel = "/useCTARMAmodel";
-	if (!nh_.getParam( para_useCTARMAmodel, useCTARMAmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useCTARMAmodel.c_str()) ; return false; }
+	loadROSparam("/intentEst_delT", intentEst_delT, 0.1);
+	loadROSparam("/intentEst_M", intentEst_M, 1.0);
 
-	useFIRmodel = false ;
-	std::string para_useFIRmodel = "/useFIRmodel";
-	if (!nh_.getParam( para_useFIRmodel, useFIRmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useFIRmodel.c_str()) ; return false; }
-
-	useMRACmodel = false ;
-	std::string para_useMRACmodel = "/useMRACmodel";
-	if (!nh_.getParam( para_useMRACmodel, useMRACmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMRACmodel.c_str()) ; return false; }
-
-	useMSDmodel = false ;
-	std::string para_useMSDmodel = "/useMSDmodel";
-	if (!nh_.getParam( para_useMSDmodel, useMSDmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useMSDmodel.c_str()) ; return false; }
-
-	useIRLmodel = false ;
-	std::string para_useIRLmodel = "/useIRLmodel";
-	if (!nh_.getParam( para_useIRLmodel, useIRLmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useIRLmodel.c_str()) ; return false; }
-
-	useDirectmodel = false ;
-	std::string para_useDirectmodel = "/useDirectmodel";
-	if (!nh_.getParam( para_useDirectmodel, useDirectmodel )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_useDirectmodel.c_str()) ; return false; }
-
-
-	externalRefTraj = true ;
-	std::string para_externalRefTraj = "/externalRefTraj";
-	if (!nh_.getParam( para_externalRefTraj, externalRefTraj )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_externalRefTraj.c_str()) ; return false; }
-
-	intentEst_delT = 0.1 ;
-	std::string para_intentEst_delT = "/intentEst_delT";
-	if (!nh_.getParam( para_intentEst_delT, intentEst_delT )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentEst_delT.c_str()) ; return false; }
-
-	intentEst_M = 1.0 ;
-	std::string para_intentEst_M = "/intentEst_M";
-	if (!nh_.getParam( para_intentEst_M, intentEst_M )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentEst_M.c_str()) ; return false; }
-
-
-
-
-	std::string para_forceCutOffX = "/forceCutOffX";
-	std::string para_forceCutOffY = "/forceCutOffY";
-	std::string para_forceCutOffZ = "/forceCutOffZ";
-
-	if (!nh_.getParam( para_forceCutOffX , forceCutOffX )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffX.c_str()) ; return false; }
-	if (!nh_.getParam( para_forceCutOffY , forceCutOffY )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffY.c_str()) ; return false; }
-	if (!nh_.getParam( para_forceCutOffZ , forceCutOffZ )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_forceCutOffZ.c_str()) ; return false; }
+	loadROSparam("/forceCutOffX", forceCutOffX, 0.1);
+	loadROSparam("/forceCutOffY", forceCutOffY, 0.1);
+	loadROSparam("/forceCutOffZ", forceCutOffZ, 0.1);
 
 	outerLoopWk.resize(8,1);
 	outerLoopWk_flexi_0.resize(8,1);
@@ -2910,34 +2808,21 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 		// TODO Initialize filter from parameter server using vectors
 	}
 
-	int numIrlSamples = 100;
-	std::string para_numIrlSamples = "/numIrlSamples";
-	if (!nh_.getParam( para_numIrlSamples , numIrlSamples )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numIrlSamples.c_str()) ; return false; }
+	int numIrlSamples, numIrlLsIter, numCartDof;
+	bool irlOneshot;
 
-	int numIrlLsIter = 10;
-	std::string para_numIrlLsIter = "/numIrlLsIter";
-	if (!nh_.getParam( para_numIrlLsIter , numIrlLsIter )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numIrlLsIter.c_str()) ; return false; }
+	loadROSparam("/numIrlSamples", numIrlSamples, 100);
+	loadROSparam("/numIrlLsIter",  numIrlLsIter, 10);
+	loadROSparam("/numCartDof",    numCartDof, 1);
+	loadROSparam("/irlOneshot",    irlOneshot, true);
 
-	int numCartDof = 1;
-	std::string para_numCartDof = "/numCartDof";
-	if (!nh_.getParam( para_numCartDof , numCartDof )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_numCartDof.c_str()) ; return false; }
-
-	bool irlOneshot = true;
-	std::string para_irlOneshot = "/irlOneshot";
-	if (!nh_.getParam( para_irlOneshot , irlOneshot )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_irlOneshot.c_str()) ; return false; }
-
-
-	std::string para_fixedFilterWeights = "/fixedFilterWeights";
-	if (!nh_.getParam( para_fixedFilterWeights , useFixedWeights )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_fixedFilterWeights.c_str()) ; return false; }
+	loadROSparam("/fixedFilterWeights", useFixedWeights, true);
 
 	double rls_lambda = 0.98 ;
 	double rls_sigma  = 1000 ;
 
-	std::string para_rls_lambda = "/rls_lambda";
-	std::string para_rls_sigma  = "/rls_sigma";
-
-	if (!nh_.getParam( para_rls_lambda , rls_lambda )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_rls_lambda.c_str()) ; return false; }
-	if (!nh_.getParam( para_rls_sigma  , rls_sigma  )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_rls_sigma .c_str()) ; return false; }
+	loadROSparam("/rls_lambda", rls_lambda);
+	loadROSparam("/rls_sigma",  rls_sigma);
 
 	double mrac_gamma_1 = 1 ;
 	double mrac_gamma_2 = 1 ;
@@ -2945,45 +2830,26 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	double mrac_gamma_4 = 1 ;
 	double mrac_gamma_5 = 1 ;
 
-	std::string para_mrac_gamma_1 = "/mrac_gamma_1";
-	std::string para_mrac_gamma_2 = "/mrac_gamma_2";
-	std::string para_mrac_gamma_3 = "/mrac_gamma_3";
-	std::string para_mrac_gamma_4 = "/mrac_gamma_4";
-	std::string para_mrac_gamma_5 = "/mrac_gamma_5";
-
-	if (!nh_.getParam( para_mrac_gamma_1 , mrac_gamma_1 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_1.c_str()) ; return false; }
-	if (!nh_.getParam( para_mrac_gamma_2 , mrac_gamma_2 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_2.c_str()) ; return false; }
-	if (!nh_.getParam( para_mrac_gamma_3 , mrac_gamma_3 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_3.c_str()) ; return false; }
-	if (!nh_.getParam( para_mrac_gamma_4 , mrac_gamma_4 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_4.c_str()) ; return false; }
-	if (!nh_.getParam( para_mrac_gamma_5 , mrac_gamma_5 )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_gamma_5.c_str()) ; return false; }
+	loadROSparam("/mrac_gamma_1",  mrac_gamma_1);
+	loadROSparam("/mrac_gamma_2",  mrac_gamma_2);
+	loadROSparam("/mrac_gamma_3",  mrac_gamma_3);
+	loadROSparam("/mrac_gamma_4",  mrac_gamma_4);
+	loadROSparam("/mrac_gamma_5",  mrac_gamma_5);
 
 	double mrac_P_m = 1 ;
 	double mrac_P_h = 1 ;
 
-	std::string para_mrac_P_m = "/mrac_P_m";
-	std::string para_mrac_P_h = "/mrac_P_h";
-
-	if (!nh_.getParam( para_mrac_P_m , mrac_P_m )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_P_m.c_str()) ; return false; }
-	if (!nh_.getParam( para_mrac_P_h , mrac_P_h )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_mrac_P_h.c_str()) ; return false; }
+	loadROSparam("/mrac_P_m", mrac_P_m);
+	loadROSparam("/mrac_P_h", mrac_P_h);
 
 	delT = 0.001;
 
-	std::string para_outerLoopTime = "/outerLoop_time";
-	if (!nh_.getParam( para_outerLoopTime , outerLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_outerLoopTime.c_str()) ; return false; }
+	loadROSparam("/outerLoop_time", outerLoopTime, 0.01);
+	loadROSparam("/intentEst_time", intentLoopTime, 0.01);
+	loadROSparam("/useSimHuman", useSimHuman, false);
+	loadROSparam("/simHuman_a",  simHuman_a);
+	loadROSparam("/simHuman_b", simHuman_b);
 
-	intentLoopTime = outerLoopTime;
-	std::string para_intentLoopTime = "/intentEst_time";
-	if (!nh_.getParam( para_intentLoopTime , intentLoopTime )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_intentLoopTime.c_str()) ; return false; }
-
-	useSimHuman = false ;
-	std::string para_simHuman = "/useSimHuman";
-	if (!nh_.getParam( para_simHuman , useSimHuman )){ ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman.c_str()) ; return false; }
-
-	std::string para_simHuman_a = "/simHuman_a" ;
-	std::string para_simHuman_b = "/simHuman_b" ;
-
-	if (!nh_.getParam( para_simHuman_a , simHuman_a )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman_a .c_str()) ; return false; }
-	if (!nh_.getParam( para_simHuman_b , simHuman_b )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_simHuman_b .c_str()) ; return false; }
 
 	// initial conditions
 	ode_init_x[0 ] = 0.0;
@@ -3204,40 +3070,7 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 
 bool PR2adaptNeuroControllerClass::initInnerLoop()
 {
-	std::string nn_kappa            = "/nn_kappa"            ;
-	std::string nn_Kv               = "/nn_Kv"               ;
-	std::string nn_lambda           = "/nn_lambda"           ;
-	std::string nn_Kz               = "/nn_Kz"               ;
-	std::string nn_Zb               = "/nn_Zb"               ;
-	std::string nn_feedForwardForce = "/nn_feedForwardForce" ;
-	std::string nn_nnF              = "/nn_nnF"              ;
-	std::string nn_nnG              = "/nn_nnG"              ;
-	std::string nn_ONparam          = "/nn_ON"               ;
-
-	if (!nh_.getParam( nn_kappa            , kappa            ))
-	{ ROS_ERROR("Value not loaded from parameter: %s !)", nn_kappa.c_str())                        ; return false; }
-	if (!nh_.getParam( nn_Kv               , Kv               ))
-	{ ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kv.c_str())                           ; return false; }
-	if (!nh_.getParam( nn_lambda           , lambda           ))
-	{ ROS_ERROR("Value not loaded from parameter: %s !)", nn_lambda.c_str())                       ; return false; }
-	if (!nh_.getParam( nn_Kz               , Kz               ))
-	{ ROS_ERROR("Value not loaded from parameter: %s !)", nn_Kz.c_str())                           ; return false; }
-	if (!nh_.getParam( nn_Zb               , Zb               ))
-	{ ROS_ERROR("Value not loaded from parameter: %s !)", nn_Zb.c_str())                           ; return false; }
-	if (!nh_.getParam( nn_feedForwardForce , fFForce ))
-	{ ROS_ERROR("Value not loaded from parameter: %s !)", nn_feedForwardForce.c_str())             ; return false; }
-	if (!nh_.getParam( nn_nnF              , nnF              ))
-	{ ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnF.c_str())                          ; return false; }
-	if (!nh_.getParam( nn_nnG              , nnG              ))
-	{ ROS_ERROR("Value not loaded from parameter: %s !)", nn_nnG.c_str())                          ; return false; }
-	if (!nh_.getParam( nn_ONparam          , nn_ON            ))
-	{ ROS_ERROR("Value not loaded from parameter: %s !)", nn_ONparam.c_str())                      ; return false; }
-
-	std::string para_nnNum_Inputs  = "/nnNum_Inputs" ;
-	std::string para_nnNum_Outputs = "/nnNum_Outputs" ;
-	std::string para_nnNum_Hidden  = "/nnNum_Hidden" ;
-	std::string para_nnNum_Error   = "/nnNum_Error" ;
-	std::string para_nnNum_Joints  = "/nnNum_Joints" ;
+	int n = 0;	// Number of failures
 
 	// Default values
 	num_Inputs  = 44 ;
@@ -3246,13 +3079,28 @@ bool PR2adaptNeuroControllerClass::initInnerLoop()
 	num_Error   = 6  ;
 	num_Joints  = 7  ; // 7 DOF
 
-	if (!nh_.getParam( para_nnNum_Inputs , num_Inputs  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Inputs .c_str()) ; return false; }
-	if (!nh_.getParam( para_nnNum_Outputs, num_Outputs )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Outputs.c_str()) ; return false; }
-	if (!nh_.getParam( para_nnNum_Hidden , num_Hidden  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Hidden .c_str()) ; return false; }
-	if (!nh_.getParam( para_nnNum_Error  , num_Error   )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Error  .c_str()) ; return false; }
-	if (!nh_.getParam( para_nnNum_Joints , num_Joints  )) { ROS_ERROR("Value not loaded from parameter: %s !)", para_nnNum_Joints .c_str()) ; return false; }
+	n += !loadROSparam("/nnNum_Inputs" , num_Inputs);
+	n += !loadROSparam("/nnNum_Outputs", num_Outputs);
+	n += !loadROSparam("/nnNum_Hidden" , num_Hidden);
+	n += !loadROSparam("/nnNum_Error"  , num_Error);
+	n += !loadROSparam("/nnNum_Joints" , num_Joints);
 
-	return true;
+	// NN parameters
+
+	n += !loadROSparam("/nn_kappa"           , kappa);
+	n += !loadROSparam("/nn_Kv"              , Kv);
+	n += !loadROSparam("/nn_lambda"          , lambda);
+	n += !loadROSparam("/nn_Kz"              , Kz);
+	n += !loadROSparam("/nn_Zb"              , Zb);
+	n += !loadROSparam("/nn_feedForwardForce", fFForce);
+	n += !loadROSparam("/nn_nnF"             , nnF);
+	n += !loadROSparam("/nn_nnG"             , nnG);
+	n += !loadROSparam("/nn_ON"              , nn_ON);
+
+	if(n==0)
+		return true;
+
+	return false;
 }
 
 bool PR2adaptNeuroControllerClass::initNullspace()
@@ -3262,3 +3110,27 @@ bool PR2adaptNeuroControllerClass::initNullspace()
 
 	return true;
 }
+
+template<typename T>
+bool PR2adaptNeuroControllerClass::loadROSparam(std::string name, T variable)
+{
+	if(!nh_.getParam( name, variable ))
+	{
+		ROS_ERROR("Failed to load ROS parameter named '%s' !)", name.c_str()) ;
+		return false;
+	}
+	return true;
+}
+
+template<typename T>
+bool PR2adaptNeuroControllerClass::loadROSparam(std::string name, T variable, T value)
+{
+	if(!nh_.getParam( name, variable ))
+	{
+		ROS_WARN("Failed to load ROS parameter named '%s' !)", name.c_str()) ;
+		variable = value;
+		return false;
+	}
+	return true;
+}
+

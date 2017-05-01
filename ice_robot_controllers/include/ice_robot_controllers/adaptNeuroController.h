@@ -448,10 +448,6 @@ private:
 
 	double fFForce;
 
-	//csl::neural_network::OneLayerNeuralNetworkController nnController;			// TODO make easier to change
-	//csl::neural_network::TwoLayerNeuralNetworkController nnController;
-	//csl::neural_network::RBFNeuralNetworkController nnController;
-	//csl::neural_network::RBFNeuralNetworkController rbfnnController;
 	csl::neural_network::NNController* ptrNNController;
 
 	// NN END
@@ -592,6 +588,9 @@ public:
 	void stopping();
 
 	void calcHumanIntentPos( Eigen::Vector3d & force, Eigen::VectorXd & pos, double delT, double m );
+
+	template<typename T> bool loadROSparam(std::string name, T variable);
+	template<typename T> bool loadROSparam(std::string name, T variable, T value);
 
 };
 }
