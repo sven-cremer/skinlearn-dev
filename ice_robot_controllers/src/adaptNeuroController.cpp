@@ -1607,8 +1607,8 @@ bool PR2adaptNeuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate:
 	num_Error   = req.msg.errorParams              ;
 
 	kappa       = req.msg.kappa                    ;
-	Kv          = req.msg.Kv                       ;
-	lambda      = req.msg.lambda                   ;
+//	Kv          = req.msg.Kv                       ;
+//	lambda      = req.msg.lambda                   ;
 	Kz          = req.msg.Kz                       ;
 	Zb          = req.msg.Zb                       ;
 	fFForce     = req.msg.feedForwardForce         ;
@@ -2712,51 +2712,6 @@ bool PR2adaptNeuroControllerClass::initSensors()
 	return result;
 }
 
-bool PR2adaptNeuroControllerClass::initNN()
-{
-
-	ptrNNController = new csl::neural_network::NNController(num_Joints, num_Outputs, num_Hidden);
-
-	Eigen::MatrixXd p_Kv     ;
-	Eigen::MatrixXd p_lambda ;
-
-	p_Kv     .resize( num_Outputs, 1 ) ;
-	p_lambda .resize( num_Outputs, 1 ) ;
-
-	// Filtered error
-	// r = (qd_m - qd) + lambda*(q_m - q);
-	// Kv*r = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
-	//        Kd*(qd_m - qd) +   Kp     *(q_m - q);
-	// Kd = Kv
-	// Kp = Kv*lambda ... lambda = Kp/Kv = Kp/Kd
-
-	p_Kv << cartPos_Kd_x ,
-            cartPos_Kd_y ,
-            cartPos_Kd_z ,
-            cartRot_Kd_x ,
-            cartRot_Kd_y ,
-            cartRot_Kd_z ;
-
-	p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
-                cartPos_Kp_y / cartPos_Kd_y ,
-                cartPos_Kp_z / cartPos_Kd_z ,
-                cartRot_Kp_x / cartRot_Kd_x ,
-                cartRot_Kp_y / cartRot_Kd_y ,
-                cartRot_Kp_z / cartRot_Kd_z ;
-
-	double weightsLimit = 0.01;
-
-	ptrNNController->paramInit(p_Kv,p_lambda,kappa,Kz,Zb,nnG,nnF,weightsLimit);
-
-	ptrNNController->setFlagNN(nn_ON);
-	ptrNNController->setUpdateRate(delT);
-	ptrNNController->setUpdateWeights(true);
-	ptrNNController->setUpdateInnerWeights(true);
-
-	return true;
-}
-
-
 bool PR2adaptNeuroControllerClass::initOuterLoop()
 {
 	bool result=true;
@@ -3087,8 +3042,8 @@ bool PR2adaptNeuroControllerClass::initInnerLoop()
 	// NN parameters
 
 	n += !loadROSparam("/nn_kappa"           , kappa);
-	n += !loadROSparam("/nn_Kv"              , Kv);
-	n += !loadROSparam("/nn_lambda"          , lambda);
+//	n += !loadROSparam("/nn_Kv"              , Kv);
+//	n += !loadROSparam("/nn_lambda"          , lambda);
 	n += !loadROSparam("/nn_Kz"              , Kz);
 	n += !loadROSparam("/nn_Zb"              , Zb);
 	n += !loadROSparam("/nn_feedForwardForce", fFForce);
@@ -3096,10 +3051,55 @@ bool PR2adaptNeuroControllerClass::initInnerLoop()
 	n += !loadROSparam("/nn_nnG"             , nnG);
 	n += !loadROSparam("/nn_ON"              , nn_ON);
 
+
+	Kv    .setZero( num_Outputs) ;
+	lambda.setZero( num_Outputs) ;
+
+	n += !loadROSparamVector("/nn_Kv", Kv);
+	n += !loadROSparamVector("/nn_lambda", lambda);
+
+	// Filtered error
+	// r = (qd_m - qd) + lambda*(q_m - q);
+	// Kv*r = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
+	//        Kd*(qd_m - qd) +   Kp     *(q_m - q);
+	// Kd = Kv
+	// Kp = Kv*lambda ... lambda = Kp/Kv = Kp/Kd
+
+	//	p_Kv << cartPos_Kd_x ,
+	//            cartPos_Kd_y ,
+	//            cartPos_Kd_z ,
+	//            cartRot_Kd_x ,
+	//            cartRot_Kd_y ,
+	//            cartRot_Kd_z ;
+
+	//	p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
+	//                cartPos_Kp_y / cartPos_Kd_y ,
+	//                cartPos_Kp_z / cartPos_Kd_z ,
+	//                cartRot_Kp_x / cartRot_Kd_x ,
+	//                cartRot_Kp_y / cartRot_Kd_y ,
+	//                cartRot_Kp_z / cartRot_Kd_z ;
+
+
 	if(n==0)
 		return true;
 
 	return false;
+}
+
+bool PR2adaptNeuroControllerClass::initNN()
+{
+
+	ptrNNController = new csl::neural_network::NNController(num_Joints, num_Outputs, num_Hidden);
+	double weightsLimit = 0.01;
+
+	ptrNNController->paramInit(Kv,lambda,kappa,Kz,Zb,nnG,nnF,weightsLimit);
+
+	ptrNNController->setFlagNN(nn_ON);
+	ptrNNController->setUpdateRate(delT);
+	ptrNNController->setUpdateWeights(true);
+	ptrNNController->setUpdateInnerWeights(true);
+
+	return true;
 }
 
 bool PR2adaptNeuroControllerClass::initNullspace()
@@ -3132,6 +3132,31 @@ bool PR2adaptNeuroControllerClass::loadROSparam(std::string name, T &variable, T
 		return false;
 	}
 	//ROS_INFO_STREAM(name << " = " << variable);
+	return true;
+}
+
+bool PR2adaptNeuroControllerClass::loadROSparamVector(std::string name, Eigen::VectorXd &variable)
+{
+	std::vector<double> tmpList;
+
+	if(!nh_.getParam( name, tmpList ))
+	{
+		ROS_ERROR("Failed to load ROS parameter vector named '%s' !)", name.c_str()) ;
+		return false;
+	}
+
+	if( tmpList.size() != variable.size())
+	{
+		ROS_ERROR("Vector sizes do not match! Failed to load ROS parameter vector named '%s' !)", name.c_str()) ;
+		return false;
+	}
+
+	for(int i=0; i < tmpList.size(); i++)
+	{
+		variable(i) = tmpList[i];
+	}
+
+	ROS_INFO_STREAM(name << " = " << variable.transpose());
 	return true;
 }
 

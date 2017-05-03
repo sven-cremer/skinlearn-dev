@@ -427,9 +427,12 @@ private:
 	double num_Error   ; // filtered error
 	double num_Joints  ; // number of joints.
 
+	Eigen::VectorXd Kv     ;
+	Eigen::VectorXd lambda ;
+
 	double kappa  ;
-	double Kv     ;
-	double lambda ;
+//	double Kv     ;
+//	double lambda ;
 	double Kz     ;
 	double Zb     ;
 	double nnF    ;
@@ -589,8 +592,9 @@ public:
 
 	void calcHumanIntentPos( Eigen::Vector3d & force, Eigen::VectorXd & pos, double delT, double m );
 
-	template<typename T> bool loadROSparam(std::string name, T & variable);
-	template<typename T> bool loadROSparam(std::string name, T & variable, T value);
+	template<typename T> bool loadROSparam(std::string name, T &variable);
+	template<typename T> bool loadROSparam(std::string name, T &variable, T value);
+	bool loadROSparamVector(std::string name, Eigen::VectorXd &variable);
 
 };
 }
