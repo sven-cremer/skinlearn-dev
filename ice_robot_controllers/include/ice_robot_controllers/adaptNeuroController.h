@@ -408,7 +408,7 @@ private:
 	Eigen::VectorXd force_c;
 	Eigen::VectorXd flexiForce;
 
-	human_state_type ode_init_x;
+	//human_state_type ode_init_x;
 
 	// System Model END
 	/////////////////////////
@@ -589,8 +589,8 @@ public:
 
 	void calcHumanIntentPos( Eigen::Vector3d & force, Eigen::VectorXd & pos, double delT, double m );
 
-	template<typename T> bool loadROSparam(std::string name, T variable);
-	template<typename T> bool loadROSparam(std::string name, T variable, T value);
+	template<typename T> bool loadROSparam(std::string name, T & variable);
+	template<typename T> bool loadROSparam(std::string name, T & variable, T value);
 
 };
 }

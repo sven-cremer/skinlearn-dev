@@ -1,4 +1,4 @@
-#include "ice_robot_controllers/adaptNeuroController.h"
+#include <ice_robot_controllers/adaptNeuroController.h>
 #include <pluginlib/class_list_macros.h>
 
 using namespace pr2_controller_ns;
@@ -24,7 +24,7 @@ PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 /// Controller initialization in non-realtime
 bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
-	ROS_INFO("Initializing Neuroadpative Controller...");
+	ROS_INFO("Initializing Neuroadaptive Controller...");
 
 	// Store node handle
 	nh_ = n;
@@ -83,7 +83,6 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	tactileCalibration_srv_ = nh_.advertiseService("/tactile/calibration" , &PR2adaptNeuroControllerClass::tactileCalibrationCB   , this);
 	status_srv_ = nh_.advertiseService("/tactile/status" , &PR2adaptNeuroControllerClass::statusCB   , this);
 	tactileFilterWeights_srv_ = nh_.advertiseService("/tactile/filterWeights" , &PR2adaptNeuroControllerClass::tactileFilterWeightsCB       , this);
-
 
 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
@@ -165,6 +164,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 /// Controller startup in realtime
 void PR2adaptNeuroControllerClass::starting()
 {
+	ROS_INFO("Starting Neuroadaptive Controller...");
 
 	// Get the current joint values to compute the initial tip location.
 	chain_.getPositions(q0_);
@@ -219,7 +219,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		// 1) Wait
 		while(!runComputations)
 		{
-			boost::this_thread::sleep(boost::posix_time::milliseconds(0.001));
+			boost::this_thread::sleep(boost::posix_time::microseconds(1));
 		}
 
 		// 2) Do Computations
@@ -2784,6 +2784,7 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 
 	loadROSparam("/externalRefTraj", externalRefTraj, true);
 
+	loadROSparam("/intentEst_time", intentLoopTime, 0.05);
 	loadROSparam("/intentEst_delT", intentEst_delT, 0.1);
 	loadROSparam("/intentEst_M", intentEst_M, 1.0);
 
@@ -2843,19 +2844,18 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	loadROSparam("/mrac_P_h", mrac_P_h);
 
 	delT = 0.001;
+	loadROSparam("/outerLoop_time", outerLoopTime, 0.0);
 
-	loadROSparam("/outerLoop_time", outerLoopTime, 0.01);
-	loadROSparam("/intentEst_time", intentLoopTime, 0.01);
 	loadROSparam("/useSimHuman", useSimHuman, false);
-	loadROSparam("/simHuman_a",  simHuman_a);
-	loadROSparam("/simHuman_b", simHuman_b);
+	loadROSparam("/simHuman_a",  simHuman_a, 0.1);
+	loadROSparam("/simHuman_b", simHuman_b, 2.6);
 
 
 	// initial conditions
-	ode_init_x[0 ] = 0.0;
-	ode_init_x[1 ] = 0.0;
-	ode_init_x[2 ] = 0.0;
-	ode_init_x[3 ] = 0.0;
+//	ode_init_x[0 ] = 0.0;
+//	ode_init_x[1 ] = 0.0;
+//	ode_init_x[2 ] = 0.0;
+//	ode_init_x[3 ] = 0.0;
 
 	/////////////////////////
 	// System Model
@@ -2904,12 +2904,12 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	p_Xd_m   .setZero() ;
 	p_Xdd_m  .setZero() ;
 
-	X_m(0)   = cartIniX     ;
-	X_m(1)   = cartIniY     ;
-	X_m(2)   = cartIniZ     ;
-	X_m(3)   = cartIniRoll  ;
-	X_m(4)   = cartIniPitch ;
-	X_m(5)   = cartIniYaw   ;
+//	X_m(0)   = cartIniX     ;
+//	X_m(1)   = cartIniY     ;
+//	X_m(2)   = cartIniZ     ;
+//	X_m(3)   = cartIniRoll  ;
+//	X_m(4)   = cartIniPitch ;
+//	X_m(5)   = cartIniYaw   ;
 
 	p_X_m    = X_m   ;
 	p_Xd_m   = Xd_m  ;
@@ -3058,7 +3058,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	outerLoopIRLmodelY.updateAB( task_mA,
 			task_mB );
 
-
 	/////////////////////////
 
 	// System Model END
@@ -3112,18 +3111,19 @@ bool PR2adaptNeuroControllerClass::initNullspace()
 }
 
 template<typename T>
-bool PR2adaptNeuroControllerClass::loadROSparam(std::string name, T variable)
+bool PR2adaptNeuroControllerClass::loadROSparam(std::string name, T &variable)
 {
 	if(!nh_.getParam( name, variable ))
 	{
 		ROS_ERROR("Failed to load ROS parameter named '%s' !)", name.c_str()) ;
 		return false;
 	}
+	//ROS_INFO_STREAM(name << " = " << variable);
 	return true;
 }
 
 template<typename T>
-bool PR2adaptNeuroControllerClass::loadROSparam(std::string name, T variable, T value)
+bool PR2adaptNeuroControllerClass::loadROSparam(std::string name, T &variable, T value)
 {
 	if(!nh_.getParam( name, variable ))
 	{
@@ -3131,6 +3131,7 @@ bool PR2adaptNeuroControllerClass::loadROSparam(std::string name, T variable, T 
 		variable = value;
 		return false;
 	}
+	//ROS_INFO_STREAM(name << " = " << variable);
 	return true;
 }
 
