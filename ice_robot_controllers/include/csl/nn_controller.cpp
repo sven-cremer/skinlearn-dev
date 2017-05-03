@@ -115,11 +115,11 @@ public:
 		paramResize();
 
 		// Set default parameter values
-		Eigen::MatrixXd p_Kv;
-		Eigen::MatrixXd p_la;
+		Eigen::VectorXd p_Kv;
+		Eigen::VectorXd p_la;
 
-		p_Kv.setOnes(num_Dim,1);
-		p_la.setOnes(num_Dim,1);
+		p_Kv.setOnes(num_Dim);
+		p_la.setOnes(num_Dim);
 
 		p_Kv *= 2;
 		p_la *= 20;
@@ -184,6 +184,22 @@ public:
 		V_next_ = V_;
 		W_trans = W_.transpose();
 		V_trans = V_.transpose();
+	}
+
+	void paramInit( Eigen::VectorXd & p_Kv,
+                    Eigen::VectorXd & p_La,
+                    double p_kappa,
+                    double p_Kz,
+                    double p_Zb,
+					double p_G,
+					double p_F,
+					double weightsLimit)
+	{
+
+		Eigen::MatrixXd p_Kv_mat = p_Kv;
+		Eigen::MatrixXd p_La_mat = p_La;
+		paramInit(p_Kv_mat, p_La_mat, p_kappa, p_Kz, p_Zb, p_G, p_F, weightsLimit);
+
 	}
 
 	void paramInit( Eigen::MatrixXd & p_Kv,
