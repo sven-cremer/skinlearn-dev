@@ -194,6 +194,10 @@ void PR2adaptNeuroControllerClass::starting()
 	// Reference trajectory
 	X_m   = affine2CartVec(x_des_);
 
+	p_X_m    = X_m   ;
+	p_Xd_m   = Xd_m  ;
+	p_Xdd_m  = Xdd_m ;
+
 	// Set transform from accelerometer to FT sensor
 	CartVec tmp;
 	tmp << 0, 0, 0, 3.142, 1.571, 1.919;	// rosrun tf tf_echo l_force_torque_link l_gripper_motor_accelerometer_link
@@ -2537,58 +2541,24 @@ bool PR2adaptNeuroControllerClass::initSensors()
 		}
 
 		// Load FT bias parameter
-		ft_bias.setZero();
-		std::vector<double> bias_list;
-		if(!nh_.getParam("/bias", bias_list))
+		ft_bias.setZero(6);
+		if(!loadROSparamVector("/bias", ft_bias))
 		{
-			ROS_ERROR("Value not loaded from parameter: /bias !)");
 			result=false;
 		}
-		else
-		{
-			if( bias_list.size() != 6)
-			{
-				ROS_ERROR("Bias vector has wrong size!");
-				result=false;
-			}
-			else
-			{
-				for(unsigned i=0; i < bias_list.size(); i++)
-				{
-					ft_bias(i) = bias_list[i];
-				}
-			}
-		}
+
 		// Load gripper COM pose parameter
-		r_gripper_com.setZero();
-		std::vector<double> gripper_com_list;
-		if(!nh_.getParam("/gripper_com_pose", gripper_com_list))
+		Eigen::VectorXd tmp;
+		tmp.setZero(6);
+		if(!loadROSparamVector("/gripper_com_pose", tmp))
 		{
-			ROS_ERROR("Value not loaded from parameter: /gripper_com_pose !)");
 			result=false;
 		}
-		else
-		{
-			if( gripper_com_list.size() != 6)
-			{
-				ROS_ERROR("Gripper vector has wrong size");
-				result=false;
-			}
-			else
-			{
-				for(unsigned i=0; i < 3; i++)
-				{
-					r_gripper_com(i) = gripper_com_list[i];
-				}
-			}
-		}
+		r_gripper_com = tmp.topRows(3);
+
+
 		// Load gripper mass parameter
-		if (!nh_.getParam( "/gripper_mass", gripper_mass))
-		{
-			ROS_ERROR("Value not loaded from parameter: /gripper_mass !)") ;
-			gripper_mass = 0.0;
-			result=false;
-		}
+		loadROSparam("/gripper_mass", gripper_mass, 0.0);
 
 	}
 
@@ -2815,77 +2785,46 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	/////////////////////////
 	// System Model
 
-	q       .resize( num_Joints ) ;
-	qd      .resize( num_Joints ) ;
-	qdd     .resize( num_Joints ) ;
+	q       .setZero( num_Joints ) ;
+	qd      .setZero( num_Joints ) ;
+	qdd     .setZero( num_Joints ) ;
 
-	q_m     .resize( num_Joints ) ;
-	qd_m    .resize( num_Joints ) ;
-	qdd_m   .resize( num_Joints ) ;
+	q_m     .setZero( num_Joints ) ;
+	qd_m    .setZero( num_Joints ) ;
+	qdd_m   .setZero( num_Joints ) ;
 
 	// desired Cartesian states
-	X_m     .resize( num_Outputs ) ;
-	Xd_m    .resize( num_Outputs ) ;
-	Xdd_m   .resize( num_Outputs ) ;
+	X_m     .setZero( num_Outputs ) ;
+	Xd_m    .setZero( num_Outputs ) ;
+	Xdd_m   .setZero( num_Outputs ) ;
 
 	// Prev desired Cartesian states
-	p_X_m     .resize( num_Outputs ) ;
-	p_Xd_m    .resize( num_Outputs ) ;
-	p_Xdd_m   .resize( num_Outputs ) ;
+	p_X_m   .setZero( num_Outputs ) ;
+	p_Xd_m  .setZero( num_Outputs ) ;
+	p_Xdd_m .setZero( num_Outputs ) ;
 
 	// Cartesian states
-	X       .resize( num_Outputs ) ;
-	Xd      .resize( num_Outputs ) ;
+	X       .setZero( num_Outputs ) ;
+	Xd      .setZero( num_Outputs ) ;
 
-	t_r     .resize( num_Outputs ) ;
-	task_ref.resize( num_Outputs ) ;
-	task_refModel_output.resize( num_Outputs ) ;
-	//tau     .resize( num_Joints ) ;
+	t_r     .setZero( num_Outputs ) ;
+	task_ref.setZero( num_Outputs ) ;
+	task_refModel_output.setZero( num_Outputs ) ;
 
-	q        .setZero() ;
-	qd       .setZero() ;
-	qdd      .setZero() ;
-	q_m      .setZero() ;
-	qd_m     .setZero() ;
-	qdd_m    .setZero() ;
-
-	X_m      .setZero() ;
-	Xd_m     .setZero() ;
-	Xdd_m    .setZero() ;
-	X        .setZero() ;
-	Xd       .setZero() ;
-
-	p_X_m    .setZero() ;
-	p_Xd_m   .setZero() ;
-	p_Xdd_m  .setZero() ;
-
-//	X_m(0)   = cartIniX     ;
-//	X_m(1)   = cartIniY     ;
-//	X_m(2)   = cartIniZ     ;
-//	X_m(3)   = cartIniRoll  ;
-//	X_m(4)   = cartIniPitch ;
-//	X_m(5)   = cartIniYaw   ;
-
-	p_X_m    = X_m   ;
-	p_Xd_m   = Xd_m  ;
-	p_Xdd_m  = Xdd_m ;
+	//tau     .setZero( num_Joints / num_Outputs ? ) ;
+	force_c  .setZero( num_Outputs ) ;
 
 	transformed_force = Eigen::Vector3d::Zero();
 	accData           = Eigen::Vector3d::Zero();
 
-	x_d                  = Eigen::VectorXd::Zero( num_Outputs ) ;
-	prev_x_d             = Eigen::VectorXd::Zero( num_Outputs ) ;
+	x_d     .setZero( num_Outputs ) ;
+	prev_x_d.setZero( num_Outputs ) ;
 
-	t_r                  = Eigen::VectorXd::Zero( num_Outputs ) ;
-	task_ref             = Eigen::VectorXd::Zero( num_Outputs ) ;
-	x_r                  = Eigen::VectorXd::Zero( num_Outputs ) ;
-	xd_r                 = Eigen::VectorXd::Zero( num_Outputs ) ;
-	xdd_r                = Eigen::VectorXd::Zero( num_Outputs ) ;
-	prev_x_r             = Eigen::VectorXd::Zero( num_Outputs ) ;
-	delta_x				 = 0;
-	task_refModel_output = Eigen::VectorXd::Zero( num_Outputs ) ;
-	//tau                  = Eigen::VectorXd::Zero( num_Outputs ) ;
-	force_c              = Eigen::VectorXd::Zero( num_Outputs ) ;
+	x_r     .setZero( num_Outputs ) ;
+	xd_r    .setZero( num_Outputs ) ;
+	xdd_r   .setZero( num_Outputs ) ;
+	prev_x_r.setZero( num_Outputs ) ;
+	delta_x	= 0;
 
 	// Initial Reference
 	task_ref = X_m ;
@@ -3158,5 +3097,33 @@ bool PR2adaptNeuroControllerClass::loadROSparamVector(std::string name, Eigen::V
 
 	ROS_INFO_STREAM(name << " = " << variable.transpose());
 	return true;
+}
+
+bool PR2adaptNeuroControllerClass::loadROSparamVector(std::string name, Eigen::MatrixXd &variable)
+{
+	int c = variable.cols();
+	if(c != 1)
+	{
+		ROS_ERROR("Vector has %d columns! Failed to load ROS parameter vector named '%s' !)", c, name.c_str()) ;
+		return false;
+	}
+	Eigen::VectorXd v;
+	v.setZero(variable.rows());
+	if( loadROSparamVector(name, v) )
+	{
+		variable = v;
+		return true;
+	}
+	return false;
+}
+bool PR2adaptNeuroControllerClass::loadROSparamVector(std::string name, CartVec &variable)
+{
+	Eigen::MatrixXd v = variable;
+	if( loadROSparamVector(name, v) )
+	{
+		variable = v;
+		return true;
+	}
+	return false;
 }
 

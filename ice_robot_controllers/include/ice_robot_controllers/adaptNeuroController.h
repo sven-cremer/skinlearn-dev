@@ -581,6 +581,12 @@ private:
 
 	  CartVec cartvec_tmp;
 
+	  template<typename T> bool loadROSparam(std::string name, T &variable);
+	  template<typename T> bool loadROSparam(std::string name, T &variable, T value);
+	  bool loadROSparamVector(std::string name, Eigen::VectorXd &variable);
+	  bool loadROSparamVector(std::string name, Eigen::MatrixXd &variable);
+	  bool loadROSparamVector(std::string name, CartVec &variable);
+
 public:
 	PR2adaptNeuroControllerClass();
 	~PR2adaptNeuroControllerClass();
@@ -591,10 +597,6 @@ public:
 	void stopping();
 
 	void calcHumanIntentPos( Eigen::Vector3d & force, Eigen::VectorXd & pos, double delT, double m );
-
-	template<typename T> bool loadROSparam(std::string name, T &variable);
-	template<typename T> bool loadROSparam(std::string name, T &variable, T value);
-	bool loadROSparamVector(std::string name, Eigen::VectorXd &variable);
 
 };
 }
