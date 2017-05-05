@@ -15,7 +15,9 @@
 namespace pr2_controller_ns{
 
 typedef Eigen::Matrix<double, 6, 1> CartVec;
+typedef Eigen::Matrix<double, 7, 1> PoseVec;
 
+/////////////////////////////////////////////////////////////////////////
 inline Eigen::Quaterniond
 euler2Quaternion( const double roll,
                   const double pitch,
@@ -33,10 +35,10 @@ inline Eigen::Vector3d
 quaternion2Euler( Eigen::Quaterniond q )
 {
 	Eigen::Matrix3d mat = q.matrix();
-    Eigen::Vector3d rpy = mat.eulerAngles(0, 1, 2);
+    Eigen::Vector3d rpy = mat.eulerAngles(0, 1, 2);	// The returned angles are in the ranges [0:pi]x[0:pi]x[-pi:pi]
     return rpy;
 }
-
+/////////////////////////////////////////////////////////////////////////
 inline CartVec
 affine2CartVec( Eigen::Affine3d a )
 {
@@ -55,6 +57,68 @@ affine2CartVec( Eigen::Affine3d a )
     return x;
 }
 
+inline PoseVec
+affine2PoseVec( Eigen::Affine3d a )
+{
+	PoseVec x;
+	Eigen::Vector3d xyz(a.translation());
+	Eigen::Quaterniond q(a.linear());
+
+	x(0) = xyz(0);
+	x(1) = xyz(1);
+	x(2) = xyz(2);
+	x(3) = q.x();
+	x(4) = q.y();
+	x(5) = q.z();
+	x(6) = q.w();
+
+    return x;
+}
+/////////////////////////////////////////////////////////////////////////
+inline CartVec
+PoseVec2CartVec( PoseVec a )
+{
+	CartVec x;
+	Eigen::Quaterniond q( a(6),a(3),a(4),a(5) );
+	Eigen::Vector3d rpy = quaternion2Euler( q );
+
+	x(0) = a(0);
+	x(1) = a(1);
+	x(2) = a(2);
+	x(3) = rpy(0);
+	x(4) = rpy(1);
+	x(5) = rpy(2);
+
+    return x;
+}
+
+inline Eigen::Affine3d
+PoseVec2Affine( PoseVec a )
+{
+	Eigen::Affine3d x;
+	Eigen::Vector3d p(a(0),a(1),a(2));
+	Eigen::Quaterniond q(a(6), a(3),a(4),a(5) );
+	x = Eigen::Translation3d(p) * q;
+    return x;
+}
+/////////////////////////////////////////////////////////////////////////
+inline PoseVec
+CartVec2PoseVec( CartVec a )
+{
+	PoseVec x;
+	Eigen::Quaterniond q = euler2Quaternion( a(3),a(4),a(5) );
+
+	x(0) = a(0);
+	x(1) = a(1);
+	x(2) = a(2);
+	x(3) = q.x();
+	x(4) = q.y();
+	x(5) = q.z();
+	x(6) = q.w();
+
+    return x;
+}
+
 inline Eigen::Affine3d
 CartVec2Affine( CartVec a )
 {
@@ -64,6 +128,7 @@ CartVec2Affine( CartVec a )
 	x = Eigen::Translation3d(p) * q;
     return x;
 }
+
 
 //inline Eigen::MatrixXd
 //JointKdl2Eigen( KDL::JntArray & joint_ )
