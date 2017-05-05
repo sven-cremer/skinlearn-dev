@@ -188,15 +188,15 @@ void PR2adaptNeuroControllerClass::starting()
 		x0_ = Eigen::Translation3d(p_init) * q_init;
 	}
 	x_des_ = x0_;
-	CartVec p = affine2CartVec(x_des_);
-	ROS_INFO("Starting pose: pos=[%f,%f,%f], rot=[%f,%f,%f]",p(0),p(1),p(2),p(3),p(4),p(5));
+	CartVec cv = affine2CartVec(x_des_);
+	PoseVec pv = affine2PoseVec(x_des_);
+	ROS_INFO("Starting pose: pos=[%f,%f,%f], rot=[%f,%f,%f]",cv(0),cv(1),cv(2),cv(3),cv(4),cv(5));
+	ROS_INFO("Starting pose: pos=[%f,%f,%f], rot=[%f,%f,%f,%f]",pv(0),pv(1),pv(2),pv(3),pv(4),pv(5),pv(6));
 
 	// Reference trajectory
-	X_m   = affine2CartVec(x_des_);
-
-	p_X_m    = X_m   ;
-	p_Xd_m   = Xd_m  ;
-	p_Xdd_m  = Xdd_m ;
+	convert2NNinput(x_des_, X_m);	// Assume xd, xdd are zero
+	p_X_m = X_m;
+	ROS_INFO_STREAM("Desired position: "<< X_m.transpose());
 
 	// Set transform from accelerometer to FT sensor
 	CartVec tmp;
@@ -469,21 +469,39 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				}
 				else
 				{
-					CartVec tmp;
-					tmp(0) = traj_msgs_.request.x[index].position.x;
-					tmp(1) = traj_msgs_.request.x[index].position.y;
-					tmp(2) = traj_msgs_.request.x[index].position.z;
+					if(dim == PR2adaptNeuroControllerClass::Pose)
+					{
+						PoseVec tmp;
+						tmp(0) = traj_msgs_.request.x[index].position.x;
+						tmp(1) = traj_msgs_.request.x[index].position.y;
+						tmp(2) = traj_msgs_.request.x[index].position.z;
+						tmp(3) = traj_msgs_.request.x[index].orientation.x;
+						tmp(4) = traj_msgs_.request.x[index].orientation.y;
+						tmp(5) = traj_msgs_.request.x[index].orientation.z;
+						tmp(6) = traj_msgs_.request.x[index].orientation.w;
 
-					Eigen::Quaterniond q( traj_msgs_.request.x[index].orientation.w,
-					                      traj_msgs_.request.x[index].orientation.x,
-					                      traj_msgs_.request.x[index].orientation.y,
-					                      traj_msgs_.request.x[index].orientation.z);
+						std::cout<<"ExpD pose #"<<index<<": "<<tmp.transpose()<<"\n";
 
-					tmp.bottomRows(3) = quaternion2Euler( q );
+						x_des_ = PoseVec2Affine(tmp);
+					}
+					else
+					{
+						CartVec tmp;
+						tmp(0) = traj_msgs_.request.x[index].position.x;
+						tmp(1) = traj_msgs_.request.x[index].position.y;
+						tmp(2) = traj_msgs_.request.x[index].position.z;
 
-					std::cout<<"ExpD pose #"<<index<<": "<<tmp.transpose()<<"\n";
+						Eigen::Quaterniond q( traj_msgs_.request.x[index].orientation.w,
+								traj_msgs_.request.x[index].orientation.x,
+								traj_msgs_.request.x[index].orientation.y,
+								traj_msgs_.request.x[index].orientation.z);
 
-					x_des_ = CartVec2Affine(tmp);
+						tmp.bottomRows(3) = quaternion2Euler( q );
+
+						std::cout<<"ExpD pose #"<<index<<": "<<tmp.transpose()<<"\n";
+
+						x_des_ = CartVec2Affine(tmp);
+					}
 
 					traj_msgs_.request.header.stamp = ros::Time::now() + ros::Duration(traj_msgs_.request.t[index]);
 					traj_msgs_.request.header.seq++;
@@ -502,20 +520,22 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		q = q_;
 		qd = qdot_;
 
-		X = affine2CartVec(x_);
-		Xd = xdot_;				// FIXME make sure they are of same type
+		convert2NNinput(x_, X);
+		convert2NNinput(xdot_, Xd);
 
 		// Reference trajectory
-		X_m   = affine2CartVec(x_des_);
+		convert2NNinput(x_des_, X_m);
+//		convert2NNinput(xd_des_, Xd_m);
+//		convert2NNinput(xdd_des_, Xdd_m);
 		Xd_m.setZero();
 		Xdd_m.setZero();
-//		Xd_m  = affine2CartVec(xd_des_);
-//		Xdd_m = affine2CartVec(xdd_des_);
 
 		// TODO
+		/*
 		X_m(3) = 1.57; Xd_m(3) = 0.0; Xdd_m(3) = 0.0;
 		X_m(4) = 0.0;  Xd_m(4) = 0.0; Xdd_m(4) = 0.0;
 		X_m(5) = 0.0;  Xd_m(5) = 0.0; Xdd_m(5) = 0.0;
+		*/
 
 		/***************** FEEDFORWARD FORCE *****************/
 
@@ -641,10 +661,15 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_c);
 
-		if(fFForce)
-		{
-			force_c -= t_r;		// Feedforward force [6x1] (f_human?)
-		}
+		// Convert NN result to a Cartesian vector
+		Force6d.setZero();
+		covert2CartVec(force_c, Force6d);
+
+
+//		if(fFForce)
+//		{
+//			force_c -= t_r;		// Feedforward force [6x1] (f_human?)
+//		}
 
 /* Experiment C
  * RBF and TANH Neural Network
@@ -695,7 +720,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
 */
 
-		tau_ = tau_ + JacobianTrans*force_c;		// [7x6]*[6x1]->[7x1]
+		tau_ = tau_ + JacobianTrans*Force6d;		// [7x6]*[6x1]->[7x1]
 
 		/***************** NULLSPACE *****************/
 
@@ -884,7 +909,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	/***************** DATA PUBLISHING *****************/
 
-	if (publishRTtopics && loop_count_ % loopRateFactor == 0 )
+	if (publishRTtopics && loop_count_ % loopRateFactor == 0 )	// TODO make sure dimensions agree!!! XXX
 	{
 /*
 		//cartvec_tmp(1) = accData_vector_size;
@@ -1608,7 +1633,6 @@ bool PR2adaptNeuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate:
 	num_Inputs  = req.msg.inParams                 ;
 	num_Outputs = req.msg.outParams                ;
 	num_Hidden  = req.msg.hiddenNodes              ;
-	num_Error   = req.msg.errorParams              ;
 
 	kappa       = req.msg.kappa                    ;
 //	Kv          = req.msg.Kv                       ;
@@ -1629,20 +1653,6 @@ bool PR2adaptNeuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate:
 	task_mA     = req.msg.task_mA                  ;
 	task_mB     = req.msg.task_mB                  ;
 
-	// Cart params
-	cartPos_Kp_x      = req.msg.cartPos_Kp_x       ;
-	cartPos_Kp_y      = req.msg.cartPos_Kp_y       ;
-	cartPos_Kp_z      = req.msg.cartPos_Kp_z       ;
-	cartPos_Kd_x      = req.msg.cartPos_Kd_x       ;
-	cartPos_Kd_y      = req.msg.cartPos_Kd_y       ;
-	cartPos_Kd_z      = req.msg.cartPos_Kd_z       ;
-
-	cartRot_Kp_x      = req.msg.cartRot_Kp_x       ;
-	cartRot_Kp_y      = req.msg.cartRot_Kp_y       ;
-	cartRot_Kp_z      = req.msg.cartRot_Kp_z       ;
-	cartRot_Kd_x      = req.msg.cartRot_Kd_x       ;
-	cartRot_Kd_y      = req.msg.cartRot_Kd_y       ;
-	cartRot_Kd_z      = req.msg.cartRot_Kd_z       ;
 
 	useCurrentCartPose= req.msg.useCurrentCartPose ;
 	useNullspacePose  = req.msg.useNullspacePose   ;
@@ -1653,13 +1663,6 @@ bool PR2adaptNeuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate:
 	cartIniRoll       = req.msg.cartIniRoll        ;
 	cartIniPitch      = req.msg.cartIniPitch       ;
 	cartIniYaw        = req.msg.cartIniYaw         ;
-
-	cartDesX          = req.msg.cartDesX           ;
-	cartDesY          = req.msg.cartDesY           ;
-	cartDesZ          = req.msg.cartDesZ           ;
-	cartDesRoll       = req.msg.cartDesRoll        ;
-	cartDesPitch      = req.msg.cartDesPitch       ;
-	cartDesYaw        = req.msg.cartDesYaw         ;
 
 	// Update NN
 	delete ptrNNController;
@@ -2387,21 +2390,6 @@ bool PR2adaptNeuroControllerClass::initRobot()
 	qnom(5) = ( q_upper(5) - q_lower(5) ) / 2 ;
 	qnom(6) = ( q_upper(6) - q_lower(6) ) / 2 ;
 
-	// Load Cartesian gains
-	loadROSparam("/cartPos_Kp_x", cartPos_Kp_x, 0.0);
-	loadROSparam("/cartPos_Kp_y", cartPos_Kp_y, 0.0);
-	loadROSparam("/cartPos_Kp_z", cartPos_Kp_z, 0.0);
-	loadROSparam("/cartPos_Kd_x", cartPos_Kd_x, 0.0);
-	loadROSparam("/cartPos_Kd_y", cartPos_Kd_y, 0.0);
-	loadROSparam("/cartPos_Kd_z", cartPos_Kd_z, 0.0);
-
-	loadROSparam("/cartRot_Kp_x", cartRot_Kp_x, 0.0);
-	loadROSparam("/cartRot_Kp_y", cartRot_Kp_y, 0.0);
-	loadROSparam("/cartRot_Kp_z", cartRot_Kp_z, 0.0);
-	loadROSparam("/cartRot_Kd_x", cartRot_Kd_x, 0.0);
-	loadROSparam("/cartRot_Kd_y", cartRot_Kd_y, 0.0);
-	loadROSparam("/cartRot_Kd_z", cartRot_Kd_z, 0.0);
-
 	// Posture control
 	loadROSparam("/k_posture", k_posture, 1.0);
 	loadROSparam("/jacobian_inverse_damping", jacobian_inverse_damping, 0.0);
@@ -2497,15 +2485,7 @@ bool PR2adaptNeuroControllerClass::initTrajectories()
 	circleAmpl = (circleUlim - circleLlim)/2 ;
 	circle_velocity = circle_rate*circleAmpl;
 
-	// Desired Cartesian pose
-	loadROSparam("/cartDesX"    , cartDesX    , 0.0);
-	loadROSparam("/cartDesY"    , cartDesY    , 0.0);
-	loadROSparam("/cartDesZ"    , cartDesZ    , 0.0);
-	loadROSparam("/cartDesRoll" , cartDesRoll , 0.0);
-	loadROSparam("/cartDesPitch", cartDesPitch, 0.0);
-	loadROSparam("/cartDesYaw"  , cartDesYaw  , 0.0);
-
-	// Initial cartesian pose
+	// Initial (desired) Cartesian pose
 	loadROSparam("/cartIniX"    , cartIniX    , 0.7);
 	loadROSparam("/cartIniY"    , cartIniY    , 0.3);
 	loadROSparam("/cartIniZ"    , cartIniZ    , 0.1);
@@ -2696,7 +2676,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 
 
 	loadROSparam("/useCurrentCartPose", useCurrentCartPose, false);
-	loadROSparam("/useQuaternions",     useQuaternions, true);
 	loadROSparam("/useNullspacePose",   useNullspacePose, false);
 
 	loadROSparam("/useARMAmodel",   useARMAmodel, false);
@@ -2775,13 +2754,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	loadROSparam("/simHuman_a",  simHuman_a, 0.1);
 	loadROSparam("/simHuman_b", simHuman_b, 2.6);
 
-
-	// initial conditions
-//	ode_init_x[0 ] = 0.0;
-//	ode_init_x[1 ] = 0.0;
-//	ode_init_x[2 ] = 0.0;
-//	ode_init_x[3 ] = 0.0;
-
 	/////////////////////////
 	// System Model
 
@@ -2829,14 +2801,14 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	// Initial Reference
 	task_ref = X_m ;
 
-	JacobianPinv     = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
-	JacobianTrans    = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), 6 ) ;
-	JacobianTransPinv= Eigen::MatrixXd::Zero( num_Outputs, kdl_chain_.getNrOfJoints() ) ;
-	nullSpace        = Eigen::MatrixXd::Zero( kdl_chain_.getNrOfJoints(), kdl_chain_.getNrOfJoints() ) ;
+	JacobianPinv     = Eigen::MatrixXd::Zero( num_Joints, CartDim ) ;
+	JacobianTrans    = Eigen::MatrixXd::Zero( num_Joints, CartDim ) ;
+	JacobianTransPinv= Eigen::MatrixXd::Zero( CartDim, num_Joints ) ;
+	nullSpace        = Eigen::MatrixXd::Zero( num_Joints, num_Joints ) ;
 
-	cartControlForce = Eigen::VectorXd::Zero( num_Outputs ) ;
-	nullspaceTorque  = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
-	controlTorque    = Eigen::VectorXd::Zero( kdl_chain_.getNrOfJoints() ) ;
+	nullspaceTorque  = Eigen::VectorXd::Zero( num_Joints ) ;
+
+	Force6d.setZero(CartDim);
 
 	/////////////////////////
 	// Outer Loop Init
@@ -2966,23 +2938,28 @@ bool PR2adaptNeuroControllerClass::initInnerLoop()
 	int n = 0;	// Number of failures
 
 	// Default values
-	num_Inputs  = 44 ;
 	num_Outputs = 6  ; // Cartesian
 	num_Hidden  = 5  ;
-	num_Error   = 6  ;
 	num_Joints  = 7  ; // 7 DOF
 
-	n += !loadROSparam("/nnNum_Inputs" , num_Inputs);
 	n += !loadROSparam("/nnNum_Outputs", num_Outputs);
 	n += !loadROSparam("/nnNum_Hidden" , num_Hidden);
-	n += !loadROSparam("/nnNum_Error"  , num_Error);
 	n += !loadROSparam("/nnNum_Joints" , num_Joints);
 
-	// NN parameters
+	// TODO load from ROS param
+	if(num_Outputs == 1)
+		dim = PR2adaptNeuroControllerClass::AxisY;
+	else if (num_Outputs == 2)
+		dim = PR2adaptNeuroControllerClass::PlaneXY;
+	else if (num_Outputs == 3)
+		dim = PR2adaptNeuroControllerClass::Position;
+	else if (num_Outputs == 7)
+		dim = PR2adaptNeuroControllerClass::Pose;
+	else
+		dim = PR2adaptNeuroControllerClass::Cart;
 
+	// NN parameters
 	n += !loadROSparam("/nn_kappa"           , kappa);
-//	n += !loadROSparam("/nn_Kv"              , Kv);
-//	n += !loadROSparam("/nn_lambda"          , lambda);
 	n += !loadROSparam("/nn_Kz"              , Kz);
 	n += !loadROSparam("/nn_Zb"              , Zb);
 	n += !loadROSparam("/nn_feedForwardForce", fFForce);
@@ -2990,34 +2967,11 @@ bool PR2adaptNeuroControllerClass::initInnerLoop()
 	n += !loadROSparam("/nn_nnG"             , nnG);
 	n += !loadROSparam("/nn_ON"              , nn_ON);
 
-
 	Kv    .setZero( num_Outputs) ;
 	lambda.setZero( num_Outputs) ;
 
 	n += !loadROSparamVector("/nn_Kv", Kv);
 	n += !loadROSparamVector("/nn_lambda", lambda);
-
-	// Filtered error
-	// r = (qd_m - qd) + lambda*(q_m - q);
-	// Kv*r = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
-	//        Kd*(qd_m - qd) +   Kp     *(q_m - q);
-	// Kd = Kv
-	// Kp = Kv*lambda ... lambda = Kp/Kv = Kp/Kd
-
-	//	p_Kv << cartPos_Kd_x ,
-	//            cartPos_Kd_y ,
-	//            cartPos_Kd_z ,
-	//            cartRot_Kd_x ,
-	//            cartRot_Kd_y ,
-	//            cartRot_Kd_z ;
-
-	//	p_lambda << cartPos_Kp_x / cartPos_Kd_x ,
-	//                cartPos_Kp_y / cartPos_Kd_y ,
-	//                cartPos_Kp_z / cartPos_Kd_z ,
-	//                cartRot_Kp_x / cartRot_Kd_x ,
-	//                cartRot_Kp_y / cartRot_Kd_y ,
-	//                cartRot_Kp_z / cartRot_Kd_z ;
-
 
 	if(n==0)
 		return true;
@@ -3037,6 +2991,9 @@ bool PR2adaptNeuroControllerClass::initNN()
 	ptrNNController->setUpdateRate(delT);
 	ptrNNController->setUpdateWeights(true);
 	ptrNNController->setUpdateInnerWeights(true);
+
+	num_Inputs = ptrNNController->getNumInputs();
+	ROS_INFO_STREAM("Number of NN inputs: " << num_Inputs);
 
 	return true;
 }
@@ -3125,5 +3082,109 @@ bool PR2adaptNeuroControllerClass::loadROSparamVector(std::string name, CartVec 
 		return true;
 	}
 	return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+bool PR2adaptNeuroControllerClass::convert2NNinput(Eigen::Affine3d in, Eigen::VectorXd &out)
+{
+	Eigen::VectorXd tmp;
+
+	if(dim == PR2adaptNeuroControllerClass::Pose)
+		tmp = affine2PoseVec(in);
+	else
+		tmp = affine2CartVec(in);
+
+	return convert2NNinput(tmp, out);
+}
+
+bool PR2adaptNeuroControllerClass::convert2NNinput(CartVec in, Eigen::VectorXd &out)
+{
+	Eigen::VectorXd tmp = in;
+	return convert2NNinput(tmp, out);
+}
+
+bool PR2adaptNeuroControllerClass::convert2NNinput(Eigen::VectorXd in, Eigen::VectorXd &out)
+{
+	switch(dim)
+	{
+		case PR2adaptNeuroControllerClass::AxisY:
+		{
+			out(0) = in(1);	// [6x1] -> [1x1]
+			break;
+		}
+		case PR2adaptNeuroControllerClass::PlaneXY:
+		{
+			out(0) = in(0);	// [6x1] -> [2x1]
+			out(1) = in(1);
+			break;
+		}
+		case PR2adaptNeuroControllerClass::Position:
+		{
+			out(0) = in(0);	// [6x1] -> [3x1]
+			out(1) = in(1);
+			out(2) = in(2);
+			break;
+		}
+		case PR2adaptNeuroControllerClass::Cart:
+		{
+			if(in.size() == 7)
+				out = PoseVec2CartVec(in); // [7x1] -> [6x1]
+			else
+				out = in; // [6x1] -> [6x1]
+			break;
+		}
+		case PR2adaptNeuroControllerClass::Pose:
+		{
+			if(in.size() == 6)
+				out = CartVec2PoseVec(in); // [6x1] -> [7x1]
+			else
+				out = in; // [7x1] -> [7x1]
+			break;
+		}
+		default:
+			ROS_ERROR("Dimension not found!");
+			return false;
+	}
+	return true;
+}
+
+bool PR2adaptNeuroControllerClass::covert2CartVec(Eigen::VectorXd in, Eigen::VectorXd &out)
+{
+	switch(dim)
+	{
+		case PR2adaptNeuroControllerClass::AxisY:
+		{
+			out(1) = in(0);	// Assuming input vector is [1x1]
+			break;
+		}
+		case PR2adaptNeuroControllerClass::PlaneXY:
+		{
+			out(0) = in(0);	// [2x1]
+			out(1) = in(1);
+			break;
+		}
+		case PR2adaptNeuroControllerClass::Position:
+		{
+			out(0) = in(0);	// [3x1]
+			out(1) = in(1);
+			out(2) = in(2);
+			break;
+		}
+		case PR2adaptNeuroControllerClass::Cart:
+		{
+			out = in; // [6x1]
+			break;
+		}
+		case PR2adaptNeuroControllerClass::Pose:
+		{
+			out = PoseVec2CartVec(in); // [7x1]
+			break;
+		}
+		default:
+			ROS_ERROR("Dimension not found!");
+			return false;
+	}
+	return true;
 }
 

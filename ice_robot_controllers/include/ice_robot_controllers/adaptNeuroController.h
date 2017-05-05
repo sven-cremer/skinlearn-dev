@@ -74,13 +74,15 @@ public:
 private:
 	enum { StoreLen = 20000 };
 	enum { Joints = 7 };
+	enum { CartDim = 6 };
 	enum Experiment{ A, B, C, D, Done };
+	enum Dim{ AxisY, PlaneXY, Position, Cart, Pose};
 
 	// Definitions
 	typedef Eigen::Matrix<double, 7, 1> JointVec;
 	typedef Eigen::Matrix<double, 6, 1> CartVec;
+	typedef Eigen::Matrix<double, 7, 1> PoseVec;
 	typedef Eigen::Matrix<double, 6, Joints> JacobianMat;
-	typedef boost::array<double, 4> human_state_type;
 	typedef ice_msgs::neuroControllerState StateMsg;
 
 	int loopRateFactor;
@@ -216,14 +218,6 @@ private:
 	// Flexiforce data (input of the controller)
 	CartVec tactile_wrench_;
 
-	// Cartesian paramters
-	double cartPos_Kp_x ; double cartPos_Kd_x ; // Translation x
-	double cartPos_Kp_y ; double cartPos_Kd_y ; // Translation y
-	double cartPos_Kp_z ; double cartPos_Kd_z ; // Translation z
-	double cartRot_Kp_x ; double cartRot_Kd_x ; // Rotation    x
-	double cartRot_Kp_y ; double cartRot_Kd_y ; // Rotation    y
-	double cartRot_Kp_z ; double cartRot_Kd_z ; // Rotation    z
-
 	geometry_msgs::Pose modelCartPos_;
 	geometry_msgs::Pose robotCartPos_;
 
@@ -232,15 +226,7 @@ private:
 	double outerLoopTime;
 	double intentLoopTime;
 
-	// Desired cartesian pose
-	double cartDesX     ;
-	double cartDesY     ;
-	double cartDesZ     ;
-	double cartDesRoll  ;
-	double cartDesPitch ;
-	double cartDesYaw   ;
-
-	// Initial cartesian pose
+	// Initial (desired) Cartesian pose
 	double cartIniX ;
 	double cartIniY ;
 	double cartIniZ ;
@@ -267,11 +253,10 @@ private:
 	JointVec joint_dd_ff_;
 	JointVec q_jointLimit ;
 
-	Eigen::VectorXd cartControlForce;
 	Eigen::VectorXd nullspaceTorque;
-	Eigen::VectorXd controlTorque;
+	Eigen::VectorXd Force6d;
 
-	bool useCurrentCartPose ;		// Use current cart pose or use specified cart pose
+	bool useCurrentCartPose ;	// Use current cart pose or use specified cart pose
 	bool useNullspacePose ;		// Use nullspace stuff
 
 	// Torque Saturation
@@ -408,8 +393,6 @@ private:
 	Eigen::VectorXd force_c;
 	Eigen::VectorXd flexiForce;
 
-	//human_state_type ode_init_x;
-
 	// System Model END
 	/////////////////////////
 
@@ -421,18 +404,16 @@ private:
 	//  enum { Hidden  = 10 }; // l Size of the hidden layer
 	//  enum { Error   = 7 }; // filtered error
 
-	double num_Inputs  ; // n Size of the inputs
-	double num_Outputs ; // m Size of the outputs
-	double num_Hidden  ; // l Size of the hidden layer
-	double num_Error   ; // filtered error
-	double num_Joints  ; // number of joints.
+	int num_Inputs  ; // Size of the NN input layer
+	int num_Hidden  ; // Size of the NN hidden layer
+	int num_Joints  ; // Number of joints or robot DOF
+	int num_Outputs ; // Size of the NN output layer; reference trajectory dimension
+
+	Dim dim;
 
 	Eigen::VectorXd Kv     ;
 	Eigen::VectorXd lambda ;
-
 	double kappa  ;
-//	double Kv     ;
-//	double lambda ;
 	double Kz     ;
 	double Zb     ;
 	double nnF    ;
@@ -586,6 +567,13 @@ private:
 	  bool loadROSparamVector(std::string name, Eigen::VectorXd &variable);
 	  bool loadROSparamVector(std::string name, Eigen::MatrixXd &variable);
 	  bool loadROSparamVector(std::string name, CartVec &variable);
+
+	  bool convert2NNinput(Eigen::VectorXd in, Eigen::VectorXd &out);
+	  bool convert2NNinput(CartVec in,         Eigen::VectorXd &out);
+	  bool convert2NNinput(Eigen::Affine3d in, Eigen::VectorXd &out);
+
+	  bool covert2CartVec(Eigen::VectorXd in, Eigen::VectorXd &out);
+
 
 public:
 	PR2adaptNeuroControllerClass();

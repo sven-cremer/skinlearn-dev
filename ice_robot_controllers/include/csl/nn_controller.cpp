@@ -262,6 +262,7 @@ public:
 
 	/*** Get and set methods ***/
 
+	int getNumInputs()					{	return num_Inputs;	}
 	double getInnerWeightsNorm()		{	return V_.norm();	}
 	double getOuterWeightsNorm()		{	return W_.norm();	}
 	Eigen::MatrixXd	getInnerWeights()	{	return V_;			}

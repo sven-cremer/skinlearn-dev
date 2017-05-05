@@ -9,11 +9,12 @@ experiment         : 0 # Experiment A=0, B=1, C=2
 
 loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRateFactor - 2)
 
-useCurrentCartPose : false
+useCurrentCartPose : true # Avoid jerky movement, should always be true
+useQuaternions     : false
 useNullspacePose   : false
 useDigitalFilter   : false
 
-publishRTtopics    : true
+publishRTtopics    : false
 
 mannequinMode      : false
 mannequinThresPos  : 0.05
@@ -148,14 +149,7 @@ fixedFilterWeights : false
 # Robot Pose                #
 #############################
 
-cartDesX              :  0.7
-cartDesY              :  0.3
-cartDesZ              : -0.1
-cartDesRoll           :  0.0
-cartDesPitch          :  0.0
-cartDesYaw            :  0.0
-
-## Initial Position (torso frame)
+## Initial (desired) Position (torso frame)
 cartIniX             :  0.65
 cartIniY             :  0.35
 cartIniZ             :  -0.10
@@ -179,51 +173,29 @@ cartIniYaw           :  0.0
 # NN controller             #
 #############################
 
-nnNum_Inputs          : 44 
-nnNum_Outputs         : 6  # Cartesian
 nnNum_Hidden          : 65
-nnNum_Error           : 6  
 nnNum_Joints          : 7  # DOF
+nnNum_Outputs         : 1  # Cartesian (with quaternions)
+
+#Note: nnNum_Inputs determined by NAC
 
 # Filtered error
-# r = (qd_m - qd) + lambda*(q_m - q);
-# Kv*r
+#  r   = (qd_m - qd) + lambda*(q_m - q);
+# Kv*r = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
 
-nn_Kv                 : 10 # not being used? see cartPos_Kd and cartPos_Kp insteads
-nn_lambda             : 20 # not being used?
+#nn_Kv                 : [2,2,2,1,1,1]
+#nn_lambda             : [20,20,20,10,10,10]
+
+nn_Kv                 : [1]
+nn_lambda             : [10]
+
 nn_kappa              : 0.1
-nn_Kz                 : 0.01 # not being used?
-nn_Zb                 : 100 # not being used?
-nn_feedForwardForce   : 0.0 #25.0 # small because of jitter from FT measurments
-nn_nnF                : 0.02 # -> W (outer)
-nn_nnG                : 0.1 # -> V (inner)
+nn_Kz                 : 0.01
+nn_Zb                 : 100
+nn_feedForwardForce   : 0.0    # small because of jitter from FT measurments
+nn_nnF                : 0.02   # -> W (outer)
+nn_nnG                : 0.1    # -> V (inner)
 nn_ON                 : 1
-
-# nn_Kv               : 5
-# nn_lambda           : 20
-# nn_kappa            : 0.07
-# nn_Kz               : 0.001 
-# nn_Zb               : 1000 
-# nn_feedForwardForce : 0   
-# nn_nnF              : 100 
-# nn_nnG              : 100
-# nn_ON               : 1
-
-# Kd*(qd_m - qd) + Kp*(q_m - q)
-cartPos_Kp_x          : 2.0
-cartPos_Kp_y          : 2.0
-cartPos_Kp_z          : 2.0
-cartRot_Kp_x          : 0.1
-cartRot_Kp_y          : 0.1
-cartRot_Kp_z          : 0.1
-
-# Prevents motion if qd=0 (note: Kd>0 because of devision)
-cartPos_Kd_x          : 0.05
-cartPos_Kd_y          : 0.05
-cartPos_Kd_z          : 0.05
-cartRot_Kd_x          : 0.01
-cartRot_Kd_y          : 0.01
-cartRot_Kd_z          : 0.01
 
 #############################
 # Controller plugins        #
