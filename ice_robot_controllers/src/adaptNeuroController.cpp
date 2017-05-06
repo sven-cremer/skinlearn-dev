@@ -463,11 +463,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				int index = traj_msgs_.request.header.seq;
 
 				// Check if all poses have been reached
-				if(index > traj_msgs_.request.x.size())
-				{
-					experiment_ = PR2adaptNeuroControllerClass::Done;
-				}
-				else
+				if(index < traj_msgs_.request.x.size())
 				{
 					if(dim == PR2adaptNeuroControllerClass::Pose)
 					{
@@ -505,6 +501,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 					traj_msgs_.request.header.stamp = ros::Time::now() + ros::Duration(traj_msgs_.request.t[index]);
 					traj_msgs_.request.header.seq++;
+				}
+				else
+				{
+					experiment_ = PR2adaptNeuroControllerClass::Done;
 				}
 			}
 		}
@@ -663,7 +663,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		// Convert NN result to a Cartesian vector
 		Force6d.setZero();
-		covert2CartVec(force_c, Force6d);
+		convert2CartVec(force_c, Force6d);
 
 
 //		if(fFForce)
@@ -709,10 +709,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 */
 
 		// PD controller
-/*
+
 		// Calculate a Cartesian restoring force.
 		computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
-
+/*
 		CartVec kp, kd;
 		kp << 100.0,100.0,100.0,100.0,100.0,100.0;
 		kd << 1.0,1.0,1.0,1.0,1.0,1.0;
@@ -909,7 +909,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	/***************** DATA PUBLISHING *****************/
 
-	if (publishRTtopics && loop_count_ % loopRateFactor == 0 )	// TODO make sure dimensions agree!!! XXX
+	if (publishRTtopics && loop_count_ % loopRateFactor == 0 )	// TODO make sure dimensions/type agree
 	{
 /*
 		//cartvec_tmp(1) = accData_vector_size;
@@ -930,14 +930,14 @@ void PR2adaptNeuroControllerClass::update()
 
 		if (pub_state_.trylock()) {
 			// Headers
-			pub_state_.msg_.header.stamp = last_time_;
-			pub_state_.msg_.x.header.stamp = last_time_;
+			pub_state_.msg_.header.stamp                 = last_time_;
+			pub_state_.msg_.x.header.stamp               = last_time_;
 			pub_state_.msg_.x_desi_filtered.header.stamp = last_time_;
-			pub_state_.msg_.x_desi.header.stamp = last_time_;
+			pub_state_.msg_.x_desi.header.stamp          = last_time_;
 
 			// Pose
 			tf::poseEigenToMsg(x_, pub_state_.msg_.x.pose);
-			tf::poseEigenToMsg(CartVec2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
+			tf::poseEigenToMsg(convert2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
 			// tf::poseEigenToMsg(x_desi_filtered_, pub_state_.msg_.x_desi_filtered.pose);
 
 			// Error
@@ -948,8 +948,8 @@ void PR2adaptNeuroControllerClass::update()
 			// tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
 
 			// Force
-			tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured, t_r
-			tf::wrenchEigenToMsg(force_c, pub_state_.msg_.force_c);
+			//tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured, t_r
+			tf::wrenchEigenToMsg(Force6d, pub_state_.msg_.force_c);
 
 			tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
 			tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
@@ -957,7 +957,7 @@ void PR2adaptNeuroControllerClass::update()
 			tf::matrixEigenToMsg(ptrNNController->getInnerWeights(), pub_state_.msg_.V);
 			tf::matrixEigenToMsg(ptrNNController->getOuterWeights(), pub_state_.msg_.W);
 
-			for (int j = 0; j < Joints; ++j) {
+			for (int j = 0; j < num_Joints; ++j) {
 				pub_state_.msg_.tau_posture[j] = nullspaceTorque(j);
 				pub_state_.msg_.tau_c[j] = tau_c_(j);
 				pub_state_.msg_.q[j] = q_(j);
@@ -3149,7 +3149,7 @@ bool PR2adaptNeuroControllerClass::convert2NNinput(Eigen::VectorXd in, Eigen::Ve
 	return true;
 }
 
-bool PR2adaptNeuroControllerClass::covert2CartVec(Eigen::VectorXd in, Eigen::VectorXd &out)
+bool PR2adaptNeuroControllerClass::convert2CartVec(Eigen::VectorXd in, CartVec &out)
 {
 	switch(dim)
 	{
@@ -3186,5 +3186,13 @@ bool PR2adaptNeuroControllerClass::covert2CartVec(Eigen::VectorXd in, Eigen::Vec
 			return false;
 	}
 	return true;
+}
+
+Eigen::Affine3d PR2adaptNeuroControllerClass::convert2Affine(Eigen::VectorXd in)
+{
+	CartVec tmp;
+	convert2CartVec(in, tmp);
+
+	return CartVec2Affine(tmp);
 }
 

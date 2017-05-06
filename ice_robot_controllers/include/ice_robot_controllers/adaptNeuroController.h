@@ -254,7 +254,7 @@ private:
 	JointVec q_jointLimit ;
 
 	Eigen::VectorXd nullspaceTorque;
-	Eigen::VectorXd Force6d;
+	CartVec Force6d;
 
 	bool useCurrentCartPose ;	// Use current cart pose or use specified cart pose
 	bool useNullspacePose ;		// Use nullspace stuff
@@ -572,7 +572,8 @@ private:
 	  bool convert2NNinput(CartVec in,         Eigen::VectorXd &out);
 	  bool convert2NNinput(Eigen::Affine3d in, Eigen::VectorXd &out);
 
-	  bool covert2CartVec(Eigen::VectorXd in, Eigen::VectorXd &out);
+	  bool convert2CartVec(Eigen::VectorXd in, CartVec &out);
+	  Eigen::Affine3d convert2Affine(Eigen::VectorXd in);
 
 
 public:

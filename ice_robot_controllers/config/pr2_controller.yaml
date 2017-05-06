@@ -14,7 +14,7 @@ useQuaternions     : false
 useNullspacePose   : false
 useDigitalFilter   : false
 
-publishRTtopics    : false
+publishRTtopics    : true
 
 mannequinMode      : false
 mannequinThresPos  : 0.05
@@ -173,9 +173,8 @@ cartIniYaw           :  0.0
 # NN controller             #
 #############################
 
-nnNum_Hidden          : 65
+nnNum_Hidden          : 50
 nnNum_Joints          : 7  # DOF
-nnNum_Outputs         : 1  # Cartesian (with quaternions)
 
 #Note: nnNum_Inputs determined by NAC
 
@@ -183,11 +182,17 @@ nnNum_Outputs         : 1  # Cartesian (with quaternions)
 #  r   = (qd_m - qd) + lambda*(q_m - q);
 # Kv*r = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
 
+#nnNum_Outputs         : 6  # Cartesian
 #nn_Kv                 : [2,2,2,1,1,1]
 #nn_lambda             : [20,20,20,10,10,10]
 
-nn_Kv                 : [1]
-nn_lambda             : [10]
+nnNum_Outputs         : 3
+nn_Kv                 : [1,1,1]
+nn_lambda             : [10,10,10]
+
+#nnNum_Outputs         : 1
+#nn_Kv                 : [1]
+#nn_lambda             : [10]
 
 nn_kappa              : 0.1
 nn_Kz                 : 0.01
