@@ -189,13 +189,16 @@ int main(int argc, char** argv)
   origin.y = 0.15;
   origin.z = -0.10;
   TrajectoryGenerator tg;
-  tg.initGrid( 3, 3, 0.07, 0.08, origin);
-  //std::string trajPathStr = "ACIGA";
-  std::string trajPathStr = "AHCFIHDIEGA";
+  //tg.initGrid( 3, 3, 0.07, 0.08, origin);
+  tg.initGrid( 3, 3, 0.01, 0.01, origin);
+  tg.printGridLayout();
+  tg.printGridMap();
+  std::string trajPathStr = "ABCFEDGHIFEDA";
+  //std::string trajPathStr = "AHCFIHDIEGA";
   ice_msgs::setTrajectory traj_msg_;
   traj_msg_.request.x =tg.str2Vec(trajPathStr);
   for(int i=0;i<traj_msg_.request.x.size();i++)
-	  traj_msg_.request.t.push_back(5.0);
+	  traj_msg_.request.t.push_back(2.0);
 
   // Set controller names
   std::vector<std::string> arm_controllers_default;
