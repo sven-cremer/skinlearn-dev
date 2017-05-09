@@ -3,5 +3,16 @@
 <launch>
 
 	<include file="$(find sound_play)/soundplay_node.launch" />
+	
+	<!-- Launch JT Cartesian controller (spawn stopped) -->
+	<include file="$(find apc_robot)/launch/arms_cartesian.launch" />
+	
+	<node name="l_posture"
+		  pkg="apc_robot" type="posture.py"
+		  args="l_cart elbowupl" />
+	
+	<!-- Load FT calibration values -->
+	<rosparam file="$(find ice_robot_controllers)/config/l_ft_calib_data.yaml"
+			  command="load" />
 
 </launch>
