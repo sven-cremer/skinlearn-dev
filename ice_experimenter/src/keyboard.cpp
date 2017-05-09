@@ -52,6 +52,7 @@ void displayMainMenu()
 	puts("MENU:   ice_controller     ");
 	puts(tmp1.c_str());
 	puts("---------------------------");
+	puts("Use '0' to change controllers");
 	puts("Use '1' to turn controller ON");
 	puts("Use '2' to turn controller OFF");
 	puts("Use 'i' to initialize robot");
@@ -61,13 +62,26 @@ void displayMainMenu()
 	puts("Use 'u/h' to lift torso up/down");
 	puts(" ");
 	puts("Use 'w' to open NN weights menu");
-	puts("Use 'r' to open reference trajectory menu");
+	puts("Use 'r' to open NN reference trajectory menu");
 	puts("Use 's' to start calibration experiment");
 	puts("Use 't' to test controller");
 	puts(" ");
 	puts("Use '-' to set variables");
 	puts(" ");
 	puts("Use 'q' to quit");
+	puts(" ");
+}
+
+void displayControllerMenu()
+{
+	puts("---------------------------");
+	puts("MENU:   Controllers     ");
+	puts("---------------------------");
+	puts("Use '1' left default / NN");
+	puts("Use '2' left default / JT Cartesian");
+	puts("Use '3' left + right default / JT Cartesian");
+	puts(" ");
+	puts("Use 'q' to quit and return to main menu");
 	puts(" ");
 }
 
@@ -156,6 +170,16 @@ void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int cur
 int kfd = 0;
 struct termios cooked, raw;
 
+void getKey(char &c)
+{
+	// get the next event from the keyboard
+	if(read(kfd, &c, 1) < 0)
+	{
+		perror("read():");
+		exit(-1);
+	}
+}
+
 void spin_function()
 {
   ros::spin();
@@ -239,7 +263,6 @@ int main(int argc, char** argv)
   //raw.c_cc[VEOF] = 2;								// since ICANON is not set this should have no effect
   tcsetattr(kfd, TCSANOW, &raw);					// sets the new terminal settings
 
-
   char c;
 
   puts("Reading from keyboard");
@@ -248,16 +271,51 @@ int main(int argc, char** argv)
   {
     displayMainMenu();
 
-    // get the next event from the keyboard
-    if(read(kfd, &c, 1) < 0)
-    {
-      perror("read():");
-      exit(-1);
-    }
+    getKey(c);
 
     switch(c)
     {
       /******************************** Manger *******************************************/
+    case '0':
+    {
+    	displayControllerMenu();
+    	getKey(c);
+
+		arm_controllers_default.clear();
+		arm_controllers_new.clear();
+		switch(c)
+		{
+		case '1':
+		{
+			arm_controllers_default.push_back("l_arm_controller");
+			arm_controllers_new.push_back("pr2_adaptNeuroController");
+			pr2manager.setControllers(arm_controllers_default, arm_controllers_new);
+			break;
+		}
+		case '2':
+		{
+			arm_controllers_default.push_back("l_arm_controller");
+			arm_controllers_new.push_back("l_cart");
+			pr2manager.setControllers(arm_controllers_default, arm_controllers_new);
+			break;
+		}
+		case '3':
+		{
+			arm_controllers_default.push_back("l_arm_controller");
+			arm_controllers_default.push_back("r_arm_controller");
+			arm_controllers_new.push_back("l_cart");
+			arm_controllers_new.push_back("r_cart");
+			pr2manager.setControllers(arm_controllers_default, arm_controllers_new);
+			break;
+		}
+		default:
+		{
+			ROS_INFO_STREAM("No controller changed");
+			break;
+		}
+		}
+    	break;
+    }
       case '1':
       {
     	  // controller on
@@ -327,12 +385,7 @@ int main(int argc, char** argv)
 
           displayNNweightsMenu();
 
-          // get the next event from the keyboard
-          if(read(kfd, &c, 1) < 0)
-          {
-            perror("read():");
-            exit(-1);
-          }
+          getKey(c);
 
           switch(c)
           {
@@ -458,15 +511,6 @@ int main(int argc, char** argv)
     		  ROS_ERROR("Failed to call runExperiment service!");
     	  }
 
-    	  // JT Cartesian
-    	  for(it_type iterator = traj_msg_.request.x.begin(); iterator != traj_msg_.request.x.end(); iterator++)
-    	  {
-    		  geometry_msgs::Pose pose = *iterator;
-
-    		  //std::cout<<pose<<"\n";
-    		  arms.moveToPose(arm,pose,"torso_lift_link",false);
-    		  ros::Duration(3.0).sleep();
-    	  }
     	  std::cout<<"Done!\n";
     	  break;
       }
@@ -501,11 +545,7 @@ int main(int argc, char** argv)
              // Get the next event from the keyboard
         	 if(!calibrationRunning)
         	 {
-				 if(read(kfd, &c, 1) < 0)
-				 {
-				   perror("read():");
-				   exit(-1);
-				 }
+        		 getKey(c);
 
 				 switch(c)
 				 {
@@ -764,6 +804,23 @@ int main(int argc, char** argv)
       /******************************** reference ****************************************/
       case 't':
       {
+    	  typedef std::vector<geometry_msgs::Pose>::iterator it_type;
+
+    	  std::cout<<"Executing trajectory: "<<trajPathStr<<"\n";
+
+    	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
+
+    	  // JT Cartesian
+    	  for(it_type iterator = traj_msg_.request.x.begin(); iterator != traj_msg_.request.x.end(); iterator++)
+    	  {
+    		  geometry_msgs::Pose pose = *iterator;
+
+    		  //std::cout<<pose<<"\n";
+    		  arms.moveToPose(arm,pose,"torso_lift_link",false);
+    		  ros::Duration(3.0).sleep();
+    	  }
+
+    	  std::cout<<"Done!\n";
     	  // Start capturing data
 
     	  // Ask user to follow pattern
