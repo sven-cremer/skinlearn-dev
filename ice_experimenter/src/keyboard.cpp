@@ -180,11 +180,6 @@ void getKey(char &c)
 	}
 }
 
-void spin_function()
-{
-  ros::spin();
-}
-
 void quit(int sig)
 {
   tcsetattr(kfd, TCSANOW, &cooked);
@@ -251,8 +246,6 @@ int main(int argc, char** argv)
 
 
   signal(SIGINT,quit);
-
-  boost::thread spin_thread(boost::bind(&spin_function));
 
   // get the console in raw mode
   tcgetattr(kfd, &cooked);							// grab old terminal i/o settings "cooked"
@@ -805,12 +798,13 @@ int main(int argc, char** argv)
       case 't':
       {
     	  typedef std::vector<geometry_msgs::Pose>::iterator it_type;
+    	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
 
     	  std::cout<<"Executing trajectory: "<<trajPathStr<<"\n";
 
-    	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
+    	  // Start capturing data
 
-    	  // JT Cartesian
+    	  // Ask user to follow pattern
     	  for(it_type iterator = traj_msg_.request.x.begin(); iterator != traj_msg_.request.x.end(); iterator++)
     	  {
     		  geometry_msgs::Pose pose = *iterator;
@@ -820,12 +814,9 @@ int main(int argc, char** argv)
     		  ros::Duration(3.0).sleep();
     	  }
 
-    	  std::cout<<"Done!\n";
-    	  // Start capturing data
-
-    	  // Ask user to follow pattern
-
     	  // Save results
+
+    	  std::cout<<"Done!\n";
 
     	  break;
       }
@@ -851,7 +842,7 @@ int main(int argc, char** argv)
   tcsetattr(kfd, TCSANOW, &cooked);	// Revert to old terminal settings
 
   ros::shutdown();
-  spin_thread.join();
+
   return(0);
 }
 
