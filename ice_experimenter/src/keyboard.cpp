@@ -803,6 +803,12 @@ int main(int argc, char** argv)
     	  std::cout<<"Executing trajectory: "<<trajPathStr<<"\n";
 
     	  // Start capturing data
+    	  std::string pathExpData = "/home/sven/test";
+    	  std::string expName = "01";
+    	  std::string topic = "/l_cart/state/x/pose";
+    	  std::string cmd1 = "rostopic echo -p " + topic  + " > " + pathExpData + "/controller_" + expName + ".csv &";
+    	  std::cout<<"$ "<<cmd1.c_str()<<"\n";
+    	  system( cmd1.c_str() );
 
     	  // Ask user to follow pattern
     	  for(it_type iterator = traj_msg_.request.x.begin(); iterator != traj_msg_.request.x.end(); iterator++)
@@ -815,6 +821,9 @@ int main(int argc, char** argv)
     	  }
 
     	  // Save results
+    	  std::string cmdA = "pkill -9 -f " + topic;
+    	  std::cout<<"$ "<<cmdA.c_str()<<"\n";
+    	  system( cmdA.c_str() );
 
     	  std::cout<<"Done!\n";
 
