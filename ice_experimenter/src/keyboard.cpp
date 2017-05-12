@@ -811,13 +811,35 @@ int main(int argc, char** argv)
     	  system( cmd1.c_str() );
 
     	  // Ask user to follow pattern
+    	  geometry_msgs::Pose p_new;
+    	  geometry_msgs::Pose p_old;
+
+//    	  arms.updateState();
+//    	  arms.getCurrentPose(arm, p_old);
+
     	  for(it_type iterator = traj_msg_.request.x.begin(); iterator != traj_msg_.request.x.end(); iterator++)
     	  {
-    		  geometry_msgs::Pose pose = *iterator;
+    		  p_old = p_new;
+    		  p_new = *iterator;
 
-    		  //std::cout<<pose<<"\n";
-    		  arms.moveToPose(arm,pose,"torso_lift_link",false);
-    		  ros::Duration(3.0).sleep();
+    		  if(iterator == traj_msg_.request.x.begin())
+    			  p_old = p_new;
+
+    		  // Interpolate
+    		  std::vector<geometry_msgs::Pose> p_vec;
+    		  tg.interpolator(p_old, p_new, 20, p_vec);
+
+    		  // Send arm commands
+    		  for(int i=0; i<p_vec.size();i++)
+    		  {
+    			  geometry_msgs::Pose p_int = p_vec[i];
+				  std::cout<<p_int.position<<"\n";
+				  arms.moveToPose(arm,p_int,"torso_lift_link",false);
+				  ros::Duration(0.1).sleep();
+    		  }
+    		  std::cout<<"\n---\n";
+    		  sc.say("Reached waypoint!");
+    		  ros::Duration(1.0).sleep();
     	  }
 
     	  // Save results
