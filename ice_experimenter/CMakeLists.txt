@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   apc_robot
   sound_play
   trajectory_generator
+  data_recorder
 )
 
 ## System dependencies are found with CMake's conventions
@@ -30,7 +31,7 @@ find_package(Boost REQUIRED COMPONENTS thread)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ice_experimenter
-#  CATKIN_DEPENDS cmake_modules ice_msgs rosbag roscpp apc_robot sound_play
+#  CATKIN_DEPENDS cmake_modules ice_msgs rosbag roscpp apc_robot sound_play data_recorder
 #  DEPENDS system_lib
 )
 

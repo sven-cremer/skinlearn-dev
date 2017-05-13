@@ -25,6 +25,7 @@
 #include <apc_robot/pr2_manager.h>
 #include <apc_robot/apc_arms_cartesian.h>
 #include <trajectory_generator/trajectoryGenerator.h>
+#include <data_recorder/data_recorder.h>
 
 // Messages
 #include <ice_msgs/setBool.h>
@@ -217,6 +218,17 @@ int main(int argc, char** argv)
   double deltaTorsoHeight = 0.01;
 
   ArmsCartesian arms;
+
+  // Data recording
+  std::vector<std::string> data_topics;
+  std::vector<std::string> data_fnames;
+  std::string dataDir;
+  std::string path;
+  loadROSparam(nh, "data_topics", data_topics);
+  loadROSparam(nh, "data_fnames", data_fnames);
+  loadROSparam(nh, "data_dir", dataDir);
+  loadROSparam(nh, "data_path", path);
+  DataRecorder recorder(data_topics,data_fnames,dataDir,path);
 
   // Trajectory settings
   std::vector<double> v_origin;
@@ -847,12 +859,13 @@ int main(int argc, char** argv)
     	  sc.say("Starting experiment.");
 
     	  // Start capturing data
-    	  std::string pathExpData = "/home/sven/test";
-    	  std::string expName = "01";
-    	  std::string topic = "/l_cart/state/x/pose";
-    	  std::string cmd1 = "rostopic echo -p " + topic  + " > " + pathExpData + "/data_" + expName + ".csv &";
-    	  std::cout<<"$ "<<cmd1.c_str()<<"\n";
-    	  system( cmd1.c_str() );
+//    	  std::string pathExpData = "/home/sven/test";
+//    	  std::string expName = "01";
+//    	  std::string topic = "/l_cart/state/x/pose";
+//    	  std::string cmd1 = "rostopic echo -p " + topic  + " > " + pathExpData + "/data_" + expName + ".csv &";
+//    	  std::cout<<"$ "<<cmd1.c_str()<<"\n";
+//    	  system( cmd1.c_str() );
+    	  recorder.start(1);
 
     	  // Ask user to follow pattern
     	  geometry_msgs::Pose p_new;
@@ -900,9 +913,10 @@ int main(int argc, char** argv)
     	  std::cout<<"\n";
 
     	  // Save results
-    	  std::string cmdA = "pkill -9 -f " + topic;
-    	  std::cout<<"$ "<<cmdA.c_str()<<"\n";
-    	  system( cmdA.c_str() );
+//    	  std::string cmdA = "pkill -9 -f " + topic;
+//    	  std::cout<<"$ "<<cmdA.c_str()<<"\n";
+//    	  system( cmdA.c_str() );
+    	  recorder.stop();
 
     	  sc.say("Done.");
     	  std::cout<<"Done!\n";

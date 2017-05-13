@@ -2,6 +2,11 @@
 arm_controllers_default: [l_arm_controller,r_arm_controller]
 arm_controllers_new:     [l_cart,r_cart]
 
+data_topics: [/l_cart/state/x/pose,/l_cart/state/x_desi/pose]
+data_fnames: [x_act,x_des]
+data_path: /home/sven/test
+data_dir: exp
+
 #trajectory_path: ABCFEDGHIFEDA
 trajectory_path: AEIHDGECFBA
 trajectory_origin: [0.48,0.08,-0.05]
