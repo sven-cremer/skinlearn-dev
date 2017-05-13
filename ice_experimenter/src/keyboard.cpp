@@ -835,20 +835,22 @@ int main(int argc, char** argv)
       /******************************** Rehabilitation ****************************************/
       case 'e':
       {
-    	  // controller on
-    	  pr2manager.on(false);
+    	  //tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
+
+    	  pr2manager.on(false);						// Controller on
     	  controller_active = true;
 
     	  typedef std::vector<geometry_msgs::Pose>::iterator it_type;
     	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
 
     	  std::cout<<"Executing trajectory: "<<trajPathStr<<"\n";
+    	  sc.say("Starting experiment.");
 
     	  // Start capturing data
     	  std::string pathExpData = "/home/sven/test";
     	  std::string expName = "01";
     	  std::string topic = "/l_cart/state/x/pose";
-    	  std::string cmd1 = "rostopic echo -p " + topic  + " > " + pathExpData + "/controller_" + expName + ".csv &";
+    	  std::string cmd1 = "rostopic echo -p " + topic  + " > " + pathExpData + "/data_" + expName + ".csv &";
     	  std::cout<<"$ "<<cmd1.c_str()<<"\n";
     	  system( cmd1.c_str() );
 
@@ -859,17 +861,24 @@ int main(int argc, char** argv)
 //    	  arms.updateState();
 //    	  arms.getCurrentPose(arm, p_old);
 
-    	  for(it_type iterator = traj_msg_.request.x.begin(); iterator != traj_msg_.request.x.end(); iterator++)
+    	  for(int k = 0; k < traj_msg_.request.x.size(); k++)
     	  {
     		  p_old = p_new;
-    		  p_new = *iterator;
+    		  p_new = traj_msg_.request.x[k];
 
-    		  if(iterator == traj_msg_.request.x.begin())
+    		  if(k == 0)
     			  p_old = p_new;
 
     		  // Interpolate
     		  std::vector<geometry_msgs::Pose> p_vec;
     		  tg.interpolator(p_old, p_new, 20, p_vec);
+
+    		  // Tell user where to move
+    		  std::string msg = trajPathStr.substr(k,1);
+    		  if(k != 0)
+    			  sc.say(msg);
+    		  std::cout << msg << " " << std::flush;
+    		  ros::Duration(1.0).sleep();
 
     		  // Send arm commands
     		  for(int i=0; i<p_vec.size();i++)
@@ -879,18 +888,20 @@ int main(int argc, char** argv)
 				  arms.moveToPose(arm,p_int,"torso_lift_link",false);
 				  ros::Duration(0.1).sleep();
     		  }
-    		  //std::cout<<"\n---\n";
-    		  sc.say("Reached waypoint!");
+
     		  ros::Duration(1.0).sleep();
     	  }
+    	  std::cout<<"\n";
 
     	  // Save results
     	  std::string cmdA = "pkill -9 -f " + topic;
     	  std::cout<<"$ "<<cmdA.c_str()<<"\n";
     	  system( cmdA.c_str() );
 
+    	  sc.say("Done.");
     	  std::cout<<"Done!\n";
 
+    	  //tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
     	  break;
       }
       /******************************** Testing ****************************************/
