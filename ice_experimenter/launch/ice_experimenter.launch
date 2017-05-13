@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 
 <launch>
+	<!-- Load experiment parameters -->
+	<rosparam file="$(find ice_experimenter)/cfg/experiment.yaml" command="load" />
 
 	<include file="$(find sound_play)/soundplay_node.launch" />
 	
