@@ -870,8 +870,10 @@ int main(int argc, char** argv)
     			  p_old = p_new;
 
     		  // Interpolate
+    		  int Nint = 20;
+    		  double dt = 0.1;
     		  std::vector<geometry_msgs::Pose> p_vec;
-    		  tg.interpolator(p_old, p_new, 20, p_vec);
+    		  tg.interpolator(p_old, p_new, Nint, p_vec);
 
     		  // Tell user where to move
     		  std::string msg = trajPathStr.substr(k,1);
@@ -879,6 +881,10 @@ int main(int argc, char** argv)
     			  sc.say(msg);
     		  std::cout << msg << " " << std::flush;
     		  ros::Duration(1.0).sleep();
+
+    		  // Send head command
+    		  double duration = Nint*dt;
+    		  pr2manager.lookAtPoint(p_new.position, duration);
 
     		  // Send arm commands
     		  for(int i=0; i<p_vec.size();i++)
