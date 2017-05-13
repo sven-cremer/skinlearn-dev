@@ -64,9 +64,10 @@ void displayMainMenu()
 	puts("Use 'w' to open NN weights menu");
 	puts("Use 'r' to open NN reference trajectory menu");
 	puts("Use 's' to start calibration experiment");
-	puts("Use 't' to test controller");
-	puts(" ");
 	puts("Use '-' to set variables");
+	puts(" ");
+	puts("Use 'e' to run rehabilitation experiment");
+	puts("Use 't' to test controller");
 	puts(" ");
 	puts("Use 'q' to quit");
 	puts(" ");
@@ -80,6 +81,7 @@ void displayControllerMenu()
 	puts("Use '1' left default / NN");
 	puts("Use '2' left default / JT Cartesian");
 	puts("Use '3' left + right default / JT Cartesian");
+	//puts("Use '4' left + right default / Mannequin");
 	puts(" ");
 	puts("Use 'q' to quit and return to main menu");
 	puts(" ");
@@ -830,8 +832,8 @@ int main(int argc, char** argv)
            } // end while
            break;
       }
-      /******************************** reference ****************************************/
-      case 't':
+      /******************************** Rehabilitation ****************************************/
+      case 'e':
       {
     	  // controller on
     	  pr2manager.on(false);
@@ -889,6 +891,68 @@ int main(int argc, char** argv)
 
     	  std::cout<<"Done!\n";
 
+    	  break;
+      }
+      /******************************** Testing ****************************************/
+      case 't':
+      {
+    	  // controller on
+    	  pr2manager.on(false);
+    	  controller_active = true;
+
+    	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
+
+    	  // Generate two Poses
+    	  std::vector<geometry_msgs::Pose> p_way;
+    	  p_way = tg.str2Vec("AF");
+
+    	  // Random uniform rotation
+    	  double u0 = rand() / (RAND_MAX + 1.);
+    	  double u1 = rand() / (RAND_MAX + 1.);
+    	  double u2 = rand() / (RAND_MAX + 1.);
+
+    	  double q1 = sqrt(1.0 - u0), q2 = sqrt(u0);
+    	  double r1 = 2.0 * M_PI * u1, r2 = 2.0 * M_PI * u2;
+    	  double c1 = cos(r1), s1 = sin(r1);
+    	  double c2 = cos(r2), s2 = sin(r2);
+
+    	  p_way[1].orientation.w = q1 * s1;
+    	  p_way[1].orientation.x = q1 * c1;
+    	  p_way[1].orientation.y = q2 * s2;
+    	  p_way[1].orientation.y = q2 * c2;
+
+    	  std::cout<<"Start:\n"<<p_way[0];
+    	  std::cout<<"Stop:\n"<<p_way[1]<<"\n";
+
+    	  // Interpolate
+    	  std::vector<geometry_msgs::Pose> p_vec;
+    	  tg.interpolator(p_way[0], p_way[1], 50, p_vec);
+
+    	  // Starting position
+    	  arms.moveToPose(arm,p_vec[0],"torso_lift_link",false);
+
+    	  ros::Duration(2.0).sleep();
+
+    	  // Send arm commands
+    	  for(int i=0; i<p_vec.size();i++)
+    	  {
+    		  geometry_msgs::Pose p_int = p_vec[i];
+    		  arms.moveToPose(arm,p_int,"torso_lift_link",false);
+    		  ros::Duration(0.1).sleep();
+    	  }
+
+    	  ros::Duration(2.0).sleep();
+    	  std::cout<<"Moving backwards ...\n";
+
+    	  // Send arm commands
+    	  for(int i=0; i<p_vec.size();i++)
+    	  {
+    		  geometry_msgs::Pose p_int = p_vec[p_vec.size()-1-i];
+    		  arms.moveToPose(arm,p_int,"torso_lift_link",false);
+    		  ros::Duration(0.1).sleep();
+    	  }
+
+    	  std::cout<<"Done!\n";
     	  break;
       }
       /******************************** QUIT ****************************************/
