@@ -167,6 +167,18 @@ void displayCalibrationExperimentMenu(int activeSensor, string dataFile, int cur
 //	puts(" ");
 //}
 
+template<typename T>
+bool loadROSparam(ros::NodeHandle &nh_, std::string name, T &variable)
+{
+	if(!nh_.getParam( name, variable ))
+	{
+		ROS_ERROR("Failed to load ROS parameter named '%s' !)", name.c_str()) ;
+		return false;
+	}
+	//ROS_INFO_STREAM(name << " = " << variable);
+	return true;
+}
+
 int kfd = 0;
 struct termios cooked, raw;
 
@@ -202,18 +214,31 @@ int main(int argc, char** argv)
   double torsoHeight = 0.05;
   double deltaTorsoHeight = 0.01;
 
+  ArmsCartesian arms;
+
   // Trajectory settings
+  std::vector<double> v_origin;
+  loadROSparam(nh, "trajectory_origin", v_origin);
   geometry_msgs::Point origin;
-  origin.x = 0.38;
-  origin.y = 0.15;
-  origin.z = -0.10;
+  origin.x = v_origin[0];
+  origin.y = v_origin[1];
+  origin.z = v_origin[2];
+  int Nx, Ny;
+  double dx, dy;
+  loadROSparam(nh, "trajectory_Nx", Nx);
+  loadROSparam(nh, "trajectory_Ny", Ny);
+  loadROSparam(nh, "trajectory_dx", dx);
+  loadROSparam(nh, "trajectory_dy", dy);
+
   TrajectoryGenerator tg;
-  //tg.initGrid( 3, 3, 0.07, 0.08, origin);
-  tg.initGrid( 3, 3, 0.01, 0.01, origin);
+  tg.initGrid( Nx, Ny, dx, dy, origin);
   tg.printGridLayout();
   tg.printGridMap();
+
+  // Trajectory Path
   std::string trajPathStr = "ABCFEDGHIFEDA";
-  //std::string trajPathStr = "AHCFIHDIEGA";
+  loadROSparam(nh, "trajectory_path", trajPathStr);
+
   ice_msgs::setTrajectory traj_msg_;
   traj_msg_.request.x =tg.str2Vec(trajPathStr);
   for(int i=0;i<traj_msg_.request.x.size();i++)
@@ -222,11 +247,22 @@ int main(int argc, char** argv)
   // Set controller names
   std::vector<std::string> arm_controllers_default;
   std::vector<std::string> arm_controllers_new;
-  arm_controllers_default.push_back("l_arm_controller");
-  arm_controllers_new.push_back("pr2_adaptNeuroController");
+  loadROSparam(nh, "arm_controllers_default", arm_controllers_default);
+  loadROSparam(nh, "arm_controllers_new", arm_controllers_new);
   pr2manager.setControllers(arm_controllers_default, arm_controllers_new);
 
-  ArmsCartesian arms;
+  // Arm start positions
+  std::vector<double> joints_l;
+  std::vector<double> joints_r;
+  loadROSparam(nh, "joints_l", joints_l);
+  loadROSparam(nh, "joints_r", joints_r);
+  pr2manager.setDefaultArmJoints(PR2Manager::LEFT, joints_l);
+  pr2manager.setDefaultArmJoints(PR2Manager::RIGHT, joints_r);
+
+  // Torso height
+  double torso_height;
+  loadROSparam(nh, "torso_height", torso_height);
+  pr2manager.setDefaultTorso(torso_height);
 
   // ROS service clients
   ros::ServiceClient toggle_updateWeights_srv_ = nh.serviceClient<ice_msgs::setBool>("/pr2_adaptNeuroController/updateNNweights");
@@ -244,7 +280,7 @@ int main(int argc, char** argv)
   // ROS messages
   ice_msgs::setBool setBool_msgs_;
 
-
+  // Terminal settings
   signal(SIGINT,quit);
 
   // get the console in raw mode
@@ -797,6 +833,10 @@ int main(int argc, char** argv)
       /******************************** reference ****************************************/
       case 't':
       {
+    	  // controller on
+    	  pr2manager.on(false);
+    	  controller_active = true;
+
     	  typedef std::vector<geometry_msgs::Pose>::iterator it_type;
     	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
 
@@ -833,11 +873,11 @@ int main(int argc, char** argv)
     		  for(int i=0; i<p_vec.size();i++)
     		  {
     			  geometry_msgs::Pose p_int = p_vec[i];
-				  std::cout<<p_int.position<<"\n";
+				  //std::cout<<p_int.position<<"\n";
 				  arms.moveToPose(arm,p_int,"torso_lift_link",false);
 				  ros::Duration(0.1).sleep();
     		  }
-    		  std::cout<<"\n---\n";
+    		  //std::cout<<"\n---\n";
     		  sc.say("Reached waypoint!");
     		  ros::Duration(1.0).sleep();
     	  }
@@ -868,7 +908,8 @@ int main(int argc, char** argv)
 
   puts("Shutting down ...");
 
- // TODO: Turn off controller
+  // Turn off controller
+  pr2manager.off(false);
 
   tcsetattr(kfd, TCSANOW, &cooked);	// Revert to old terminal settings
 
