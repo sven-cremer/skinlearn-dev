@@ -88,6 +88,21 @@ void displayControllerMenu()
 	puts(" ");
 }
 
+void displayRehabilitationExperimentMenu(std::string trajPath, int expNumber)
+{
+	printf("---------------------------\n");
+	printf("MENU:   Rehabilitation     \n");
+	printf("---------------------------\n");
+	printf("Use '1' to change trajectory path: %s\n", trajPath.c_str());
+	printf("Use '2' to change JT Cartesian gains\n");
+	printf("\n");
+	printf("Use 'n' to change experiment number: %i \n", expNumber);
+	printf("Use 's' to start experiment\n");
+	printf("\n");
+	printf("Use 'q' to quit and return to main menu\n");
+	printf("\n");
+}
+
 void displayNNweightsMenu()
 {
 	string tmp1 = "Updating: " + (string)(updating_weights ?  "YES" : "NO");
@@ -195,6 +210,18 @@ void getKey(char &c)
 	}
 }
 
+template<typename T>
+void getInput(T &result)
+{
+	tcsetattr(kfd, TCSANOW, &cooked);       // Use old terminal settings
+	char cmd[100];
+	cin.getline(cmd,100);
+	tcsetattr(kfd, TCSANOW, &raw);          // Use new terminal settings
+
+	std::stringstream  linestream(cmd);
+	linestream >> result;					// TODO: check user input
+}
+
 void quit(int sig)
 {
   tcsetattr(kfd, TCSANOW, &cooked);
@@ -229,6 +256,7 @@ int main(int argc, char** argv)
   loadROSparam(nh, "data_dir", dataDir);
   loadROSparam(nh, "data_path", path);
   DataRecorder recorder(data_topics,data_fnames,dataDir,path);
+  int expNumber = 1;
 
   // Trajectory settings
   std::vector<double> v_origin;
@@ -847,81 +875,127 @@ int main(int argc, char** argv)
       /******************************** Rehabilitation ****************************************/
       case 'e':
       {
-    	  //tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
+    	  double Kp_tran = 800;
+    	  double Kp_rot  = 80;
+    	  double Kd_tran = 15;
+    	  double Kd_rot  = 1.2;
 
-    	  pr2manager.on(false);						// Controller on
-    	  controller_active = true;
+    	  bool stop_menu_rehab = false;
 
-    	  typedef std::vector<geometry_msgs::Pose>::iterator it_type;
-    	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
-
-    	  std::cout<<"Executing trajectory: "<<trajPathStr<<"\n";
-    	  sc.say("Starting experiment.");
-
-    	  // Start capturing data
-//    	  std::string pathExpData = "/home/sven/test";
-//    	  std::string expName = "01";
-//    	  std::string topic = "/l_cart/state/x/pose";
-//    	  std::string cmd1 = "rostopic echo -p " + topic  + " > " + pathExpData + "/data_" + expName + ".csv &";
-//    	  std::cout<<"$ "<<cmd1.c_str()<<"\n";
-//    	  system( cmd1.c_str() );
-    	  recorder.start(1);
-
-    	  // Ask user to follow pattern
-    	  geometry_msgs::Pose p_new;
-    	  geometry_msgs::Pose p_old;
-
-//    	  arms.updateState();
-//    	  arms.getCurrentPose(arm, p_old);
-
-    	  for(int k = 0; k < traj_msg_.request.x.size(); k++)
+    	  while(!stop_menu_rehab)
     	  {
-    		  p_old = p_new;
-    		  p_new = traj_msg_.request.x[k];
 
-    		  if(k == 0)
-    			  p_old = p_new;
+    		  displayRehabilitationExperimentMenu(trajPathStr, expNumber);
 
-    		  // Interpolate
-    		  int Nint = 20;
-    		  double dt = 0.1;
-    		  std::vector<geometry_msgs::Pose> p_vec;
-    		  tg.interpolator(p_old, p_new, Nint, p_vec);
+    		  getKey(c);
 
-    		  // Tell user where to move
-    		  std::string msg = trajPathStr.substr(k,1);
-    		  if(k != 0)
-    			  sc.say(msg);
-    		  std::cout << msg << " " << std::flush;
-    		  ros::Duration(1.0).sleep();
-
-    		  // Send head command
-    		  double duration = Nint*dt;
-    		  pr2manager.lookAtPoint(p_new.position, duration);
-
-    		  // Send arm commands
-    		  for(int i=0; i<p_vec.size();i++)
+    		  switch(c)
     		  {
-    			  geometry_msgs::Pose p_int = p_vec[i];
-				  //std::cout<<p_int.position<<"\n";
-				  arms.moveToPose(arm,p_int,"torso_lift_link",false);
-				  ros::Duration(0.1).sleep();
+    		  case '1':
+    		  {
+    			  // Change path
+    			  printf("Enter trajectory path: ");
+    			  getInput(trajPathStr);
+    			  break;
     		  }
+    		  case '2':
+    		  {
+    			  // Change gains
+    			  printf("Enter Kp tran (%.2f): ",Kp_tran); getInput(Kp_tran);
+    			  printf("Enter Kp rot  (%.2f): ",Kp_rot);  getInput(Kp_rot);
+    			  printf("Enter Kd tran (%.2f): ",Kd_tran); getInput(Kd_tran);
+    			  printf("Enter Kd rot  (%.2f): ",Kd_rot);  getInput(Kd_rot);
 
-    		  ros::Duration(1.0).sleep();
-    	  }
-    	  std::cout<<"\n";
+    			  arms.setGains(Kp_tran,Kp_rot,Kd_tran,Kd_rot,ArmsCartesian::LEFT);
+    			  break;
+    		  }
+    		  case 'n':
+    		  {
+    			  // Change number
+    			  printf("Enter experiment number: ");
+    			  getInput(expNumber);
+    			  break;
+    		  }
+    		  case 's':
+    		  {
+    			  // Start experiment
+    			  pr2manager.on(false);						// Controller on
+    			  controller_active = true;
 
-    	  // Save results
-//    	  std::string cmdA = "pkill -9 -f " + topic;
-//    	  std::cout<<"$ "<<cmdA.c_str()<<"\n";
-//    	  system( cmdA.c_str() );
-    	  recorder.stop();
+    			  typedef std::vector<geometry_msgs::Pose>::iterator it_type;
+    			  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
 
-    	  sc.say("Done.");
-    	  std::cout<<"Done!\n";
+    			  std::cout<<"Executing trajectory: "<<trajPathStr<<"\n";
+    			  sc.say("Starting experiment.");
 
-    	  //tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
+    			  // Start recording data
+    			  recorder.start(expNumber);
+
+    			  // Ask user to follow pattern
+    			  geometry_msgs::Pose p_new;
+    			  geometry_msgs::Pose p_old;
+
+    			  //arms.updateState();
+    			  //arms.getCurrentPose(arm, p_old);
+
+    			  for(int k = 0; k < traj_msg_.request.x.size(); k++)
+    			  {
+    				  p_old = p_new;
+    				  p_new = traj_msg_.request.x[k];
+
+    				  if(k == 0)
+    					  p_old = p_new;
+
+    				  // Interpolate
+    				  int Nint = 20;
+    				  double dt = 0.1;
+    				  std::vector<geometry_msgs::Pose> p_vec;
+    				  tg.interpolator(p_old, p_new, Nint, p_vec);
+
+    				  // Tell user where to move
+    				  std::string msg = trajPathStr.substr(k,1);
+    				  if(k != 0)
+    					  sc.say(msg);
+    				  std::cout << msg << " " << std::flush;
+    				  ros::Duration(1.0).sleep();
+
+    				  // Send head command
+    				  double duration = Nint*dt;
+    				  pr2manager.lookAtPoint(p_new.position, duration);
+
+    				  // Send arm commands
+    				  for(int i=0; i<p_vec.size();i++)
+    				  {
+    					  geometry_msgs::Pose p_int = p_vec[i];
+    					  //std::cout<<p_int.position<<"\n";
+    					  arms.moveToPose(arm,p_int,"torso_lift_link",false);
+    					  ros::Duration(0.1).sleep();
+    				  }
+
+    				  ros::Duration(1.0).sleep();
+    			  }
+    			  std::cout<<"\n";
+
+    			  // Stop recording data
+    			  recorder.stop();
+
+    			  sc.say("Done!");
+    			  std::cout<<"Done!\n";
+
+    			  break;
+    		  }
+    		  case 'q':
+    		  {
+    			  stop_menu_rehab = true;
+    			  break;
+    		  }
+    		  default:
+    		  {
+    			  ROS_INFO_STREAM("Keycode not found: " << c);
+    			  break;
+    		  }
+    		  } // end switch
+    	  }// end while
     	  break;
       }
       /******************************** Testing ****************************************/
