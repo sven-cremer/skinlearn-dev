@@ -88,13 +88,15 @@ void displayControllerMenu()
 	puts(" ");
 }
 
-void displayRehabilitationExperimentMenu(std::string trajPath, int expNumber)
+void displayRehabilitationExperimentMenu(std::string trajPath, int expNumber, int interp_steps, double interp_dt, double Kp_tran, double Kp_rot, double Kd_tran, double Kd_rot)
 {
 	printf("---------------------------\n");
 	printf("MENU:   Rehabilitation     \n");
 	printf("---------------------------\n");
-	printf("Use '1' to change trajectory path: %s\n", trajPath.c_str());
-	printf("Use '2' to change JT Cartesian gains\n");
+	printf("Use 't' to change trajectory path (%s)\n", trajPath.c_str());
+	printf("Use 'i' to change interpolation settings (%i steps, %.3f sec/step)\n", interp_steps, interp_dt);
+	printf("Use 'g' to change JT Cartesian gains (%.1f, %.1f, %.1f, %.1f)\n",Kp_tran, Kp_rot, Kd_tran, Kd_rot);
+	printf("Use 'p' to print layout\n");
 	printf("\n");
 	printf("Use 'n' to change experiment number: %i \n", expNumber);
 	printf("Use 's' to start experiment\n");
@@ -190,7 +192,7 @@ bool loadROSparam(ros::NodeHandle &nh_, std::string name, T &variable)
 {
 	if(!nh_.getParam( name, variable ))
 	{
-		ROS_ERROR("Failed to load ROS parameter named '%s' !)", name.c_str()) ;
+		ROS_ERROR("Failed to load ROS parameter named '%s' !", name.c_str()) ;
 		return false;
 	}
 	//ROS_INFO_STREAM(name << " = " << variable);
@@ -272,17 +274,20 @@ int main(int argc, char** argv)
   loadROSparam(nh, "trajectory_dx", dx);
   loadROSparam(nh, "trajectory_dy", dy);
 
+  double interpolation_dt;
+  int interpolation_steps;
+  loadROSparam(nh, "interpolation_dt", interpolation_dt);
+  loadROSparam(nh, "interpolation_steps", interpolation_steps);
+
   TrajectoryGenerator tg;
   tg.initGrid( Nx, Ny, dx, dy, origin);
-  tg.printGridLayout();
-  tg.printGridMap();
 
   // Trajectory Path
   std::string trajPathStr = "ABCFEDGHIFEDA";
   loadROSparam(nh, "trajectory_path", trajPathStr);
 
   ice_msgs::setTrajectory traj_msg_;
-  traj_msg_.request.x =tg.str2Vec(trajPathStr);
+  traj_msg_.request.x = tg.str2Vec(trajPathStr);
   for(int i=0;i<traj_msg_.request.x.size();i++)
 	  traj_msg_.request.t.push_back(2.0);
 
@@ -623,26 +628,15 @@ int main(int argc, char** argv)
 				 case 'd':
 				 {
 					 // Ask for file name
-					 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
-					 char cmd[100];
 					 puts("*** Enter name of new data file ***");
-					 cin.getline(cmd,100);
-					 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
-
-					 dataFile = string(cmd);				   // TODO: add package path
+					 getInput(dataFile);
 					 break;
 				 }
 				 case 'r':
 				 {
 					 // Ask for number of trials
-					 tcsetattr(kfd, TCSANOW, &cooked);         // Use old terminal settings
-					 char cmd[100];
 					 puts("*** Enter number of trials ***");
-					 cin.getline(cmd,100);
-					 tcsetattr(kfd, TCSANOW, &raw);            // Use new terminal settings
-
-					 std::stringstream  linestream(cmd);
-					 linestream >> numTrials;				   // TODO: check user input
+					 getInput(numTrials);
 					 break;
 				 }
 				 case 's':
@@ -884,21 +878,37 @@ int main(int argc, char** argv)
 
     	  while(!stop_menu_rehab)
     	  {
-
-    		  displayRehabilitationExperimentMenu(trajPathStr, expNumber);
+    		  displayRehabilitationExperimentMenu(trajPathStr, expNumber, interpolation_steps, interpolation_dt, Kp_tran, Kp_rot, Kd_tran, Kd_rot);
 
     		  getKey(c);
 
     		  switch(c)
     		  {
-    		  case '1':
+    		  case 't':
     		  {
     			  // Change path
+    			  tg.printGridLayout();
+
     			  printf("Enter trajectory path: ");
     			  getInput(trajPathStr);
+
+    			  // Update trajectory message
+    			  traj_msg_.request.x = tg.str2Vec(trajPathStr);
+    			  for(int i=0;i<traj_msg_.request.x.size();i++)
+    				  traj_msg_.request.t.push_back(2.0);
+
     			  break;
     		  }
-    		  case '2':
+    		  case 'i':
+    		  {
+    			  // Change interpolation settings
+    			  printf("Enter number of interpolation steps: ");
+    			  getInput(interpolation_steps);
+    			  printf("Enter seconds per interpolation steps: ");
+    			  getInput(interpolation_dt);
+    			  break;
+    		  }
+    		  case 'g':
     		  {
     			  // Change gains
     			  printf("Enter Kp tran (%.2f): ",Kp_tran); getInput(Kp_tran);
@@ -907,6 +917,13 @@ int main(int argc, char** argv)
     			  printf("Enter Kd rot  (%.2f): ",Kd_rot);  getInput(Kd_rot);
 
     			  arms.setGains(Kp_tran,Kp_rot,Kd_tran,Kd_rot,ArmsCartesian::LEFT);
+    			  break;
+    		  }
+    		  case 'p':
+    		  {
+    			  // Print layout
+        		  tg.printGridLayout();
+        		  tg.printGridMap();
     			  break;
     		  }
     		  case 'n':
@@ -947,10 +964,8 @@ int main(int argc, char** argv)
     					  p_old = p_new;
 
     				  // Interpolate
-    				  int Nint = 20;
-    				  double dt = 0.1;
     				  std::vector<geometry_msgs::Pose> p_vec;
-    				  tg.interpolator(p_old, p_new, Nint, p_vec);
+    				  tg.interpolator(p_old, p_new, interpolation_steps, p_vec);
 
     				  // Tell user where to move
     				  std::string msg = trajPathStr.substr(k,1);
@@ -960,7 +975,7 @@ int main(int argc, char** argv)
     				  ros::Duration(1.0).sleep();
 
     				  // Send head command
-    				  double duration = Nint*dt;
+    				  double duration = interpolation_dt*interpolation_steps;
     				  pr2manager.lookAtPoint(p_new.position, duration);
 
     				  // Send arm commands
@@ -969,7 +984,7 @@ int main(int argc, char** argv)
     					  geometry_msgs::Pose p_int = p_vec[i];
     					  //std::cout<<p_int.position<<"\n";
     					  arms.moveToPose(arm,p_int,"torso_lift_link",false);
-    					  ros::Duration(0.1).sleep();
+    					  ros::Duration(interpolation_dt).sleep();
     				  }
 
     				  ros::Duration(1.0).sleep();
