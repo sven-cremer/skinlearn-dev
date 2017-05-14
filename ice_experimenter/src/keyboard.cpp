@@ -20,6 +20,7 @@
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 #include <sound_play/sound_play.h>
+#include <tf/transform_datatypes.h>
 
 // PR2 utilities
 #include <apc_robot/pr2_manager.h>
@@ -310,6 +311,11 @@ int main(int argc, char** argv)
   double torso_height;
   loadROSparam(nh, "torso_height", torso_height);
   pr2manager.setDefaultTorso(torso_height);
+
+  // ROS publisher
+  std::string commandPoseTopic;
+  loadROSparam(nh, "command_pose_topic", commandPoseTopic);
+  ros::Publisher pub_commandPose_ = nh.advertise<geometry_msgs::PoseStamped>(commandPoseTopic.c_str(),1);
 
   // ROS service clients
   ros::ServiceClient toggle_updateWeights_srv_ = nh.serviceClient<ice_msgs::setBool>("/pr2_adaptNeuroController/updateNNweights");
@@ -981,9 +987,14 @@ int main(int argc, char** argv)
     				  // Send arm commands
     				  for(int i=0; i<p_vec.size();i++)
     				  {
-    					  geometry_msgs::Pose p_int = p_vec[i];
-    					  //std::cout<<p_int.position<<"\n";
-    					  arms.moveToPose(arm,p_int,"torso_lift_link",false);
+    					  geometry_msgs::PoseStamped p_i;
+    					  p_i.pose = p_vec[i];
+    					  p_i.header.frame_id = "torso_lift_link";
+    					  p_i.header.stamp = ros::Time::now();		// + ros::Duration(dt)
+    					  //p_i.header.seq = i;
+
+    					  pub_commandPose_.publish(p_i);
+
     					  ros::Duration(interpolation_dt).sleep();
     				  }
 
@@ -1022,9 +1033,12 @@ int main(int argc, char** argv)
 
     	  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
 
+    	  geometry_msgs::PoseStamped ps;
+    	  ps.header.frame_id = "torso_lift_link";
+
     	  // Generate two Poses
     	  std::vector<geometry_msgs::Pose> p_way;
-    	  p_way = tg.str2Vec("AF");
+    	  p_way = tg.str2Vec("BB");
 
     	  // Random uniform rotation
     	  double u0 = rand() / (RAND_MAX + 1.);
@@ -1039,26 +1053,38 @@ int main(int argc, char** argv)
     	  p_way[1].orientation.w = q1 * s1;
     	  p_way[1].orientation.x = q1 * c1;
     	  p_way[1].orientation.y = q2 * s2;
-    	  p_way[1].orientation.y = q2 * c2;
+    	  p_way[1].orientation.z = q2 * c2;
 
     	  std::cout<<"Start:\n"<<p_way[0];
     	  std::cout<<"Stop:\n"<<p_way[1]<<"\n";
 
+    	  double roll, pitch, yaw;
+    	  tf::Quaternion qt1(p_way[1].orientation.x, p_way[1].orientation.y, p_way[1].orientation.z, p_way[1].orientation.w);
+    	  tf::Matrix3x3 m1(qt1);
+    	  m1.getRPY(roll, pitch, yaw);
+    	  std::cout << "Roll: " << roll*180/M_PI << ", Pitch: " << pitch*180/M_PI << ", Yaw: " << yaw*180/M_PI << std::endl;
+    	  //transform.getBasis().getRPY(roll, pitch, yaw);
+
     	  // Interpolate
     	  std::vector<geometry_msgs::Pose> p_vec;
-    	  tg.interpolator(p_way[0], p_way[1], 50, p_vec);
+    	  tg.interpolator(p_way[0], p_way[1], interpolation_steps, p_vec);
 
     	  // Starting position
-    	  arms.moveToPose(arm,p_vec[0],"torso_lift_link",false);
+    	  std::cout<<"Moving to start position ...\n";
+		  ps.pose = p_vec[0];
+		  ps.header.stamp = ros::Time::now();
+		  pub_commandPose_.publish(ps);
 
     	  ros::Duration(2.0).sleep();
 
     	  // Send arm commands
+    	  std::cout<<"Moving to goal in "<<interpolation_steps*interpolation_dt<<" seconds ...\n";
     	  for(int i=0; i<p_vec.size();i++)
     	  {
-    		  geometry_msgs::Pose p_int = p_vec[i];
-    		  arms.moveToPose(arm,p_int,"torso_lift_link",false);
-    		  ros::Duration(0.1).sleep();
+    		  ps.pose = p_vec[i];
+    		  ps.header.stamp = ros::Time::now();
+    		  pub_commandPose_.publish(ps);
+    		  ros::Duration(interpolation_dt).sleep();
     	  }
 
     	  ros::Duration(2.0).sleep();
@@ -1067,9 +1093,10 @@ int main(int argc, char** argv)
     	  // Send arm commands
     	  for(int i=0; i<p_vec.size();i++)
     	  {
-    		  geometry_msgs::Pose p_int = p_vec[p_vec.size()-1-i];
-    		  arms.moveToPose(arm,p_int,"torso_lift_link",false);
-    		  ros::Duration(0.1).sleep();
+    		  ps.pose = p_vec[p_vec.size()-1-i];
+    		  ps.header.stamp = ros::Time::now();
+    		  pub_commandPose_.publish(ps);
+    		  ros::Duration(interpolation_dt).sleep();
     	  }
 
     	  std::cout<<"Done!\n";

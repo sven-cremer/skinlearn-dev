@@ -2,6 +2,8 @@
 arm_controllers_default: [l_arm_controller,r_arm_controller]
 arm_controllers_new:     [l_cart,r_cart]
 
+command_pose_topic: /l_cart/command_pose
+
 data_topics: [/l_cart/state/x/pose,/l_cart/state/x_desi/pose]
 data_fnames: [x_act,x_des]
 data_path: /home/sven/test
@@ -15,8 +17,8 @@ trajectory_Ny: 4
 trajectory_dx: 0.07
 trajectory_dy: 0.08
 
-interpolation_dt: 0.1
-interpolation_steps: 25
+interpolation_dt: 0.05
+interpolation_steps: 40
 
 torso_height: 0.13
 joints_l: [0.449875,0.119194,1.61072,-1.91529,3.2495,-1.4646,1.5743]
@@ -26,3 +28,11 @@ joints_r: [-1.34833,0.416038,-0.606422,-1.89242,-0.96327,-1.30197,-3.6831]
 ## Neuroadaptive Experiments
 #arm_controllers_default: [l_arm_controller]
 #arm_controllers_new:     [pr2_adaptNeuroController]
+
+#command_pose_topic: /pr2_adaptNeuroController/command_pose
+
+#data_topics: [/pr2_adaptNeuroController/state/x/pose,/pr2_adaptNeuroController/state/x_desi/pose]
+#data_fnames: [nn_xact,nn_xdes]
+
+#interpolation_dt: 0.01
+#interpolation_steps: 100
