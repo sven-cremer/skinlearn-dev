@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<arg name="fname" default="experiment"/>
+
+	<!-- Load experiment parameters -->
+	<rosparam file="$(find ice_experimenter)/cfg/$(arg fname).yaml" command="load" />
+
+</launch>
