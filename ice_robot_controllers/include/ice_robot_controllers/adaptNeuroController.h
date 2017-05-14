@@ -299,6 +299,11 @@ private:
 	ros::Subscriber sub_tactileWrench_;
 	ros::Subscriber sub_tactileData_  ;
 
+	ros::Subscriber sub_commandPose_;
+	void commandPoseCB(const geometry_msgs::PoseStamped::ConstPtr &p);
+	ros::Time commandTf;
+	Eigen::Affine3d commandPose;
+
 	// ROS messages
 	geometry_msgs::WrenchStamped msgFTData             [StoreLen];
 	sensor_msgs::JointState      msgModelStates        [StoreLen];

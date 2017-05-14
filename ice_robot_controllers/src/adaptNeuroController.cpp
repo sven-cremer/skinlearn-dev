@@ -84,6 +84,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	status_srv_ = nh_.advertiseService("/tactile/status" , &PR2adaptNeuroControllerClass::statusCB   , this);
 	tactileFilterWeights_srv_ = nh_.advertiseService("/tactile/filterWeights" , &PR2adaptNeuroControllerClass::tactileFilterWeightsCB       , this);
 
+	sub_commandPose_ = nh_.subscribe("command_pose", 1, &PR2adaptNeuroControllerClass::commandPoseCB, this);
 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
 	runExperimentB_srv_ = nh_.advertiseService("runExperimentB" , &PR2adaptNeuroControllerClass::runExperimentB   , this);
@@ -507,6 +508,14 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 					experiment_ = PR2adaptNeuroControllerClass::Done;
 				}
 			}
+		}
+
+		if(externalRefTraj)
+		{
+			// Subscriber updates commandPose, commandTf
+			// TODO: interpolate?
+			x_des_ = commandPose;
+
 		}
 
 		/***************** UPDATE LOOP VARIABLES *****************/
@@ -1364,6 +1373,16 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 	// System Model END
 	/////////////////////////
 }
+
+void PR2adaptNeuroControllerClass::commandPoseCB(const geometry_msgs::PoseStamped::ConstPtr &p)
+{
+	// TODO perform tf transform, assume torso_lift_link for now
+	// if(p->header.frame_id == "torso_lift_link")
+	commandTf = p->header.stamp;
+
+	tf::poseMsgToEigen(p->pose, commandPose);
+}
+
 
 void PR2adaptNeuroControllerClass::bufferData()
 {
