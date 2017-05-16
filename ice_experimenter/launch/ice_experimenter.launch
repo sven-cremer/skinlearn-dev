@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 
 <launch>
+	
+	<arg name="ft" default="false"/>
+	
 	<!-- Load experiment parameters -->
 	<rosparam file="$(find ice_experimenter)/cfg/experiment.yaml" command="load" />
 
@@ -8,13 +11,14 @@
 	
 	<!-- Launch JT Cartesian controller (spawn stopped) -->
 	<include file="$(find apc_robot)/launch/arms_cartesian.launch" />
-	
+
 	<node name="l_posture"
 		  pkg="apc_robot" type="posture.py"
 		  args="l_cart elbowupl" />
-	
-	<!-- Load FT calibration values -->
-	<rosparam file="$(find ice_robot_controllers)/config/l_ft_calib_data.yaml"
-			  command="load" />
+
+	<!-- Load FT compensation node -->
+	<group if="$(arg ft)">
+		<include file="$(find gravity_compensation)/launch/gravity_compensation.launch" />
+	</group>
 
 </launch>

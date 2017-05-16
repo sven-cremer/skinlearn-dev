@@ -1007,7 +1007,7 @@ int main(int argc, char** argv)
 
     			  sc.say("Done!");
     			  std::cout<<"Done!\n";
-
+    			  expNumber++;
     			  break;
     		  }
     		  case 'q':
