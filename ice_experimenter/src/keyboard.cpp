@@ -47,6 +47,24 @@ using namespace std;
 static bool controller_active = false;
 static bool updating_weights = true;
 
+enum Mode{ ASSISTIVE, PASSIVE, RESISTIVE};
+
+std::string enum2str(Mode m)
+{
+	string tmp;
+	switch(m)
+	{
+	case ASSISTIVE:
+		return "ASSISTIVE";
+	case PASSIVE:
+		return "PASSIVE";
+	case RESISTIVE:
+		return "RESISTIVE";
+	default:
+		return "unknown";
+	}
+}
+
 void displayMainMenu()
 {
 	string tmp1 = "Status: " + (string)(controller_active ?  "ON" : "OFF");
@@ -89,8 +107,10 @@ void displayControllerMenu()
 	puts(" ");
 }
 
-void displayRehabilitationExperimentMenu(std::string trajPath, int expNumber, int interp_steps, double interp_dt, double Kp_tran, double Kp_rot, double Kd_tran, double Kd_rot)
+void displayRehabilitationExperimentMenu(std::string trajPath, int expNumber, int interp_steps, double interp_dt, double Kp_tran, double Kp_rot, double Kd_tran, double Kd_rot, Mode exp_mode)
 {
+
+	string tmp = enum2str(exp_mode);
 	printf("---------------------------\n");
 	printf("MENU:   Rehabilitation     \n");
 	printf("---------------------------\n");
@@ -98,6 +118,7 @@ void displayRehabilitationExperimentMenu(std::string trajPath, int expNumber, in
 	printf("Use 'i' to change interpolation settings (%i steps, %.3f sec/step)\n", interp_steps, interp_dt);
 	printf("Use 'g' to change JT Cartesian gains (%.1f, %.1f, %.1f, %.1f)\n",Kp_tran, Kp_rot, Kd_tran, Kd_rot);
 	printf("Use 'p' to print layout\n");
+	printf("Use 'm' to change mode (%s)\n",tmp.c_str());
 	printf("\n");
 	printf("Use 'n' to change experiment number: %i \n", expNumber);
 	printf("Use 's' to start experiment\n");
@@ -248,6 +269,8 @@ int main(int argc, char** argv)
   double deltaTorsoHeight = 0.01;
 
   ArmsCartesian arms;
+
+  Mode exp_mode = PASSIVE;
 
   // Data recording
   std::vector<std::string> data_topics;
@@ -884,7 +907,7 @@ int main(int argc, char** argv)
 
     	  while(!stop_menu_rehab)
     	  {
-    		  displayRehabilitationExperimentMenu(trajPathStr, expNumber, interpolation_steps, interpolation_dt, Kp_tran, Kp_rot, Kd_tran, Kd_rot);
+    		  displayRehabilitationExperimentMenu(trajPathStr, expNumber, interpolation_steps, interpolation_dt, Kp_tran, Kp_rot, Kd_tran, Kd_rot, exp_mode);
 
     		  getKey(c);
 
@@ -932,6 +955,25 @@ int main(int argc, char** argv)
         		  tg.printGridMap();
     			  break;
     		  }
+    		  case 'm':
+    		  {
+    			  // Change mode
+    			  switch(exp_mode)
+    			  {
+    			  case PASSIVE:
+    				  exp_mode = ASSISTIVE;
+    				  break;
+    			  case ASSISTIVE:
+    				  exp_mode = RESISTIVE;
+    				  break;
+    			  case RESISTIVE:
+    				  exp_mode = PASSIVE;
+    				  break;
+    			  default:
+    				  std::cerr<<"Experiment mode not found!\n";
+    			  }
+    			  break;
+    		  }
     		  case 'n':
     		  {
     			  // Change number
@@ -942,8 +984,16 @@ int main(int argc, char** argv)
     		  case 's':
     		  {
     			  // Start experiment
-    			  pr2manager.on(false);						// Controller on
+
+    			  // Turn on arm controller and set gains
+    			  pr2manager.on(false);
     			  controller_active = true;
+    			  double scale = 1.0;
+    			  if(exp_mode == ASSISTIVE)
+    				  scale = 0.2;
+    			  if(exp_mode == RESISTIVE)
+    				  scale = 0.4;
+    			  arms.setGains(scale*Kp_tran,scale*Kp_rot,scale*Kd_tran,scale*Kd_rot,ArmsCartesian::LEFT);
 
     			  typedef std::vector<geometry_msgs::Pose>::iterator it_type;
     			  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
@@ -975,7 +1025,9 @@ int main(int argc, char** argv)
 
     				  // Tell user where to move
     				  std::string msg = trajPathStr.substr(k,1);
-    				  if(k != 0)
+    				  if('A' == trajPathStr[k])
+    					  sc.say("ay");
+    				  else
     					  sc.say(msg);
     				  std::cout << msg << " " << std::flush;
     				  ros::Duration(1.0).sleep();
@@ -985,28 +1037,62 @@ int main(int argc, char** argv)
     				  pr2manager.lookAtPoint(p_new.position, duration);
 
     				  // Send arm commands
-    				  for(int i=0; i<p_vec.size();i++)
+    				  if(exp_mode != RESISTIVE)
     				  {
-    					  geometry_msgs::PoseStamped p_i;
-    					  p_i.pose = p_vec[i];
-    					  p_i.header.frame_id = "torso_lift_link";
-    					  p_i.header.stamp = ros::Time::now();		// + ros::Duration(dt)
-    					  //p_i.header.seq = i;
+    					  // Help user
+    					  for(int i=0; i<p_vec.size();i++)
+    					  {
+    						  geometry_msgs::PoseStamped p_i;
+    						  p_i.pose = p_vec[i];
+    						  p_i.header.frame_id = "torso_lift_link";
+    						  p_i.header.stamp = ros::Time::now();		// + ros::Duration(dt)
+    						  //p_i.header.seq = i;
 
-    					  pub_commandPose_.publish(p_i);
+    						  pub_commandPose_.publish(p_i);
 
-    					  ros::Duration(interpolation_dt).sleep();
+    						  ros::Duration(interpolation_dt).sleep();
+    					  }
+    					  ros::Duration(1.0).sleep();
     				  }
+    				  else
+    				  {
+    					  // Wait
+    					  double delay = 1.0;
+    					  ros::Duration(delay).sleep();
+    					  // Help user
+    					  for(int i=0; i<p_vec.size();i++)
+    					  {
+    						  geometry_msgs::PoseStamped p_i;
+    						  p_i.pose = p_vec[i];
+    						  p_i.header.frame_id = "torso_lift_link";
+    						  p_i.header.stamp = ros::Time::now();
 
-    				  ros::Duration(1.0).sleep();
+    						  pub_commandPose_.publish(p_i);
+
+    						  ros::Duration(interpolation_dt).sleep();
+    					  }
+    					  /*
+    					  ros::Duration(duration).sleep();
+    					  // Update final position
+						  geometry_msgs::PoseStamped p_i;
+						  p_i.pose = p_new;
+						  p_i.header.frame_id = "torso_lift_link";
+						  p_i.header.stamp = ros::Time::now();
+						  pub_commandPose_.publish(p_i);
+						  */
+    				  }
     			  }
     			  std::cout<<"\n";
+
+    			  sc.say("Done!");
+    			  std::cout<<"Done!\n";
 
     			  // Stop recording data
     			  recorder.stop();
 
-    			  sc.say("Done!");
-    			  std::cout<<"Done!\n";
+    			  // Set default arm gains
+    			  arms.setGains(Kp_tran,Kp_rot,Kd_tran,Kd_rot,ArmsCartesian::LEFT);
+
     			  expNumber++;
     			  break;
     		  }
