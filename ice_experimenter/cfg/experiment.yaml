@@ -6,12 +6,12 @@ command_pose_topic: /l_cart/command_pose
 
 data_topics: [/l_cart/state/x/pose,/l_cart/state/x_desi/pose, /l_cart/state/xd,/l_cart/state/xd_desi, /l_cart/state/F, /ft_sensor/ft_compensated/wrench,/l_cart/state/tau_pose,/l_cart/state/tau_posture]
 data_fnames: [pos_act,pos_des,vel_act,vel_des,f_control,f_human,tau_pose,tau_posture]
-data_path: /home/sven/Dropbox/2017_Rehab/Data
+data_path: /home/sven/Dropbox/2017_Rehab/Data_May21
 data_dir: exp
 
 #trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
-#trajectory_path: ACIGAGICADBFHDHFBDA
-trajectory_path: ABEA
+trajectory_path: ACIGAGICADBFHDHFBDA
+#trajectory_path: ABEA
 trajectory_origin: [0.48,0.08,-0.05]
 trajectory_Nx: 3
 trajectory_Ny: 4
@@ -24,16 +24,3 @@ interpolation_steps: 40
 torso_height: 0.13
 joints_l: [0.449875,0.119194,1.61072,-1.91529,3.2495,-1.4646,1.5743]
 joints_r: [-1.34833,0.416038,-0.606422,-1.89242,-0.96327,-1.30197,-3.6831]
-
-
-## Neuroadaptive Experiments
-#arm_controllers_default: [l_arm_controller]
-#arm_controllers_new:     [pr2_adaptNeuroController]
-
-#command_pose_topic: /pr2_adaptNeuroController/command_pose
-
-#data_topics: [/pr2_adaptNeuroController/state/x/pose,/pr2_adaptNeuroController/state/x_desi/pose]
-#data_fnames: [nn_xact,nn_xdes]
-
-#interpolation_dt: 0.01
-#interpolation_steps: 100

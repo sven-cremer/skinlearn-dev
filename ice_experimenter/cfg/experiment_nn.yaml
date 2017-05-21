@@ -1,0 +1,26 @@
+## Neuroadaptive Experiments
+arm_controllers_default: [l_arm_controller]
+arm_controllers_new:     [pr2_adaptNeuroController]
+
+command_pose_topic: /pr2_adaptNeuroController/command_pose
+
+data_topics: [/pr2_adaptNeuroController/state/x/pose,/pr2_adaptNeuroController/state/x_desi/pose]
+data_fnames: [nn_xact,nn_xdes]
+data_path: /home/sven/Dropbox/2017_Rehab/Data
+data_dir: exp
+
+#trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
+#trajectory_path: ACIGAGICADBFHDHFBDA
+trajectory_path: ABEA
+trajectory_origin: [0.48,0.08,-0.05]
+trajectory_Nx: 3
+trajectory_Ny: 4
+trajectory_dx: 0.124
+trajectory_dy: 0.124
+
+interpolation_dt: 0.005
+interpolation_steps: 400
+
+torso_height: 0.13
+joints_l: [0.449875,0.119194,1.61072,-1.91529,3.2495,-1.4646,1.5743]
+joints_r: [-1.34833,0.416038,-0.606422,-1.89242,-0.96327,-1.30197,-3.6831]
