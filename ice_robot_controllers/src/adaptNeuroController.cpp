@@ -746,16 +746,32 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			// Computes the nullspace of J
 			nullSpace = IdentityJoints - J_pinv * J_;
 
+			/*
 			for (int j = 0; j < Joints; ++j)
 			{
 				// This is the Liegeois cost function from 1977
 				q_jointLimit(j) = - (q(j) - qnom(j) )/( q.rows() * ( q_upper(j) - q_lower(j))) ;
 			}
 			nullspaceTorque = nullSpace*50*( q_jointLimit - 0.0*qd );
+			*/
+			// Posture control from JT Cartesian controller:
+			JointVec posture_err = q_posture_ - q;
+			for (size_t j = 0; j < Joints; ++j)
+			{
+				if (chain_.getJoint(j)->joint_->type == urdf::Joint::CONTINUOUS)
+					posture_err[j] = angles::normalize_angle(posture_err[j]);
+			}
+
+			for (size_t j = 0; j < Joints; ++j) {
+				if (fabs(q_posture_[j] - 9999) < 1e-5)
+					posture_err[j] = 0.0;
+			}
+			JointVec qdd_posture = k_posture * posture_err;
+			nullspaceTorque = joint_dd_ff_.array() * (nullSpace * qdd_posture).array();
 
 			tau_ = tau_ + nullspaceTorque;
-		}
 
+		}
 		/***************** TORQUE *****************/
 
 		// Torque Saturation							(if a torque command is larger than the saturation value, then scale all torque values such that torque_i=saturation_i)
