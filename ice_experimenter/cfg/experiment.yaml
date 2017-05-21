@@ -4,13 +4,14 @@ arm_controllers_new:     [l_cart,r_cart]
 
 command_pose_topic: /l_cart/command_pose
 
-data_topics: [/l_cart/state/x/pose,/l_cart/state/x_desi/pose, /l_cart/state/xd,/l_cart/state/xd_desi, /l_cart/state/F, /ft_sensor/ft_compensated/wrench]
-data_fnames: [pos_act,pos_des,vel_act,vel_des,f_control,f_human]
+data_topics: [/l_cart/state/x/pose,/l_cart/state/x_desi/pose, /l_cart/state/xd,/l_cart/state/xd_desi, /l_cart/state/F, /ft_sensor/ft_compensated/wrench,/l_cart/state/tau_pose,/l_cart/state/tau_posture]
+data_fnames: [pos_act,pos_des,vel_act,vel_des,f_control,f_human,tau_pose,tau_posture]
 data_path: /home/sven/Dropbox/2017_Rehab/Data
 data_dir: exp
 
 #trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
-trajectory_path: ACIGAGICADBFHDHFBDA
+#trajectory_path: ACIGAGICADBFHDHFBDA
+trajectory_path: ABEA
 trajectory_origin: [0.48,0.08,-0.05]
 trajectory_Nx: 3
 trajectory_Ny: 4
