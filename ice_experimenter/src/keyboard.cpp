@@ -1007,16 +1007,6 @@ int main(int argc, char** argv)
     		  {
     			  // Start experiment
 
-    			  // YAML file for saving paramters
-    			  YAML::Emitter out;
-    			  out << YAML::BeginMap;
-
-    			  out << YAML::Key << "experiment" << YAML::Value << expNumber;
-    			  out << YAML::Key << "mode" << YAML::Value << enum2str(exp_mode);
-    			  out << YAML::Key << "trajectory" << YAML::Value << trajPathStr;
-    			  vec2YAML("arm_controllers_default", arm_controllers_default, out);
-    			  vec2YAML("arm_controllers_new", arm_controllers_new, out);
-
     			  // Turn on arm controller and set gains
     			  pr2manager.on(false);
     			  controller_active = true;
@@ -1026,8 +1016,6 @@ int main(int argc, char** argv)
     			  if(exp_mode == RESISTIVE)
     				  scale = 0.4;
     			  arms.setGains(scale*Kp_tran,scale*Kp_rot,scale*Kd_tran,scale*Kd_rot,ArmsCartesian::LEFT);
-    			  out << YAML::Key << "gains";
-    			  out << YAML::Flow << YAML::BeginSeq << scale*Kp_tran << scale*Kp_rot << scale*Kd_tran << scale*Kd_rot << YAML::EndSeq;
 
     			  typedef std::vector<geometry_msgs::Pose>::iterator it_type;
     			  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
@@ -1045,8 +1033,11 @@ int main(int argc, char** argv)
     			  //arms.updateState();
     			  //arms.getCurrentPose(arm, p_old);
 
-    			  out << YAML::Key << "time";
-    			  out << YAML::Flow << YAML::BeginSeq;
+    			  // YAML Emitters for saving waypoint info
+    			  YAML::Emitter out_dt, out_t, out_p;
+    			  out_dt << YAML::BeginMap << YAML::Key << "dt"     << YAML::Flow << YAML::BeginSeq;
+    			  out_t  << YAML::BeginMap << YAML::Key << "time"   << YAML::Flow << YAML::BeginSeq;
+    			  out_p  << YAML::BeginMap << YAML::Key << "points" << YAML::Flow << YAML::BeginSeq;
 
     			  for(int k = 0; k < traj_msg_.request.x.size(); k++)
     			  {
@@ -1121,13 +1112,33 @@ int main(int argc, char** argv)
     				  }
     				  // Reached waypoint
     				  ros::Time stop = ros::Time::now();
-    				  //out << (stop-start).toSec();
-    				  out << stop.toNSec();
+    				  out_dt << (stop-start).toSec();
+    				  out_t  << stop.toNSec();
+    				  out_p  << msg;
     			  }
     			  std::cout<<"\n";
 
-    			  out << YAML::EndSeq << YAML::EndMap;
-    			  saveYAML(recorder.getPathDataDir(),"results.yaml", out);
+    			  // Save data to YAML emitters
+    			  out_dt << YAML::EndSeq << YAML::EndMap;
+    			  out_t  << YAML::EndSeq << YAML::EndMap;
+    			  out_p  << YAML::EndSeq << YAML::EndMap;
+    			  YAML::Emitter out;
+    			  out << YAML::BeginMap;
+    			  out << YAML::Key << "experiment" << YAML::Value << expNumber;
+    			  out << YAML::Key << "mode" << YAML::Value << enum2str(exp_mode);
+    			  out << YAML::Key << "trajectory" << YAML::Value << trajPathStr;
+    			  vec2YAML("arm_controllers_default", arm_controllers_default, out);
+    			  vec2YAML("arm_controllers_new", arm_controllers_new, out);
+    			  out << YAML::Key << "gains" << YAML::Flow << YAML::BeginSeq << scale*Kp_tran << scale*Kp_rot << scale*Kd_tran << scale*Kd_rot << YAML::EndSeq;
+    			  out << YAML::EndMap;
+
+    			  // Save YAML file
+    			  std::string pathToFile = recorder.getPathDataDir() + "/results.yaml";
+    			  std::cout<<"Saving file: "<<pathToFile<<"\n";
+    			  std::ofstream fout(pathToFile.c_str());
+    			  fout << out.c_str() << "\n" << out_dt.c_str() << "\n" << out_t.c_str() << "\n" << out_p.c_str();
+    			  fout.close();
+    			  //saveYAML(recorder.getPathDataDir(),"results.yaml", out);
 
     			  sc.say("Done!");
     			  std::cout<<"Done!\n";
