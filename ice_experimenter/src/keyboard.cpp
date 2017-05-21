@@ -232,6 +232,17 @@ void saveYAML(std::string path, std::string fname, YAML::Emitter& out_)
 	fout.close();
 }
 
+void vec2YAML(std::string key, std::vector<std::string> vec, YAML::Emitter& out)
+{
+	out << YAML::Key << key;
+	out << YAML::Flow << YAML::BeginSeq;
+	for(int i=0;i<vec.size();i++)
+	{
+		out << vec[i];
+	}
+	out << YAML::EndSeq;
+}
+
 int kfd = 0;
 struct termios cooked, raw;
 
@@ -1003,6 +1014,8 @@ int main(int argc, char** argv)
     			  out << YAML::Key << "experiment" << YAML::Value << expNumber;
     			  out << YAML::Key << "mode" << YAML::Value << enum2str(exp_mode);
     			  out << YAML::Key << "trajectory" << YAML::Value << trajPathStr;
+    			  vec2YAML("arm_controllers_default", arm_controllers_default, out);
+    			  vec2YAML("arm_controllers_new", arm_controllers_new, out);
 
     			  // Turn on arm controller and set gains
     			  pr2manager.on(false);
@@ -1013,6 +1026,8 @@ int main(int argc, char** argv)
     			  if(exp_mode == RESISTIVE)
     				  scale = 0.4;
     			  arms.setGains(scale*Kp_tran,scale*Kp_rot,scale*Kd_tran,scale*Kd_rot,ArmsCartesian::LEFT);
+    			  out << YAML::Key << "gains";
+    			  out << YAML::Flow << YAML::BeginSeq << scale*Kp_tran << scale*Kp_rot << scale*Kd_tran << scale*Kd_rot << YAML::EndSeq;
 
     			  typedef std::vector<geometry_msgs::Pose>::iterator it_type;
     			  ArmsCartesian::WhichArm arm = ArmsCartesian::LEFT;
