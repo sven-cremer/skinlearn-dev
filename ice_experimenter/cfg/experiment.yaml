@@ -9,8 +9,8 @@ data_fnames: [pos_act,pos_des,vel_act,vel_des,f_control,f_human]
 data_path: /home/sven/Dropbox/2017_Rehab/Data
 data_dir: exp
 
-trajectory_path: ABCFEDGHILKJA
-#trajectory_path: AEIHDGECFBA
+#trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
+trajectory_path: ACIGAGICADBFHDHFBDA
 trajectory_origin: [0.48,0.08,-0.05]
 trajectory_Nx: 3
 trajectory_Ny: 4

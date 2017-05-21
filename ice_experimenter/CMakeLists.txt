@@ -47,5 +47,5 @@ include_directories(
 )
 # Keyboard interface
 add_executable(        ice_experimenter   src/keyboard.cpp)
-target_link_libraries( ice_experimenter   ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries( ice_experimenter   ${catkin_LIBRARIES} ${Boost_LIBRARIES} yaml-cpp)
 add_dependencies(      ice_experimenter   ice_msgs_generate_messages_cpp)

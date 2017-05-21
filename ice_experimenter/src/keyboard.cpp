@@ -13,6 +13,8 @@
 #include <termios.h>
 #include <signal.h>
 #include <Eigen/Core>
+#include <yaml-cpp/yaml.h>
+#include <fstream>
 
 // ROS
 #include <ros/ros.h>
@@ -219,6 +221,15 @@ bool loadROSparam(ros::NodeHandle &nh_, std::string name, T &variable)
 	}
 	//ROS_INFO_STREAM(name << " = " << variable);
 	return true;
+}
+
+void saveYAML(std::string path, std::string fname, YAML::Emitter& out_)
+{
+	std::string pathToFile = path + "/" + fname;
+	std::cout<<"Saving file: "<<pathToFile<<"\n";
+	std::ofstream fout(pathToFile.c_str());
+	fout << out_.c_str();
+	fout.close();
 }
 
 int kfd = 0;
@@ -985,6 +996,14 @@ int main(int argc, char** argv)
     		  {
     			  // Start experiment
 
+    			  // YAML file for saving paramters
+    			  YAML::Emitter out;
+    			  out << YAML::BeginMap;
+
+    			  out << YAML::Key << "experiment" << YAML::Value << expNumber;
+    			  out << YAML::Key << "mode" << YAML::Value << enum2str(exp_mode);
+    			  out << YAML::Key << "trajectory" << YAML::Value << trajPathStr;
+
     			  // Turn on arm controller and set gains
     			  pr2manager.on(false);
     			  controller_active = true;
@@ -1010,6 +1029,9 @@ int main(int argc, char** argv)
 
     			  //arms.updateState();
     			  //arms.getCurrentPose(arm, p_old);
+
+    			  out << YAML::Key << "time";
+    			  out << YAML::Flow << YAML::BeginSeq;
 
     			  for(int k = 0; k < traj_msg_.request.x.size(); k++)
     			  {
@@ -1037,6 +1059,7 @@ int main(int argc, char** argv)
     				  pr2manager.lookAtPoint(p_new.position, duration);
 
     				  // Send arm commands
+    				  ros::Time start = ros::Time::now();
     				  if(exp_mode != RESISTIVE)
     				  {
     					  // Help user
@@ -1081,8 +1104,15 @@ int main(int argc, char** argv)
 						  pub_commandPose_.publish(p_i);
 						  */
     				  }
+    				  // Reached waypoint
+    				  ros::Time stop = ros::Time::now();
+    				  //out << (stop-start).toSec();
+    				  out << stop.toNSec();
     			  }
     			  std::cout<<"\n";
+
+    			  out << YAML::EndSeq << YAML::EndMap;
+    			  saveYAML(recorder.getPathDataDir(),"results.yaml", out);
 
     			  sc.say("Done!");
     			  std::cout<<"Done!\n";
