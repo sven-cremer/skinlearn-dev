@@ -1,24 +1,25 @@
 ## Rehabilitation Experiments
-arm_controllers_default: [l_arm_controller,r_arm_controller]
-arm_controllers_new:     [l_cart,r_cart]
+arm_controllers_default: [l_arm_controller]
+arm_controllers_new:     [l_cart]
 
 command_pose_topic: /l_cart/command_pose
 
 data_topics: [/l_cart/state/x/pose,/l_cart/state/x_desi/pose, /l_cart/state/xd,/l_cart/state/xd_desi, /l_cart/state/F, /ft_sensor/ft_compensated/wrench,/l_cart/state/tau_pose,/l_cart/state/tau_posture]
 data_fnames: [pos_act,pos_des,vel_act,vel_des,f_control,f_human,tau_pose,tau_posture]
-data_path: /home/sven/Dropbox/2017_Rehab/Data_May21
+data_path: /home/sven/Dropbox/2017_Rehab/Data_June12_SubC
 data_dir: exp
 
 #trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
-trajectory_path: ACIGAGICADBFHDHFBDA
 #trajectory_path: ABEA
-trajectory_origin: [0.48,0.08,-0.05]
+#trajectory_origin: [0.48,0.08,-0.05]
+trajectory_path: ACIGAGICADBFHDHFBDA
+trajectory_origin: [0.49,-0.10,-0.05]
 trajectory_Nx: 3
-trajectory_Ny: 4
-trajectory_dx: 0.124
-trajectory_dy: 0.124
+trajectory_Ny: 3
+trajectory_dx: 0.125
+trajectory_dy: 0.125
 
-interpolation_dt: 0.05
+interpolation_dt: 0.06
 interpolation_steps: 40
 
 torso_height: 0.13
