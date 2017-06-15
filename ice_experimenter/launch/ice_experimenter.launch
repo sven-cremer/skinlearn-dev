@@ -2,13 +2,17 @@
 
 <launch>
 	
-	<arg name="ft" default="true"/>
-	<arg name="cfg" default="experiment"/>
+	<arg name="ft"    default="true"/>
+	<arg name="cfg"   default="experiment"/>
+	<arg name="sound" default="false"/>
 	
 	<!-- Load experiment parameters -->
 	<rosparam file="$(find ice_experimenter)/cfg/$(arg cfg).yaml" command="load" />
 
-	<include file="$(find sound_play)/soundplay_node.launch" />
+	<!-- Use speaker -->
+	<group if="$(arg sound)">
+		<include file="$(find sound_play)/soundplay_node.launch" />
+	</group>
 	
 	<!-- Launch JT Cartesian controller (spawn stopped) -->
 	<include file="$(find apc_robot)/launch/arms_cartesian.launch" />
