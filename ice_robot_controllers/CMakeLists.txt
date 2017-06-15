@@ -80,6 +80,9 @@ pr2_enable_rpath(ice_robot_controllers)
 add_library(nn_controller include/csl/nn_controller.cpp)
 target_link_libraries(nn_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_library(jt_controller src/jt_cartesian_controller.cpp)
+target_link_libraries(jt_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
 #############
 ## Install ##
 #############
