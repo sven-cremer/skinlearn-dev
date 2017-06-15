@@ -741,10 +741,18 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		// JT Cartesian XXX
 		if(true)
 		{
-			Eigen::VectorXd temp = xdot_;
-			ptrJTController->update(x_,temp,x_des_,fc_JT_);
+			Eigen::Vector3d px(x_.translation());
+			Eigen::Vector3d pdes(x_des_.translation());
+			px.head(2) = pdes.head(2);
+			Eigen::Affine3d t0 = x_;
+			t0.translation() = px;		// Make xy error zero
+
+			Eigen::VectorXd t1 = xdot_;
+
+			ptrJTController->update(t0,t1,x_des_,fc_JT_);
 			//std::cout<<"fc: "<<fc_JT_.transpose()<<"\n";
-			Force6d.tail(4) = fc_JT_.tail(4);
+			//Force6d.tail(4) = fc_JT_.tail(4);
+			Force6d += fc_JT_;
 		}
 
 		tau_ = tau_ + JacobianTrans*Force6d;		// [7x6]*[6x1]->[7x1]
