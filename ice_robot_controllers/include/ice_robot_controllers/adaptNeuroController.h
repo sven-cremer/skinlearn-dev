@@ -32,6 +32,7 @@
 //#include "csl/neural_network.hpp"
 #include "csl/nn_controller.cpp"
 #include "csl/outer_loop.h"
+#include "ice_robot_controllers/jt_cartesian_controller.cpp"
 
 // ROS messages
 #include <ice_msgs/neuroControllerState.h>
@@ -439,6 +440,9 @@ private:
 	double fFForce;
 
 	csl::neural_network::NNController* ptrNNController;
+
+	JTCartesianController* ptrJTController;
+	Eigen::VectorXd fc_JT_;
 
 	// NN END
 	/////////////////////////

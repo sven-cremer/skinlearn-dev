@@ -19,6 +19,7 @@ PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 		delete ARMAmodel_flexi_[i];
 	}
 	delete ptrNNController;
+	delete ptrJTController;
 }
 
 /// Controller initialization in non-realtime
@@ -73,6 +74,9 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 		ROS_ERROR("initNullspace() failed!");
 		return false;
 	}
+
+	// JT Controller
+	ptrJTController = new JTCartesianController(n);
 
 	// Subscribe to Flexiforce wrench commands
 	if(useFlexiForce)
@@ -193,6 +197,8 @@ void PR2adaptNeuroControllerClass::starting()
 	PoseVec pv = affine2PoseVec(x_des_);
 	ROS_INFO("Starting pose: pos=[%f,%f,%f], rot=[%f,%f,%f]",cv(0),cv(1),cv(2),cv(3),cv(4),cv(5));
 	ROS_INFO("Starting pose: pos=[%f,%f,%f], rot=[%f,%f,%f,%f]",pv(0),pv(1),pv(2),pv(3),pv(4),pv(5),pv(6));
+
+	ptrJTController->starting(x0_);
 
 	// Reference trajectory
 	convert2NNinput(x_des_, X_m);	// Assume xd, xdd are zero
@@ -679,7 +685,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		Force6d.setZero();
 		convert2CartVec(force_c, Force6d);
 
-
 //		if(fFForce)
 //		{
 //			force_c -= t_r;		// Feedforward force [6x1] (f_human?)
@@ -733,6 +738,14 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		// F    = -(       Kp * (x-x_dis)   +     Kd * (xdot - 0)    )
 		force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
 */
+		// JT Cartesian XXX
+		if(true)
+		{
+			Eigen::VectorXd temp = xdot_;
+			ptrJTController->update(x_,temp,x_des_,fc_JT_);
+			//std::cout<<"fc: "<<fc_JT_.transpose()<<"\n";
+			Force6d.tail(4) = fc_JT_.tail(4);
+		}
 
 		tau_ = tau_ + JacobianTrans*Force6d;		// [7x6]*[6x1]->[7x1]
 
@@ -851,7 +864,6 @@ void PR2adaptNeuroControllerClass::update()
 
 		xdot_ = J_ * qdot_;		// [6x7]*[7x1] -> [6x1]
 
-
 		// Estimate force at gripper tip
 		//	chain_.getEfforts(tau_measured_);
 		//	for (unsigned int i = 0 ; i < 6 ; i++)
@@ -903,10 +915,8 @@ void PR2adaptNeuroControllerClass::update()
 			tf::wrenchMsgToEigen(ftData_msg.wrench, wrench_raw_);
 		}
 
-
 		/***************** START DATA PROCESSING *****************/
 		runComputations = true;
-
 	}
 
 	if(loop_count_ % loopRateFactor == 0)	// After X loops, assume computations are done and send commands
@@ -1014,8 +1024,6 @@ void PR2adaptNeuroControllerClass::update()
 		}
 */
 	}
-
-
 
 }
 

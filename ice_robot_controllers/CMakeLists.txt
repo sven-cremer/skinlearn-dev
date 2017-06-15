@@ -69,7 +69,7 @@ add_library(ice_robot_controllers
 #target_link_libraries(outer_loop ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 target_link_libraries(ice_robot_controllers
-  oelLIB digitalFilterLIB nn_controller
+  oelLIB digitalFilterLIB nn_controller jt_controller
   ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(ice_robot_controllers ice_msgs_generate_messages_cpp)
 add_dependencies(ice_robot_controllers pr2_gripper_sensor_msgs_generate_messages_cpp)
@@ -80,7 +80,7 @@ pr2_enable_rpath(ice_robot_controllers)
 add_library(nn_controller include/csl/nn_controller.cpp)
 target_link_libraries(nn_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-add_library(jt_controller src/jt_cartesian_controller.cpp)
+add_library(jt_controller include/ice_robot_controllers/jt_cartesian_controller.cpp)
 target_link_libraries(jt_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 #############
