@@ -92,6 +92,7 @@ roslaunch ice_sensors rviz.launch
 The most up-to-date controller is inside the *adaptNeuroController* class. To test:
 ```
 roslaunch ice_robot_controllers adaptNeuroController.launch
+roslaunch ice_experimenter load_parameters.launch fname:=experiment_nn
 rosrun ice_experimenter ice_experimenter
 ```
 To use the speaker:

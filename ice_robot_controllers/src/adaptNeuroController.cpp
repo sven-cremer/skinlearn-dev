@@ -274,6 +274,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			transformed_force = wrench_filtered_.topRows(3);
 		}
+		else
+		{
+			wrench_transformed_.setZero();
+		}
 
 		if(useFlexiForce)
 		{
@@ -667,8 +671,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		/***************** INNER LOOP *****************/
 
 		// Neural Network
+		convert2NNinput(wrench_transformed_,force_h);
 
-		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_c);
+		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_h,force_c);
 
 		// Convert NN result to a Cartesian vector
 		Force6d.setZero();
@@ -2819,6 +2824,7 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	task_refModel_output.setZero( num_Outputs ) ;
 
 	//tau     .setZero( num_Joints / num_Outputs ? ) ;
+	force_h  .setZero( num_Outputs ) ;
 	force_c  .setZero( num_Outputs ) ;
 
 	transformed_force = Eigen::Vector3d::Zero();

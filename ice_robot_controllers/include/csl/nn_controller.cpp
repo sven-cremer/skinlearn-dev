@@ -33,6 +33,7 @@ private:
 	// Flags
 	bool nn_ON;					// Use fhat from NN
 	bool robust_ON;				// Use robustifying term
+	bool PED_ON;				// Use prescribed error dynamics
 	bool updateWeights;
 	bool updateInnerWeights;
 	NNController::ActFcn actF;	// Selected activtion function
@@ -77,6 +78,16 @@ private:
 	double Kz;					// Gain of robustifying term
 	double Zb;					// Bound for NN weight error part of robustifying term
 
+	// Prescribed error dynamics
+	Eigen::MatrixXd Kd;			// Desired stiffness
+	Eigen::MatrixXd Dd;			// Desired damping
+	Eigen::MatrixXd gamma;
+	Eigen::MatrixXd lambda;
+	Eigen::VectorXd fl;			// Filtered force
+	Eigen::VectorXd fh;			// Human force
+	Eigen::MatrixXd lambda_dot;
+	Eigen::MatrixXd fl_dot;
+
 	// RBF variables
 	double rbf_beta;			// RBF beta = 1/(2*sigma^2); fixed for each node instead of Eigen::VectorXd
 	Eigen::MatrixXd rbf_mu;		// RBF center for each hidden layer node [num_Hidden x num_Hidden]
@@ -97,6 +108,7 @@ public:
 
 		nn_ON              = true;
 		robust_ON          = true;
+		PED_ON             = true;
 		updateWeights      = true;
 		updateInnerWeights = true;
 
@@ -126,6 +138,18 @@ public:
 
 		paramInit(p_Kv, p_la, 0.01, 0.05, 100, 100, 10, 0.01);
 
+		// Prescribed error dynamics
+		Kd    .setIdentity(num_Dim,num_Dim);
+		Dd    .setIdentity(num_Dim,num_Dim);
+		gamma .setIdentity(num_Dim,num_Dim);
+		lambda.setIdentity(num_Dim,num_Dim);
+		fl.setZero(num_Dim);
+		fh.setZero(num_Dim);
+		Kd *= 20.0;				// TODO use parameters
+		Dd *= 10.0;
+		gamma  *= 9.5;
+		lambda *= 0.5;
+
 		// RBF
 		rbf_beta = 1.0;
     	rbf_mu.resize(num_Hidden, num_Hidden);
@@ -135,7 +159,6 @@ public:
     	pos.setOnes();
     	neg = -pos;
     	rbf_mu = (rbf_mu.array() < 0).select(neg,pos);	// Make elements -1 or +1
-
 	}
 
 	void paramResize()	// TODO make private
@@ -273,6 +296,7 @@ public:
 
 	void setFlagNN(bool b)				{	nn_ON = b;			}
 	void setFlagRobust(bool b)			{	robust_ON = b;		}
+	void setFlagPED(bool b)				{	PED_ON = b;			}
 	void setUpdateRate(double r)		{	updateRate = r;		}
 	void setRBFbeta(double b)			{	nn_ON = b;			}
 	bool setInnerWeights(Eigen::MatrixXd p_V)
@@ -319,6 +343,7 @@ public:
                      Eigen::VectorXd & xd_m,
                      Eigen::VectorXd & xdd_m,
                      double dt,
+                     Eigen::VectorXd & f_h,
                      Eigen::VectorXd & fc);
 
 	void UpdateJoint( Eigen::VectorXd & q,
@@ -341,6 +366,7 @@ void NNController::UpdateCart( Eigen::VectorXd & q,
                                Eigen::VectorXd & xd_m,
                                Eigen::VectorXd & xdd_m,
                                double dt,
+                               Eigen::VectorXd & f_h,
                                Eigen::VectorXd & fc)
 {
 	// Update error signals
@@ -352,6 +378,8 @@ void NNController::UpdateCart( Eigen::VectorXd & q,
 		phi << 1, q, qd, e, ed, x_m, xd_m, xdd_m;
 	else
 		phi << q, qd, e, ed, x_m, xd_m, xdd_m;
+
+	fh = f_h;
 
 	Update(dt, fc);
 }
@@ -386,8 +414,24 @@ void NNController::Update( double dt,
 	W_trans = W_.transpose();
 	V_trans = V_.transpose();
 
-	// Sliding mode
-	r = ed + La*e;
+	// Prescribed error dynamics
+	if(PED_ON)
+	{
+		gamma = Dd - lambda;
+
+		lambda_dot = Kd - gamma*lambda;
+		lambda += lambda_dot*dt;
+
+		fl_dot = fh - gamma*fl;
+		fl = fl + fl_dot*dt;
+
+		r = ed + lambda*e - fl;
+	}
+	else
+	{
+		// Sliding mode
+		r = ed + La*e;
+	}
 
 	// Robustifying term
 	if(robust_ON)
@@ -403,7 +447,7 @@ void NNController::Update( double dt,
 
 	// Control signal
 	if(nn_ON)
-		fc = Kv*r + fhat - v;
+		fc = Kv*r + fhat - v - fh;
 	else
 		fc = Kv*r;
 

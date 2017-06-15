@@ -204,6 +204,7 @@ private:
 	CartVec wrench_compensated_;
 	CartVec wrench_transformed_;
 	CartVec wrench_gripper_;			// Gripper wrench
+	Eigen::VectorXd force_h;			// Human force
 
 	double forceCutOffX ;
 	double forceCutOffY ;
