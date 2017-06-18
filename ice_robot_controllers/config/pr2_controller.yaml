@@ -173,7 +173,7 @@ cartIniYaw           :  0.0
 # NN controller             #
 #############################
 
-nnNum_Hidden          : 50
+nnNum_Hidden          : 18
 nnNum_Joints          : 7  # DOF
 
 #Note: nnNum_Inputs determined by NAC
@@ -184,7 +184,7 @@ nnNum_Joints          : 7  # DOF
 
 nnNum_Outputs         : 6  # Cartesian / Quaternion
 nn_Kv                 : [2,2,2,1,1,1]
-nn_lambda             : [20,20,20,10,10,10]
+nn_lambda             : [25,25,25,15,15,15]
 
 #nnNum_Outputs         : 3
 #nn_Kv                 : [5,5,5]
@@ -239,7 +239,7 @@ saturation:
 #############################
 # Posture control           #
 #############################
-k_posture: 5 #25.0
+k_posture: 3 #25.0
 jacobian_inverse_damping: 0.01
 joint_feedforward:
   l_shoulder_pan_joint: 3.33
