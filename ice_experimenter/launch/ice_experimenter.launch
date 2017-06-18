@@ -6,7 +6,7 @@
 	<arg name="cfg"   default="experiment"/>
 	<arg name="JT"    default="false"/>
 	<arg name="NN"    default="true"/>
-	<arg name="sound" default="false"/>
+	<arg name="sound" default="true"/>
 	
 	<!-- Load experiment parameters -->
 	<!-- rosparam file="$(find ice_experimenter)/cfg/$(arg cfg).yaml" command="load" /-->

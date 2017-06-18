@@ -182,13 +182,13 @@ nnNum_Joints          : 7  # DOF
 #  r   = (qd_m - qd) + lambda*(q_m - q);
 # Kv*r = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
 
-#nnNum_Outputs         : 6  # Cartesian / Quaternion
-#nn_Kv                 : [2,2,2,1,1,1,1]
-#nn_lambda             : [20,20,20,10,10,10,10]
+nnNum_Outputs         : 6  # Cartesian / Quaternion
+nn_Kv                 : [2,2,2,1,1,1]
+nn_lambda             : [20,20,20,10,10,10]
 
-nnNum_Outputs         : 2
-nn_Kv                 : [30,30]
-nn_lambda             : [200,200]
+#nnNum_Outputs         : 3
+#nn_Kv                 : [5,5,5]
+#nn_lambda             : [25,25,25]
 
 #nnNum_Outputs         : 1
 #nn_Kv                 : [1]
@@ -198,23 +198,24 @@ nn_kappa              : 0.1
 nn_Kz                 : 0.01
 nn_Zb                 : 100
 nn_feedForwardForce   : 0.0    # small because of jitter from FT measurments
-nn_nnF                : 0.02   # -> W (outer)
-nn_nnG                : 0.1    # -> V (inner)
+nn_nnF                : 10   # -> W (outer) smaller than G?
+nn_nnG                : 10    # -> V (inner)
 nn_ON                 : 1
 
 #############################
 # Controller plugins        #
 #############################
 
-pr2_cartneuroController:
-  type: ice_robot_controllers/PR2CartneuroControllerClass
-  root_name: torso_lift_link
-  tip_name: l_gripper_tool_frame
+#pr2_cartneuroController:
+#  type: ice_robot_controllers/PR2CartneuroControllerClass
+#  root_name: torso_lift_link
+#  tip_name: l_gripper_tool_frame
 
 pr2_adaptNeuroController:
   type: ice_robot_controllers/PR2adaptNeuroControllerClass
   root_name: torso_lift_link
-  tip_name: l_gripper_tool_frame
+  #tip_name: l_gripper_tool_frame
+  tip_name: l_wrist_roll_link
 
 #############################
 # Torque saturation         #
@@ -238,7 +239,7 @@ saturation:
 #############################
 # Posture control           #
 #############################
-k_posture: 25.0
+k_posture: 5 #25.0
 jacobian_inverse_damping: 0.01
 joint_feedforward:
   l_shoulder_pan_joint: 3.33

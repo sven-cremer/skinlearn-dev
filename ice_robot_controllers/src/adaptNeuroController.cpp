@@ -555,6 +555,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		Xd_m.setZero();
 		Xdd_m.setZero();
 
+		// Calculate a Cartesian restoring force.
+		computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
+		X_m.tail(3) = X.tail(3) - xerr_.tail(3);
+
 		// TODO
 		/*
 		X_m(3) = 1.57; Xd_m(3) = 0.0; Xdd_m(3) = 0.0;
@@ -734,9 +738,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 */
 
 		// PD controller
-
-		// Calculate a Cartesian restoring force.
-		computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
 /*
 		CartVec kp, kd;
 		kp << 100.0,100.0,100.0,100.0,100.0,100.0;
