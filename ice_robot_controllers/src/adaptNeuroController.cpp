@@ -951,7 +951,7 @@ void PR2adaptNeuroControllerClass::update()
 	}
 
 	// Send torque command (old or new)
-	if(loop_count_ > loopRateFactor)
+	//if(loop_count_ > loopRateFactor)
 	{
 		chain_.setEfforts( tau_c_latest_ );
 	}
