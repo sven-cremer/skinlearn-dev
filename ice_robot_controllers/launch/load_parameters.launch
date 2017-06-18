@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<arg name="fname" default="pr2_controller"/>
+	<arg name="ft"    default="true"/>
+
+	<!-- Load controller parameters -->
+	<rosparam file="$(find ice_robot_controllers)/config/$(arg fname).yaml" command="load" />
+	
+	<!-- Load FT compensation parameters -->
+	<group if="$(arg ft)">
+		<rosparam file="$(find ice_robot_controllers)/config/l_ft_calib_data.yaml" command="load" />
+	</group>
+
+</launch>

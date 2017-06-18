@@ -4,26 +4,44 @@
 	
 	<arg name="ft"    default="true"/>
 	<arg name="cfg"   default="experiment"/>
+	<arg name="JT"    default="false"/>
+	<arg name="NN"    default="true"/>
 	<arg name="sound" default="false"/>
 	
 	<!-- Load experiment parameters -->
-	<rosparam file="$(find ice_experimenter)/cfg/$(arg cfg).yaml" command="load" />
-
+	<!-- rosparam file="$(find ice_experimenter)/cfg/$(arg cfg).yaml" command="load" /-->
+	
+	<!-- Load JT arm controller -->
+	<group if="$(arg JT)">
+		
+		<rosparam file="$(find ice_experimenter)/cfg/experiment.yaml" command="load" />
+		
+		<!-- Launch JT Cartesian controller (spawn stopped) -->
+		<include file="$(find apc_robot)/launch/arms_cartesian.launch" />
+	
+		<node name="l_posture"
+			  pkg="apc_robot" type="posture.py"
+			  args="l_cart elbowupl" />
+	
+		<!-- Load FT compensation node -->
+		<group if="$(arg ft)">
+			<include file="$(find gravity_compensation)/launch/gravity_compensation.launch" />
+		</group>
+		
+	</group>
+	
+	<!-- Load NN arm controller -->
+	<group if="$(arg NN)">
+		
+		<rosparam file="$(find ice_experimenter)/cfg/experiment_nn.yaml" command="load" />
+		
+		<include file="$(find ice_robot_controllers)/launch/adaptNeuroController.launch" />
+		
+	</group>
+	
 	<!-- Use speaker -->
 	<group if="$(arg sound)">
 		<include file="$(find sound_play)/soundplay_node.launch" />
-	</group>
-	
-	<!-- Launch JT Cartesian controller (spawn stopped) -->
-	<include file="$(find apc_robot)/launch/arms_cartesian.launch" />
-
-	<node name="l_posture"
-		  pkg="apc_robot" type="posture.py"
-		  args="l_cart elbowupl" />
-
-	<!-- Load FT compensation node -->
-	<group if="$(arg ft)">
-		<include file="$(find gravity_compensation)/launch/gravity_compensation.launch" />
 	</group>
 
 </launch>

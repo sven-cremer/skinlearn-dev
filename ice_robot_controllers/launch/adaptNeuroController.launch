@@ -2,11 +2,10 @@
 
 <launch>
 
-   <rosparam file="$(find ice_robot_controllers)/config/pr2_controller.yaml"
-             command="load" />
-  
-   <rosparam file="$(find ice_robot_controllers)/config/l_ft_calib_data.yaml"
-             command="load" />
+   <include file="$(find ice_robot_controllers)/launch/load_parameters.launch">
+       <arg name="fname" value="pr2_controller"/>
+       <arg name="ft"    value="true"/>
+   </include>
 
   <!-- node name="unspawn_arms"
         pkg="pr2_controller_manager"
