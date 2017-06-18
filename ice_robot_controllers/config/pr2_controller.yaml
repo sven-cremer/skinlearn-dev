@@ -11,7 +11,7 @@ loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRat
 
 useCurrentCartPose : true # Avoid jerky movement, should always be true
 useQuaternions     : false
-useNullspacePose   : false
+useNullspacePose   : true
 useDigitalFilter   : false
 
 publishRTtopics    : true
@@ -186,9 +186,9 @@ nnNum_Joints          : 7  # DOF
 #nn_Kv                 : [2,2,2,1,1,1,1]
 #nn_lambda             : [20,20,20,10,10,10,10]
 
-nnNum_Outputs         : 3
-nn_Kv                 : [2,2,2]
-nn_lambda             : [20,20,20]
+nnNum_Outputs         : 2
+nn_Kv                 : [30,30]
+nn_lambda             : [200,200]
 
 #nnNum_Outputs         : 1
 #nn_Kv                 : [1]
@@ -257,6 +257,7 @@ joint_feedforward:
   r_wrist_roll_joint: 0.0727
 #[0.467279,0.38766,0.850325,-1.88652,3.09594,-1.28368,-3.89919];
 posture:
+# 'elbowupl': [0.79,0,1.6 , 9999, 9999, 9999, 9999]
   l_shoulder_pan_joint: 0.79
   l_shoulder_lift_joint: 0
   l_upper_arm_roll_joint: 1.6
