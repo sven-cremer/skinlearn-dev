@@ -108,7 +108,7 @@ public:
 
 		nn_ON              = true;
 		robust_ON          = true;
-		PED_ON             = true;
+		PED_ON             = false;
 		updateWeights      = true;
 		updateInnerWeights = true;
 
@@ -235,32 +235,13 @@ public:
 					double weightsLimit)
 	{
 		// Initialize Kv
-		if(p_Kv.rows() == num_Dim && p_Kv.cols() == 1 )
+		if( !setParamKv(p_Kv) )
 		{
-			Kv = p_Kv.asDiagonal();
-		}
-		else if (p_Kv.rows() == num_Dim && p_Kv.cols() == num_Dim )
-		{
-			Kv = p_Kv;
-		}
-		else
-		{
-			std::cerr<<"Failed to initialize Kv!\n";
 			Kv.setZero();
 		}
-
 		// Initialize Lambda
-		if(p_La.rows() == num_Dim && p_La.cols() == 1 )
+		if( !setParamLa(p_La) )
 		{
-			La = p_La.asDiagonal();
-		}
-		else if (p_La.rows() == num_Dim && p_La.cols() == num_Dim )
-		{
-			La = p_La;
-		}
-		else
-		{
-			std::cerr<<"Failed to initialize Lambda!\n";
 			La.setZero();
 		}
 
@@ -292,7 +273,75 @@ public:
 	Eigen::MatrixXd	getOuterWeights()	{	return W_trans;		}
 	Eigen::VectorXd	getNNoutput()		{	return fhat;		}
 	Eigen::VectorXd	getRBFmu()			{	return rbf_mu;		}
+	Eigen::VectorXd	getKv()				{	return Kv;			}
+	Eigen::VectorXd	getLa()				{	return La;			}
 
+	void setParamKz(double p)			{	Kz = p;				}
+	void setParamZb(double p)			{	Zb = p;				}
+	void setParamKappa(double p)		{	kappa = p;			}
+	void setParamF(double p)
+	{
+		F.setIdentity();
+		F *= p;
+	}
+	void setParamG(double p)
+	{
+		G.setIdentity();
+		G *= p;
+	}
+	bool setParamKv(Eigen::VectorXd p_Kv)
+	{
+		if(p_Kv.rows() == num_Dim && p_Kv.cols() == 1 )
+		{
+			Kv = p_Kv.asDiagonal();
+		}
+		else if (p_Kv.rows() == num_Dim && p_Kv.cols() == num_Dim )
+		{
+			Kv = p_Kv;
+		}
+		else
+		{
+			std::cerr<<"Failed to initialize Kv!\n";
+			return false;
+		}
+		return true;
+	}
+	bool setParamLa(Eigen::VectorXd p_La)
+	{
+		// Initialize Lambda
+		if(p_La.rows() == num_Dim && p_La.cols() == 1 )
+		{
+			La = p_La.asDiagonal();
+		}
+		else if (p_La.rows() == num_Dim && p_La.cols() == num_Dim )
+		{
+			La = p_La;
+		}
+		else
+		{
+			std::cerr<<"Failed to initialize Lambda!\n";
+			return false;
+		}
+		return true;
+	}
+	bool setParamKv(double p, int index)
+	{
+		if(0<index && index<num_Dim)
+		{
+			Kv(index,index) = p;
+			return true;
+		}
+		return false;
+	}
+	bool setParamLa(double p, int index)
+	{
+		if(0<index && index<num_Dim)
+		{
+			La(index,index) = p;
+			return true;
+		}
+		return false;
+	}
 
 	void setFlagNN(bool b)				{	nn_ON = b;			}
 	void setFlagRobust(bool b)			{	robust_ON = b;		}
@@ -375,7 +424,7 @@ void NNController::UpdateCart( Eigen::VectorXd & q,
 
 	// Update NN input vector
 	if(bias == 1)
-		phi << 1, q, qd, e, ed, x_m, xd_m, xdd_m;
+		phi << 1, q, qd, e, ed, x_m, xd_m, xdd_m;	// TODO add PED parameters
 	else
 		phi << q, qd, e, ed, x_m, xd_m, xdd_m;
 

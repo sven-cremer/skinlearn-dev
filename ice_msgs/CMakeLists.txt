@@ -37,6 +37,7 @@ add_service_files(DIRECTORY srv FILES
   setCircleRate.srv
   setTrajectory.srv
   # pr2_cart
+  setParameters.srv
   getState.srv
   setCarteDofMatrix.srv
   setGains.srv

@@ -35,6 +35,7 @@
 #include "ice_robot_controllers/jt_cartesian_controller.cpp"
 
 // ROS messages
+#include <ice_msgs/setParameters.h>
 #include <ice_msgs/neuroControllerState.h>
 #include <ice_msgs/controllerParam.h>
 #include <ice_msgs/controllerFullData.h>
@@ -499,6 +500,10 @@ private:
 	ros::ServiceServer capture_srv_;
 	ros::ServiceServer setRefTraj_srv_;
 	ros::ServiceServer toggleFixedWeights_srv_;
+
+	ros::ServiceServer setNNparam_srv_;
+	bool setNNparamCB( ice_msgs::setParameters::Request & req,
+				       ice_msgs::setParameters::Response& resp );
 
 	ros::ServiceServer status_srv_;
 	bool statusCB( ice_msgs::setBool::Request & req,

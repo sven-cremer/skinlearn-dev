@@ -99,6 +99,8 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	runExperimentC_srv_ = nh_.advertiseService("runExperimentC" , &PR2adaptNeuroControllerClass::runExperimentC   , this);
 	runExperimentD_srv_ = nh_.advertiseService("runExperimentD" , &PR2adaptNeuroControllerClass::runExperimentD   , this);
 
+	setNNparam_srv_  = nh_.advertiseService("setNNparam" , &PR2adaptNeuroControllerClass::setNNparamCB, this);
+
 	// NN weights
 	updateInnerNNweights_srv_  = nh_.advertiseService("updateInnerNNweights" , &PR2adaptNeuroControllerClass::updateInnerNNweights   , this);
 	updateNNweights_srv_  = nh_.advertiseService("updateNNweights" , &PR2adaptNeuroControllerClass::updateNNweights   , this);
@@ -555,7 +557,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		Xd_m.setZero();
 		Xdd_m.setZero();
 
-		// Calculate a Cartesian restoring force.
+		// Calculate Cartesian error
 		computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
 		X_m.tail(3) = X.tail(3) - xerr_.tail(3);
 
@@ -1794,6 +1796,68 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 			pubExperimentDataB_.publish(experimentDataB_msg_[index]);
 		if(	experiment_ == PR2adaptNeuroControllerClass::C)
 			pubExperimentDataC_.publish(experimentDataC_msg_[index]);
+	}
+
+	return true;
+}
+
+bool PR2adaptNeuroControllerClass::setNNparamCB( ice_msgs::setParameters::Request & req,
+											 ice_msgs::setParameters::Response& resp )
+{
+	if( req.names.size() != req.values.size() )
+	{
+		resp.success = false;
+	}
+	else
+	{
+		resp.success = true;
+		for(int i=0;i<req.names.size();i++)
+		{
+			if( req.names[i].compare("Kz") ) {
+				ptrNNController->setParamKz(req.values[i]);
+			}
+			else if ( req.names[i].compare("Zb") ) {
+				ptrNNController->setParamZb(req.values[i]);
+			}
+			else if ( req.names[i].compare("kappa") ) {
+				ptrNNController->setParamKappa(req.values[i]);
+			}
+			else if ( req.names[i].compare("F") ) {
+				ptrNNController->setParamF(req.values[i]);
+			}
+			else if ( req.names[i].compare("G") ) {
+				ptrNNController->setParamG(req.values[i]);
+			}
+			else if ( req.names[i].substr(0,2).compare("Kv") )
+			{
+				try {
+					int idx = boost::lexical_cast<int>( req.names[i].substr(2,1) );
+					ptrNNController->setParamKv(req.values[i],idx);
+
+				} catch( boost::bad_lexical_cast const& ) {
+					std::cout << "Error: input string was not valid" << std::endl;
+					resp.success = false;
+				}
+			}
+			else if ( req.names[i].substr(0,2).compare("La") )
+			{
+				try {
+					int idx = boost::lexical_cast<int>( req.names[i].substr(2,1) );
+					ptrNNController->setParamLa(req.values[i],idx);
+
+				} catch( boost::bad_lexical_cast const& ) {
+					std::cout << "Error: input string was not valid" << std::endl;
+					resp.success = false;
+				}
+			}
+			else if ( req.names[i].compare("k_posture") ) {
+				k_posture = req.values[i];
+			}
+			else
+			{
+				resp.success = false;
+			}
+		}
 	}
 
 	return true;
