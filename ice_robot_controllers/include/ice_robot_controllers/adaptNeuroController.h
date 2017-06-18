@@ -566,6 +566,7 @@ private:
 	  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_ft_transformed_;
 
 	  int loop_count_;
+	  int missed_updates_count_;
 
 	  boost::thread	m_Thread;
 	  volatile bool runComputations;

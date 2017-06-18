@@ -1,4 +1,5 @@
 Header header
+int64 missed_updates_counter
 geometry_msgs/PoseStamped x
 geometry_msgs/PoseStamped x_desi
 geometry_msgs/PoseStamped x_desi_filtered
@@ -10,9 +11,9 @@ geometry_msgs/Wrench force_c
 float64[] tau_posture
 float64[] tau_c
 float64[] q
-std_msgs/Float64MultiArray J
-std_msgs/Float64MultiArray N
+#std_msgs/Float64MultiArray J
+#std_msgs/Float64MultiArray N
 float64 W_norm
 float64 V_norm
-std_msgs/Float64MultiArray W
-std_msgs/Float64MultiArray V
+#std_msgs/Float64MultiArray W
+#std_msgs/Float64MultiArray V

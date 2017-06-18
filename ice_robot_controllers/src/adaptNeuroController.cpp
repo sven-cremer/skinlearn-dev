@@ -125,21 +125,22 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 
 	StateMsg state_template;
 	state_template.header.frame_id = root_name;
+	state_template.missed_updates_counter = 0;
 	state_template.x.header.frame_id = root_name;
 	state_template.x_desi.header.frame_id = root_name;
 	state_template.x_desi_filtered.header.frame_id = root_name;
 	state_template.q.resize(Joints);
 	state_template.tau_c.resize(Joints);
 	state_template.tau_posture.resize(Joints);
-	state_template.J.layout.dim.resize(2);
-	state_template.J.data.resize(6*Joints);
-	state_template.N.layout.dim.resize(2);
-	state_template.N.data.resize(Joints*Joints);
+//	state_template.J.layout.dim.resize(2);
+//	state_template.J.data.resize(6*Joints);
+//	state_template.N.layout.dim.resize(2);
+//	state_template.N.data.resize(Joints*Joints);
 	// NN weights
-	state_template.W.layout.dim.resize(2);
-	state_template.W.data.resize(num_Outputs*num_Hidden);
-	state_template.V.layout.dim.resize(2);
-	state_template.V.data.resize(num_Hidden*(num_Inputs+1));
+//	state_template.W.layout.dim.resize(2);
+//	state_template.W.data.resize(num_Outputs*num_Hidden);
+//	state_template.V.layout.dim.resize(2);
+//	state_template.V.data.resize(num_Hidden*(num_Inputs+1));
 	pub_state_.init(nh_, "state", 1);
 	pub_state_.lock();
 	pub_state_.msg_ = state_template;
@@ -214,6 +215,7 @@ void PR2adaptNeuroControllerClass::starting()
 	qdot_filtered_.setZero();
 
 	loop_count_ = 0;
+	missed_updates_count_=0;
 	recordData = false;
 
 	// Start threads
@@ -563,10 +565,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //			tau_ = JacobianTrans*(-fFForce*tactile_wrench_);	// [7x6]*[6x1]->[7x1]
 //		}
 
-		if(forceTorqueOn)
-		{
-			tau_ = JacobianTrans*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
-		}
+//		if(forceTorqueOn)
+//		{
+//			tau_ = JacobianTrans*(fFForce*wrench_filtered_);	// [7x6]*[6x1]->[7x1]
+//		}
 
 		/***************** OUTER LOOP *****************/
 
@@ -677,7 +679,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		/***************** INNER LOOP *****************/
 
 		// Neural Network
-		convert2NNinput(wrench_transformed_,force_h);
+		convert2NNinput(wrench_transformed_,force_h);	// TODO use wrench filtered?
 
 		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_h,force_c);
 
@@ -739,7 +741,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
 */
 		// JT Cartesian XXX
-		if(true)
+		if(false)
 		{
 			Eigen::Vector3d px(x_.translation());
 			Eigen::Vector3d pdes(x_des_.translation());
@@ -780,6 +782,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 			nullspaceTorque = nullSpace*50*( q_jointLimit - 0.0*qd );
 			*/
+
 			// Posture control from JT Cartesian controller:
 			JointVec posture_err = q_posture_ - q;
 			for (size_t j = 0; j < Joints; ++j)
@@ -932,16 +935,14 @@ void PR2adaptNeuroControllerClass::update()
 
 		if(runComputations)
 		{
-			cartvec_tmp(0)++;	// computation took too long
-			return;
+			missed_updates_count_++;	// computations still running
 		}
 		else
 		{
-			tau_c_latest_ = tau_c_;
+			tau_c_latest_ = tau_c_; // computations finished, update torque command value
 		}
 
 		/***************** DATA COLLECTION *****************/
-
 		if (recordData)
 		{
 			bufferData();
@@ -949,7 +950,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	}
 
-	// Send torque command
+	// Send torque command (old or new)
 	if(loop_count_ > loopRateFactor)
 	{
 		chain_.setEfforts( tau_c_latest_ );
@@ -957,7 +958,7 @@ void PR2adaptNeuroControllerClass::update()
 
 	/***************** DATA PUBLISHING *****************/
 
-	if (publishRTtopics && loop_count_ % loopRateFactor == 0 )	// TODO make sure dimensions/type agree
+	if (publishRTtopics && !runComputations )	// TODO make sure dimensions/type agree
 	{
 /*
 		//cartvec_tmp(1) = accData_vector_size;
@@ -983,6 +984,8 @@ void PR2adaptNeuroControllerClass::update()
 			pub_state_.msg_.x_desi_filtered.header.stamp = last_time_;
 			pub_state_.msg_.x_desi.header.stamp          = last_time_;
 
+			pub_state_.msg_.missed_updates_counter = missed_updates_count_;
+
 			// Pose
 			tf::poseEigenToMsg(x_, pub_state_.msg_.x.pose);
 			tf::poseEigenToMsg(convert2Affine(X_m), pub_state_.msg_.x_desi.pose);		// X_m, xd_T
@@ -996,19 +999,23 @@ void PR2adaptNeuroControllerClass::update()
 			// tf::twistEigenToMsg(Xd_m, pub_state_.msg_.xd_desi);
 
 			// Force
-			//tf::wrenchEigenToMsg(t_r, pub_state_.msg_.force_measured);		// force_measured, t_r
-			tf::wrenchEigenToMsg(Force6d, pub_state_.msg_.force_c);
+			if(forceTorqueOn)
+			{
+				tf::wrenchEigenToMsg(wrench_transformed_, pub_state_.msg_.force_measured);	// TODO use wrench_filtered?
+			}
+			tf::wrenchEigenToMsg(Force6d, pub_state_.msg_.force_c);			// NN control force
 
-			tf::matrixEigenToMsg(J_, pub_state_.msg_.J);
-			tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
+			//tf::matrixEigenToMsg(J_, pub_state_.msg_.J);			// TODO move into a separate message
+			//tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
 
-			tf::matrixEigenToMsg(ptrNNController->getInnerWeights(), pub_state_.msg_.V);
-			tf::matrixEigenToMsg(ptrNNController->getOuterWeights(), pub_state_.msg_.W);
+			//tf::matrixEigenToMsg(ptrNNController->getInnerWeights(), pub_state_.msg_.V);
+			//tf::matrixEigenToMsg(ptrNNController->getOuterWeights(), pub_state_.msg_.W);
 
 			for (int j = 0; j < num_Joints; ++j) {
-				pub_state_.msg_.tau_posture[j] = nullspaceTorque(j);
-				pub_state_.msg_.tau_c[j] = tau_c_(j);
+				pub_state_.msg_.tau_c[j] = tau_c_latest_(j);
 				pub_state_.msg_.q[j] = q_(j);
+				if(useNullspacePose)
+					pub_state_.msg_.tau_posture[j] = nullspaceTorque(j);
 			}
 
 			pub_state_.msg_.W_norm = ptrNNController->getInnerWeightsNorm();
