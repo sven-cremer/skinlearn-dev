@@ -1034,10 +1034,11 @@ int main(int argc, char** argv)
     			  //arms.getCurrentPose(arm, p_old);
 
     			  // YAML Emitters for saving waypoint info
-    			  YAML::Emitter out_dt, out_t, out_p;
+    			  YAML::Emitter out_dt, out_t_start, out_t_stop, out_p;
     			  out_dt << YAML::BeginMap << YAML::Key << "dt"     << YAML::Flow << YAML::BeginSeq;
-    			  out_t  << YAML::BeginMap << YAML::Key << "time"   << YAML::Flow << YAML::BeginSeq;
     			  out_p  << YAML::BeginMap << YAML::Key << "points" << YAML::Flow << YAML::BeginSeq;
+    			  out_t_start << YAML::BeginMap << YAML::Key << "time_start" << YAML::Flow << YAML::BeginSeq;
+    			  out_t_stop  << YAML::BeginMap << YAML::Key << "time_stop"  << YAML::Flow << YAML::BeginSeq;
 
     			  for(int k = 0; k < traj_msg_.request.x.size(); k++)
     			  {
@@ -1113,14 +1114,16 @@ int main(int argc, char** argv)
     				  // Reached waypoint
     				  ros::Time stop = ros::Time::now();
     				  out_dt << (stop-start).toSec();
-    				  out_t  << stop.toNSec();
+    				  out_t_start  << start.toNSec();
+    				  out_t_stop   << stop.toNSec();
     				  out_p  << msg;
     			  }
     			  std::cout<<"\n";
 
     			  // Save data to YAML emitters
     			  out_dt << YAML::EndSeq << YAML::EndMap;
-    			  out_t  << YAML::EndSeq << YAML::EndMap;
+    			  out_t_start  << YAML::EndSeq << YAML::EndMap;
+    			  out_t_stop   << YAML::EndSeq << YAML::EndMap;
     			  out_p  << YAML::EndSeq << YAML::EndMap;
     			  YAML::Emitter out;
     			  out << YAML::BeginMap;
@@ -1136,7 +1139,7 @@ int main(int argc, char** argv)
     			  std::string pathToFile = recorder.getPathDataDir() + "/results.yaml";
     			  std::cout<<"Saving file: "<<pathToFile<<"\n";
     			  std::ofstream fout(pathToFile.c_str());
-    			  fout << out.c_str() << "\n" << out_dt.c_str() << "\n" << out_t.c_str() << "\n" << out_p.c_str();
+    			  fout << out.c_str() << "\n" << out_dt.c_str() << "\n" << out_t_start.c_str() << "\n" << out_t_stop.c_str() << "\n" << out_p.c_str();
     			  fout.close();
     			  //saveYAML(recorder.getPathDataDir(),"results.yaml", out);
 
