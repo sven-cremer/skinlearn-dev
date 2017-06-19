@@ -109,10 +109,11 @@ void displayControllerMenu()
 	puts(" ");
 }
 
-void displayRehabilitationExperimentMenu(std::string trajPath, int expNumber, int interp_steps, double interp_dt, double Kp_tran, double Kp_rot, double Kd_tran, double Kd_rot, Mode exp_mode)
+void displayRehabilitationExperimentMenu(std::string trajPath, int expNumber, int interp_steps, double interp_dt, double Kp_tran, double Kp_rot, double Kd_tran, double Kd_rot, Mode exp_mode, bool data_recording)
 {
 
 	string tmp = enum2str(exp_mode);
+	string tmp1 = (string)(data_recording ?  "TRUE" : "FALSE");
 	printf("---------------------------\n");
 	printf("MENU:   Rehabilitation     \n");
 	printf("---------------------------\n");
@@ -124,6 +125,7 @@ void displayRehabilitationExperimentMenu(std::string trajPath, int expNumber, in
 	printf("\n");
 	printf("Use 'n' to change experiment number: %i \n", expNumber);
 	printf("Use 's' to start experiment\n");
+	printf("Use 'r' to toggle data recording (%s)\n", tmp1.c_str());
 	printf("\n");
 	printf("Use 'q' to quit and return to main menu\n");
 	printf("\n");
@@ -299,10 +301,12 @@ int main(int argc, char** argv)
   std::vector<std::string> data_fnames;
   std::string dataDir;
   std::string path;
+  bool data_recording=true;
   loadROSparam(nh, "data_topics", data_topics);
   loadROSparam(nh, "data_fnames", data_fnames);
   loadROSparam(nh, "data_dir", dataDir);
   loadROSparam(nh, "data_path", path);
+  loadROSparam(nh, "data_recording", data_recording);
   DataRecorder recorder(data_topics,data_fnames,dataDir,path);
   int expNumber = 1;
 
@@ -929,7 +933,7 @@ int main(int argc, char** argv)
 
     	  while(!stop_menu_rehab)
     	  {
-    		  displayRehabilitationExperimentMenu(trajPathStr, expNumber, interpolation_steps, interpolation_dt, Kp_tran, Kp_rot, Kd_tran, Kd_rot, exp_mode);
+    		  displayRehabilitationExperimentMenu(trajPathStr, expNumber, interpolation_steps, interpolation_dt, Kp_tran, Kp_rot, Kd_tran, Kd_rot, exp_mode, data_recording);
 
     		  getKey(c);
 
@@ -1024,7 +1028,8 @@ int main(int argc, char** argv)
     			  sc.say("Starting experiment.");
 
     			  // Start recording data
-    			  recorder.start(expNumber);
+    			  if(data_recording)
+    				  recorder.start(expNumber);
 
     			  // Ask user to follow pattern
     			  geometry_msgs::Pose p_new;
@@ -1147,12 +1152,18 @@ int main(int argc, char** argv)
     			  std::cout<<"Done!\n";
 
     			  // Stop recording data
-    			  recorder.stop();
+    			  if(data_recording)
+    				  recorder.stop();
 
     			  // Set default arm gains
     			  arms.setGains(Kp_tran,Kp_rot,Kd_tran,Kd_rot,ArmsCartesian::LEFT);
 
     			  expNumber++;
+    			  break;
+    		  }
+    		  case 'r':
+    		  {
+    			  data_recording = !data_recording;
     			  break;
     		  }
     		  case 'q':

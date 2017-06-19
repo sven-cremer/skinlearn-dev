@@ -8,12 +8,13 @@ data_topics: [/pr2_adaptNeuroController/state/x/pose,/pr2_adaptNeuroController/s
 data_fnames: [nn_xact,nn_xdes]
 data_path: /home/sven/Dropbox/2017_Rehab/Data
 data_dir: exp
+data_recording: false
 
 #trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
 #trajectory_path: ACIGAGICADBFHDHFBDA
 trajectory_path: ABEDA
 #trajectory_origin: [0.48,0.08,-0.05]
-trajectory_origin: [0.70,-0.10,-0.05]
+trajectory_origin: [0.50,-0.10,-0.05]
 trajectory_Nx: 3
 trajectory_Ny: 4
 trajectory_dx: 0.124
