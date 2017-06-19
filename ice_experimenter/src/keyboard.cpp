@@ -42,12 +42,23 @@
 #include <std_srvs/Empty.h>
 #include <ice_msgs/setTrajectory.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <ice_msgs/setParameters.h>
 
 
 using namespace std;
 
 static bool controller_active = false;
 static bool updating_weights = true;
+
+struct NNparam {
+	double kappa;
+	double Kz;
+	double Zb;
+	double F;
+	double G;
+	Eigen::VectorXd Kv;
+	Eigen::VectorXd La;
+};
 
 enum Mode{ ASSISTIVE, PASSIVE, RESISTIVE};
 
@@ -84,6 +95,7 @@ void displayMainMenu()
 	puts("Use 'u/h' to lift torso up/down");
 	puts(" ");
 	puts("Use 'w' to open NN weights menu");
+	puts("Use 'a' to open NN parameter menu");
 	puts("Use 'r' to open NN reference trajectory menu");
 	puts("Use 's' to start calibration experiment");
 	puts("Use '-' to set variables");
@@ -128,6 +140,33 @@ void displayRehabilitationExperimentMenu(std::string trajPath, int expNumber, in
 	printf("Use 'r' to toggle data recording (%s)\n", tmp1.c_str());
 	printf("\n");
 	printf("Use 'q' to quit and return to main menu\n");
+	printf("\n");
+}
+
+void displayNNparamMenu(NNparam nn,ice_msgs::setParameters msg)
+{
+	printf("---------------------------");
+	printf("\nMENU:   NN Parameters     ");
+	printf("\n---------------------------");
+	printf("\nUse '1' kappa = %.2f \t Gain of e-modification terms",nn.kappa);
+	printf("\nUse '2' Kz    = %.2f \t Gain of robustifying term",nn.Kz);
+	printf("\nUse '3' Zb    = %.1f \t Bound for NN weight error part of robustifying term",nn.Zb);
+	printf("\n");
+	printf("\nUse '4' G = %.1f \t Positive definite design matrix for inner layer (V)",nn.G);
+	printf("\nUse '5' F = %.1f \t Positive definite design matrix for outer layer (W)",nn.F);
+	printf("\n");
+	printf("\nUse '6' Kv = ["); std::cout<<nn.Kv.transpose(); printf("]\t Derivative term, i.e. Kv*r= Kv*ed + Kv*lam*e");
+	printf("\nUse '7' La = ["); std::cout<<nn.La.transpose(); printf("]\t Proportional term");
+	printf("\n");
+	printf("\nUse 's' to send service message (");
+	for(int i = 0; i<msg.request.names.size();i++)
+	{
+		std::cout<<msg.request.names[i]<<"="<<msg.request.values[i];
+		if( i+1 < msg.request.names.size())
+			std::cout<<", ";
+	}
+	printf(")\n");
+	printf("\nUse 'q' to quit and return to main menu");
 	printf("\n");
 }
 
@@ -222,6 +261,27 @@ bool loadROSparam(ros::NodeHandle &nh_, std::string name, T &variable)
 		return false;
 	}
 	//ROS_INFO_STREAM(name << " = " << variable);
+	return true;
+}
+bool loadROSparamVector(ros::NodeHandle &nh_, std::string name, Eigen::VectorXd &variable)
+{
+	std::vector<double> tmpList;
+	if(!nh_.getParam( name, tmpList ))
+	{
+		ROS_ERROR("Failed to load ROS parameter vector named '%s' !)", name.c_str()) ;
+		return false;
+	}
+//	if( tmpList.size() != variable.size())
+//	{
+//		ROS_ERROR("Vector sizes do not match! Failed to load ROS parameter vector named '%s' !)", name.c_str()) ;
+//		return false;
+//	}
+	variable.resize(tmpList.size());
+	for(int i=0; i < tmpList.size(); i++)
+	{
+		variable(i) = tmpList[i];
+	}
+	ROS_INFO_STREAM(name << " = " << variable.transpose());
 	return true;
 }
 
@@ -361,6 +421,17 @@ int main(int argc, char** argv)
   loadROSparam(nh, "torso_height", torso_height);
   pr2manager.setDefaultTorso(torso_height);
 
+  // NN parameters
+  NNparam nn;
+  loadROSparam(nh, "/nn_kappa"           , nn.kappa);
+  loadROSparam(nh, "/nn_Kz"              , nn.Kz);
+  loadROSparam(nh, "/nn_Zb"              , nn.Zb);
+  loadROSparam(nh, "/nn_nnF"             , nn.F);
+  loadROSparam(nh, "/nn_nnG"             , nn.G);
+//  loadROSparam(nh, "/nn_ON"              , nn_ON);
+  loadROSparamVector(nh,"/nn_Kv", nn.Kv);
+  loadROSparamVector(nh,"/nn_lambda", nn.La);
+
   // ROS publisher
   std::string commandPoseTopic;
   loadROSparam(nh, "command_pose_topic", commandPoseTopic);
@@ -376,6 +447,7 @@ int main(int argc, char** argv)
   ros::ServiceClient status_srv_ = nh.serviceClient<ice_msgs::setBool>("/tactile/status");
   ros::ServiceClient tactileFilterWeights_srv_ = nh.serviceClient<ice_msgs::tactileFilterWeights>("/tactile/filterWeights");
   ros::ServiceClient runExperiment_srv_ = nh.serviceClient<ice_msgs::setTrajectory>("/pr2_adaptNeuroController/runExperimentD");
+  ros::ServiceClient setNNParam_srv_ = nh.serviceClient<ice_msgs::setParameters>("/pr2_adaptNeuroController/setNNparam");
 
   sound_play::SoundClient sc;
 
@@ -627,6 +699,105 @@ int main(int argc, char** argv)
         } // end while
         break;
       }
+      /******************************** NN parameters ****************************************/
+      case 'a':
+      {
+    	  ice_msgs::setParameters msg;
+    	  std::string tmp;
+    	  double* ptrDouble;
+
+    	  bool stop_menu2 = false;
+
+    	  while(!stop_menu2)
+    	  {
+    		  displayNNparamMenu(nn,msg);
+
+    		  getKey(c);
+
+    		  bool get_value = false;
+
+    		  switch(c)
+    		  {
+    		  case '1':
+    		  {
+    			  tmp = "kappa"; ptrDouble = &nn.kappa;
+    			  get_value = true;
+    			  break;
+    		  }
+    		  case '2':
+    		  {
+    			  tmp = "Kz"; ptrDouble = &nn.Kz;
+    			  get_value = true;
+    			  break;
+    		  }
+    		  case '3':
+    		  {
+    			  tmp = "Zb"; ptrDouble = &nn.Zb;
+    			  get_value = true;
+    			  break;
+    		  }
+    		  case '4':
+    		  {
+    			  tmp = "G"; ptrDouble = &nn.G;
+    			  get_value = true;
+    			  break;
+    		  }
+    		  case '5':
+    		  {
+    			  tmp = "F"; ptrDouble = &nn.F;
+    			  get_value = true;
+    			  break;
+    		  }
+    		  case 's':
+			  {
+				  // Stop controller if active
+				  if(controller_active)
+				  {
+					  pr2manager.off(false);
+					  sleep(2);
+				  }
+				  if (!setNNParam_srv_.call(msg))
+				  {
+					  ROS_ERROR("Failed to call setNNParam service!");
+				  }
+				  else
+				  {
+					  std::cout<<"Service call " + (string)(msg.response.success ? "SUCCEEDED" : "FAILED") + "!\n";
+					  msg.request.names.clear();
+					  msg.request.values.clear();
+				  }
+				  // Start controller if it was disabled
+				  if(controller_active)
+				  {
+					  sleep(2);
+					  pr2manager.on(false);
+				  }
+
+				  break;
+			  }
+    		  case 'q':
+    		  {
+    			  stop_menu2 = true;
+    			  break;
+    		  }
+    		  default:
+    			  ROS_INFO_STREAM("Keycode not found: " << c);
+    			  break;
+              } //end switch
+
+    		  if(get_value)
+    		  {
+    			  std::cout<<"Enter value for "<<tmp<<": ";
+    			  double v;
+    			  getInput(v);
+    			  msg.request.names.push_back(tmp);
+    			  msg.request.values.push_back(v);
+    			  *ptrDouble = v;
+    		  }
+
+            } // end while
+            break;
+          }
       /******************************** reference ****************************************/
       case 'r':
       {
