@@ -236,9 +236,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	while(true)
 	{
 		// 1) Wait
+		boost::mutex::scoped_lock lock(m_Mutex);
 		while(!runComputations)
 		{
-			boost::this_thread::sleep(boost::posix_time::microseconds(1));
+			m_Condition.wait(lock);
+			//boost::this_thread::sleep(boost::posix_time::microseconds(1));
 		}
 
 		// 2) Do Computations
@@ -935,32 +937,33 @@ void PR2adaptNeuroControllerClass::update()
 
 		/***************** START DATA PROCESSING *****************/
 		runComputations = true;
+		m_Condition.notify_one();
 	}
+
+	/***************** UPDATE TORQUE COMMAND  *****************/
 
 	if(loop_count_ % loopRateFactor == 0)	// After X loops, assume computations are done and send commands
 	{
-
 		if(runComputations)
 		{
 			missed_updates_count_++;	// computations still running
 		}
 		else
 		{
-			tau_c_latest_ = tau_c_; // computations finished, update torque command value
+			tau_c_latest_ = tau_c_; 	// computations finished, update torque command value
 		}
-
-		/***************** DATA COLLECTION *****************/
-		if (recordData)
-		{
-			bufferData();
-		}
-
 	}
 
-	// Send torque command (old or new)
+	/***************** SEND TORQUE COMMAND  *****************/
 	//if(loop_count_ > loopRateFactor)
 	{
 		chain_.setEfforts( tau_c_latest_ );
+	}
+
+	/***************** DATA COLLECTION *****************/
+	if (recordData)
+	{
+		bufferData();
 	}
 
 	/***************** DATA PUBLISHING *****************/
@@ -1811,6 +1814,10 @@ bool PR2adaptNeuroControllerClass::setNNparamCB( ice_msgs::setParameters::Reques
 	else
 	{
 		resp.success = true;
+
+		// Grab the resource or wait until free
+		boost::mutex::scoped_lock lock(m_Mutex);
+
 		for(int i=0;i<req.names.size();i++)
 		{
 			if( req.names[i].compare("Kz") ) {

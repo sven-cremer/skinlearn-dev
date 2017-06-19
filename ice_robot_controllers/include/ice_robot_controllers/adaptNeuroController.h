@@ -574,6 +574,8 @@ private:
 	  int missed_updates_count_;
 
 	  boost::thread	m_Thread;
+	  boost::mutex m_Mutex;
+	  boost::condition m_Condition;
 	  volatile bool runComputations;
 
 	  CartVec cartvec_tmp;
