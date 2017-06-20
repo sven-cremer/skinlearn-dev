@@ -748,6 +748,30 @@ int main(int argc, char** argv)
     			  get_value = true;
     			  break;
     		  }
+    		  case '6':
+    		  {
+    			  for(int i=0;i<nn.Kv.size();i++)
+    			  {
+    				  std::cout<<"Kv("<<i<<") = ";
+    				  getInput(nn.Kv(i));
+    				  std::string s = "Kv" + boost::lexical_cast<std::string>(i);
+    				  msg.request.names.push_back(s);
+    				  msg.request.values.push_back(nn.Kv(i));
+    			  }
+    			  break;
+    		  }
+    		  case '7':
+    		  {
+    			  for(int i=0;i<nn.La.size();i++)
+    			  {
+    				  std::cout<<"La("<<i<<") = ";
+    				  getInput(nn.La(i));
+    				  std::string s = "La" + boost::lexical_cast<std::string>(i);
+    				  msg.request.names.push_back(s);
+    				  msg.request.values.push_back(nn.La(i));
+    			  }
+    			  break;
+    		  }
     		  case 's':
 			  {
 				  // Stop controller if active
