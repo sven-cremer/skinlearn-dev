@@ -181,6 +181,7 @@ nnNum_Joints          : 7  # DOF
 # Filtered error
 #  r   = (qd_m - qd) + lambda*(q_m - q);
 # Kv*r = Kv*(qd_m - qd) + Kv*lambda*(q_m - q);
+# Works best when Kv > lambda?
 
 nnNum_Outputs         : 6  # Cartesian / Quaternion
 nn_Kv                 : [2,2,2,1,1,1]

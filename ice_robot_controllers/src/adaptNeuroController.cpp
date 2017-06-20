@@ -583,7 +583,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //		}
 
 		/***************** OUTER LOOP *****************/
-
+/*
 		if(useOuterloop && loop_count_ > 3000)
 		{
 			// Variables previously updated:
@@ -626,13 +626,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				X_m.topRows(3) = x0_cali_vec_.topRows(3)+tmp(1)*sensorDirections.col(tactileSensorSelected_);
 //				X_m.topRows(3) = X.topRows(3)+tmp(1)*sensorDirections.col(tactileSensorSelected_);	// <- Results in overshoot
 
-//				if(tmp(2)>1)
-//					tmp(2)=1;
-//				if(tmp(2)<1)
-//					tmp(2)=-1;
-//				Xd_m .topRows(3) = tmp(2)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT   ?
-//				Xdd_m.topRows(3) += tmp(3)*sensorDirections.col(tactileSensorSelected_); // or tmp(0)/delT^2 ?		// FIXME
-//std::cout<<"X_m:\n"<<X_m<<"\n---\n";
 				// Save weights
 				for(int i=0; i<numTactileSensors_;i++)
 				{
@@ -660,20 +653,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 												  tactile_data_(i) );	// input:  force or voltage
 //std::cout<<"ARMA:\n"<<tmp(0)<<"\n---\n";
 					X_m.topRows(3) += tmp(0)*sensorDirections.col(i);
-/*
-					tmp(0) = X.topRows(3).dot( sensorDirections.col(i) );	// delta!!!
-
-					ARMAmodel_flexi_[i]->runARMAupdate(outer_delT   ,  // input: delta T
-								tactile_data_(i)        			,  // input:  force or voltage
-								tmp(0)      						,  // input:  x_d
-								tmp(1)      						,  // output: x_m
-								tmp(2)     							,  // output: xd_m
-								tmp(3)    						    ); // output: xdd_m
-
-					X_m  .topRows(3) = tmp(1)*sensorDirections.col(i) + X_m.topRows(3).cwiseProduct(Vec3d_ones - sensorDirections.col(i).cwiseAbs());
-					//Xd_m .topRows(3) += tmp(1)*sensorDirections.col(i);
-					//Xdd_m.topRows(3) += tmp(2)*sensorDirections.col(i);
-*/
 				}
 				//std::cout<<"X_m:\n"<<X_m<<"\n---\n";
 			}
@@ -687,12 +666,13 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			//   Xdd_m;
 
 		}
-
+*/
 		/***************** INNER LOOP *****************/
 
-		// Neural Network
+		// Feedforward force, human force [6x1]
 		convert2NNinput(wrench_transformed_,force_h);	// TODO use wrench filtered?
 
+		// Neural Network
 		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_h,force_c);
 
 		// Convert NN result to a Cartesian vector
@@ -749,22 +729,20 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		// F    = -(       Kp * (x-x_dis)   +     Kd * (xdot - 0)    )
 		force_c = -(kp.asDiagonal() * xerr_ + kd.asDiagonal() * xdot_);			// TODO choose NN/PD with a param
 */
-		// JT Cartesian XXX
-		if(false)
-		{
-			Eigen::Vector3d px(x_.translation());
-			Eigen::Vector3d pdes(x_des_.translation());
-			px.head(2) = pdes.head(2);
-			Eigen::Affine3d t0 = x_;
-			t0.translation() = px;		// Make xy error zero
+		// JT Cartesian
+/*
+		Eigen::Vector3d px(x_.translation());
+		Eigen::Vector3d pdes(x_des_.translation());
+		px.head(2) = pdes.head(2);
+		Eigen::Affine3d t0 = x_;
+		t0.translation() = px;		// Make xy error zero
 
-			Eigen::VectorXd t1 = xdot_;
+		Eigen::VectorXd t1 = xdot_;
 
-			ptrJTController->update(t0,t1,x_des_,fc_JT_);
-			//std::cout<<"fc: "<<fc_JT_.transpose()<<"\n";
-			//Force6d.tail(4) = fc_JT_.tail(4);
-			Force6d += fc_JT_;
-		}
+		ptrJTController->update(t0,t1,x_des_,fc_JT_);
+		//std::cout<<"fc: "<<fc_JT_.transpose()<<"\n";
+		Force6d = fc_JT_;
+*/
 
 		tau_ = tau_ + JacobianTrans*Force6d;		// [7x6]*[6x1]->[7x1]
 
@@ -823,7 +801,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		tau_c_ = JointEigen2Kdl( tau_sat );
 
 		runComputations = false;
-
 	}
 }
 
@@ -843,6 +820,8 @@ void PR2adaptNeuroControllerClass::update()
 {
 
 	++loop_count_;	// Start at 1
+
+	/***************** GET ROBOT STATE *****************/
 
 	if(loop_count_ % loopRateFactor == 1 && !runComputations)	// Retrieve data and start computations in a thread
 	{
@@ -900,7 +879,7 @@ void PR2adaptNeuroControllerClass::update()
 		// Flexiforce data updated by readForceValuesCB
 		if(useFlexiForce)
 		{
-			ros::spinOnce();	// TODO move to nonRealtime update, seems to slow down loop
+			// TODO check if CB function has been updated
 		}
 
 		if( accelerometerOn )//|| forceTorqueOn )
@@ -1816,7 +1795,7 @@ bool PR2adaptNeuroControllerClass::setNNparamCB( ice_msgs::setParameters::Reques
 		resp.success = true;
 
 		// Grab the resource or wait until free
-		boost::mutex::scoped_lock lock(m_Mutex);
+		//boost::mutex::scoped_lock lock(m_Mutex);
 
 		for(int i=0;i<req.names.size();i++)
 		{

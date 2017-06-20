@@ -565,33 +565,33 @@ private:
 	void readForceValuesCB(const geometry_msgs::WrenchStampedConstPtr& wrench_msg);
 	void readTactileDataCB(const ice_msgs::tactileArrayDataConstPtr& msg);
 
-	  realtime_tools::RealtimePublisher<StateMsg> pub_state_;
-	  realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pub_x_desi_;
-	  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_ft_;
-	  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_ft_transformed_;
+	realtime_tools::RealtimePublisher<StateMsg> pub_state_;
+	realtime_tools::RealtimePublisher<geometry_msgs::PoseStamped> pub_x_desi_;
+	realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_ft_;
+	realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped> pub_ft_transformed_;
 
-	  int loop_count_;
-	  int missed_updates_count_;
+	int loop_count_;
+	int missed_updates_count_;
 
-	  boost::thread	m_Thread;
-	  boost::mutex m_Mutex;
-	  boost::condition m_Condition;
-	  volatile bool runComputations;
+	boost::thread	m_Thread;
+	boost::mutex m_Mutex;
+	boost::condition m_Condition;
+	volatile bool runComputations;
 
-	  CartVec cartvec_tmp;
+	CartVec cartvec_tmp;
 
-	  template<typename T> bool loadROSparam(std::string name, T &variable);
-	  template<typename T> bool loadROSparam(std::string name, T &variable, T value);
-	  bool loadROSparamVector(std::string name, Eigen::VectorXd &variable);
-	  bool loadROSparamVector(std::string name, Eigen::MatrixXd &variable);
-	  bool loadROSparamVector(std::string name, CartVec &variable);
+	template<typename T> bool loadROSparam(std::string name, T &variable);
+	template<typename T> bool loadROSparam(std::string name, T &variable, T value);
+	bool loadROSparamVector(std::string name, Eigen::VectorXd &variable);
+	bool loadROSparamVector(std::string name, Eigen::MatrixXd &variable);
+	bool loadROSparamVector(std::string name, CartVec &variable);
 
-	  bool convert2NNinput(Eigen::VectorXd in, Eigen::VectorXd &out);
-	  bool convert2NNinput(CartVec in,         Eigen::VectorXd &out);
-	  bool convert2NNinput(Eigen::Affine3d in, Eigen::VectorXd &out);
+	bool convert2NNinput(Eigen::VectorXd in, Eigen::VectorXd &out);
+	bool convert2NNinput(CartVec in,         Eigen::VectorXd &out);
+	bool convert2NNinput(Eigen::Affine3d in, Eigen::VectorXd &out);
 
-	  bool convert2CartVec(Eigen::VectorXd in, CartVec &out);
-	  Eigen::Affine3d convert2Affine(Eigen::VectorXd in);
+	bool convert2CartVec(Eigen::VectorXd in, CartVec &out);
+	Eigen::Affine3d convert2Affine(Eigen::VectorXd in);
 
 
 public:
