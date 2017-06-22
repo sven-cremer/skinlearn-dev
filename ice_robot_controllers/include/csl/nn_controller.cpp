@@ -36,7 +36,7 @@ private:
 	bool PED_ON;				// Use prescribed error dynamics
 	bool updateWeights;
 	bool updateInnerWeights;
-	NNController::ActFcn actF;	// Selected activtion function
+	NNController::ActFcn actF;	// Selected activation function
 	NNController::Layers lay;	// Number of NN layers
 
 	// NN variables

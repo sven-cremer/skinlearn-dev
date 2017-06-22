@@ -31,6 +31,7 @@
 // Inner and outer loops
 //#include "csl/neural_network.hpp"
 #include "csl/nn_controller.cpp"
+#include "csl/nn_estimator.cpp"
 #include "csl/outer_loop.h"
 #include "ice_robot_controllers/jt_cartesian_controller.cpp"
 
@@ -441,6 +442,7 @@ private:
 	double fFForce;
 
 	csl::neural_network::NNController* ptrNNController;
+	csl::neural_network::NNEstimator* ptrNNEstimator;
 
 	JTCartesianController* ptrJTController;
 	Eigen::VectorXd fc_JT_;

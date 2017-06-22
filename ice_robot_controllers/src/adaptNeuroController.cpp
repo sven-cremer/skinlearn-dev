@@ -24,6 +24,8 @@ PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 		delete ptrNNController;
 	if(ptrNNController)
 		delete ptrJTController;
+	if(ptrNNEstimator)
+		delete ptrNNEstimator;
 }
 
 /// Controller initialization in non-realtime
@@ -245,6 +247,23 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		// 2) Do Computations
 
+		/***************** UPDATE LOOP VARIABLES *****************/
+
+		JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
+
+		t_r.setZero();		// [6x1] (num_Outputs)
+		tau_.setZero();		// [7x1] (num_Joints)
+
+		// Current joint positions and velocities
+		q = q_;
+		qd = qdot_;
+
+		convert2NNinput(x_, X);
+		convert2NNinput(xdot_, Xd);
+
+		Xd_m.setZero();
+		Xdd_m.setZero();
+
 		/***************** SENSOR DATA PROCESSING *****************/
 
 		if( forceTorqueOn )		// TODO check if accData has been updated
@@ -307,6 +326,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	//	if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
 	//	if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
 	//	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
+
+		// Feedforward force, human force [6x1]
+		convert2NNinput(wrench_transformed_,force_h);	// TODO use wrench filtered?
 
 
 		/***************** REFERENCE TRAJECTORY *****************/
@@ -395,13 +417,18 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				task_ref.z() = xyz(3) + task_ref.z() ;
 
 			// TODO check limits?			a = F/m							v=v0+at			x=x0+vt
-			x_des_.translation() += (transformed_force / intentEst_M) * intentEst_delT * intentEst_delT;
+			//x_des_.translation() += (transformed_force / intentEst_M) * intentEst_delT * intentEst_delT;
 
 //
 //				x_des_.translation() = task_ref;
 //
 //				intent_elapsed_ = robot_state_->getTime() ;
 //			}
+
+			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_m, Xd_m);
+
+			x_des_ = CartVec2Affine(X_m);
+
 		}
 		if(calibrateSensors)
 		{
@@ -538,30 +565,14 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		}
 
-		/***************** UPDATE LOOP VARIABLES *****************/
-
-		JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
-
-		t_r.setZero();		// [6x1] (num_Outputs)
-		tau_.setZero();		// [7x1] (num_Joints)
-
-		// Current joint positions and velocities
-		q = q_;
-		qd = qdot_;
-
-		convert2NNinput(x_, X);
-		convert2NNinput(xdot_, Xd);
-
-		// Reference trajectory
+		// Update reference trajectory vectors (assumes only Affine variables were updated)
 		convert2NNinput(x_des_, X_m);
 //		convert2NNinput(xd_des_, Xd_m);
 //		convert2NNinput(xdd_des_, Xdd_m);
-		Xd_m.setZero();
-		Xdd_m.setZero();
 
 		// Calculate Cartesian error
 		computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
-		X_m.tail(3) = X.tail(3) - xerr_.tail(3);
+		X_m.tail(3) = X.tail(3) - xerr_.tail(3);		// Make sure X_m - X rotation error is small/continuous
 
 		// TODO
 		/*
@@ -669,9 +680,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 */
 		/***************** INNER LOOP *****************/
 
-		// Feedforward force, human force [6x1]
-		convert2NNinput(wrench_transformed_,force_h);	// TODO use wrench filtered?
-
 		// Neural Network
 		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_h,force_c);
 
@@ -681,7 +689,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 //		if(fFForce)
 //		{
-//			force_c -= t_r;		// Feedforward force [6x1] (f_human?)
+//			force_c -= t_r;
 //		}
 
 /* Experiment C
@@ -2248,7 +2256,9 @@ bool PR2adaptNeuroControllerClass::toggleFixedWeights( ice_msgs::fixedWeightTogg
 
 /// Controller stopping in realtime
 void PR2adaptNeuroControllerClass::stopping()
-{}
+{
+
+}
 
 
 bool PR2adaptNeuroControllerClass::updateInnerNNweights( ice_msgs::setBool::Request& req,
@@ -3100,7 +3110,11 @@ bool PR2adaptNeuroControllerClass::initInnerLoop()
 
 bool PR2adaptNeuroControllerClass::initNN()
 {
+	// NN Estimator
+	ptrNNEstimator = new csl::neural_network::NNEstimator(num_Outputs, csl::neural_network::NNEstimator::RBF);
+	//ptrNNEstimator->paramInit(nne_G,nne_H,nne_kappa,0.01);
 
+	// NN Controller
 	ptrNNController = new csl::neural_network::NNController(num_Joints, num_Outputs, num_Hidden);
 	double weightsLimit = 0.01;
 

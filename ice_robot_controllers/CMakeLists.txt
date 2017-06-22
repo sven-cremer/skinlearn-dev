@@ -69,7 +69,7 @@ add_library(ice_robot_controllers
 #target_link_libraries(outer_loop ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 target_link_libraries(ice_robot_controllers
-  oelLIB digitalFilterLIB nn_controller jt_controller
+  oelLIB digitalFilterLIB nn_controller jt_controller nn_estimator
   ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(ice_robot_controllers ice_msgs_generate_messages_cpp)
 add_dependencies(ice_robot_controllers pr2_gripper_sensor_msgs_generate_messages_cpp)

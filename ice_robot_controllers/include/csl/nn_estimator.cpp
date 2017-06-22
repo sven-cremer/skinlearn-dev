@@ -56,7 +56,8 @@ private:
 	// Controller variables
 	Eigen::VectorXd e;			// Error signal
 	Eigen::VectorXd ed;			// Error signal derivative
-	Eigen::VectorXd ea;			// Approximated human dynamics error signal
+	Eigen::VectorXd ea_;		// Approximated human dynamics error signal
+	Eigen::VectorXd ea_dot;
 	Eigen::VectorXd s;			// Sliding mode error
 	Eigen::VectorXd s_trans;
 	Eigen::MatrixXd Dh;			// Derivative term
@@ -140,6 +141,8 @@ public:
 
 		e                   .resize( num_Dim          ) ;
 		ed                  .resize( num_Dim          ) ;
+		ea_                 .resize( num_Dim          ) ;
+		ea_dot              .resize( num_Dim          ) ;
 		s                   .resize( num_Dim          ) ;
 		fh                  .resize( num_Dim          ) ;
 
@@ -192,6 +195,8 @@ public:
 
 		// Initialize weights randomly
 		resetWeights(weightsLimit);
+
+		ea_.setZero();
 
 		//std::cout<<"G:\n"<<G<<"\n---\n";
 		//std::cout<<"H:\n"<<H<<"\n---\n";
@@ -347,23 +352,31 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 	Phat = U_trans*sigma;
 	xhat = V_trans*sigma;
 
+	Kh = Phat.head(num_Dim).diagonal();
+	Dh = Phat.tail(num_Dim).diagonal();
+	x_hat  = xhat.head(num_Dim);
+	xd_hat = xhat.tail(num_Dim);
 
 	// Update error signals
-	e  = xhat.head(num_Dim) - x;
-	ed = xhat.tail(num_Dim) - xd;
+	e  = x_hat - x;
+	ed = xd_hat - xd;
+
+	// Update filtered error
+	ea_dot = Dh.inverse()*(fh - Kh*ea_);
+	ea_ = ea_ + ea_dot*dt;
 
 	// Sliding mode
-	s = e - ea;
+	s = e - ea_;
 	s_trans = s.transpose();
 
 	// NN update
-	if(updateWeightsU)
+	if(updateWeightsU) // Gains
 	{
 		// Uk+1 = Uk +  Ukdot * dt
-		U_next_ = U_ - (H*sigma*s_trans*J*xhat.diagonal() - kappa*s.norm()*H*U_) * dt;
+		U_next_ = U_ - (H*sigma*s_trans*J*ea_.diagonal() - kappa*s.norm()*H*U_) * dt;	// Note: ea instead of xhat
 	}
 
-	if(updateWeightsV)
+	if(updateWeightsV) // Trajectory
 	{
 		// Vk+1 = Vk +  Vkdot * dt
 		V_next_ = V_ - (G*sigma*s_trans*J*Phat.diagonal() - kappa*s.norm()*G*V_) * dt;
