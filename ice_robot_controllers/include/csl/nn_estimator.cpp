@@ -59,7 +59,6 @@ private:
 	Eigen::VectorXd ea_;		// Approximated human dynamics error signal
 	Eigen::VectorXd ea_dot;
 	Eigen::VectorXd s;			// Sliding mode error
-	Eigen::VectorXd s_trans;
 	Eigen::MatrixXd Dh;			// Derivative term
 	Eigen::MatrixXd Kh;		    // Proportional term
 	Eigen::MatrixXd G;			// Positive definite design matrix for layer V
@@ -91,22 +90,19 @@ public:
 		bias = 1;
 
 		num_Dim     = nDim;		// Usually 6
-		//num_Hidden  = ???;
-		num_Outputs = nDim*2;
 		num_Inputs  = nDim*3;
-
-		// Determine size of NN input vector
+		num_Outputs = nDim*2;
+		num_Hidden  = num_Inputs;
 
 		paramResize();
 
 		// Set default parameter values
 		Eigen::VectorXd p_G;
 		Eigen::VectorXd p_H;
-
-		p_G.setIdentity(num_Dim,num_Dim);
-		p_H.setIdentity(num_Dim,num_Dim);
-		p_G *= 2;
-		p_H *= 2;
+		p_G.setOnes(num_Hidden + bias);
+		p_H.setOnes(num_Hidden + bias);
+		p_G *= 0.1;
+		p_H *= 0.1;
 
 		paramInit(p_G, p_H, 0.01, 0.01);
 
@@ -124,20 +120,20 @@ public:
 	void paramResize()	// TODO make private
 	{
 
-		V_        .resize( num_Inputs + bias           , num_Outputs              ) ;
-		U_        .resize( num_Inputs + bias           , num_Outputs              ) ;
-		V_next_   .resize( num_Inputs + bias           , num_Outputs              ) ;
-		U_next_   .resize( num_Inputs + bias           , num_Outputs              ) ;
-		V_trans   .resize( num_Outputs                 , num_Inputs + bias        ) ;
-		U_trans   .resize( num_Outputs                 , num_Inputs + bias        ) ;
+		V_        .resize( num_Hidden + bias           , num_Outputs              ) ;
+		U_        .resize( num_Hidden + bias           , num_Outputs              ) ;
+		V_next_   .resize( num_Hidden + bias           , num_Outputs              ) ;
+		U_next_   .resize( num_Hidden + bias           , num_Outputs              ) ;
+		V_trans   .resize( num_Outputs                 , num_Hidden + bias        ) ;
+		U_trans   .resize( num_Outputs                 , num_Hidden + bias        ) ;
 
-		G         .resize( num_Inputs + bias           , num_Inputs + bias        ) ;
-		H         .resize( num_Inputs + bias           , num_Inputs + bias        ) ;
+		G         .resize( num_Hidden + bias           , num_Hidden + bias        ) ;
+		H         .resize( num_Hidden + bias           , num_Hidden + bias        ) ;
 
-		phi                 .resize( num_Inputs + bias) ;
+		phi                 .resize( num_Inputs ) ;
 
 		//activationOut       .resize( num_Inputs + bias) ;
-		sigma               .resize( num_Inputs       ) ;
+		sigma               .resize( num_Inputs + bias  ) ;
 
 		e                   .resize( num_Dim          ) ;
 		ed                  .resize( num_Dim          ) ;
@@ -176,11 +172,14 @@ public:
                     double p_kappa,
 					double weightsLimit)
 	{
-
-		Eigen::MatrixXd p_G_mat = p_G.diagonal();
-		Eigen::MatrixXd p_H_mat = p_H.diagonal();
+		if(p_G.size() != num_Hidden + bias || p_H.size() != num_Hidden + bias)
+		{
+			std::cerr<<"Failed to initialize G or H!\n";
+			return;
+		}
+		Eigen::MatrixXd p_G_mat = p_G.asDiagonal();
+		Eigen::MatrixXd p_H_mat = p_H.asDiagonal();
 		paramInit(p_G_mat, p_H_mat, p_kappa, weightsLimit);
-
 	}
 
 	void paramInit( Eigen::MatrixXd & p_G,
@@ -218,12 +217,12 @@ public:
 	void setParamKappa(double p)		{	kappa = p;			}
 	void setParamG(double p)
 	{
-		G.setIdentity();
+		G.setIdentity(num_Hidden + bias,num_Hidden + bias);
 		G *= p;
 	}
 	void setParamH(double p)
 	{
-		H.setIdentity();
+		H.setIdentity(num_Hidden + bias,num_Hidden + bias);
 		H *= p;
 	}
 	bool setParamG(Eigen::VectorXd v)
@@ -323,6 +322,16 @@ public:
                  Eigen::VectorXd & x_hat,
                  Eigen::VectorXd & xd_hat);
 
+	template<typename T>
+	void printVar(std::string name, T var)
+	{
+		std::cout<<name<<"=\n"<<var<<"\n---\n";
+	}
+	void printSize(std::string name, Eigen::MatrixXd var)
+	{
+		std::cout<<name<<" is ["<<var.rows()<<"x"<<var.cols()<<"]\n";
+	}
+
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
@@ -340,9 +349,9 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 	V_trans = V_.transpose();
 
 	// Update NN input vector
-	if(bias == 1)
-		phi << 1, x, xd, f_h;
-	else
+//	if(bias == 1)
+//		phi << 1, x, xd, f_h;
+//	else
 		phi << x, xd, f_h;
 
 	fh = f_h;
@@ -352,8 +361,8 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 	Phat = U_trans*sigma;
 	xhat = V_trans*sigma;
 
-	Kh = Phat.head(num_Dim).diagonal();
-	Dh = Phat.tail(num_Dim).diagonal();
+	Kh = Phat.head(num_Dim).asDiagonal();
+	Dh = Phat.tail(num_Dim).asDiagonal();
 	x_hat  = xhat.head(num_Dim);
 	xd_hat = xhat.tail(num_Dim);
 
@@ -367,19 +376,18 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 
 	// Sliding mode
 	s = e - ea_;
-	s_trans = s.transpose();
 
 	// NN update
 	if(updateWeightsU) // Gains
 	{
 		// Uk+1 = Uk +  Ukdot * dt
-		U_next_ = U_ - (H*sigma*s_trans*J*ea_.diagonal() - kappa*s.norm()*H*U_) * dt;	// Note: ea instead of xhat
+		U_next_ = U_ - (H*sigma*s.transpose()*J*xhat.asDiagonal() - kappa*s.norm()*H*U_) * dt;
 	}
 
 	if(updateWeightsV) // Trajectory
 	{
 		// Vk+1 = Vk +  Vkdot * dt
-		V_next_ = V_ - (G*sigma*s_trans*J*Phat.diagonal() - kappa*s.norm()*G*V_) * dt;
+		V_next_ = V_ - (G*sigma*s.transpose()*J*Phat.asDiagonal() - kappa*s.norm()*G*V_) * dt;
 	}
 
 }
