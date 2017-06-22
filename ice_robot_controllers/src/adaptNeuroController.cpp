@@ -425,9 +425,14 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				intent_elapsed_ = robot_state_->getTime() ;
 //			}
 
-			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_m, Xd_m);
+			Eigen::VectorXd X_tmp;
+			Eigen::VectorXd Xd_tmp;
 
-			x_des_ = CartVec2Affine(X_m);
+			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_tmp, Xd_tmp);
+
+			//x_des_ = CartVec2Affine(X_m);
+			std::cout<<"X ="<<X_tmp.transpose()<<"\t";
+			std::cout<<"Xd="<<Xd_tmp.transpose()<<"\n";
 
 		}
 		if(calibrateSensors)

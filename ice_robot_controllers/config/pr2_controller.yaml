@@ -103,7 +103,7 @@ joint_vel_filter : 1.0
 externalRefTraj    : true
 
 # Human intent estimation
-useHumanIntent     : false
+useHumanIntent     : true
 intentEst_time     : 0.05
 intentEst_delT     : 0.1  # Propagation time
 intentEst_M        : 100.0  # M_i the mass of the intent admittance model
@@ -184,8 +184,8 @@ nnNum_Joints          : 7  # DOF
 # Works best when Kv > lambda?
 
 nnNum_Outputs         : 6  # Cartesian / Quaternion
-nn_Kv                 : [2,2,2,1,1,1]
-nn_lambda             : [25,25,25,15,15,15]
+nn_Kv                 : [5,5,5,3,3,3]
+nn_lambda             : [2,2,2,2,2,2]
 
 #nnNum_Outputs         : 3
 #nn_Kv                 : [5,5,5]
