@@ -11,7 +11,7 @@ loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRat
 
 useCurrentCartPose : true # Avoid jerky movement, should always be true
 useQuaternions     : false
-useNullspacePose   : true
+useNullspacePose   : false
 useDigitalFilter   : false
 
 publishRTtopics    : false
@@ -24,8 +24,8 @@ mannequinThresRot  : 0.05 # not used
 # F/T sensors               #
 #############################
 
-forceTorqueOn      : false
-accelerometerOn    : false
+forceTorqueOn      : true
+accelerometerOn    : true
 
 #gripper_acc_tip: r_gripper_motor_accelerometer_link
 gripper_acc_tip: l_gripper_motor_accelerometer_link

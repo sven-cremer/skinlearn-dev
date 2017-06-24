@@ -416,6 +416,10 @@ int main(int argc, char** argv)
   pr2manager.setDefaultArmJoints(PR2Manager::LEFT, joints_l);
   pr2manager.setDefaultArmJoints(PR2Manager::RIGHT, joints_r);
 
+  // Head
+  bool moveHead = false;
+  loadROSparam(nh, "moveHead", moveHead);
+
   // Torso height
   double torso_height;
   loadROSparam(nh, "torso_height", torso_height);
@@ -1277,8 +1281,10 @@ int main(int argc, char** argv)
     				  ros::Duration(1.0).sleep();
 
     				  // Send head command
-    				  double duration = interpolation_dt*interpolation_steps;
-    				  pr2manager.lookAtPoint(p_new.position, duration);
+    				  if(moveHead){
+    					  double duration = interpolation_dt*interpolation_steps;
+    					  pr2manager.lookAtPoint(p_new.position, duration);
+    				  }
 
     				  // Send arm commands
     				  ros::Time start = ros::Time::now();
@@ -1350,14 +1356,6 @@ int main(int argc, char** argv)
     			  out << YAML::Key << "gains" << YAML::Flow << YAML::BeginSeq << scale*Kp_tran << scale*Kp_rot << scale*Kd_tran << scale*Kd_rot << YAML::EndSeq;
     			  out << YAML::EndMap;
 
-    			  // Save YAML file
-    			  std::string pathToFile = recorder.getPathDataDir() + "/results.yaml";
-    			  std::cout<<"Saving file: "<<pathToFile<<"\n";
-    			  std::ofstream fout(pathToFile.c_str());
-    			  fout << out.c_str() << "\n" << out_dt.c_str() << "\n" << out_t_start.c_str() << "\n" << out_t_stop.c_str() << "\n" << out_p.c_str();
-    			  fout.close();
-    			  //saveYAML(recorder.getPathDataDir(),"results.yaml", out);
-
     			  sc.say("Done!");
     			  std::cout<<"Done!\n";
 
@@ -1366,7 +1364,7 @@ int main(int argc, char** argv)
     			  {
     				  if(true) // TODO
     				  {
-    					  recorder.start();
+    					  recorder.start(expNumber);
     					  sleep(1);
     					  // Publish data
     					  std::cout<<"Publishing data ...\n";
@@ -1383,6 +1381,14 @@ int main(int argc, char** argv)
     					  recorder.stop();
     				  }
     			  }
+
+    			  // Save YAML file
+    			  std::string pathToFile = recorder.getPathDataDir() + "/results.yaml";		// Call after recorder.start!
+    			  std::cout<<"Saving file: "<<pathToFile<<"\n";
+    			  std::ofstream fout(pathToFile.c_str());
+    			  fout << out.c_str() << "\n" << out_dt.c_str() << "\n" << out_t_start.c_str() << "\n" << out_t_stop.c_str() << "\n" << out_p.c_str();
+    			  fout.close();
+    			  //saveYAML(recorder.getPathDataDir(),"results.yaml", out);
 
     			  // Set default arm gains
     			  arms.setGains(Kp_tran,Kp_rot,Kd_tran,Kd_rot,ArmsCartesian::LEFT);
