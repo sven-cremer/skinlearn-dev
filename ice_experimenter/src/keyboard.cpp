@@ -39,10 +39,10 @@
 #include <ice_msgs/setValue.h>
 #include <ice_msgs/tactileCalibration.h>
 #include <ice_msgs/tactileFilterWeights.h>
-#include <std_srvs/Empty.h>
 #include <ice_msgs/setTrajectory.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <ice_msgs/setParameters.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <std_srvs/Empty.h>
 
 
 using namespace std;
@@ -1224,7 +1224,22 @@ int main(int argc, char** argv)
 
     			  // Start recording data
     			  if(data_recording)
-    				  recorder.start(expNumber);
+    			  {
+    				  if(true) // TODO
+    				  {
+    					  // Capture data
+    					  cout<<"Start capturing data ...\n";
+    					  std_srvs::Empty empty_msgs;
+    					  if (!captureData_srv_.call(empty_msgs))
+    					  {
+    						  ROS_ERROR("Failed to call capture data service!");
+    					  }
+    				  }
+    				  else
+    				  {
+    					  recorder.start(expNumber);
+    				  }
+    			  }
 
     			  // Ask user to follow pattern
     			  geometry_msgs::Pose p_new;
@@ -1348,7 +1363,26 @@ int main(int argc, char** argv)
 
     			  // Stop recording data
     			  if(data_recording)
-    				  recorder.stop();
+    			  {
+    				  if(true) // TODO
+    				  {
+    					  recorder.start();
+    					  sleep(1);
+    					  // Publish data
+    					  std::cout<<"Publishing data ...\n";
+    					  std_srvs::Empty empty_msgs;
+    					  if (!publishExpData_srv_.call(empty_msgs))
+    					  {
+    						  ROS_ERROR("Failed to call publishing data service!");
+    					  }
+    					  sleep(3);
+    					  recorder.stop();
+    				  }
+    				  else
+    				  {
+    					  recorder.stop();
+    				  }
+    			  }
 
     			  // Set default arm gains
     			  arms.setGains(Kp_tran,Kp_rot,Kd_tran,Kd_rot,ArmsCartesian::LEFT);

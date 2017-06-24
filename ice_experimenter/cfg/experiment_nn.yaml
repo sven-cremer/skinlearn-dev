@@ -4,9 +4,11 @@ arm_controllers_new:     [pr2_adaptNeuroController]
 
 command_pose_topic: /pr2_adaptNeuroController/command_pose
 
-data_topics: [/pr2_adaptNeuroController/state/x/pose,/pr2_adaptNeuroController/state/x_desi/pose]
-data_fnames: [nn_xact,nn_xdes]
-data_path: /home/sven/Dropbox/2017_Rehab/Data
+#data_topics: [/pr2_adaptNeuroController/state/x/pose,/pr2_adaptNeuroController/state/x_desi/pose]
+#data_fnames: [nn_xact,nn_xdes]
+data_topics: [/pr2_adaptNeuroController/experimentDataState]
+data_fnames: [data]
+data_path: /home/sven/Dropbox/0_Data
 data_dir: exp
 data_recording: false
 
