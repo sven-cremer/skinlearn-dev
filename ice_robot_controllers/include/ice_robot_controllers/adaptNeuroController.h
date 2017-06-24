@@ -392,7 +392,6 @@ private:
 	Eigen::VectorXd x_d;
 	Eigen::VectorXd prev_x_d;
 
-	Eigen::VectorXd t_r;
 	Eigen::VectorXd task_ref;
 	Eigen::VectorXd x_r;
 	Eigen::VectorXd xd_r;

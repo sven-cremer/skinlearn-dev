@@ -251,13 +251,14 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
 
-		t_r.setZero();		// [6x1] (num_Outputs)
-		tau_.setZero();		// [7x1] (num_Joints)
+		force_c.setZero();		// [6x1] (num_Outputs)
+		tau_   .setZero();		// [7x1] (num_Joints)
 
 		// Current joint positions and velocities
 		q = q_;
 		qd = qdot_;
 
+		//X = affine2CartVec(x_);
 		convert2NNinput(x_, X);
 		convert2NNinput(xdot_, Xd);
 
@@ -317,7 +318,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		if(useFlexiForce)
 		{
 			//tactile_wrench_ = -tactile_wrench_;
-			// TODO: update t_r?
 			// TODO: transform into torso frame
 			transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
 		}
@@ -2947,7 +2947,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	X       .setZero( num_Outputs ) ;
 	Xd      .setZero( num_Outputs ) ;
 
-	t_r     .setZero( num_Outputs ) ;
 	task_ref.setZero( num_Outputs ) ;
 	task_refModel_output.setZero( num_Outputs ) ;
 
