@@ -75,7 +75,7 @@ public:
 	// See also http://eigen.tuxfamily.org/dox/StructHavingEigenMembers.html
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 private:
-	enum { StoreLen = 20000 };
+	enum { StoreLen = 5000 };
 	enum { Joints = 7 };
 	enum { CartDim = 6 };
 	enum Experiment{ A, B, C, D, NACwithHIE, Done };

@@ -401,7 +401,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			}
 
 		}
-		if(useHumanIntent && loop_count_ > 3000)
+		if(useHumanIntent && loop_count_ > 100) // TODO make sure this is executed before BufferData!
 		{
 
 //			if( ( robot_state_->getTime() - intent_elapsed_ ).toSec() >= intentLoopTime )
@@ -426,10 +426,14 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //			}
 
 			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_hat, Xd_hat);
+			Kh = ptrNNEstimator->getKh();
+			Dh = ptrNNEstimator->getDh();
 
 			//x_des_ = CartVec2Affine(X_m);
-			//std::cout<<"X ="<<X_hat.transpose()<<"\t";
+			//std::cout<<"X ="<<X_hat.transpose()<<"\n";
 			//std::cout<<"Xd="<<Xd_hat.transpose()<<"\n";
+			//std::cout<<"Kh="<<Kh.transpose()<<"\n";
+			//std::cout<<"Dh="<<Dh.transpose()<<"\n---\n";
 
 		}
 		if(calibrateSensors)
@@ -694,43 +698,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //			force_c -= t_r;
 //		}
 
-/* Experiment C
- * RBF and TANH Neural Network
-
-		tau.setZero();
-
-		if(experiment_ == PR2adaptNeuroControllerClass::C && recordData)
-		{
-			circle_phase += circle_rate * dt_;				// w*t = w*(dt1+dt2+dt3+...)
-
-			q_m(3) 		=  -1.0 + circleAmpl * cos(circle_phase) - circleAmpl/2;
-			qd_m(3)		= -circleAmpl * circle_rate * sin(circle_phase);
-			qdd_m(3)	= -circleAmpl * circle_rate * circle_rate * cos(circle_phase);
-
-			rbfnnController.update( dt_		,		// time step
-									q		,		// x1
-									qd		,		// x2
-									q_m		,		// xd
-									qd_m	,		// vd
-									qdd_m	,		// ad
-									tau  );
-			tau(0) *= 0.05;
-			tau(1) *= 0.05;
-			tau(2) *= 0.05; // FIXME temporary solution
-			tau(4) *= 0.05;
-			tau(5) *= 0.05;
-			tau(6) *= 0.05;
-		}
-		if(experiment_ == PR2adaptNeuroControllerClass::C && !recordData)
-		{
-			q_m.setZero();
-			q_m(3) = -1.0 + circleAmpl/2;;
-			tau = 50.0*(q_m-q);
-		}
-
-		tau_ = tau;
-*/
-
 		// PD controller
 /*
 		CartVec kp, kd;
@@ -950,7 +917,7 @@ void PR2adaptNeuroControllerClass::update()
 	}
 
 	/***************** DATA COLLECTION *****************/
-	if (recordData)
+	if (recordData && loop_count_>200 && loop_count_ % 20 == 0)	// 1000Hz / 20 = 50 Hz TODO check runComputations
 	{
 		bufferData();
 	}
@@ -1718,9 +1685,6 @@ void PR2adaptNeuroControllerClass::bufferData()
 			experimentDataState_msg_[storage_index_].U_norm_traj = ptrNNEstimator->getWeightsNormU();
 			experimentDataState_msg_[storage_index_].V_norm_gain = ptrNNEstimator->getWeightsNormV();
 
-			Kh = ptrNNEstimator->getKh();
-			Dh = ptrNNEstimator->getDh();
-
 			experimentDataState_msg_[storage_index_].Kh.resize(Kh.size());
 			for (int j = 0; j < Kh.size(); ++j) {
 				experimentDataState_msg_[storage_index_].Kh[j] = Kh(j);
@@ -1730,7 +1694,6 @@ void PR2adaptNeuroControllerClass::bufferData()
 				experimentDataState_msg_[storage_index_].Dh[j] = Dh(j);
 			}
 		}
-
 	}
 	else
 	{
@@ -1840,6 +1803,8 @@ bool PR2adaptNeuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate:
 bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Request & req,
                                                 std_srvs::Empty::Response& resp )
 {
+	recordData = false;
+
 	/* Then we can publish the buffer contents. */
 	int  index;
 	for (index = 0 ; index < storage_index_ ; index++)
@@ -2260,6 +2225,7 @@ bool PR2adaptNeuroControllerClass::capture(	std_srvs::Empty::Request & req,
 	// Capture data
 	experiment_ = PR2adaptNeuroControllerClass::NACwithHIE;
 	storage_index_ = 0;
+	loop_count_ = 0;
 	recordData = true;
 
 	return true;
