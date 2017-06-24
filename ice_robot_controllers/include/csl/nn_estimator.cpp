@@ -213,6 +213,8 @@ public:
 	Eigen::VectorXd	getRBFmu()			{	return rbf_mu;		}
 	Eigen::VectorXd	getG()				{	return G;			}
 	Eigen::VectorXd	getH()				{	return H;			}
+	Eigen::VectorXd	getKh()				{	return Kh.diagonal();	}
+	Eigen::VectorXd	getDh()				{	return Dh.diagonal();	}
 
 	void setParamKappa(double p)		{	kappa = p;			}
 	void setParamG(double p)

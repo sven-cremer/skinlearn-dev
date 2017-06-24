@@ -78,7 +78,7 @@ private:
 	enum { StoreLen = 20000 };
 	enum { Joints = 7 };
 	enum { CartDim = 6 };
-	enum Experiment{ A, B, C, D, Done };
+	enum Experiment{ A, B, C, D, NACwithHIE, Done };
 	enum Dim{ AxisY, PlaneXY, Position, Cart, Pose};
 
 	// Definitions
@@ -296,6 +296,7 @@ private:
 	ros::Publisher pubExperimentDataA_     ;
 	ros::Publisher pubExperimentDataB_     ;
 	ros::Publisher pubExperimentDataC_     ;
+	ros::Publisher pubExperimentDataState_ ;
 
 	bool publishRTtopics;
 
@@ -319,6 +320,7 @@ private:
 	ice_msgs::experimentDataA    experimentDataA_msg_  [StoreLen];
 	ice_msgs::experimentDataB    experimentDataB_msg_  [StoreLen];
 	ice_msgs::experimentDataC    experimentDataC_msg_  [StoreLen];
+	StateMsg experimentDataState_msg_[StoreLen];
 
 	volatile int storage_index_;
 
@@ -446,6 +448,12 @@ private:
 
 	JTCartesianController* ptrJTController;
 	Eigen::VectorXd fc_JT_;
+
+	int num_Dim_Estimator;
+	Eigen::VectorXd X_hat;	// Human Intent Estimation
+	Eigen::VectorXd Xd_hat;
+	Eigen::VectorXd Kh;
+	Eigen::VectorXd Dh;
 
 	// NN END
 	/////////////////////////

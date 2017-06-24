@@ -111,7 +111,7 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 
 	/////////////////////////
 	// DATA COLLECTION
-	publish_srv_             = nh_.advertiseService("publishExpData"     , &PR2adaptNeuroControllerClass::publishExperimentData              , this);
+	publish_srv_             = nh_.advertiseService("publishExpData"     , &PR2adaptNeuroControllerClass::publishExperimentData, this);
 	capture_srv_             = nh_.advertiseService("capture"            , &PR2adaptNeuroControllerClass::capture              , this);
 	setRefTraj_srv_          = nh_.advertiseService("setRefTraj"         , &PR2adaptNeuroControllerClass::setRefTraj           , this);
 	toggleFixedWeights_srv_  = nh_.advertiseService("toggleFixedWeights" , &PR2adaptNeuroControllerClass::toggleFixedWeights   , this);
@@ -123,9 +123,10 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	pubRobotCartPos_         = nh_.advertise< geometry_msgs::PoseStamped   >( "robot_cart_pos"       , StoreLen);
 	pubControllerParam_      = nh_.advertise< ice_msgs::controllerParam    >( "controller_params"    , StoreLen);
 	pubControllerFullData_   = nh_.advertise< ice_msgs::controllerFullData >( "controllerFullData"   , StoreLen);
-	pubExperimentDataA_	     = nh_.advertise< ice_msgs::experimentDataA    >( "experimentDataA"   , StoreLen);
-	pubExperimentDataB_	     = nh_.advertise< ice_msgs::experimentDataB    >( "experimentDataB"   , StoreLen);
-	pubExperimentDataC_	     = nh_.advertise< ice_msgs::experimentDataC    >( "experimentDataC"   , StoreLen);
+	pubExperimentDataA_	     = nh_.advertise< ice_msgs::experimentDataA    >( "experimentDataA"      , StoreLen);
+	pubExperimentDataB_	     = nh_.advertise< ice_msgs::experimentDataB    >( "experimentDataB"      , StoreLen);
+	pubExperimentDataC_	     = nh_.advertise< ice_msgs::experimentDataC    >( "experimentDataC"      , StoreLen);
+	pubExperimentDataState_  = nh_.advertise< StateMsg                     >( "experimentDataState"  , StoreLen);
 
 	storage_index_ = StoreLen;
 	// DATA COLLECTION END
@@ -168,7 +169,6 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	pub_ft_transformed_.lock();
 	pub_ft_transformed_.msg_.header.frame_id = root_name;
 	pub_ft_transformed_.unlock();
-
 
 	ROS_INFO("Neuroadpative Controller is initialized!");
 	return true;
@@ -425,14 +425,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				intent_elapsed_ = robot_state_->getTime() ;
 //			}
 
-			Eigen::VectorXd X_tmp;
-			Eigen::VectorXd Xd_tmp;
-
-			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_tmp, Xd_tmp);
+			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_hat, Xd_hat);
 
 			//x_des_ = CartVec2Affine(X_m);
-			std::cout<<"X ="<<X_tmp.transpose()<<"\t";
-			std::cout<<"Xd="<<Xd_tmp.transpose()<<"\n";
+			//std::cout<<"X ="<<X_hat.transpose()<<"\t";
+			//std::cout<<"Xd="<<Xd_hat.transpose()<<"\n";
 
 		}
 		if(calibrateSensors)
@@ -1434,6 +1431,7 @@ void PR2adaptNeuroControllerClass::bufferData()
 {
 	if( (storage_index_ < 0) || (storage_index_ >= StoreLen) )
 	{
+		std::cout<<"No data is being recorded!\n";
 		recordData = false;
 		return;
 	}
@@ -1666,6 +1664,74 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataC_msg_[storage_index_].tau_sat.j5   = tau_sat(5);
 		experimentDataC_msg_[storage_index_].tau_sat.j6   = tau_sat(6);
 	}
+	else if (experiment_ == PR2adaptNeuroControllerClass::NACwithHIE)
+	{
+		//StateMsg* pMsg = &experimentDataState_msg_[storage_index_];
+
+		experimentDataState_msg_[storage_index_].header.stamp = last_time_;
+		experimentDataState_msg_[storage_index_].dt = dt_;
+		experimentDataState_msg_[storage_index_].missed_updates_counter = missed_updates_count_;
+
+		// Pose
+		tf::poseEigenToMsg(x_, experimentDataState_msg_[storage_index_].x.pose);
+		tf::twistEigenToMsg(xdot_, experimentDataState_msg_[storage_index_].xd);
+
+		// Force
+		if(forceTorqueOn)
+		{
+			tf::wrenchEigenToMsg(wrench_transformed_, pub_state_.msg_.force_measured);	// TODO use wrench_filtered?
+		}
+		//tf::matrixEigenToMsg(J_, pub_state_.msg_.J);			// TODO move into a separate message
+		//tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
+
+		// Reference trajectory
+		tf::poseEigenToMsg(convert2Affine(X_m), experimentDataState_msg_[storage_index_].x_desi.pose);		// X_m, xd_T
+		// tf::poseEigenToMsg(x_desi_filtered_, experimentDataState_msg_[storage_index_].x_desi_filtered.pose);
+		tf::twistEigenToMsg(Xd_m,  experimentDataState_msg_[storage_index_].xd_desi);
+		tf::twistEigenToMsg(xerr_, experimentDataState_msg_[storage_index_].x_err);
+
+		// Controller
+		tf::wrenchEigenToMsg(Force6d, pub_state_.msg_.force_c);			// NN control force
+		experimentDataState_msg_[storage_index_].W_norm = ptrNNController->getInnerWeightsNorm();
+		experimentDataState_msg_[storage_index_].V_norm = ptrNNController->getOuterWeightsNorm();
+		//tf::matrixEigenToMsg(ptrNNController->getInnerWeights(), pub_state_.msg_.V);
+		//tf::matrixEigenToMsg(ptrNNController->getOuterWeights(), pub_state_.msg_.W);
+
+		// Vectors
+		experimentDataState_msg_[storage_index_].q.resize(num_Joints);
+		experimentDataState_msg_[storage_index_].tau_c.resize(num_Joints);
+		if(useNullspacePose)
+			experimentDataState_msg_[storage_index_].tau_posture.resize(num_Joints);
+
+		for (int j = 0; j < num_Joints; ++j) {
+			experimentDataState_msg_[storage_index_].tau_c[j] = tau_c_latest_(j);
+			experimentDataState_msg_[storage_index_].q[j] = q_(j);
+			if(useNullspacePose)
+				experimentDataState_msg_[storage_index_].tau_posture[j] = nullspaceTorque(j);
+		}
+
+		// Estimator
+		if(useHumanIntent)
+		{
+			tf::poseEigenToMsg(convert2Affine(X_hat), experimentDataState_msg_[storage_index_].x_hat);
+			tf::poseEigenToMsg(convert2Affine(Xd_hat), experimentDataState_msg_[storage_index_].xd_hat);
+			experimentDataState_msg_[storage_index_].U_norm_traj = ptrNNEstimator->getWeightsNormU();
+			experimentDataState_msg_[storage_index_].V_norm_gain = ptrNNEstimator->getWeightsNormV();
+
+			Kh = ptrNNEstimator->getKh();
+			Dh = ptrNNEstimator->getDh();
+
+			experimentDataState_msg_[storage_index_].Kh.resize(Kh.size());
+			for (int j = 0; j < Kh.size(); ++j) {
+				experimentDataState_msg_[storage_index_].Kh[j] = Kh(j);
+			}
+			experimentDataState_msg_[storage_index_].Dh.resize(Dh.size());
+			for (int j = 0; j < Dh.size(); ++j) {
+				experimentDataState_msg_[storage_index_].Dh[j] = Dh(j);
+			}
+		}
+
+	}
 	else
 	{
 		// TODO failure message
@@ -1791,6 +1857,9 @@ bool PR2adaptNeuroControllerClass::publishExperimentData( std_srvs::Empty::Reque
 			pubExperimentDataB_.publish(experimentDataB_msg_[index]);
 		if(	experiment_ == PR2adaptNeuroControllerClass::C)
 			pubExperimentDataC_.publish(experimentDataC_msg_[index]);
+		if(	experiment_ == PR2adaptNeuroControllerClass::NACwithHIE)
+			pubExperimentDataState_.publish(experimentDataState_msg_[index]);
+
 	}
 
 	return true;
@@ -2189,7 +2258,7 @@ bool PR2adaptNeuroControllerClass::capture(	std_srvs::Empty::Request & req,
 //	}
 
 	// Capture data
-	experiment_ = PR2adaptNeuroControllerClass::B;
+	experiment_ = PR2adaptNeuroControllerClass::NACwithHIE;
 	storage_index_ = 0;
 	recordData = true;
 

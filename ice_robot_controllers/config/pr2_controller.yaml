@@ -1,7 +1,7 @@
 #############################
 # Experiment settings       #
 #############################
-experiment         : 0 # Experiment A=0, B=1, C=2
+experiment         : 5 # Experiment A=0, B=1, C=2, D=3, NACwithHIE, Done
 
 #############################
 # Controller settings       #
@@ -14,7 +14,7 @@ useQuaternions     : false
 useNullspacePose   : true
 useDigitalFilter   : false
 
-publishRTtopics    : true
+publishRTtopics    : false
 
 mannequinMode      : false
 mannequinThresPos  : 0.05
