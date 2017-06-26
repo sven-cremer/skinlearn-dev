@@ -383,13 +383,13 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 	if(updateWeightsU) // Gains
 	{
 		// Uk+1 = Uk +  Ukdot * dt
-		U_next_ = U_ - (H*sigma*s.transpose()*J*xhat.asDiagonal() - kappa*s.norm()*H*U_) * dt;
+		U_next_ = U_ + (H*sigma*s.transpose()*J*xhat.asDiagonal() - kappa*s.norm()*H*U_) * dt;	// TODO sign?
 	}
 
 	if(updateWeightsV) // Trajectory
 	{
 		// Vk+1 = Vk +  Vkdot * dt
-		V_next_ = V_ - (G*sigma*s.transpose()*J*Phat.asDiagonal() - kappa*s.norm()*G*V_) * dt;
+		V_next_ = V_ + (G*sigma*s.transpose()*J*Phat.asDiagonal() - kappa*s.norm()*G*V_) * dt;
 	}
 
 }
