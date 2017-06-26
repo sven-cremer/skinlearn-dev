@@ -433,7 +433,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				intent_elapsed_ = robot_state_->getTime() ;
 //			}
 		}
-		if(useHumanIntentNN && loop_count_ > 100) // TODO make sure this is executed before BufferData!
+		if(computeHumanIntentNN && loop_count_ > 100) // TODO make sure this is executed before BufferData!
 		{
 			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_hat, Xd_hat);
 			Kh = ptrNNEstimator->getKh();
@@ -443,6 +443,12 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			//std::cout<<"Xd="<<Xd_hat.transpose()<<"\n";
 			//std::cout<<"Kh="<<Kh.transpose()<<"\n";
 			//std::cout<<"Dh="<<Dh.transpose()<<"\n---\n";
+
+			if(useHumanIntentNN)
+			{
+				x_des_ = CartVec2Affine(X_hat);
+				// TODO use Xd_hat
+			}
 		}
 		if(calibrateSensors)
 		{
@@ -1690,7 +1696,7 @@ void PR2adaptNeuroControllerClass::bufferData()
 		}
 
 		// Estimator
-		if(useHumanIntentNN)
+		if(computeHumanIntentNN)
 		{
 			tf::poseEigenToMsg(convert2Affine(X_hat), experimentDataState_msg_[storage_index_].x_hat);
 			tf::poseEigenToMsg(convert2Affine(Xd_hat), experimentDataState_msg_[storage_index_].xd_hat);
@@ -2440,6 +2446,7 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/mannequinMode",     mannequinMode,     false);
 	nh_.param("/useHumanIntent",    useHumanIntent,   false);
 	nh_.param("/useHumanIntentNN",  useHumanIntentNN,   false);
+	nh_.param("/computeHumanIntentNN",  computeHumanIntentNN,   false);
 
 	int tmp;
 	nh_.param("/experiment", tmp, 1);		// TODO check user input
