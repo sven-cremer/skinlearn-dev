@@ -3150,8 +3150,17 @@ bool PR2adaptNeuroControllerClass::initInnerLoop()
 bool PR2adaptNeuroControllerClass::initNN()
 {
 	// NN Estimator
+	double nne_kappa = 0.01;
+	loadROSparam("/nne_kappa", nne_kappa);
+
+	Eigen::VectorXd nne_G; nne_G.setOnes( num_Outputs);
+	Eigen::VectorXd nne_H; nne_H.setOnes( num_Outputs);
+	loadROSparamVector("/nne_G", nne_G);
+	loadROSparamVector("/nne_H", nne_H);
+
 	ptrNNEstimator = new csl::neural_network::NNEstimator(num_Outputs, csl::neural_network::NNEstimator::RBF);
-	//ptrNNEstimator->paramInit(nne_G,nne_H,nne_kappa,0.01);
+	ptrNNEstimator->paramInit(nne_G,nne_H,nne_kappa,0.01);
+
 
 	// NN Controller
 	ptrNNController = new csl::neural_network::NNController(num_Joints, num_Outputs, num_Hidden);
