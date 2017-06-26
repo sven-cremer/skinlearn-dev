@@ -14,7 +14,7 @@ useQuaternions     : false
 useNullspacePose   : false
 useDigitalFilter   : false
 
-publishRTtopics    : false
+publishRTtopics    : true
 
 mannequinMode      : false
 mannequinThresPos  : 0.05
@@ -103,7 +103,7 @@ joint_vel_filter : 1.0
 externalRefTraj    : false
 
 # Human intent estimation
-useHumanIntent     : true
+useHumanIntent     : false
 intentEst_time     : 0.05
 intentEst_delT     : 0.1  # Propagation time
 intentEst_M        : 100.0  # M_i the mass of the intent admittance model
