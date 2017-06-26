@@ -376,8 +376,8 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 
 	if(useLimits)
 	{
-		Phat.array() = (Phat.array() > Phat_max.array()).select(Phat_max, Phat);	// (Phat > Phat_max ? Phat_max : Phat)
-		Phat.array() = (Phat.array() < Phat_min.array()).select(Phat_min, Phat);
+		Phat = (Phat.array() > Phat_max.array()).select(Phat_max, Phat);	// (Phat > Phat_max ? Phat_max : Phat)
+		Phat = (Phat.array() < Phat_min.array()).select(Phat_min, Phat);
 	}
 
 	Kh = Phat.head(num_Dim).asDiagonal();

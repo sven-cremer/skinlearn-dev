@@ -1690,7 +1690,7 @@ void PR2adaptNeuroControllerClass::bufferData()
 		}
 
 		// Estimator
-		if(useHumanIntent)
+		if(useHumanIntentNN)
 		{
 			tf::poseEigenToMsg(convert2Affine(X_hat), experimentDataState_msg_[storage_index_].x_hat);
 			tf::poseEigenToMsg(convert2Affine(Xd_hat), experimentDataState_msg_[storage_index_].xd_hat);
