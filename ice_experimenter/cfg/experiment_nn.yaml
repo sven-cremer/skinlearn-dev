@@ -13,14 +13,14 @@ data_dir: exp
 data_recording: true
 
 #trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
-#trajectory_path: ACIGAGICADBFHDHFBDA
-trajectory_path: ABEDA
+trajectory_path: ACIGAGICADBFHDHFBDA
+#trajectory_path: ABEDA
 #trajectory_origin: [0.48,0.08,-0.05]
 trajectory_origin: [0.50,-0.10,-0.05]
 trajectory_Nx: 3
-trajectory_Ny: 4
-trajectory_dx: 0.124
-trajectory_dy: 0.124
+trajectory_Ny: 3
+trajectory_dx: 0.125
+trajectory_dy: 0.125
 
 interpolation_dt: 0.01
 interpolation_steps: 500
