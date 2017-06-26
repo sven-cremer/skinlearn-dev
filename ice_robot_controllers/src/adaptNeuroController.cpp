@@ -916,10 +916,14 @@ void PR2adaptNeuroControllerClass::update()
 		{
 			missed_updates_count_++;	// computations still running
 		}
-		else
-		{
-			tau_c_latest_ = tau_c_; 	// computations finished, update torque command value
-		}
+//		else
+//		{
+//			tau_c_latest_ = tau_c_; 	// computations finished, update torque command value
+//		}
+	}
+	if(!runComputations)
+	{
+		tau_c_latest_ = tau_c_; 	// computations finished, update torque command value
 	}
 
 	/***************** SEND TORQUE COMMAND  *****************/

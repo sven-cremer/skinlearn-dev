@@ -14,7 +14,7 @@ useQuaternions     : false
 useNullspacePose   : false
 useDigitalFilter   : false
 
-publishRTtopics    : true
+publishRTtopics    : false
 
 mannequinMode      : false
 mannequinThresPos  : 0.05
