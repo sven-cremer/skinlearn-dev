@@ -1670,7 +1670,7 @@ void PR2adaptNeuroControllerClass::bufferData()
 		// Force
 		if(forceTorqueOn)
 		{
-			tf::wrenchEigenToMsg(wrench_transformed_, pub_state_.msg_.force_measured);	// TODO use wrench_filtered?
+			tf::wrenchEigenToMsg(wrench_transformed_, experimentDataState_msg_[storage_index_].force_measured);	// TODO use wrench_filtered?
 		}
 		//tf::matrixEigenToMsg(J_, pub_state_.msg_.J);			// TODO move into a separate message
 		//tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
@@ -1682,7 +1682,7 @@ void PR2adaptNeuroControllerClass::bufferData()
 		tf::twistEigenToMsg(xerr_, experimentDataState_msg_[storage_index_].x_err);
 
 		// Controller
-		tf::wrenchEigenToMsg(Force6d, pub_state_.msg_.force_c);			// NN control force
+		tf::wrenchEigenToMsg(Force6d, experimentDataState_msg_[storage_index_].force_c);			// NN control force
 		experimentDataState_msg_[storage_index_].W_norm = ptrNNController->getInnerWeightsNorm();
 		experimentDataState_msg_[storage_index_].V_norm = ptrNNController->getOuterWeightsNorm();
 		//tf::matrixEigenToMsg(ptrNNController->getInnerWeights(), pub_state_.msg_.V);
