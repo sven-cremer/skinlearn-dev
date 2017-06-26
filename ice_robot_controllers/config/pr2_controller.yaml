@@ -100,7 +100,7 @@ joint_vel_filter : 1.0
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
 # i.e. an admittance model is used to generate x_i from f_h the force from the FT sensor
-externalRefTraj    : true
+externalRefTraj    : false
 
 # Human intent estimation
 useHumanIntent     : true
@@ -172,7 +172,7 @@ cartIniYaw           :  0.0
 #############################
 # NN estimator              #
 #############################
-
+useHumanIntentNN: true
 nne_kappa : 0.01
 nne_alpha : 0.001
 nne_G     : [10,10,10,10,10,10]

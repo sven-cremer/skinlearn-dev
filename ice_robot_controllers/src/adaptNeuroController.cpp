@@ -213,6 +213,7 @@ void PR2adaptNeuroControllerClass::starting()
 	convert2NNinput(x_des_, X_m);	// Assume xd, xdd are zero
 	p_X_m = X_m;
 	ROS_INFO_STREAM("Desired position: "<< X_m.transpose());
+	commandPose = x_des_;
 
 	// Set transform from accelerometer to FT sensor
 	CartVec tmp;
@@ -232,6 +233,14 @@ void PR2adaptNeuroControllerClass::starting()
 
 }
 
+
+/// Controller stopping in realtime
+void PR2adaptNeuroControllerClass::stopping()
+{
+	runComputations = false;
+	m_Thread.interrupt();		// Kill thread at one of the interruption points
+}
+
 /// Parallel thread for updates that are computationally expensive
 void PR2adaptNeuroControllerClass::updateNonRealtime()
 {
@@ -241,7 +250,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		boost::mutex::scoped_lock lock(m_Mutex);
 		while(!runComputations)
 		{
-			m_Condition.wait(lock);
+			m_Condition.wait(lock);		// Note: this is also an interrupt point
 			//boost::this_thread::sleep(boost::posix_time::microseconds(1));
 		}
 
@@ -417,13 +426,16 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				task_ref.z() = xyz(3) + task_ref.z() ;
 
 			// TODO check limits?			a = F/m							v=v0+at			x=x0+vt
-			//x_des_.translation() += (transformed_force / intentEst_M) * intentEst_delT * intentEst_delT;
-
+			x_des_.translation() += (force_h.head(3) / intentEst_M) * intentEst_delT * intentEst_delT;
 //
 //				x_des_.translation() = task_ref;
 //
 //				intent_elapsed_ = robot_state_->getTime() ;
 //			}
+		}
+		if(useHumanIntentNN && loop_count_ > 100) // TODO make sure this is executed before BufferData!
+		{
+
 
 			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_hat, Xd_hat);
 			Kh = ptrNNEstimator->getKh();
@@ -2294,13 +2306,6 @@ bool PR2adaptNeuroControllerClass::toggleFixedWeights( ice_msgs::fixedWeightTogg
 	return true;
 }
 
-/// Controller stopping in realtime
-void PR2adaptNeuroControllerClass::stopping()
-{
-
-}
-
-
 bool PR2adaptNeuroControllerClass::updateInnerNNweights( ice_msgs::setBool::Request& req,
 		                                            ice_msgs::setBool::Response& resp )
 {
@@ -2434,6 +2439,7 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/mannequinThresPos", mannequinThresRot, 0.05);
 	nh_.param("/mannequinMode",     mannequinMode,     false);
 	nh_.param("/useHumanIntent",    useHumanIntent,   false);
+	nh_.param("/useHumanIntent",    useHumanIntentNN,   false);
 
 	int tmp;
 	nh_.param("/experiment", tmp, 1);		// TODO check user input
