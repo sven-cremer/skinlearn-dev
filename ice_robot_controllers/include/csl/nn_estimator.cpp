@@ -64,6 +64,7 @@ private:
 	Eigen::MatrixXd G;			// Positive definite design matrix for layer V
 	Eigen::MatrixXd H;			// Positive definite design matrix for layer U
 	double kappa;				// Gain of e-modification terms
+	double alpha;				// Learning rate for testing
 
 	Eigen::VectorXd fh;			// Human force
 
@@ -105,6 +106,8 @@ public:
 		p_H *= 0.1;
 
 		paramInit(p_G, p_H, 0.01, 0.01);
+
+		alpha = 1.0;
 
 		// RBF
 		rbf_beta = 1.0;
@@ -216,6 +219,7 @@ public:
 	Eigen::VectorXd	getKh()				{	return Kh.diagonal();	}
 	Eigen::VectorXd	getDh()				{	return Dh.diagonal();	}
 
+	void setParamAlpha(double p)		{	alpha = p;			}
 	void setParamKappa(double p)		{	kappa = p;			}
 	void setParamG(double p)
 	{
@@ -383,13 +387,13 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 	if(updateWeightsU) // Gains
 	{
 		// Uk+1 = Uk +  Ukdot * dt
-		U_next_ = U_ - (H*sigma*s.transpose()*J*xhat.asDiagonal() + kappa*s.norm()*H*U_) * dt;	// TODO sign?
+		U_next_ = U_ - alpha*(H*sigma*s.transpose()*J*xhat.asDiagonal() + kappa*s.norm()*H*U_) * dt;	// TODO sign?
 	}
 
 	if(updateWeightsV) // Trajectory
 	{
 		// Vk+1 = Vk +  Vkdot * dt
-		V_next_ = V_ - (G*sigma*s.transpose()*J*Phat.asDiagonal() + kappa*s.norm()*G*V_) * dt;
+		V_next_ = V_ - alpha*(G*sigma*s.transpose()*J*Phat.asDiagonal() + kappa*s.norm()*G*V_) * dt;
 	}
 
 }

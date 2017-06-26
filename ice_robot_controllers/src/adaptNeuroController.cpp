@@ -3151,7 +3151,9 @@ bool PR2adaptNeuroControllerClass::initNN()
 {
 	// NN Estimator
 	double nne_kappa = 0.01;
+	double nne_alpha = 1.0;
 	loadROSparam("/nne_kappa", nne_kappa);
+	loadROSparam("/nne_alpha", nne_alpha);
 
 	Eigen::VectorXd nne_G; nne_G.setOnes( num_Outputs);
 	Eigen::VectorXd nne_H; nne_H.setOnes( num_Outputs);
@@ -3160,6 +3162,7 @@ bool PR2adaptNeuroControllerClass::initNN()
 
 	ptrNNEstimator = new csl::neural_network::NNEstimator(num_Outputs, csl::neural_network::NNEstimator::RBF);
 	ptrNNEstimator->paramInit(nne_G,nne_H,nne_kappa,0.01);
+	ptrNNEstimator->setParamAlpha(nne_alpha);
 
 
 	// NN Controller
