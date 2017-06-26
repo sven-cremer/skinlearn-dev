@@ -457,6 +457,7 @@ private:
 	Eigen::Vector3d e_int;
 	Eigen::Vector3d e_int_max;
 	Eigen::Vector3d e_int_min;
+	double nne_pose_filter;
 
 	// NN END
 	/////////////////////////

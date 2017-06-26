@@ -433,9 +433,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //				intent_elapsed_ = robot_state_->getTime() ;
 //			}
 		}
-		if(computeHumanIntentNN && loop_count_ > 100 && loop_count_ % 5 == 0) // TODO make sure this is executed before BufferData!
+		if(computeHumanIntentNN && loop_count_ > 100 ) //&& loop_count_ % 5 == 0) // TODO make sure this is executed before BufferData!
 		{
-			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_hat, Xd_hat);
+			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_hat, Xd_hat);		// TODO use correct dt
 			Kh = ptrNNEstimator->getKh();
 			Dh = ptrNNEstimator->getDh();
 			//x_des_ = CartVec2Affine(X_m);
@@ -447,11 +447,12 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			if(useHumanIntentNN)
 			{
 				// Limit error
-				e_int = X.head(3) - X_hat.head(3);
-				e_int = (e_int.array() > e_int_max.array() ).select(e_int_max, e_int);
-				e_int = (e_int.array() < e_int_min.array() ).select(e_int_min, e_int);
+				e_int = X_hat.head(3) - X.head(3);
+				//e_int = (e_int.array() > e_int_max.array() ).select(e_int_max, e_int);
+				//e_int = (e_int.array() < e_int_min.array() ).select(e_int_min, e_int);
+				//x_des_.translation() = X.head(3) + e_int;
+				x_des_.translation() = X.head(3) + nne_pose_filter * e_int;
 
-				x_des_.translation() = X.head(3) - e_int;
 				x_des_.linear() = x0_.linear();	// Ignore rotation
 				// TODO use Xd_hat
 			}
@@ -3194,8 +3195,11 @@ bool PR2adaptNeuroControllerClass::initNN()
 	ptrNNEstimator->setPhatMax(nne_Pmax);
 	ptrNNEstimator->setUseLimits(nne_useLimits);
 
-	e_int_max << 0.05, 0.05, 0.05;
-	e_int_min << -0.05, -0.05, -0.05;
+	e_int_max << 0.01, 0.01, 0.01;
+	e_int_min << -0.01, -0.01, -0.01;
+
+	nne_pose_filter = 0.01;
+	loadROSparam("/nne_pose_filter", nne_pose_filter);
 
 	// NN Controller
 	ptrNNController = new csl::neural_network::NNController(num_Joints, num_Outputs, num_Hidden);
