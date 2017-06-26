@@ -30,6 +30,7 @@ private:
 	bool nn_ON;					// Use fhat from NN
 	bool updateWeightsV;
 	bool updateWeightsU;
+	bool useLimits;				// Use artificial limits for Phat
 	NNEstimator::ActFcn actF;	// Selected activation function
 
 	// NN variables
@@ -49,6 +50,8 @@ private:
 	Eigen::VectorXd phi;		// NN input vector
 	Eigen::VectorXd xhat;		// NN output vector (trajectory)
 	Eigen::VectorXd Phat;		// NN output vector (gains)
+	Eigen::VectorXd Phat_min;   // Artificial limits
+	Eigen::VectorXd Phat_max;   // Artificial limits
 
 	Eigen::VectorXd sigma;		// Activation function output
 	Eigen::MatrixXd J;	        // Identity matrix  [I6, I6]
@@ -87,6 +90,7 @@ public:
 		nn_ON              = true;
 		updateWeightsV     = true;
 		updateWeightsU     = true;
+		useLimits          = false;
 
 		bias = 1;
 
@@ -219,6 +223,9 @@ public:
 	Eigen::VectorXd	getKh()				{	return Kh.diagonal();	}
 	Eigen::VectorXd	getDh()				{	return Dh.diagonal();	}
 
+	void setPhatMin(Eigen::VectorXd v)  {	Phat_min = v;		}	// TODO check values
+	void setPhatMax(Eigen::VectorXd v)  {	Phat_max = v;		}
+	void setUseLimits(bool v)  			{	useLimits = v;		}
 	void setParamAlpha(double p)		{	alpha = p;			}
 	void setParamKappa(double p)		{	kappa = p;			}
 	void setParamG(double p)
@@ -366,6 +373,12 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 	sigma = activation(phi);
 	Phat = U_trans*sigma;
 	xhat = V_trans*sigma;
+
+	if(useLimits)
+	{
+		Phat.array() = (Phat.array() > Phat_max.array()).select(Phat_max, Phat);	// (Phat > Phat_max ? Phat_max : Phat)
+		Phat.array() = (Phat.array() < Phat_min.array()).select(Phat_min, Phat);
+	}
 
 	Kh = Phat.head(num_Dim).asDiagonal();
 	Dh = Phat.tail(num_Dim).asDiagonal();

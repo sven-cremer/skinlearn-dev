@@ -435,18 +435,14 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		}
 		if(useHumanIntentNN && loop_count_ > 100) // TODO make sure this is executed before BufferData!
 		{
-
-
 			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_hat, Xd_hat);
 			Kh = ptrNNEstimator->getKh();
 			Dh = ptrNNEstimator->getDh();
-
 			//x_des_ = CartVec2Affine(X_m);
 			//std::cout<<"X ="<<X_hat.transpose()<<"\n";
 			//std::cout<<"Xd="<<Xd_hat.transpose()<<"\n";
 			//std::cout<<"Kh="<<Kh.transpose()<<"\n";
 			//std::cout<<"Dh="<<Dh.transpose()<<"\n---\n";
-
 		}
 		if(calibrateSensors)
 		{
@@ -2443,7 +2439,7 @@ bool PR2adaptNeuroControllerClass::initParam()
 	nh_.param("/mannequinThresPos", mannequinThresRot, 0.05);
 	nh_.param("/mannequinMode",     mannequinMode,     false);
 	nh_.param("/useHumanIntent",    useHumanIntent,   false);
-	nh_.param("/useHumanIntent",    useHumanIntentNN,   false);
+	nh_.param("/useHumanIntentNN",  useHumanIntentNN,   false);
 
 	int tmp;
 	nh_.param("/experiment", tmp, 1);		// TODO check user input
@@ -3170,10 +3166,20 @@ bool PR2adaptNeuroControllerClass::initNN()
 	loadROSparamVector("/nne_G", nne_G);
 	loadROSparamVector("/nne_H", nne_H);
 
+	bool nne_useLimits=false;
+	loadROSparam("/nne_useLimits", nne_useLimits);
+	Eigen::VectorXd nne_Pmin; nne_Pmin.setZero( 2*num_Outputs);
+	Eigen::VectorXd nne_Pmax; nne_Pmax.setZero( 2*num_Outputs);
+	loadROSparamVector("/nne_Pmin", nne_Pmin);
+	loadROSparamVector("/nne_Pmax", nne_Pmax);
+
 	ptrNNEstimator = new csl::neural_network::NNEstimator(num_Outputs, csl::neural_network::NNEstimator::RBF);
 	ptrNNEstimator->paramInit(nne_G,nne_H,nne_kappa,0.01);
 	ptrNNEstimator->setParamAlpha(nne_alpha);
 
+	ptrNNEstimator->setPhatMin(nne_Pmin);
+	ptrNNEstimator->setPhatMax(nne_Pmax);
+	ptrNNEstimator->setUseLimits(nne_useLimits);
 
 	// NN Controller
 	ptrNNController = new csl::neural_network::NNController(num_Joints, num_Outputs, num_Hidden);

@@ -174,9 +174,13 @@ cartIniYaw           :  0.0
 #############################
 useHumanIntentNN: true
 nne_kappa : 0.01
-nne_alpha : 0.001
+nne_alpha : 1.0
 nne_G     : [10,10,10,10,10,10]
 nne_H     : [10,10,10,10,10,10]
+
+nne_useLimits: true
+nne_Pmin  : [10,10,10,10,10,10,10,10,10,10,10,10]
+nne_Pmax  : [90,90,90,90,90,90,90,90,90,90,90,90]
 
 #############################
 # NN controller             #
