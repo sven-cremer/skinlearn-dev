@@ -454,6 +454,10 @@ private:
 	Eigen::VectorXd Kh;
 	Eigen::VectorXd Dh;
 
+	Eigen::Vector3d e_int;
+	Eigen::Vector3d e_int_max;
+	Eigen::Vector3d e_int_min;
+
 	// NN END
 	/////////////////////////
 
