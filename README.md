@@ -8,7 +8,8 @@ Branches:
 
   * master (Groovy, rosbuild) - deprecated
   * rbfnn (test with RBF activation functions) - incomplete
-  * **catkin-devel** (Indigo, catkin) - main branch, work in progress
+  * **catkin-devel** - started converting packages from rosmake to catkin
+  * *indigo-devel* - main branch, work in progress
 
 Working packages:
 
@@ -89,16 +90,17 @@ roslaunch ice_sensors tactileBox.launch
 roslaunch ice_sensors rviz.launch
 ```
 # Demo 2: Neuroadaptive controller
-The most up-to-date controller is inside the *adaptNeuroController* class. To test:
+The most up-to-date controller is inside the *adaptNeuroController* class which can be launched with
 ```
 roslaunch ice_robot_controllers adaptNeuroController.launch
-roslaunch ice_experimenter load_parameters.launch fname:=experiment_nn
+```
+To use the ICE experimenter:
+```
+roslaunch ice_experimenter ice_experimenter.launch NN:=true JT:=false
 rosrun ice_experimenter ice_experimenter
 ```
-To use the speaker:
-```
-roslaunch ice_experimenter ice_experimenter.launch
-```
+Check the launch file and configuration files in `ice_experimenter/cfg` for more settings.
+*Note*: Run the keyboard interface on the PR2 to avoid timing offsets during data collection.
 
 # Running in Simulation
 Add the following settings to bashrc:  
