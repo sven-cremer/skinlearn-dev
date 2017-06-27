@@ -3175,8 +3175,8 @@ bool PR2adaptNeuroControllerClass::initNN()
 	loadROSparam("/nne_kappa", nne_kappa);
 	loadROSparam("/nne_alpha", nne_alpha);
 
-	Eigen::VectorXd nne_G; nne_G.setOnes( num_Outputs);
-	Eigen::VectorXd nne_H; nne_H.setOnes( num_Outputs);
+	Eigen::VectorXd nne_G; nne_G.setOnes( num_Inputs*3 + 1);
+	Eigen::VectorXd nne_H; nne_H.setOnes( num_Inputs*3 + 1);
 	loadROSparamVector("/nne_G", nne_G);
 	loadROSparamVector("/nne_H", nne_H);
 
