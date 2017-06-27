@@ -11,6 +11,7 @@ data_fnames: [data]
 data_path: /home/sven/Dropbox/0_Data
 data_dir: exp
 data_recording: true
+data_buffer: true
 
 #trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
 trajectory_path: ACIGAGICADBFHDHFBDA

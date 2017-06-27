@@ -362,11 +362,13 @@ int main(int argc, char** argv)
   std::string dataDir;
   std::string path;
   bool data_recording=true;
+  bool data_buffer=false;
   loadROSparam(nh, "data_topics", data_topics);
   loadROSparam(nh, "data_fnames", data_fnames);
   loadROSparam(nh, "data_dir", dataDir);
   loadROSparam(nh, "data_path", path);
   loadROSparam(nh, "data_recording", data_recording);
+  loadROSparam(nh, "data_buffer", data_buffer);
   DataRecorder recorder(data_topics,data_fnames,dataDir,path);
   int expNumber = 1;
 
@@ -1229,7 +1231,7 @@ int main(int argc, char** argv)
     			  // Start recording data
     			  if(data_recording)
     			  {
-    				  if(true) // TODO
+    				  if(data_buffer) // Start saving data inside controller buffer
     				  {
     					  // Capture data
     					  cout<<"Start capturing data ...\n";
@@ -1362,7 +1364,7 @@ int main(int argc, char** argv)
     			  // Stop recording data
     			  if(data_recording)
     			  {
-    				  if(true) // TODO
+    				  if(data_buffer) // Retrieve data from controller buffer
     				  {
     					  recorder.start(expNumber);
     					  sleep(1);

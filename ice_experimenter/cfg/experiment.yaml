@@ -9,6 +9,7 @@ data_fnames: [pos_act,pos_des,vel_act,vel_des,f_control,f_human,tau_pose,tau_pos
 data_path: /home/sven/Dropbox/0_Data
 data_dir: exp
 data_recording: true
+data_buffer: false
 
 #trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
 #trajectory_path: ABEA
