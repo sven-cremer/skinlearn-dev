@@ -100,7 +100,7 @@ joint_vel_filter : 1.0
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
 # i.e. an admittance model is used to generate x_i from f_h the force from the FT sensor
-externalRefTraj    : false
+externalRefTraj    : true
 
 # Human intent estimation
 useHumanIntent     : false
@@ -173,11 +173,15 @@ cartIniYaw           :  0.0
 # NN estimator              #
 #############################
 computeHumanIntentNN : true
-useHumanIntentNN     : true
+useHumanIntentNN     : false
 nne_kappa : 0.01
 nne_alpha : 1.0
-nne_G     : [10,10,10,10,10,10, 10,10,10,10,10,10, 10,10,10,10,10,10, 10]
-nne_H     : [10,10,10,10,10,10, 10,10,10,10,10,10, 10,10,10,10,10,10, 10]
+#nne_G     : [10,10,10,10,10,10, 10,10,10,10,10,10, 10,10,10,10,10,10, 10]
+#nne_H     : [10,10,10,10,10,10, 10,10,10,10,10,10, 10,10,10,10,10,10, 10]
+#nne_G     : [0.1,0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,0.1, 0.1]
+#nne_H     : [0.1,0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,0.1, 0.1]
+nne_G     : [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1, 1]
+nne_H     : [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1, 1]
 
 nne_useLimits: true
 nne_Pmin  : [0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05]
