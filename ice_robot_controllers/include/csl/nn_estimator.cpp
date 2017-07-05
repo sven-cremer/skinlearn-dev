@@ -182,7 +182,11 @@ public:
 		if(p_G.size() != num_Hidden + bias || p_H.size() != num_Hidden + bias)
 		{
 			std::cerr<<"Failed to initialize G or H!\n";
-			return;
+			p_G.setOnes(num_Hidden + bias);
+			p_H.setOnes(num_Hidden + bias);
+			p_G *= 10;
+			p_H *= 10;
+			//return;	// TODO
 		}
 		Eigen::MatrixXd p_G_mat = p_G.asDiagonal();
 		Eigen::MatrixXd p_H_mat = p_H.asDiagonal();
