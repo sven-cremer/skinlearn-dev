@@ -81,12 +81,12 @@ private:
 	// Prescribed error dynamics
 	Eigen::MatrixXd Kd;			// Desired stiffness
 	Eigen::MatrixXd Dd;			// Desired damping
-	Eigen::MatrixXd gamma;
-	Eigen::MatrixXd lambda;
+	Eigen::MatrixXd Ga;			// Gamma
+	//Eigen::MatrixXd lambda;
 	Eigen::VectorXd fl;			// Filtered force
 	Eigen::VectorXd fh;			// Human force
-	Eigen::MatrixXd lambda_dot;
-	Eigen::MatrixXd fl_dot;
+	Eigen::MatrixXd La_dot;
+	Eigen::VectorXd fl_dot;
 
 	// RBF variables
 	double rbf_beta;			// RBF beta = 1/(2*sigma^2); fixed for each node instead of Eigen::VectorXd
@@ -97,6 +97,7 @@ public:
 	/*** Constructor methods ***/
 
 	NNController(int nJoints, int nDim, int nHidden,
+			     bool PED = false,
 			     NNController::ActFcn a = NNController::RBF,
 				 NNController::Layers l = NNController::Two)
 	{
@@ -106,9 +107,9 @@ public:
 
 		updateRate = 0.001; // 1000 Hz
 
+		PED_ON             = PED;
 		nn_ON              = true;
 		robust_ON          = true;
-		PED_ON             = false;
 		updateWeights      = true;
 		updateInnerWeights = true;
 
@@ -119,36 +120,48 @@ public:
 		num_Hidden  = nHidden;
 		num_Outputs = nDim;
 
-		if(true) // Determine size of NN input vector (Joint: 5*num_Joints)
+		if(PED_ON) // Determine size of NN input vector (Joint: 5*num_Joints)
+		{
+			num_Inputs = num_Joints*2 + num_Dim*9;
+		}
+		else
 		{
 			num_Inputs = num_Joints*2 + num_Dim*5;
 		}
+		std::cout<<"Number of joints:  "<<num_Joints<<"\n";
+		std::cout<<"Number of outputs: "<<num_Outputs<<"\n";
+		std::cout<<"Number of inputs:  "<<num_Inputs<<"\n";
 
 		paramResize();
 
 		// Set default parameter values
 		Eigen::VectorXd p_Kv;
-		Eigen::VectorXd p_la;
+		Eigen::VectorXd p_La;
 
 		p_Kv.setOnes(num_Dim);
-		p_la.setOnes(num_Dim);
+		p_La.setOnes(num_Dim);
 
 		p_Kv *= 2;
-		p_la *= 20;
+		p_La *= 20;
 
-		paramInit(p_Kv, p_la, 0.01, 0.05, 100, 100, 10, 0.01);
+		paramInit(p_Kv, p_La, 0.01, 0.05, 100, 100, 10, 0.01);
 
 		// Prescribed error dynamics
-		Kd    .setIdentity(num_Dim,num_Dim);
-		Dd    .setIdentity(num_Dim,num_Dim);
-		gamma .setIdentity(num_Dim,num_Dim);
-		lambda.setIdentity(num_Dim,num_Dim);
+		Kd .setIdentity(num_Dim,num_Dim);
+		Dd .setIdentity(num_Dim,num_Dim);
+		Ga .setIdentity(num_Dim,num_Dim);
+		La_dot.setZero(num_Dim,num_Dim);
+		fl_dot.setZero(num_Dim);
 		fl.setZero(num_Dim);
 		fh.setZero(num_Dim);
 		Kd *= 20.0;				// TODO use parameters
 		Dd *= 10.0;
-		gamma  *= 9.5;
-		lambda *= 0.5;
+		Ga  *= 9.5;
+		if(PED_ON)
+		{
+			La.setIdentity(num_Dim,num_Dim);
+			La *= 0.5;
+		}
 
 		// RBF
 		rbf_beta = 1.0;
@@ -273,8 +286,9 @@ public:
 	Eigen::MatrixXd	getOuterWeights()	{	return W_trans;		}
 	Eigen::VectorXd	getNNoutput()		{	return fhat;		}
 	Eigen::VectorXd	getRBFmu()			{	return rbf_mu;		}
-	Eigen::VectorXd	getKv()				{	return Kv;			}
-	Eigen::VectorXd	getLa()				{	return La;			}
+	Eigen::VectorXd	getKv()				{	return Kv.diagonal();}
+	Eigen::VectorXd	getLa()				{	return La.diagonal();}
+	Eigen::VectorXd	getGa()				{	return Ga.diagonal();}
 
 	void setParamKz(double p)			{	Kz = p;				}
 	void setParamZb(double p)			{	Zb = p;				}
@@ -423,10 +437,17 @@ void NNController::UpdateCart( Eigen::VectorXd & q,
 	ed = xd_m - xd;
 
 	// Update NN input vector
-	if(bias == 1)
-		phi << 1, q, qd, e, ed, x_m, xd_m, xdd_m;	// TODO add PED parameters
+	if(PED_ON)
+	{
+		phi << 1, fl, fl_dot, La.diagonal(), La_dot.diagonal(), q, qd, e, ed, x_m, xd_m, xdd_m;
+	}
 	else
-		phi << q, qd, e, ed, x_m, xd_m, xdd_m;
+	{
+		if(bias == 1)
+			phi << 1, q, qd, e, ed, x_m, xd_m, xdd_m;
+		else
+			phi << q, qd, e, ed, x_m, xd_m, xdd_m;
+	}
 
 	fh = f_h;
 
@@ -466,15 +487,15 @@ void NNController::Update( double dt,
 	// Prescribed error dynamics
 	if(PED_ON)
 	{
-		gamma = Dd - lambda;
+		Ga = Dd - La;
 
-		lambda_dot = Kd - gamma*lambda;
-		lambda += lambda_dot*dt;
+		La_dot = Kd - Ga*La;
+		La += La_dot*dt;
 
-		fl_dot = fh - gamma*fl;
+		fl_dot = fh - Ga*fl;
 		fl = fl + fl_dot*dt;
 
-		r = ed + lambda*e - fl;
+		r = ed + La*e - fl;
 	}
 	else
 	{
