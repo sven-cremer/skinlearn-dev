@@ -189,6 +189,7 @@ nne_pose_filter : 0.10
 # NN controller             #
 #############################
 
+nn_usePED : true
 nnNum_Hidden          : 18
 nnNum_Joints          : 7  # DOF
 
