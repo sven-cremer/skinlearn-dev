@@ -1719,6 +1719,22 @@ void PR2adaptNeuroControllerClass::bufferData()
 				experimentDataState_msg_[storage_index_].Dh[j] = Dh(j);
 			}
 		}
+
+		// Prescribed error dynamics
+		if(nn_usePED)
+		{
+			Gamma  = ptrNNController->getGa();
+			Lambda = ptrNNController->getLa();
+
+			experimentDataState_msg_[storage_index_].Gamma.resize(Gamma.size());
+			for (int j = 0; j < Gamma.size(); ++j) {
+				experimentDataState_msg_[storage_index_].Gamma[j] = Gamma(j);
+			}
+			experimentDataState_msg_[storage_index_].Lambda.resize(Lambda.size());
+			for (int j = 0; j < Lambda.size(); ++j) {
+				experimentDataState_msg_[storage_index_].Lambda[j] = Lambda(j);
+			}
+		}
 	}
 	else
 	{
@@ -3206,7 +3222,7 @@ bool PR2adaptNeuroControllerClass::initNN()
 	loadROSparam("/nne_pose_filter", nne_pose_filter);
 
 	// NN Controller
-	ptrNNController = new csl::neural_network::NNController(num_Joints, num_Outputs, num_Hidden);
+	ptrNNController = new csl::neural_network::NNController(num_Joints, num_Outputs, num_Hidden, nn_usePED);
 	double weightsLimit = 0.01;
 
 	ptrNNController->paramInit(Kv,lambda,kappa,Kz,Zb,nnG,nnF,weightsLimit);
@@ -3218,7 +3234,7 @@ bool PR2adaptNeuroControllerClass::initNN()
 	ptrNNController->setUpdateInnerWeights(true);
 
 	num_Inputs = ptrNNController->getNumInputs();
-	ROS_INFO_STREAM("Number of NN inputs: " << num_Inputs);
+	//ROS_INFO_STREAM("Number of NN inputs: " << num_Inputs);
 
 	return true;
 }

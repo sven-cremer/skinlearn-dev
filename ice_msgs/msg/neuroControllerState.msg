@@ -26,6 +26,8 @@ float64 W_norm
 float64 V_norm
 #std_msgs/Float64MultiArray W
 #std_msgs/Float64MultiArray V
+float64[] Gamma
+float64[] Lambda
 
 ## Estimator
 geometry_msgs/Pose x_hat
