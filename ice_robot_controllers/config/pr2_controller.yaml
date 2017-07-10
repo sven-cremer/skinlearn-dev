@@ -236,8 +236,8 @@ nn_ON                 : 1
 pr2_adaptNeuroController:
   type: ice_robot_controllers/PR2adaptNeuroControllerClass
   root_name: torso_lift_link
-  #tip_name: l_gripper_tool_frame
-  tip_name: l_wrist_roll_link
+  tip_name: l_gripper_tool_frame
+  #tip_name: l_wrist_roll_link
 
 #############################
 # Torque saturation         #

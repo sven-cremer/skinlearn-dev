@@ -16,16 +16,17 @@ data_buffer: true
 #trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
 trajectory_path: ACIGAGICADBFHDHFBDA
 #trajectory_path: ABEDA
-#trajectory_origin: [0.48,0.08,-0.05]
-trajectory_origin: [0.50,-0.10,-0.05]
+#trajectory_origin: [0.50,-0.10,-0.05]
+# rosrun tf tf_echo l_wrist_roll_link l_gripper_tool_frame: 0.216
+trajectory_origin: [0.716,-0.10,-0.05]
 trajectory_Nx: 3
 trajectory_Ny: 3
 trajectory_dx: 0.125
 trajectory_dy: 0.125
 
 interpolation_dt: 0.01
-interpolation_steps: 500
+interpolation_steps: 400
 
-torso_height: 0.13
-joints_l: [0.449875,0.119194,1.61072,-1.91529,3.2495,-1.4646,1.5743]
+torso_height: 0.12
+joints_l: [0.0873244,0.108704,1.58828,-1.64196,3.23313,-1.53719,1.56155]
 joints_r: [-1.34833,0.416038,-0.606422,-1.89242,-0.96327,-1.30197,-3.6831]

@@ -543,7 +543,7 @@ int main(int argc, char** argv)
       {
     	  // init robot
     	  pr2manager.robotInit(false);
-    	  torsoHeight = 0.05;
+    	  torsoHeight = torso_height;
     	  controller_active = false;
     	  break;
       }
@@ -1431,7 +1431,7 @@ int main(int argc, char** argv)
 
     	  // Generate two Poses
     	  std::vector<geometry_msgs::Pose> p_way;
-    	  p_way = tg.str2Vec("BB");
+    	  p_way = tg.str2Vec("AA");
 
     	  // Random uniform rotation
     	  double u0 = rand() / (RAND_MAX + 1.);
