@@ -386,12 +386,12 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 
 	Kh = Phat.head(num_Dim).asDiagonal();
 	Dh = Phat.tail(num_Dim).asDiagonal();
-	x_hat.head(num_Dim)  = xhat.head(num_Dim);
+	x_hat.head(num_Dim)  = xhat.head(num_Dim);	// Note: this assumes x_hat has been initialized
 	xd_hat.head(num_Dim) = xhat.tail(num_Dim);
 
 	// Update error signals
-	e  = x_hat - x;
-	ed = xd_hat - xd;
+	e  = x_hat.head(num_Dim) - x.head(num_Dim);
+	ed = xd_hat.head(num_Dim) - xd.head(num_Dim);
 
 	// Update filtered error
 	ea_dot = Dh.inverse()*(fh - Kh*ea_);

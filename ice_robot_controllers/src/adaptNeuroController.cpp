@@ -2728,6 +2728,9 @@ bool PR2adaptNeuroControllerClass::initNN()
 	ptrNNEstimator->setPhatMax(nne_Pmax);
 	ptrNNEstimator->setUseLimits(nne_useLimits);
 
+	X_hat.setZero(6);	// Note: important for Update function if nne_Dim != 6
+	Xd_hat.setZero(6);
+
 	e_int_max << 0.01, 0.01, 0.01;
 	e_int_min << -0.01, -0.01, -0.01;
 
