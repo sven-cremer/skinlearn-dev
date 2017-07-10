@@ -1352,10 +1352,18 @@ int main(int argc, char** argv)
     			  out << YAML::BeginMap;
     			  out << YAML::Key << "experiment" << YAML::Value << expNumber;
     			  out << YAML::Key << "mode" << YAML::Value << enum2str(exp_mode);
-    			  out << YAML::Key << "trajectory" << YAML::Value << trajPathStr;
     			  vec2YAML("arm_controllers_default", arm_controllers_default, out);
     			  vec2YAML("arm_controllers_new", arm_controllers_new, out);
     			  out << YAML::Key << "gains" << YAML::Flow << YAML::BeginSeq << scale*Kp_tran << scale*Kp_rot << scale*Kd_tran << scale*Kd_rot << YAML::EndSeq;
+    			  // Save trajectory info
+    			  out << YAML::Key << "trajectory_path" << YAML::Value << trajPathStr;
+    			  out << YAML::Key << "trajectory_origin" << YAML::Flow << YAML::BeginSeq << v_origin[0] << v_origin[1] << v_origin[2] << YAML::EndSeq;
+    			  out << YAML::Key << "trajectory_Nx" << YAML::Value << Nx;
+    			  out << YAML::Key << "trajectory_Ny" << YAML::Value << Ny;
+    			  out << YAML::Key << "trajectory_dx" << YAML::Value << dx;
+    			  out << YAML::Key << "trajectory_dy" << YAML::Value << dy;
+    			  out << YAML::Key << "interpolation_dt" << YAML::Value << interpolation_dt;
+    			  out << YAML::Key << "interpolation_steps" << YAML::Value << interpolation_steps;
     			  out << YAML::EndMap;
 
     			  sc.say("Done!");
