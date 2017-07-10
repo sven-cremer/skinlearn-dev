@@ -127,22 +127,6 @@ task_mB               : 0.7
 rls_lambda         : 0.98
 rls_sigma          : 0.001
 
-# IRL
-numIrlSamples      : 200
-numIrlLsIter       : 20
-numCartDof         : 1
-irlOneshot         : true
-
-# Params for the MRAC outer-loop controller
-mrac_gamma_1       : 0.1
-mrac_gamma_2       : 2.0
-mrac_gamma_3       : 2.5
-mrac_gamma_4       : 4
-mrac_gamma_5       : 4
-
-mrac_P_m           : 1
-mrac_P_h           : 1
-
 fixedFilterWeights : false
 
 #############################
@@ -158,16 +142,6 @@ cartIniZ             :  -0.10
 cartIniRoll          :  1.57
 cartIniPitch         :  0.0
 cartIniYaw           :  0.0
-
-# Nominal angles for the arm joints
-                # Left arm          # Right arm
-#nom_joint_0  :  0.0    # 0.067      # -0.48577  
-#nom_joint_1  :  0.0    # 0.036      # -0.0190721
-#nom_joint_2  :  1.5828 # 0.012      # -1.51115  
-#nom_joint_3  : -0.5    #-0.097      # -1.70928  
-#nom_joint_4  :  0.0    #-0.983      #  1.54561  
-#nom_joint_5  :  0.0    #-0.0947     #  0.046854 
-#nom_joint_6  :  0.0    # 0.1114     # -0.0436174
 
 #############################
 # NN estimator              #
@@ -187,14 +161,14 @@ nne_useLimits: true
 nne_Pmin  : [0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05]
 nne_Pmax  : [50,50,50,50,50,50,50,50,50,50,50,50]
 
-nne_pose_filter : 0.10
+nne_pose_filter : 1.00
 
 #############################
 # NN controller             #
 #############################
 
-nn_usePED : true
-nnNum_Hidden          : 18
+nn_usePED : false
+nnNum_Hidden          : 15
 nnNum_Joints          : 7  # DOF
 
 #Note: nnNum_Inputs determined by NAC

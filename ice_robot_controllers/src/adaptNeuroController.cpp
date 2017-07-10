@@ -337,8 +337,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 	//	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
 
 		// Feedforward force, human force [6x1]
-		convert2NNinput(wrench_transformed_,force_h);	// TODO use wrench filtered?
-
+		if(useDigitalFilter)
+			convert2NNinput(wrench_filtered_,force_h);
+		else
+			convert2NNinput(wrench_transformed_,force_h);
 
 		/***************** REFERENCE TRAJECTORY *****************/
 
@@ -1063,72 +1065,6 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 		// RLS ARMA
 		if( useARMAmodel )
 		{
-/*
-			if( useFlexiForce )	// One model per axis containing all the sensors
-			{
-				// Set ARMA parameters
-				// Note: tactile_wrench_ corresponds to the applied force (not the reactant force)
-
-				// X axis
-				if( tactile_wrench_(0) > 0.0 )	// Positive if pressing 0 (i.e. forward)
-				{
-
-					outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_0 ) ;
-					if( useFixedWeights )
-						outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_0 );
-					else
-						outerLoopRLSmodelX.setUpdatedWeights();
-
-				}
-				else							// Negative if pressing 2 (i.e. backward)
-				{
-					outerLoopRLSmodelX.setWeights( outerLoopWk_flexi_2 ) ;
-					if( useFixedWeights )
-						outerLoopRLSmodelX.setFixedWeights( outerLoopWk_flexi_2 );
-					else
-						outerLoopRLSmodelX.setUpdatedWeights();
-				}
-
-				// Y axis
-				if( tactile_wrench_(1) > 0.0 )	// Positive if pressing 1 (i.e. outward)
-				{
-					outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_1 ) ;
-					if( useFixedWeights )
-						outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_1 );
-					else
-						outerLoopRLSmodelY.setUpdatedWeights();
-				}
-				else							// Negative if pressing 3 (i.e. inward)
-				{
-					outerLoopRLSmodelY.setWeights( outerLoopWk_flexi_3 ) ;
-					if( useFixedWeights )
-						outerLoopRLSmodelY.setFixedWeights( outerLoopWk_flexi_3 );
-					else
-						outerLoopRLSmodelY.setUpdatedWeights();
-				}
-
-			}
-
-
-			// Raw tactile data (voltages)
-
-			if(0 <= tactileSensorSelected_ && tactileSensorSelected_ < numTactileSensors_)	// Calibration mode		FIXME: use useFixedWeights instead
-			{
-				//ARMAmodel_flexi_[tactileSensorSelected_].setUpdatedWeights();
-				for(int i=0; i<numTactileSensors_*tactile_dimensions_;i++)
-				{
-					ARMAmodel_flexi_[i]->setUpdatedWeights();
-				}
-			}
-			else							// Fixed weights
-			{
-				for(int i=0; i<numTactileSensors_*tactile_dimensions_;i++)
-				{
-					Eigen::MatrixXd tmp = filterWeights_flexi_.col(i);
-					ARMAmodel_flexi_[i]->setFixedWeights(tmp);
-				}
-			}
-*/
 			task_ref.topRows(3) = x_des_.translation();
 
 			X_m.setZero();
@@ -1167,201 +1103,13 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 				ARMAmodel_flexi_[i]->getWeights(tmp2);
 				filterWeights_flexi_.col(i) = tmp2;
 			}
-
-
-/*
-			// X axis (use 1D update)
-			outerLoopRLSmodelX.updateDelT(current_delT);
-			outerLoopRLSmodelX.updateARMA( Xd_m                   (0) ,   // output: xd_m
-                                           Xd                     (0) ,
-                                           X_m                    (0) ,   // output: x_m
-                                           X                      (0) ,
-                                           Xdd_m                  (0) ,   // output: xdd_m
-                                           transformed_force      (0) ,   // input:  force or voltage
-                                           task_ref               (0) ,   // input:  x_r
-                                           task_refModel_output   (0)  ); // output: x_d
-
-			// Y axis
-			outerLoopRLSmodelY.updateDelT(current_delT);
-			outerLoopRLSmodelY.updateARMA( Xd_m                   (1) ,
-                                           Xd                     (1) ,
-                                           X_m                    (1) ,
-                                           X                      (1) ,
-                                           Xdd_m                  (1) ,
-                                           transformed_force      (1) ,
-                                           task_ref               (1) ,
-                                           task_refModel_output   (1)  );
-
-			outerLoopRLSmodelX.getWeights( weightsRLSmodelX ) ;
-			outerLoopRLSmodelY.getWeights( weightsRLSmodelY ) ;
-
-			// ROS_ERROR_STREAM("USING RLS ARMA");
-
-			if( useFlexiForce )
-			{
-				// X axis
-				if( tactile_wrench_(0) > 0.0 )
-				{
-					outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_0 ) ;
-				}
-				else
-				{
-					outerLoopRLSmodelX.getWeights( outerLoopWk_flexi_2 ) ;
-				}
-
-				// Y axis
-				if( tactile_wrench_(1) > 0.0 )
-				{
-					outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_1 ) ;
-				}
-				else
-				{
-					outerLoopRLSmodelY.getWeights( outerLoopWk_flexi_3 ) ;
-				}
-
-			}
-			else
-			{
-				outerLoopRLSmodelX.getWeights( outerLoopWk ) ;
-				outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
-			}
-*/
 		}
-
 
 		// CT RLS ARMA
-		if( useCTARMAmodel )
-		{
-			//      outerLoopCTRLSmodelX.updateARMA( Xd_m              (0) ,
-			//                                       Xd                (0) ,
-			//                                       X_m               (0) ,
-			//                                       X                 (0) ,
-			//                                       Xdd_m             (0) ,
-			//                                       transformed_force (0) ,
-			//                                       task_ref          (0) ,
-			//                                       task_refModel     (0)  );
-
-			// Y axis
-			outerLoopCTRLSmodelY.updateARMA( Xd_m                   (1) ,
-                                             Xd                     (1) ,
-                                             X_m                    (1) ,
-                                             X                      (1) ,
-                                             Xdd_m                  (1) ,
-                                             transformed_force      (1) ,
-                                             task_ref               (1) ,
-                                             task_refModel_output   (1)  );
-
-			//      ROS_ERROR_STREAM("USING CT RLS ARMA");
-
-			outerLoopCTRLSmodelY.getWeights( outerLoopWk ) ;
-			//		outerLoopCTRLSmodelY.setWeights( outerLoopWk ) ;
-		}
-
 		// RLS FIR
-		if( useFIRmodel )
-		{
-			//      outerLoopRLSmodelX.updateFIR( Xd_m              (0) ,
-			//                                    Xd                (0) ,
-			//                                    X_m               (0) ,
-			//                                    X                 (0) ,
-			//                                    Xdd_m             (0) ,
-			//                                    transformed_force (0) ,
-			//                                    task_ref          (0) ,
-			//                                    task_refModel     (0)  );
-
-			// Y axis
-			outerLoopRLSmodelY.updateFIR( Xd_m                   (1) ,
-                                          Xd                     (1) ,
-                                          X_m                    (1) ,
-                                          X                      (1) ,
-                                          Xdd_m                  (1) ,
-                                          transformed_force      (1) ,
-                                          task_ref               (1) ,
-                                          task_refModel_output   (1)  );
-			//      ROS_ERROR_STREAM("USING RLS FIR");
-
-			outerLoopRLSmodelY.getWeights( outerLoopWk ) ;
-			//		outerLoopRLSmodelY.setWeights( outerLoopWk ) ;
-		}
-		/*
-			// MRAC
-			if( useMRACmodel )
-			{
-		//      outerLoopMRACmodelX.update( Xd_m              (0) ,
-		//                                  Xd                (0) ,
-		//                                  X_m               (0) ,
-		//                                  X                 (0) ,
-		//                                  Xdd_m             (0) ,
-		//                                  transformed_force (0) ,
-		//                                  task_ref          (0) ,
-		//                                  task_refModel     (0)  );
-
-			  // Y axis
-			  outerLoopMRACmodelY.update( Xd_m              (1) ,
-										  Xd                (1) ,
-										  X_m               (1) ,
-										  X                 (1) ,
-										  Xdd_m             (1) ,
-										  transformed_force (1) ,
-										  task_ref          (1) ,
-										  task_refModel     (1)  );
-
-		//      ROS_ERROR_STREAM("USING MRAC");
-			}
-		 */
+		// MRAC
 		// MSD
-		if( useMSDmodel )
-		{
-			// Cartesian space MSD model
-			outerLoopMSDmodelX.update( Xd_m             (0) ,
-                                       Xd               (0) ,
-                                       X_m              (0) ,
-                                       X                (0) ,
-                                       Xdd_m            (0) ,
-                                       transformed_force(0)  );
-
-			outerLoopMSDmodelY.update( Xd_m             (1) ,
-                                       Xd               (1) ,
-                                       X_m              (1) ,
-                                       X                (1) ,
-                                       Xdd_m            (1) ,
-                                       transformed_force(1)  );
-			//      ROS_ERROR_STREAM("USING MSD");
-		}
-
 		// IRL
-		if( useIRLmodel )
-		{
-			//    // Cartesian space IRL model
-			//    outerLoopIRLmodelX.updateIRL( Xd_m              (0) ,
-			//   	                            Xd                (0) ,
-			//   	                            X_m               (0) ,
-			//   	                            X                 (0) ,
-			//   	                            Xdd_m             (0) ,
-			//   	                            transformed_force (0) ,
-			//   	                            task_ref          (0) ,
-			//   	                            task_refModel     (0)  );
-
-			outerLoopIRLmodelY.updateIRL( Xd_m                  (1) ,
-                                          Xd                    (1) ,
-                                          X_m                   (1) ,
-                                          X                     (1) ,
-                                          Xdd_m                 (1) ,
-                                          transformed_force     (1) ,
-                                          task_ref              (1) ,
-                                          task_refModel_output  (1)  );
-
-
-			// IRL
-			//			outerLoopIRLmodelX.getMsd( m_M,
-			//			                           m_S,
-			//			                           m_D );
-			outerLoopIRLmodelY.getMsd( m_M,
-                                       m_S,
-                                       m_D );
-
-			//      ROS_ERROR_STREAM("USING MSD");
-		}
 
 		// Direct Model
 		if( useDirectmodel )
@@ -1371,31 +1119,7 @@ void PR2adaptNeuroControllerClass::updateOuterLoop()
 			Xd_m  = (X_m - p_X_m)/outerLoopTime  ;
 			Xdd_m = (Xd_m - p_Xd_m)/outerLoopTime;
 		}
-
 		// MRAC
-		if( useMRACmodel )
-		{
-			//      outerLoopMRACmodelX.update( Xd_m              (0) ,
-			//                                  Xd                (0) ,
-			//                                  X_m               (0) ,
-			//                                  X                 (0) ,
-			//                                  Xdd_m             (0) ,
-			//                                  transformed_force (0) ,
-			//                                  task_ref          (0) ,
-			//                                  task_refModel     (0)  );
-
-			// Y axis
-			outerLoopMRACmodelY.update( Xd_m                 (1) ,
-                                        Xd                   (1) ,
-                                        X_m                  (1) ,
-                                        X                    (1) ,
-                                        Xdd_m                (1) ,
-                                        transformed_force    (1) ,
-                                        task_ref             (1) ,
-                                        task_refModel_output (1)  );
-
-			//      ROS_ERROR_STREAM("USING MRAC");
-		}
 
 		p_X_m    = X_m   ;
 		p_Xd_m   = Xd_m  ;
@@ -1671,7 +1395,10 @@ void PR2adaptNeuroControllerClass::bufferData()
 		// Force
 		if(forceTorqueOn)
 		{
-			tf::wrenchEigenToMsg(wrench_transformed_, experimentDataState_msg_[storage_index_].force_measured);	// TODO use wrench_filtered?
+			if(useDigitalFilter)
+				tf::wrenchEigenToMsg(wrench_filtered_, experimentDataState_msg_[storage_index_].force_measured);	// TODO save both
+			else
+				tf::wrenchEigenToMsg(wrench_transformed_, experimentDataState_msg_[storage_index_].force_measured);
 		}
 		//tf::matrixEigenToMsg(J_, pub_state_.msg_.J);			// TODO move into a separate message
 		//tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
@@ -1806,34 +1533,6 @@ bool PR2adaptNeuroControllerClass::paramUpdate( ice_msgs::controllerParamUpdate:
 	{
 		ROS_ERROR("initNN() failed!");
 	}
-
-	// MRAC
-	outerLoopMRACmodelX.updateAB( task_mA,
-                                  task_mB );
-	outerLoopMRACmodelY.updateAB( task_mA,
-                                  task_mB );
-
-	// RLS
-	outerLoopRLSmodelX.updateAB( task_mA,
-                                 task_mB );
-	outerLoopRLSmodelY.updateAB( task_mA,
-                                 task_mB );
-
-	// MSD
-	outerLoopMSDmodelX.updateMsd( m_M,
-                                  m_S,
-                                  m_D );
-	outerLoopMSDmodelY.updateMsd( m_M,
-                                  m_S,
-                                  m_D );
-
-	// IRL
-	outerLoopIRLmodelX.updateMsd( m_M,
-                                  m_S,
-                                  m_D );
-	outerLoopIRLmodelY.updateMsd( m_M,
-                                  m_S,
-                                  m_D );
 
 	resp.success = true;
 
@@ -2279,58 +1978,6 @@ bool PR2adaptNeuroControllerClass::toggleFixedWeights( ice_msgs::fixedWeightTogg
 	// XOR to toggle
 	useFixedWeights =  ( useFixedWeights || true ) && !( useFixedWeights && true );
 	resp.useFixedWeights = useFixedWeights ;
-
-	// Filter Weights
-	/* TODO
-	resp.w0 = filtW0 ; // outerLoopWk(0,0) ;
-	resp.w1 = filtW1 ; // outerLoopWk(1,0) ;
-	resp.w2 = filtW2 ; // outerLoopWk(2,0) ;
-	resp.w3 = filtW3 ; // outerLoopWk(3,0) ;
-	resp.w4 = filtW4 ; // outerLoopWk(4,0) ;
-	resp.w5 = filtW5 ; // outerLoopWk(5,0) ;
-	resp.w6 = filtW6 ; // outerLoopWk(6,0) ;
-	resp.w7 = filtW7 ; // outerLoopWk(7,0) ;
-
-	outerLoopWk(0,0) = filtW0 ;
-	outerLoopWk(1,0) = filtW1 ;
-	outerLoopWk(2,0) = filtW2 ;
-	outerLoopWk(3,0) = filtW3 ;
-	outerLoopWk(4,0) = filtW4 ;
-	outerLoopWk(5,0) = filtW5 ;
-	outerLoopWk(6,0) = filtW6 ;
-	outerLoopWk(7,0) = filtW7 ;
-	*/
-
-	if( useFixedWeights )
-	{
-		outerLoopRLSmodelY.setFixedWeights( outerLoopWk );
-	}else
-	{
-		outerLoopRLSmodelY.setUpdatedWeights();
-	}
-
-	std::vector<std::string> outerModel ;
-
-	if( useARMAmodel   ){ outerModel.push_back("useARMAmodel"  ); }
-	if( useCTARMAmodel ){ outerModel.push_back("useCTARMAmodel"); }
-	if( useFIRmodel    ){ outerModel.push_back("useFIRmodel "  ); }
-	if( useMRACmodel   ){ outerModel.push_back("useMRACmodel"  ); }
-	if( useMSDmodel    ){ outerModel.push_back("useMSDmodel "  ); }
-
-	if( useIRLmodel  )
-	{
-		if( useFixedWeights )
-		{
-			outerModel.push_back("useIRLmodel : Update");
-			outerLoopIRLmodelY.setUpdateIrl();
-		}else
-		{
-			outerModel.push_back("useIRLmodel : Fixed");
-			outerLoopIRLmodelY.setFixedMsd();
-		}
-	}
-
-	resp.outerModel = outerModel;
 
 	return true;
 }
@@ -2877,8 +2524,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	loadROSparam("/task_mA", task_mA, 0.7);
 	loadROSparam("/task_mB", task_mB, 0.7);
 
-
-
 	loadROSparam("/useCurrentCartPose", useCurrentCartPose, false);
 	loadROSparam("/useNullspacePose",   useNullspacePose, false);
 
@@ -2900,31 +2545,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	loadROSparam("/forceCutOffY", forceCutOffY, 0.1);
 	loadROSparam("/forceCutOffZ", forceCutOffZ, 0.1);
 
-	outerLoopWk.resize(8,1);
-	outerLoopWk_flexi_0.resize(8,1);
-	outerLoopWk_flexi_1.resize(8,1);
-	outerLoopWk_flexi_2.resize(8,1);
-	outerLoopWk_flexi_3.resize(8,1);
-
-	outerLoopWk.setZero();
-	outerLoopWk_flexi_0.setZero();
-	outerLoopWk_flexi_1.setZero();
-	outerLoopWk_flexi_2.setZero();
-	outerLoopWk_flexi_3.setZero();
-
-	if( useFIRmodel || useARMAmodel || useCTARMAmodel)
-	{
-		// TODO Initialize filter from parameter server using vectors
-	}
-
-	int numIrlSamples, numIrlLsIter, numCartDof;
-	bool irlOneshot;
-
-	loadROSparam("/numIrlSamples", numIrlSamples, 100);
-	loadROSparam("/numIrlLsIter",  numIrlLsIter, 10);
-	loadROSparam("/numCartDof",    numCartDof, 1);
-	loadROSparam("/irlOneshot",    irlOneshot, true);
-
 	loadROSparam("/fixedFilterWeights", useFixedWeights, true);
 
 	double rls_lambda = 0.98 ;
@@ -2932,24 +2552,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 
 	loadROSparam("/rls_lambda", rls_lambda);
 	loadROSparam("/rls_sigma",  rls_sigma);
-
-	double mrac_gamma_1 = 1 ;
-	double mrac_gamma_2 = 1 ;
-	double mrac_gamma_3 = 1 ;
-	double mrac_gamma_4 = 1 ;
-	double mrac_gamma_5 = 1 ;
-
-	loadROSparam("/mrac_gamma_1",  mrac_gamma_1);
-	loadROSparam("/mrac_gamma_2",  mrac_gamma_2);
-	loadROSparam("/mrac_gamma_3",  mrac_gamma_3);
-	loadROSparam("/mrac_gamma_4",  mrac_gamma_4);
-	loadROSparam("/mrac_gamma_5",  mrac_gamma_5);
-
-	double mrac_P_m = 1 ;
-	double mrac_P_h = 1 ;
-
-	loadROSparam("/mrac_P_m", mrac_P_m);
-	loadROSparam("/mrac_P_h", mrac_P_h);
 
 	delT = 0.001;
 	loadROSparam("/outerLoop_time", outerLoopTime, 0.0);
@@ -3017,57 +2619,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	/////////////////////////
 	// Outer Loop Init
 
-	// MRAC
-	outerLoopMRACmodelX.updateDelT( outerLoopTime );
-	outerLoopMRACmodelX.updateAB( task_mA,
-			task_mB );
-	outerLoopMRACmodelX.updateIni( cartIniX,
-			cartIniX );
-	outerLoopMRACmodelX.updateSimHuman( useSimHuman );
-	outerLoopMRACmodelX.updateSimHuman( simHuman_a,
-			simHuman_b );
-	outerLoopMRACmodelX.updateGamma( mrac_gamma_1,
-			mrac_gamma_2,
-			mrac_gamma_3,
-			mrac_gamma_4,
-			mrac_gamma_5 ) ;
-	outerLoopMRACmodelX.updateCov( mrac_P_m,
-			mrac_P_h ) ;
-
-	outerLoopMRACmodelY.updateDelT( outerLoopTime );
-	outerLoopMRACmodelY.updateAB( task_mA,
-			task_mB );
-	outerLoopMRACmodelY.updateIni( cartIniY,
-			cartIniY );
-	outerLoopMRACmodelY.updateSimHuman( useSimHuman );
-	outerLoopMRACmodelY.updateSimHuman( simHuman_a,
-			simHuman_b );
-	outerLoopMRACmodelY.updateGamma( mrac_gamma_1,
-			mrac_gamma_2,
-			mrac_gamma_3,
-			mrac_gamma_4,
-			mrac_gamma_5 ) ;
-	outerLoopMRACmodelY.updateCov( mrac_P_m,
-			mrac_P_h ) ;
-
-	// RLS
-
-	outerLoopRLSmodelX.updateDelT( outerLoopTime );		// FIXME assumens 1D, 4+4*4 filter parameters
-	outerLoopRLSmodelX.updateAB( task_mA, task_mB );
-	outerLoopRLSmodelX.initRls( rls_lambda, rls_sigma );
-	//  outerLoopRLSmodelX.initPos( cartIniX );
-
-
-	outerLoopRLSmodelY.updateDelT( outerLoopTime );
-	outerLoopRLSmodelY.updateAB( task_mA, task_mB );
-	outerLoopRLSmodelY.initRls( rls_lambda, rls_sigma );
-	//  outerLoopRLSmodelY.initPos( cartIniY );
-
-	weightsRLSmodelX.resize(4+1*4,1);	// FIXME use parameters
-	weightsRLSmodelY.resize(4+1*4,1);
-	weightsRLSmodelX.setZero();
-	weightsRLSmodelY.setZero();
-
 	// ARMA models for each tactile sensor
 	tactile_data_.resize(numTactileSensors_);
 	tactile_data_.setZero();
@@ -3090,45 +2641,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	ARMAmodel_flexi_combined_->updateAB( task_mA, task_mB );
 	ARMAmodel_flexi_combined_->initRls( rls_lambda, rls_sigma );
 	ARMAmodel_flexi_combined_->setUseFixedWeights(true);
-
-	// CT RLS
-	outerLoopCTRLSmodelX.updateDelT( outerLoopTime );
-	outerLoopCTRLSmodelX.updateAB( task_mA,
-			task_mB );
-
-	outerLoopCTRLSmodelY.updateDelT( outerLoopTime );
-	outerLoopCTRLSmodelY.updateAB( task_mA,
-			task_mB );
-
-	// MSD
-	outerLoopMSDmodelX.updateDelT( outerLoopTime );
-	outerLoopMSDmodelX.updateMsd( m_M,
-			m_S,
-			m_D );
-
-	outerLoopMSDmodelY.updateDelT( outerLoopTime );
-	outerLoopMSDmodelY.updateMsd( m_M,
-			m_S,
-			m_D );
-
-	// IRL
-	outerLoopIRLmodelX.init( numCartDof, numIrlSamples, numIrlLsIter, irlOneshot );
-	outerLoopIRLmodelX.updateDelT( outerLoopTime );
-	outerLoopIRLmodelX.updateMsd( m_M,
-			m_S,
-			m_D );
-	outerLoopIRLmodelX.updateAB( task_mA,
-			task_mB );
-
-	outerLoopIRLmodelY.init( numCartDof, numIrlSamples, numIrlLsIter, irlOneshot );
-	outerLoopIRLmodelY.updateDelT( outerLoopTime );
-	outerLoopIRLmodelY.updateMsd( m_M,
-			m_S,
-			m_D );
-	outerLoopIRLmodelY.updateAB( task_mA,
-			task_mB );
-
-	/////////////////////////
 
 	// System Model END
 	/////////////////////////
