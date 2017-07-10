@@ -369,9 +369,9 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 //	if(bias == 1)
 //		phi << 1, x, xd, f_h;
 //	else
-		phi << x, xd, f_h;
+		phi << x.head(num_Dim), xd.head(num_Dim), f_h.head(num_Dim);
 
-	fh = f_h;
+	fh = f_h.head(num_Dim);
 
 	// NN output
 	sigma = activation(phi);
@@ -386,8 +386,8 @@ void NNEstimator::Update( Eigen::VectorXd & x,
 
 	Kh = Phat.head(num_Dim).asDiagonal();
 	Dh = Phat.tail(num_Dim).asDiagonal();
-	x_hat  = xhat.head(num_Dim);
-	xd_hat = xhat.tail(num_Dim);
+	x_hat.head(num_Dim)  = xhat.head(num_Dim);
+	xd_hat.head(num_Dim) = xhat.tail(num_Dim);
 
 	// Update error signals
 	e  = x_hat - x;

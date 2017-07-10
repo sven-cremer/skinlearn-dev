@@ -14,7 +14,7 @@ data_recording: true
 data_buffer: true
 
 #trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
-trajectory_path: ACIGAGICADBFHDHFBDA
+trajectory_path: ACIGAGICADBFHDHFBDAA
 #trajectory_path: ABEDA
 #trajectory_origin: [0.50,-0.10,-0.05]
 # rosrun tf tf_echo l_wrist_roll_link l_gripper_tool_frame: 0.216

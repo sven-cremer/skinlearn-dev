@@ -2706,20 +2706,21 @@ bool PR2adaptNeuroControllerClass::initNN()
 	loadROSparam("/nne_kappa", nne_kappa);
 	loadROSparam("/nne_alpha", nne_alpha);
 
-	int num_Dim_Estimator = 6;	// num_Outputs
-	Eigen::VectorXd nne_G; nne_G.setOnes( num_Dim_Estimator*3 + 1);
-	Eigen::VectorXd nne_H; nne_H.setOnes( num_Dim_Estimator*3 + 1);
+	int nne_Dim = 6;	// num_Outputs
+	loadROSparam("/nne_Dim", nne_Dim);
+	Eigen::VectorXd nne_G; nne_G.setOnes( nne_Dim*3 + 1);
+	Eigen::VectorXd nne_H; nne_H.setOnes( nne_Dim*3 + 1);
 	loadROSparamVector("/nne_G", nne_G);
 	loadROSparamVector("/nne_H", nne_H);
 
 	bool nne_useLimits=false;
 	loadROSparam("/nne_useLimits", nne_useLimits);
-	Eigen::VectorXd nne_Pmin; nne_Pmin.setZero( 2*num_Dim_Estimator);
-	Eigen::VectorXd nne_Pmax; nne_Pmax.setZero( 2*num_Dim_Estimator);
+	Eigen::VectorXd nne_Pmin; nne_Pmin.setZero( 2*nne_Dim);
+	Eigen::VectorXd nne_Pmax; nne_Pmax.setZero( 2*nne_Dim);
 	loadROSparamVector("/nne_Pmin", nne_Pmin);
 	loadROSparamVector("/nne_Pmax", nne_Pmax);
 
-	ptrNNEstimator = new csl::neural_network::NNEstimator(num_Dim_Estimator, csl::neural_network::NNEstimator::RBF);
+	ptrNNEstimator = new csl::neural_network::NNEstimator(nne_Dim, csl::neural_network::NNEstimator::RBF);
 	ptrNNEstimator->paramInit(nne_G,nne_H,nne_kappa,0.01);
 	ptrNNEstimator->setParamAlpha(nne_alpha);
 

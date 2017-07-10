@@ -12,7 +12,7 @@ loopRateFactor     : 3 # Virtual loop rate [ms] (time for computations = loopRat
 useCurrentCartPose : true # Avoid jerky movement, should always be true
 useQuaternions     : false
 useNullspacePose   : false
-useDigitalFilter   : false
+useDigitalFilter   : true
 
 publishRTtopics    : false
 
@@ -148,20 +148,23 @@ cartIniYaw           :  0.0
 #############################
 computeHumanIntentNN : true
 useHumanIntentNN     : false
+nne_useLimits: true
 nne_kappa : 0.01
 nne_alpha : 1.0
-#nne_G     : [10,10,10,10,10,10, 10,10,10,10,10,10, 10,10,10,10,10,10, 10]
-#nne_H     : [10,10,10,10,10,10, 10,10,10,10,10,10, 10,10,10,10,10,10, 10]
-#nne_G     : [0.1,0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,0.1, 0.1]
-#nne_H     : [0.1,0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,0.1, 0.1]
-nne_G     : [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1, 1]
-nne_H     : [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1, 1]
-
-nne_useLimits: true
-nne_Pmin  : [0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05]
-nne_Pmax  : [50,50,50,50,50,50,50,50,50,50,50,50]
-
 nne_pose_filter : 1.00
+
+#nne_Dim: 6
+#nne_G     : [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1, 1]
+#nne_H     : [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1, 1]
+#nne_Pmin  : [0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05]
+#nne_Pmax  : [50,50,50,50,50,50,50,50,50,50,50,50]
+
+nne_Dim: 3
+nne_G     : [1,1,1, 1,1,1, 1,1,1, 1]
+nne_H     : [1,1,1, 1,1,1, 1,1,1, 1]
+nne_Pmin  : [0.05,0.05,0.05,0.05,0.05,0.05]
+nne_Pmax  : [50,50,50,50,50,50]
+
 
 #############################
 # NN controller             #

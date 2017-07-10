@@ -14,7 +14,7 @@ data_buffer: false
 #trajectory_path: ABCFIHGDA DGHIFCBA DBFHDHFBDA
 #trajectory_path: ABEA
 #trajectory_origin: [0.48,0.08,-0.05]
-trajectory_path: ACIGAGICADBFHDHFBDA
+trajectory_path: ACIGAGICADBFHDHFBDAA
 #trajectory_origin: [0.50,-0.10,-0.05]
 trajectory_origin: [0.716,-0.10,-0.05]
 trajectory_Nx: 3
