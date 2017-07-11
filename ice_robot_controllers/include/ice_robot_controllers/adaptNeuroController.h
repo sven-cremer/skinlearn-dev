@@ -436,8 +436,8 @@ private:
 	bool nn_usePED;
 	Eigen::VectorXd Lambda;
 	Eigen::VectorXd Gamma;
-	Eigen::VectorXd Kd;
-	Eigen::VectorXd Dd;
+	Eigen::VectorXd nn_Kd;
+	Eigen::VectorXd nn_Dd;
 
 	Eigen::Vector3d e_int;
 	Eigen::Vector3d e_int_max;
