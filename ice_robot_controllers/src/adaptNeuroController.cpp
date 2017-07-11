@@ -727,16 +727,21 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		// Neural Network
 		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_h,force_c);
 
-		// Check for NaN
-		if( is_nan(force_c) )
+		// Check for valid output
+		for(int i=0;i<force_c.size();i++)
 		{
-			force_c.setZero();
-			missed_updates_count_ -= 2;
-		}
-		if( !is_finite(force_c) )
-		{
-			force_c.setZero();
-			missed_updates_count_ -= 3;
+			if( isnan(force_c(i)) )
+			{
+				std::cout<<"force_c("<<i<<") is NaN: "<<force_c.transpose()<<"\n";
+				force_c(i) = 0;
+				missed_updates_count_ -= 2;
+			}
+			if( isinf(force_c(i)) )
+			{
+				std::cout<<"force_c("<<i<<") is Inf: "<<force_c.transpose()<<"\n";
+				force_c(i) = 0;
+				missed_updates_count_ -= 3;
+			}
 		}
 
 		// Convert NN result to a Cartesian vector
