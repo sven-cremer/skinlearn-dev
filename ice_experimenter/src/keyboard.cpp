@@ -60,6 +60,7 @@ struct NNparam {
 	Eigen::VectorXd La;
 	double joint_vel_filter;
 	double ft_filter;
+	double nne_pose_filter;
 };
 
 enum Mode{ ASSISTIVE, PASSIVE, RESISTIVE};
@@ -162,6 +163,7 @@ void displayNNparamMenu(NNparam nn,ice_msgs::setParameters msg)
 	printf("\n");
 	printf("\nUse '8' joint_vel_filter = %.3f \t Lowpass filter for qdot",nn.joint_vel_filter);
 	printf("\nUse '9' ft_filter = %.3f \t Lowpass filter for F/T values",nn.ft_filter);
+	printf("\nUse '0' nne_pose_filter = %.3f \t Lowpass filter for NN estimator",nn.nne_pose_filter);
 	printf("\n");
 	printf("\nUse 's' to send service message (");
 	for(int i = 0; i<msg.request.names.size();i++)
@@ -443,7 +445,8 @@ int main(int argc, char** argv)
   loadROSparamVector(nh,"/nn_Kv", nn.Kv);
   loadROSparamVector(nh,"/nn_lambda", nn.La);
   loadROSparam(nh, "/joint_vel_filter"   , nn.joint_vel_filter);
-  loadROSparam(nh, "/ft_filter       "   , nn.ft_filter);
+  loadROSparam(nh, "/ft_filter"          , nn.ft_filter);
+  loadROSparam(nh, "/nne_pose_filter"    , nn.nne_pose_filter);
 
   // ROS publisher
   std::string commandPoseTopic;
@@ -794,6 +797,12 @@ int main(int argc, char** argv)
     		  case '9':
     		  {
     			  tmp = "ft_filter"; ptrDouble = &nn.ft_filter;
+    			  get_value = true;
+    			  break;
+    		  }
+    		  case '0':
+    		  {
+    			  tmp = "nne_pose_filter"; ptrDouble = &nn.nne_pose_filter;
     			  get_value = true;
     			  break;
     		  }

@@ -102,10 +102,10 @@ a_filt: [1.0, -0.4899]
 b_filt: [0.2551, 0.2551]
 
 # Filter for F/T values
-ft_filter : 0.01
+ft_filter : 0.10
 
 # Filter for qdot values
-joint_vel_filter : 0.01
+joint_vel_filter : 0.10
 
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
