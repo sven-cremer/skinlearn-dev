@@ -3,6 +3,18 @@
 
 using namespace pr2_controller_ns;
 
+template<typename Derived>
+inline bool is_finite(const Eigen::MatrixBase<Derived>& x)
+{
+	return ( (x - x).array() == (x - x).array()).all();
+}
+
+template<typename Derived>
+inline bool is_nan(const Eigen::MatrixBase<Derived>& x)
+{
+	return ((x.array() == x.array())).all();
+}
+
 // Register controller to pluginlib
 PLUGINLIB_EXPORT_CLASS( pr2_controller_ns::PR2adaptNeuroControllerClass, pr2_controller_interface::Controller)
 
@@ -714,6 +726,18 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		// Neural Network
 		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_h,force_c);
+
+		// Check for NaN
+		if( is_nan(force_c) )
+		{
+			force_c.setZero();
+			missed_updates_count_ -= 2;
+		}
+		if( !is_finite(force_c) )
+		{
+			force_c.setZero();
+			missed_updates_count_ -= 3;
+		}
 
 		// Convert NN result to a Cartesian vector
 		Force6d.setZero();
@@ -2963,4 +2987,3 @@ Eigen::Affine3d PR2adaptNeuroControllerClass::convert2Affine(Eigen::VectorXd in)
 
 	return CartVec2Affine(tmp);
 }
-
