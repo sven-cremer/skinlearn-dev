@@ -43,6 +43,7 @@ public:
 
 	bool init(int filterOrder_userdef, bool isIIR, Eigen::VectorXd b_userdef, Eigen::VectorXd a_userdef);
 	double getNextFilteredValue(double u_current);
+	double getNextFilteredValueNew(double u_current);
 	bool initialized;
 
 protected:

@@ -86,6 +86,9 @@ target_link_libraries(nn_estimator ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_library(jt_controller include/ice_robot_controllers/jt_cartesian_controller.cpp)
 target_link_libraries(jt_controller ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(        test_digitalFilter   src/test_digitalFilter.cpp)
+target_link_libraries( test_digitalFilter   ${catkin_LIBRARIES} ${Boost_LIBRARIES} digitalFilterLIB)
+
 #############
 ## Install ##
 #############

@@ -100,6 +100,32 @@ bool digitalFilter::init(int filterOrder_userdef, bool isIIR, Eigen::VectorXd b_
 }
 
 
+double digitalFilter::getNextFilteredValueNew(double u_current)
+{
+	/* Shift x2 and u2 vectors, losing the last elements and putting new u2 value in zeroth spot. */
+    x.head(filterOrder).swap(x.tail(filterOrder));	// Swap is highly optimized
+    u.head(filterOrder).swap(u.tail(filterOrder));
+
+	u[0] = u_current;
+
+	/* Simulate system. */
+	  
+        // if we have an IIR filter            
+        if(IIR)
+        {
+            x(0) = b.cwiseProduct(u).sum() - a.tail(filterOrder).cwiseProduct(x.tail(filterOrder)).sum();
+        }
+
+       // if we have an FIR filter
+       else
+       {
+            x(0) = b.cwiseProduct(u).sum();
+            //x(0) = (b.transpose() * u ).sum();
+       }
+
+	return x(0);
+}
+
 double digitalFilter::getNextFilteredValue(double u_current)
 {
 	/* Shift x2 and u2 vectors, losing the last elements and putting new u2 value in zeroth spot. */
@@ -107,12 +133,13 @@ double digitalFilter::getNextFilteredValue(double u_current)
 		x[i] = x[i-1];
 		u[i] = u[i-1];
 	}
-	u[0] = u_current; 
+
+	u[0] = u_current;
 
 	/* Simulate system. */
 	double output = b[0] * u[0];
-	  
-        // if we have an IIR filter            
+
+        // if we have an IIR filter
         if(IIR)
         {
             for (int i = 1 ; i < (filterOrder+1) ; i++) {
