@@ -153,8 +153,6 @@ nne_Pmax  : [50,50,50,50,50,50]
 #############################
 # NN controller             #
 #############################
-
-nn_usePED : true
 nnNum_Hidden          : 15
 nnNum_Joints          : 7  # DOF
 
@@ -176,6 +174,10 @@ nn_lambda             : [2,2,2,2,2,2]
 #nnNum_Outputs         : 1
 #nn_Kv                 : [1]
 #nn_lambda             : [10]
+
+nn_usePED : true
+nn_Kd                 : [20,20,20,15,15,15]
+nn_Dd                 : [5,5,5,3,3,3]
 
 nn_kappa              : 0.1
 nn_Kz                 : 0.01

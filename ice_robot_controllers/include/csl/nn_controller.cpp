@@ -289,6 +289,8 @@ public:
 	Eigen::VectorXd	getKv()				{	return Kv.diagonal();}
 	Eigen::VectorXd	getLa()				{	return La.diagonal();}
 	Eigen::VectorXd	getGa()				{	return Ga.diagonal();}
+	Eigen::VectorXd	getKd()				{	return Kd.diagonal();}
+	Eigen::VectorXd	getDd()				{	return Dd.diagonal();}
 
 	void setParamKz(double p)			{	Kz = p;				}
 	void setParamZb(double p)			{	Zb = p;				}
@@ -302,6 +304,40 @@ public:
 	{
 		G.setIdentity();
 		G *= p;
+	}
+	bool setParamKd(Eigen::MatrixXd p)	// TODO make a function
+	{
+		if(p.rows() == num_Dim && p.cols() == 1 )
+		{
+			Kd = p.asDiagonal();
+		}
+		else if (p.rows() == num_Dim && p.cols() == num_Dim )
+		{
+			Kd = p;
+		}
+		else
+		{
+			std::cerr<<"Failed to initialize Kd!\n";
+			return false;
+		}
+		return true;
+	}
+	bool setParamDd(Eigen::MatrixXd p)
+	{
+		if(p.rows() == num_Dim && p.cols() == 1 )
+		{
+			Dd = p.asDiagonal();
+		}
+		else if (p.rows() == num_Dim && p.cols() == num_Dim )
+		{
+			Dd = p;
+		}
+		else
+		{
+			std::cerr<<"Failed to initialize Kd!\n";
+			return false;
+		}
+		return true;
 	}
 	bool setParamKv(Eigen::VectorXd p_Kv)
 	{

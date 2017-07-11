@@ -2738,14 +2738,18 @@ bool PR2adaptNeuroControllerClass::initInnerLoop()
 	n += !loadROSparam("/nn_nnG"             , nnG);
 	n += !loadROSparam("/nn_ON"              , nn_ON);
 
-	Kv    .setZero( num_Outputs) ;
-	lambda.setZero( num_Outputs) ;
+	Kv    .setZero(num_Outputs) ;
+	lambda.setZero(num_Outputs) ;
 
 	n += !loadROSparamVector("/nn_Kv", Kv);
 	n += !loadROSparamVector("/nn_lambda", lambda);
 
 	nn_usePED = false;
+	Kd.setZero(num_Outputs);
+	Dd.setZero(num_Outputs);
 	n += !loadROSparam("/nn_usePED", nn_usePED);
+	n += !loadROSparamVector("/nn_Kd", Kd);
+	n += !loadROSparamVector("/nn_Dd", Dd);
 
 	if(n==0)
 		return true;
@@ -2799,6 +2803,8 @@ bool PR2adaptNeuroControllerClass::initNN()
 	ptrNNController->paramInit(Kv,lambda,kappa,Kz,Zb,nnG,nnF,weightsLimit);
 
 	ptrNNController->setFlagPED(nn_usePED);
+	ptrNNController->setParamKd(Kd);
+	ptrNNController->setParamDd(Dd);
 	ptrNNController->setFlagNN(nn_ON);
 	ptrNNController->setUpdateRate(delT);
 	ptrNNController->setUpdateWeights(true);
