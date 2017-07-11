@@ -854,12 +854,10 @@ void PR2adaptNeuroControllerClass::update()
 		//	kin_acc_->jac(q_, J_acc_);
 
 		// TODO Filter velocity values with 2nd order butterworth
-		/*
-		chain_.getVelocities(qdot_raw_);
+		//chain_.getVelocities(qdot_raw_);
 		for (int i = 0; i < Joints; ++i)
-			qdot_filtered_[i] += joint_vel_filter_ * (qdot_raw_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
+			qdot_filtered_[i] += joint_vel_filter_ * (qdot_[i] - qdot_filtered_[i]);	// Does nothing when joint_vel_filter_=1
 		qdot_ = qdot_filtered_;
-		*/
 
 		xdot_ = J_ * qdot_;		// [6x7]*[7x1] -> [6x1]
 

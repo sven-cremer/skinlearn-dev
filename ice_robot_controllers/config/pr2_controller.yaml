@@ -80,6 +80,10 @@ outerLoop_time     : 0.0
 
 #### Digital filter coefficients
 ## Lowpass, 1st order butterworth
+# fc=100Hz, fs=1000Hz
+#a_filt: [1.0, -0.5095]
+#b_filt: [0.7548, -0.7548]
+## Lowpass, 1st order butterworth
 # fc=1000Hz, fs=3000Hz
 #a_filt: [1.0, 0.2679]
 #b_filt: [0.634, 0.634]
@@ -95,7 +99,7 @@ b_filt: [0.0994, 0.0994]
 #b_filt: [0.4683, 0, -0.4683]
 
 # Filter for qdot values
-joint_vel_filter : 1.0
+joint_vel_filter : 0.1
 
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
@@ -151,7 +155,7 @@ useHumanIntentNN     : false
 nne_useLimits: true
 nne_kappa : 0.01
 nne_alpha : 1.0
-nne_pose_filter : 1.00
+nne_pose_filter : 0.10
 
 #nne_Dim: 6
 #nne_G     : [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1, 1]
