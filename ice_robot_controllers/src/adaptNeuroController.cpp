@@ -316,8 +316,10 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			{
 		        for(int i=0;i<6;i++)
 		        {
-		        	wrench_filtered_(i) = digitalFilters[i].getNextFilteredValue(wrench_transformed_(i));
+		        	//wrench_filtered_(i) = digitalFilters[i].getNextFilteredValue(wrench_transformed_(i));
+		        	wrench_filtered_(i) += joint_vel_filter_ * ( wrench_transformed_(i) - wrench_filtered_(i));
 		        }
+
 			}
 
 			transformed_force = wrench_filtered_.topRows(3);
