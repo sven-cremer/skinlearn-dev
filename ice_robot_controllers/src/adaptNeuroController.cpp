@@ -323,6 +323,21 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			wrench_transformed_.bottomRows(3) = W_mat_*x_ft_.linear()*forceFT + x_ft_.linear()*tauFT;
 			wrench_transformed_.topRows(3)    = x_ft_.linear()*forceFT;
 
+			// Check for valid values
+			for(int i=0;i<wrench_transformed_.size();i++)
+			{
+				if( isnan(wrench_transformed_(i)) )
+				{
+					wrench_transformed_(i) = 0;
+					missed_updates_count_ -= 2;
+				}
+				if( isinf(wrench_transformed_(i)) )
+				{
+					wrench_transformed_(i) = 0;
+					missed_updates_count_ -= 3;
+				}
+			}
+
 			// Apply low-pass filter
 			if(useDigitalFilter)		// FIXME wrench_filtered_ not updated if false
 			{
@@ -732,15 +747,15 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		{
 			if( isnan(force_c(i)) )
 			{
-				std::cout<<"force_c("<<i<<") is NaN: "<<force_c.transpose()<<"\n";
+				//std::cout<<"force_c("<<i<<") is NaN: "<<force_c.transpose()<<"\n";
 				force_c(i) = 0;
-				missed_updates_count_ -= 2;
+				missed_updates_count_ -= 4;
 			}
 			if( isinf(force_c(i)) )
 			{
-				std::cout<<"force_c("<<i<<") is Inf: "<<force_c.transpose()<<"\n";
+				//std::cout<<"force_c("<<i<<") is Inf: "<<force_c.transpose()<<"\n";
 				force_c(i) = 0;
-				missed_updates_count_ -= 3;
+				missed_updates_count_ -= 5;
 			}
 		}
 
