@@ -175,7 +175,7 @@ nn_lambda             : [2,2,2,2,2,2]
 #nn_Kv                 : [1]
 #nn_lambda             : [10]
 
-nn_usePED : true
+nn_usePED : false
 nn_Kd                 : [20,20,20,20,20,20]
 nn_Dd                 : [10,10,10,10,10,10]
 
