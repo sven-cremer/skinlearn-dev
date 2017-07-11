@@ -1627,6 +1627,12 @@ bool PR2adaptNeuroControllerClass::setNNparamCB( ice_msgs::setParameters::Reques
 			else if ( req.names[i].compare("k_posture") ) {
 				k_posture = req.values[i];
 			}
+			else if ( req.names[i].compare("ft_filter") ) {
+				ft_filter_ = req.values[i];
+			}
+			else if ( req.names[i].compare("joint_vel_filter") ) {
+				joint_vel_filter_ = req.values[i];
+			}
 			else
 			{
 				resp.success = false;

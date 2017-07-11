@@ -58,6 +58,8 @@ struct NNparam {
 	double G;
 	Eigen::VectorXd Kv;
 	Eigen::VectorXd La;
+	double joint_vel_filter;
+	double ft_filter;
 };
 
 enum Mode{ ASSISTIVE, PASSIVE, RESISTIVE};
@@ -157,6 +159,9 @@ void displayNNparamMenu(NNparam nn,ice_msgs::setParameters msg)
 	printf("\n");
 	printf("\nUse '6' Kv = ["); std::cout<<nn.Kv.transpose(); printf("]\t Derivative term, i.e. Kv*r= Kv*ed + Kv*lam*e");
 	printf("\nUse '7' La = ["); std::cout<<nn.La.transpose(); printf("]\t Proportional term");
+	printf("\n");
+	printf("\nUse '8' joint_vel_filter = %.3f \t Lowpass filter for qdot",nn.joint_vel_filter);
+	printf("\nUse '9' ft_filter = %.3f \t Lowpass filter for F/T values",nn.ft_filter);
 	printf("\n");
 	printf("\nUse 's' to send service message (");
 	for(int i = 0; i<msg.request.names.size();i++)
@@ -437,6 +442,8 @@ int main(int argc, char** argv)
 //  loadROSparam(nh, "/nn_ON"              , nn_ON);
   loadROSparamVector(nh,"/nn_Kv", nn.Kv);
   loadROSparamVector(nh,"/nn_lambda", nn.La);
+  loadROSparam(nh, "/joint_vel_filter"   , nn.joint_vel_filter);
+  loadROSparam(nh, "/ft_filter       "   , nn.ft_filter);
 
   // ROS publisher
   std::string commandPoseTopic;
@@ -776,6 +783,18 @@ int main(int argc, char** argv)
     				  msg.request.names.push_back(s);
     				  msg.request.values.push_back(nn.La(i));
     			  }
+    			  break;
+    		  }
+    		  case '8':
+    		  {
+    			  tmp = "joint_vel_filter"; ptrDouble = &nn.joint_vel_filter;
+    			  get_value = true;
+    			  break;
+    		  }
+    		  case '9':
+    		  {
+    			  tmp = "ft_filter"; ptrDouble = &nn.ft_filter;
+    			  get_value = true;
     			  break;
     		  }
     		  case 's':
