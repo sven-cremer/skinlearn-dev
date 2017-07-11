@@ -125,14 +125,14 @@ circleUlim         : 0.8   #  = A/2
 
 # Subscribes to a reference trajectory topic
 # Note: set to false if human intent is used
-externalRefTraj    : true
+externalRefTraj    : false
 
 #############################
 # NN estimator              #
 #############################
 # Estimate human intent trajectory from force and position values
-computeHumanIntentNN : false
-useHumanIntentNN     : false
+computeHumanIntentNN : true
+useHumanIntentNN     : true
 nne_useLimits: true
 nne_kappa : 0.01
 nne_alpha : 1.0
@@ -175,7 +175,7 @@ nn_lambda             : [2,2,2,2,2,2]
 #nn_Kv                 : [1]
 #nn_lambda             : [10]
 
-nn_usePED : false
+nn_usePED : true
 nn_Kd                 : [20,20,20,20,20,20]
 nn_Dd                 : [10,10,10,10,10,10]
 
