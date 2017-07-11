@@ -94,7 +94,10 @@ bool PR2adaptNeuroControllerClass::init(pr2_mechanism_model::RobotState *robot, 
 	status_srv_ = nh_.advertiseService("/tactile/status" , &PR2adaptNeuroControllerClass::statusCB   , this);
 	tactileFilterWeights_srv_ = nh_.advertiseService("/tactile/filterWeights" , &PR2adaptNeuroControllerClass::tactileFilterWeightsCB       , this);
 
-	sub_commandPose_ = nh_.subscribe("command_pose", 1, &PR2adaptNeuroControllerClass::commandPoseCB, this);
+	if(externalRefTraj)
+	{
+		sub_commandPose_ = nh_.subscribe("command_pose", 1, &PR2adaptNeuroControllerClass::commandPoseCB, this);
+	}
 
 	runExperimentA_srv_ = nh_.advertiseService("runExperimentA" , &PR2adaptNeuroControllerClass::runExperimentA   , this);
 	runExperimentB_srv_ = nh_.advertiseService("runExperimentB" , &PR2adaptNeuroControllerClass::runExperimentB   , this);
