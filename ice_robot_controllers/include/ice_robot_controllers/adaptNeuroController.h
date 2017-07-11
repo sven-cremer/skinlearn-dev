@@ -124,7 +124,8 @@ private:
 	JointVec qdot_;					// Joint velocities
 	JointVec qdot_raw_;
 	JointVec qdot_filtered_;
-	double joint_vel_filter_;
+	double joint_vel_filter_;		// Multiplier for simple lowpass filter (no filtering when equal to 1.0)
+	double ft_filter_;
 
 	KDL::JntArray tau_measured_;
 	CartVec force_measured_;

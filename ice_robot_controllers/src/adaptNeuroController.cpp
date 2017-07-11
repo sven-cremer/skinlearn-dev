@@ -317,11 +317,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		        for(int i=0;i<6;i++)
 		        {
 		        	//wrench_filtered_(i) = digitalFilters[i].getNextFilteredValue(wrench_transformed_(i));
-		        	wrench_filtered_(i) += joint_vel_filter_ * ( wrench_transformed_(i) - wrench_filtered_(i));
+		        	wrench_filtered_(i) += ft_filter_ * ( wrench_transformed_(i) - wrench_filtered_(i));
 		        }
-
 			}
-
 			transformed_force = wrench_filtered_.topRows(3);
 		}
 		else
@@ -2311,8 +2309,9 @@ bool PR2adaptNeuroControllerClass::initRobot()
 	sat_scaling = 1.0;
 	tau_sat.resize( 7 );		// num_Outputs
 
-	// Joint velocity filter
-	nh_.param("/joint_vel_filter", joint_vel_filter_,     1.0);
+	// Simple lowpass filters
+	nh_.param("/joint_vel_filter", joint_vel_filter_, 1.0);
+	nh_.param("/ft_filter", ft_filter_, 1.0);
 
 
 	return true;

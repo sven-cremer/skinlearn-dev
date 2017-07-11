@@ -88,8 +88,8 @@ outerLoop_time     : 0.0
 #a_filt: [1.0, 0.2679]
 #b_filt: [0.634, 0.634]
 # fc=35Hz, fs=1000Hz
-a_filt: [1.0, -0.8012]
-b_filt: [0.0994, 0.0994]
+#a_filt: [1.0, -0.8012]
+#b_filt: [0.0994, 0.0994]
 ## Band-pass, 1st order chebychev
 # 5-1000Hz, fs=3000Hz
 #a_filt: [1.0,-0.3329,-0.6610]
@@ -98,13 +98,19 @@ b_filt: [0.0994, 0.0994]
 #a_filt: [1.0,-1.0526,0.0634]
 #b_filt: [0.4683, 0, -0.4683]
 
+a_filt: [1.0, -0.4899]
+b_filt: [0.2551, 0.2551]
+
+# Filter for F/T values
+ft_filter : 0.01
+
 # Filter for qdot values
-joint_vel_filter : 0.1
+joint_vel_filter : 0.01
 
 # Is the reference trajectory x_r or q_r set externally or estimated
 # If externalRefTraj is false the human intent x_i is used
 # i.e. an admittance model is used to generate x_i from f_h the force from the FT sensor
-externalRefTraj    : true
+externalRefTraj    : false
 
 # Human intent estimation
 useHumanIntent     : false
@@ -151,11 +157,11 @@ cartIniYaw           :  0.0
 # NN estimator              #
 #############################
 computeHumanIntentNN : true
-useHumanIntentNN     : false
+useHumanIntentNN     : true
 nne_useLimits: true
 nne_kappa : 0.01
 nne_alpha : 1.0
-nne_pose_filter : 0.10
+nne_pose_filter : 0.0
 
 #nne_Dim: 6
 #nne_G     : [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1, 1]
