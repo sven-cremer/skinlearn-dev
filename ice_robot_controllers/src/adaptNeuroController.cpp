@@ -328,7 +328,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			{
 				if( isnan(wrench_transformed_(i)) )
 				{
-					wrench_transformed_(i) = 0;
+					wrench_transformed_(i) = 0;	// TODO use previous value instead?
 					missed_updates_count_ -= 2;
 				}
 				if( isinf(wrench_transformed_(i)) )
@@ -411,7 +411,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				ROS_INFO("End pose: pos=[%f,%f,%f], rot=[%f,%f,%f]",p(0),p(1),p(2),p(3),p(4),p(5));
 			}
 		}
-		if(mannequinMode && loop_count_ > 3000) // Check if initialized
+		if(mannequinMode && loop_count_ > 100) // Check if initialized
 		{
 
 			// Compute error
@@ -881,8 +881,8 @@ void PR2adaptNeuroControllerClass::update()
 		chain_.getVelocities(qdot_);
 
 		// Wrap continuous joints
-		q_(4) = wrapMinMax(q_(4), -M_PI, +M_PI);
-		q_(6) = wrapMinMax(q_(6), -M_PI, +M_PI);
+		//q_(4) = wrapMinMax(q_(4), -M_PI, +M_PI);	<-- Might cause discontinuities
+		//q_(6) = wrapMinMax(q_(6), -M_PI, +M_PI);
 
 		// Get the pose of the F/T sensor
 		if(forceTorqueOn)
@@ -937,7 +937,7 @@ void PR2adaptNeuroControllerClass::update()
 			// Convert into Eigen vector and compute average value
 			accData.setZero();
 			accData_vector_size = accData_vector.size();		// 3 or 4 (usually three)
-			for( int  i = 0; i < accData_vector_size; i++ )		// Take average value
+			for( int  i = 0; i < accData_vector_size; i++ )		// Take average value TODO use median?
 			{
 				accData(0) += accData_vector[i].x;
 				accData(1) += accData_vector[i].y;
@@ -955,7 +955,7 @@ void PR2adaptNeuroControllerClass::update()
 
 			// Convert into Eigen vector
 			ftData_vector_size = ftData_vector.size();					// 2,3,4 (usually three)
-			ftData_msg.wrench = ftData_vector[ftData_vector_size-1];	// Take latest value
+			ftData_msg.wrench = ftData_vector[ftData_vector_size-1];	// Take latest value	TODO use average/median?
 			tf::wrenchMsgToEigen(ftData_msg.wrench, wrench_raw_);
 		}
 
