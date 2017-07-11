@@ -136,7 +136,7 @@ useHumanIntentNN     : false
 nne_useLimits: true
 nne_kappa : 0.01
 nne_alpha : 1.0
-nne_pose_filter : 0.0
+nne_pose_filter : 0.01
 
 #nne_Dim: 6
 #nne_G     : [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1, 1]
@@ -175,7 +175,7 @@ nn_lambda             : [2,2,2,2,2,2]
 #nn_Kv                 : [1]
 #nn_lambda             : [10]
 
-nn_usePED : true
+nn_usePED : false
 nn_Kd                 : [20,20,20,20,20,20]
 nn_Dd                 : [10,10,10,10,10,10]
 
