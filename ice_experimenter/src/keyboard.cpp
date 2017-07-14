@@ -63,6 +63,8 @@ struct NNparam {
 	double joint_vel_filter;
 	double ft_filter;
 	double nne_pose_filter;
+	double nne_alpha;
+	double nne_kappa;
 };
 
 enum Mode{ ASSISTIVE, PASSIVE, RESISTIVE};
@@ -169,6 +171,8 @@ void displayNNparamMenu(NNparam nn,ice_msgs::setParameters msg)
 	printf("\nUse '8' joint_vel_filter = %.3f \t Lowpass filter for qdot",nn.joint_vel_filter);
 	printf("\nUse '9' ft_filter = %.3f \t\t Lowpass filter for F/T values",nn.ft_filter);
 	printf("\nUse '0' nne_pose_filter = %.3f \t Lowpass filter for NN estimator",nn.nne_pose_filter);
+	printf("\nUse 'o' nne_alpha = %.3f \t NN estimator learning rate",nn.nne_alpha);
+	printf("\nUse 'p' nne_kappa = %.3f \t NN estimator kappa",nn.nne_kappa);
 	printf("\n");
 	printf("\nUse 's' to send service message (");
 	for(int i = 0; i<msg.request.names.size();i++)
@@ -454,6 +458,8 @@ int main(int argc, char** argv)
   loadROSparam(nh, "/joint_vel_filter"   , nn.joint_vel_filter);
   loadROSparam(nh, "/ft_filter"          , nn.ft_filter);
   loadROSparam(nh, "/nne_pose_filter"    , nn.nne_pose_filter);
+  loadROSparam(nh, "/nne_alpha"          , nn.nne_alpha);
+  loadROSparam(nh, "/nne_kappa"          , nn.nne_kappa);
 
   // ROS publisher
   std::string commandPoseTopic;
@@ -795,7 +801,7 @@ int main(int argc, char** argv)
     			  }
     			  break;
     		  }
-    		  case 'K':
+    		  case 'k':
     		  {
     			  for(int i=0;i<nn.Kd.size();i++)
     			  {
@@ -807,7 +813,7 @@ int main(int argc, char** argv)
     			  }
     			  break;
     		  }
-    		  case 'D':
+    		  case 'd':
     		  {
     			  for(int i=0;i<nn.Dd.size();i++)
     			  {
@@ -834,6 +840,18 @@ int main(int argc, char** argv)
     		  case '0':
     		  {
     			  tmp = "nne_pose_filter"; ptrDouble = &nn.nne_pose_filter;
+    			  get_value = true;
+    			  break;
+    		  }
+    		  case 'o':
+    		  {
+    			  tmp = "nne_alpha"; ptrDouble = &nn.nne_alpha;
+    			  get_value = true;
+    			  break;
+    		  }
+    		  case 'p':
+    		  {
+    			  tmp = "nne_kappa"; ptrDouble = &nn.nne_kappa;
     			  get_value = true;
     			  break;
     		  }

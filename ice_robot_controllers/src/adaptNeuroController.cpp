@@ -1729,6 +1729,12 @@ bool PR2adaptNeuroControllerClass::setNNparamCB( ice_msgs::setParameters::Reques
 			else if ( req.names[i].compare("nne_pose_filter") ) {
 				nne_pose_filter = req.values[i];
 			}
+			else if ( req.names[i].compare("nne_alpha") ) {
+				ptrNNEstimator->setParamAlpha(req.values[i]);
+			}
+			else if ( req.names[i].compare("nne_kappa") ) {
+				ptrNNEstimator->setParamKappa(req.values[i]);
+			}
 			else
 			{
 				resp.success = false;
