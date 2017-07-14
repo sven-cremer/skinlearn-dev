@@ -216,6 +216,7 @@ void PR2adaptNeuroControllerClass::starting()
 		Eigen::Quaterniond q_init = euler2Quaternion( cartIniRoll, cartIniPitch, cartIniYaw );
 		x0_ = Eigen::Translation3d(p_init) * q_init;
 	}
+	x0_vec_ = affine2CartVec(x0_);
 	x_des_ = x0_;
 	CartVec cv = affine2CartVec(x_des_);
 	PoseVec pv = affine2PoseVec(x_des_);
@@ -479,7 +480,15 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			if(useHumanIntentNN)
 			{
 				// Limit error
-				e_int = X_hat.head(3) - X.head(3);
+				if(nne_Dim>2)
+				{
+					e_int = X_hat.head(3) - X.head(3);
+				}
+				else
+				{
+					e_int = x0_vec_.head(3) - X.head(3);
+					e_int = X_hat.head(nne_Dim) - X.head(nne_Dim); // Dim=2: xy, Dim=1: x
+				}
 				//e_int = (e_int.array() > e_int_max.array() ).select(e_int_max, e_int);
 				//e_int = (e_int.array() < e_int_min.array() ).select(e_int_min, e_int);
 				//x_des_.translation() = X.head(3) + e_int;
@@ -2823,7 +2832,7 @@ bool PR2adaptNeuroControllerClass::initNN()
 	loadROSparam("/nne_kappa", nne_kappa);
 	loadROSparam("/nne_alpha", nne_alpha);
 
-	int nne_Dim = 6;	// num_Outputs
+	nne_Dim = 6;	// num_Outputs
 	loadROSparam("/nne_Dim", nne_Dim);
 	Eigen::VectorXd nne_G; nne_G.setOnes( nne_Dim*3 + 1);
 	Eigen::VectorXd nne_H; nne_H.setOnes( nne_Dim*3 + 1);

@@ -138,6 +138,7 @@ private:
 
 	Eigen::Affine3d x_;				// Tip pose
 	Eigen::Affine3d x0_;			// Tip initial pose
+	CartVec x0_vec_;
 	Eigen::Affine3d x0_cali_;		// Tip initial pose for calibration
 	CartVec x0_cali_vec_;
 
@@ -440,6 +441,7 @@ private:
 	Eigen::VectorXd nn_Kd;
 	Eigen::VectorXd nn_Dd;
 
+	int nne_Dim;
 	Eigen::Vector3d e_int;
 	Eigen::Vector3d e_int_max;
 	Eigen::Vector3d e_int_min;
