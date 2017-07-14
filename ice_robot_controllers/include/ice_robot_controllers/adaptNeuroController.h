@@ -204,6 +204,7 @@ private:
 	bool useFlexiForce;
 	bool calibrateSensors;
 	std::string ft_frame_id;
+	CartVec wrenchData;
 	CartVec wrench_raw_;
 	CartVec wrench_compensated_;
 	CartVec wrench_transformed_;

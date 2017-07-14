@@ -239,7 +239,7 @@ void PR2adaptNeuroControllerClass::starting()
 	qdot_filtered_.setZero();
 
 	loop_count_ = 0;
-	missed_updates_count_=0;
+	missed_updates_count_=1;
 	recordData = false;
 
 	// Start threads
@@ -301,24 +301,24 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			wrench_gripper_.bottomRows(3) = r_gripper_com.cross(forceFT); // Torque vector
 
-			wrench_compensated_ = wrench_raw_ - ft_bias - wrench_gripper_;
+			wrench_compensated_ = wrenchData - ft_bias - wrench_gripper_;
 
 			forceFT = wrench_compensated_.topRows(3);
 			tauFT	= wrench_compensated_.bottomRows(3);
 
 			// Force transformation
 
-			W_mat_(0,0) = 0;
+			//W_mat_(0,0) = 0;
 			W_mat_(0,1) = -x_ft_.translation().z();
 			W_mat_(0,2) = x_ft_.translation().y();
 
 			W_mat_(1,0) = x_ft_.translation().z();
-			W_mat_(1,1) = 0;
+			//W_mat_(1,1) = 0;
 			W_mat_(1,2) = -x_ft_.translation().x();
 
 			W_mat_(2,0) = -x_ft_.translation().y();
 			W_mat_(2,1) = x_ft_.translation().x();
-			W_mat_(2,2) = 0;
+			//W_mat_(2,2) = 0;
 
 			wrench_transformed_.bottomRows(3) = W_mat_*x_ft_.linear()*forceFT + x_ft_.linear()*tauFT;
 			wrench_transformed_.topRows(3)    = x_ft_.linear()*forceFT;
@@ -329,12 +329,12 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				if( isnan(wrench_transformed_(i)) )
 				{
 					wrench_transformed_(i) = 0;	// TODO use previous value instead?
-					missed_updates_count_ -= 2;
+					missed_updates_count_ += 1e3;
 				}
 				if( isinf(wrench_transformed_(i)) )
 				{
 					wrench_transformed_(i) = 0;
-					missed_updates_count_ -= 3;
+					missed_updates_count_ += 1e4;
 				}
 			}
 
@@ -749,13 +749,13 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			{
 				//std::cout<<"force_c("<<i<<") is NaN: "<<force_c.transpose()<<"\n";
 				force_c(i) = 0;
-				missed_updates_count_ -= 4;
+				missed_updates_count_ += 1e5;
 			}
 			if( isinf(force_c(i)) )
 			{
 				//std::cout<<"force_c("<<i<<") is Inf: "<<force_c.transpose()<<"\n";
 				force_c(i) = 0;
-				missed_updates_count_ -= 5;
+				missed_updates_count_ += 1e6;
 			}
 		}
 
@@ -932,18 +932,28 @@ void PR2adaptNeuroControllerClass::update()
 			// Retrieve accelerometer data
 			accData_vector.clear();
 			accData_vector = accelerometer_handle_->state_.samples_;
-			accData_received = true;
+			accData_vector_size = accData_vector.size();			// 3 or 4 (usually three)
 
-			// Convert into Eigen vector and compute average value
-			accData.setZero();
-			accData_vector_size = accData_vector.size();		// 3 or 4 (usually three)
-			for( int  i = 0; i < accData_vector_size; i++ )		// Take average value TODO use median?
+			if(accData_vector_size > 0)
 			{
-				accData(0) += accData_vector[i].x;
-				accData(1) += accData_vector[i].y;
-				accData(2) += accData_vector[i].z;
+				accData_received = true;
+
+				// Convert into Eigen vector and compute average value
+				accData.setZero();
+				for( int  i = 0; i < accData_vector_size; i++ )		// Take average value TODO use median?
+				{
+					accData(0) += accData_vector[i].x;
+					accData(1) += accData_vector[i].y;
+					accData(2) += accData_vector[i].z;
+				}
+				accData = accData.array() / (double)accData_vector_size;
 			}
-			accData = accData.array() / (double)accData_vector_size;
+			else
+			{
+				// Use previous value
+				missed_updates_count_ += 10;
+			}
+
 		}
 
 		if( forceTorqueOn )
@@ -951,12 +961,26 @@ void PR2adaptNeuroControllerClass::update()
 			// Retrieve Force/Torque data
 			ftData_vector.clear();
 			ftData_vector = ft_handle_->state_.samples_;
-			ftData_received = true;
+			ftData_vector_size = ftData_vector.size();				// 2,3,4 (usually three)
 
-			// Convert into Eigen vector
-			ftData_vector_size = ftData_vector.size();					// 2,3,4 (usually three)
-			ftData_msg.wrench = ftData_vector[ftData_vector_size-1];	// Take latest value	TODO use average/median?
-			tf::wrenchMsgToEigen(ftData_msg.wrench, wrench_raw_);
+			if(ftData_vector_size > 0)
+			{
+				ftData_received = true;
+
+				// Convert into Eigen vector and compute average
+				wrenchData.setZero();
+				for( int  i = 0; i < ftData_vector_size; i++ )		// Take average value TODO use median?
+				{
+					tf::wrenchMsgToEigen(ftData_vector[i], wrench_raw_);
+					wrenchData += wrench_raw_;
+				}
+				wrenchData = wrenchData.array() / (double)ftData_vector_size;
+			}
+			else
+			{
+				// Use previous value
+				missed_updates_count_ += 1e2;
+			}
 		}
 
 		/***************** START DATA PROCESSING *****************/
@@ -970,7 +994,7 @@ void PR2adaptNeuroControllerClass::update()
 	{
 		if(runComputations)
 		{
-			missed_updates_count_++;	// computations still running
+			missed_updates_count_ *= -1;	// computations still running
 		}
 //		else
 //		{
@@ -1432,6 +1456,7 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataState_msg_[storage_index_].header.stamp = last_time_;
 		experimentDataState_msg_[storage_index_].dt = dt_;
 		experimentDataState_msg_[storage_index_].missed_updates_counter = missed_updates_count_;
+		missed_updates_count_ = 1;
 
 		// Pose
 		tf::poseEigenToMsg(x_, experimentDataState_msg_[storage_index_].x.pose);
@@ -2356,6 +2381,9 @@ bool PR2adaptNeuroControllerClass::initRobot()
 		}
 		chain_acc_to_ft_link.toKDL(kdl_chain_acc_to_ft_link);
 		kin_acc_to_ft_.reset(new Kin<Joints>(kdl_chain_acc_to_ft_link));
+
+		// TODO init FT variables
+		W_mat_.setZero();
 	}
 
 	// Torque Saturation
