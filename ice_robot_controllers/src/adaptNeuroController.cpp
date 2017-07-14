@@ -951,6 +951,7 @@ void PR2adaptNeuroControllerClass::update()
 			else
 			{
 				// Use previous value
+				accData_received = false;
 				missed_updates_count_ += 10;
 			}
 
@@ -961,7 +962,7 @@ void PR2adaptNeuroControllerClass::update()
 			// Retrieve Force/Torque data
 			ftData_vector.clear();
 			ftData_vector = ft_handle_->state_.samples_;
-			ftData_vector_size = ftData_vector.size();				// 2,3,4 (usually three)
+			ftData_vector_size = ftData_vector.size();				// between 0 and 4 (usually three)
 
 			if(ftData_vector_size > 0)
 			{
@@ -979,6 +980,7 @@ void PR2adaptNeuroControllerClass::update()
 			else
 			{
 				// Use previous value
+				ftData_received = false;
 				missed_updates_count_ += 1e2;
 			}
 		}
