@@ -58,6 +58,8 @@ struct NNparam {
 	double G;
 	Eigen::VectorXd Kv;
 	Eigen::VectorXd La;
+	Eigen::VectorXd Kd;
+	Eigen::VectorXd Dd;
 	double joint_vel_filter;
 	double ft_filter;
 	double nne_pose_filter;
@@ -161,8 +163,11 @@ void displayNNparamMenu(NNparam nn,ice_msgs::setParameters msg)
 	printf("\nUse '6' Kv = ["); std::cout<<nn.Kv.transpose(); printf("]\t Derivative term, i.e. Kv*r= Kv*ed + Kv*lam*e");
 	printf("\nUse '7' La = ["); std::cout<<nn.La.transpose(); printf("]\t Proportional term");
 	printf("\n");
+	printf("\nUse 'K' Kd = ["); std::cout<<nn.Kd.transpose(); printf("]\t Proportional term, i.e. Kd*e + Dd*ed = fh ");
+	printf("\nUse 'D' Dd = ["); std::cout<<nn.Dd.transpose(); printf("]\t Derivative term");
+	printf("\n");
 	printf("\nUse '8' joint_vel_filter = %.3f \t Lowpass filter for qdot",nn.joint_vel_filter);
-	printf("\nUse '9' ft_filter = %.3f \t Lowpass filter for F/T values",nn.ft_filter);
+	printf("\nUse '9' ft_filter = %.3f \t\t Lowpass filter for F/T values",nn.ft_filter);
 	printf("\nUse '0' nne_pose_filter = %.3f \t Lowpass filter for NN estimator",nn.nne_pose_filter);
 	printf("\n");
 	printf("\nUse 's' to send service message (");
@@ -444,6 +449,8 @@ int main(int argc, char** argv)
 //  loadROSparam(nh, "/nn_ON"              , nn_ON);
   loadROSparamVector(nh,"/nn_Kv", nn.Kv);
   loadROSparamVector(nh,"/nn_lambda", nn.La);
+  loadROSparamVector(nh,"/nn_Kd", nn.Kd);
+  loadROSparamVector(nh,"/nn_Dd", nn.Dd);
   loadROSparam(nh, "/joint_vel_filter"   , nn.joint_vel_filter);
   loadROSparam(nh, "/ft_filter"          , nn.ft_filter);
   loadROSparam(nh, "/nne_pose_filter"    , nn.nne_pose_filter);
@@ -785,6 +792,30 @@ int main(int argc, char** argv)
     				  std::string s = "La" + boost::lexical_cast<std::string>(i);
     				  msg.request.names.push_back(s);
     				  msg.request.values.push_back(nn.La(i));
+    			  }
+    			  break;
+    		  }
+    		  case 'K':
+    		  {
+    			  for(int i=0;i<nn.Kd.size();i++)
+    			  {
+    				  std::cout<<"Kd("<<i<<") = ";
+    				  getInput(nn.Kd(i));
+    				  std::string s = "Kd" + boost::lexical_cast<std::string>(i);
+    				  msg.request.names.push_back(s);
+    				  msg.request.values.push_back(nn.Kd(i));
+    			  }
+    			  break;
+    		  }
+    		  case 'D':
+    		  {
+    			  for(int i=0;i<nn.Dd.size();i++)
+    			  {
+    				  std::cout<<"Dd("<<i<<") = ";
+    				  getInput(nn.Dd(i));
+    				  std::string s = "Dd" + boost::lexical_cast<std::string>(i);
+    				  msg.request.names.push_back(s);
+    				  msg.request.values.push_back(nn.Dd(i));
     			  }
     			  break;
     		  }

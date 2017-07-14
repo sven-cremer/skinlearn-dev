@@ -1695,6 +1695,28 @@ bool PR2adaptNeuroControllerClass::setNNparamCB( ice_msgs::setParameters::Reques
 					resp.success = false;
 				}
 			}
+			else if ( req.names[i].substr(0,2).compare("Kd") )
+			{
+				try {
+					int idx = boost::lexical_cast<int>( req.names[i].substr(2,1) );
+					ptrNNController->setParamKd(req.values[i],idx);
+
+				} catch( boost::bad_lexical_cast const& ) {
+					std::cout << "Error: input string was not valid" << std::endl;
+					resp.success = false;
+				}
+			}
+			else if ( req.names[i].substr(0,2).compare("Dd") )
+			{
+				try {
+					int idx = boost::lexical_cast<int>( req.names[i].substr(2,1) );
+					ptrNNController->setParamDd(req.values[i],idx);
+
+				} catch( boost::bad_lexical_cast const& ) {
+					std::cout << "Error: input string was not valid" << std::endl;
+					resp.success = false;
+				}
+			}
 			else if ( req.names[i].compare("k_posture") ) {
 				k_posture = req.values[i];
 			}

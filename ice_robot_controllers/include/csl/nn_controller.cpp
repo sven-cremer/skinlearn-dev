@@ -392,6 +392,24 @@ public:
 		}
 		return false;
 	}
+	bool setParamKd(double p, int index)
+	{
+		if(0<index && index<num_Dim)
+		{
+			Kd(index,index) = p;
+			return true;
+		}
+		return false;
+	}
+	bool setParamDd(double p, int index)
+	{
+		if(0<index && index<num_Dim)
+		{
+			Dd(index,index) = p;
+			return true;
+		}
+		return false;
+	}
 
 	void setFlagNN(bool b)				{	nn_ON = b;			}
 	void setFlagRobust(bool b)			{	robust_ON = b;		}
