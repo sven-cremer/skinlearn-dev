@@ -441,7 +441,7 @@ private:
 	Eigen::VectorXd nn_Kd;
 	Eigen::VectorXd nn_Dd;
 
-	int nne_Dim;
+	int nne_Dim;	// Dimension of NN Estimator
 	Eigen::Vector3d e_int;
 	Eigen::Vector3d e_int_max;
 	Eigen::Vector3d e_int_min;

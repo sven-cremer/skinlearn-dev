@@ -487,7 +487,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				else
 				{
 					e_int = x0_vec_.head(3) - X.head(3);
-					e_int = X_hat.head(nne_Dim) - X.head(nne_Dim); // Dim=2: xy, Dim=1: x
+					e_int.head(nne_Dim) = X_hat.head(nne_Dim) - X.head(nne_Dim); // Dim=2: xy, Dim=1: x
 				}
 				//e_int = (e_int.array() > e_int_max.array() ).select(e_int_max, e_int);
 				//e_int = (e_int.array() < e_int_min.array() ).select(e_int_min, e_int);
