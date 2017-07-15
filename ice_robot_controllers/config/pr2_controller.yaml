@@ -136,7 +136,7 @@ useHumanIntentNN     : true
 nne_useLimits: true
 nne_kappa : 0.01
 nne_alpha : 1.0
-nne_pose_filter : 0.01
+nne_pose_filter : 1.0
 
 #nne_Dim: 6
 #nne_G     : [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1, 1]
@@ -151,15 +151,15 @@ nne_pose_filter : 0.01
 #nne_Pmax  : [50,50,50,50,50,50]
 
 nne_Dim: 2
-nne_G     : [1,1, 1,1, 1,1, 1]
-nne_H     : [1,1, 1,1, 1,1, 1]
-nne_Pmin  : [0.05,0.05,0.05,0.05]
+nne_G     : [0.050,0.050, 0.050,0.050, 0.050,0.050, 0.050] # V -> xhat
+nne_H     : [0.005,0.005, 0.005,0.005, 0.005,0.005, 0.005] # U -> Phat
+nne_Pmin  : [0.01,0.01,0.01,0.01]
 nne_Pmax  : [50,50,50,50]
 
 #############################
 # NN controller             #
 #############################
-nnNum_Hidden          : 15
+nnNum_Hidden          : 18
 nnNum_Joints          : 7  # DOF
 
 #Note: nnNum_Inputs determined by NAC
@@ -181,7 +181,7 @@ nn_lambda             : [2,2,2,2,2,2]
 #nn_Kv                 : [1]
 #nn_lambda             : [10]
 
-nn_usePED : false
+nn_usePED : true
 nn_Kd                 : [20,20,20,20,20,20]
 nn_Dd                 : [10,10,10,10,10,10]
 
