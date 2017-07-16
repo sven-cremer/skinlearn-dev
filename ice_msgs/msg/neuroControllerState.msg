@@ -1,6 +1,7 @@
 Header header
 float64 dt
 int64 missed_updates_counter
+int64 invalid_value_counter
 
 ## Robot state
 geometry_msgs/PoseStamped x

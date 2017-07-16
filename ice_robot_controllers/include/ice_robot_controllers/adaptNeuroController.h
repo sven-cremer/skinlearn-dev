@@ -209,6 +209,7 @@ private:
 	CartVec wrench_raw_;
 	CartVec wrench_compensated_;
 	CartVec wrench_transformed_;
+	CartVec wrench_transformed_prev_;
 	CartVec wrench_gripper_;			// Gripper wrench
 	Eigen::VectorXd force_h;			// Human force
 
@@ -382,6 +383,7 @@ private:
 	Eigen::VectorXd task_refModel_output;
 	//Eigen::VectorXd tau;
 	Eigen::VectorXd force_c;
+	Eigen::VectorXd force_c_prev;
 	Eigen::VectorXd flexiForce;
 
 	// System Model END
@@ -576,6 +578,7 @@ private:
 
 	int loop_count_;
 	int missed_updates_count_;
+	int invalid_value_count_;
 
 	boost::thread	m_Thread;
 	boost::mutex m_Mutex;

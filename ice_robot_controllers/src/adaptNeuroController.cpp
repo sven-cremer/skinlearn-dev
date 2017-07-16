@@ -240,7 +240,8 @@ void PR2adaptNeuroControllerClass::starting()
 	qdot_filtered_.setZero();
 
 	loop_count_ = 0;
-	missed_updates_count_=1;
+	missed_updates_count_= 0;
+	invalid_value_count_ = 0;
 	recordData = false;
 
 	// Start threads
@@ -271,12 +272,13 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		}
 
 		// 2) Do Computations
+		//invalid_value_count_ = 0;
 
 		/***************** UPDATE LOOP VARIABLES *****************/
 
 		JacobianTrans = J_.transpose();			// [6x7]^T->[7x6]
 
-		force_c.setZero();		// [6x1] (num_Outputs)
+		//force_c.setZero();		// [6x1] (num_Outputs)
 		tau_   .setZero();		// [7x1] (num_Joints)
 
 		// Current joint positions and velocities
@@ -294,9 +296,9 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 		if( forceTorqueOn )		// TODO check if accData has been updated
 		{
-			// FT compensation
+			wrench_transformed_prev_ = wrench_transformed_;
 
-			wrench_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_.linear()*accData);	// Gripper force
+			wrench_gripper_.topRows(3) = gripper_mass * (x_acc_to_ft_.linear()*accData);	// Gripper force due to gravity
 
 			forceFT =  wrench_gripper_.topRows(3);	// Temporary store values due to Eigen limitations
 
@@ -329,13 +331,13 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			{
 				if( isnan(wrench_transformed_(i)) )
 				{
-					wrench_transformed_(i) = 0;	// TODO use previous value instead?
-					missed_updates_count_ += 1e3;
+					wrench_transformed_(i) = wrench_transformed_prev_(i);
+					invalid_value_count_ += 1;
 				}
 				if( isinf(wrench_transformed_(i)) )
 				{
-					wrench_transformed_(i) = 0;
-					missed_updates_count_ += 1e4;
+					wrench_transformed_(i) = wrench_transformed_prev_(i);
+					invalid_value_count_ += 10;
 				}
 			}
 
@@ -748,6 +750,8 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 */
 		/***************** INNER LOOP *****************/
 
+		force_c_prev = force_c;
+
 		// Neural Network
 		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_h,force_c);
 
@@ -757,14 +761,14 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			if( isnan(force_c(i)) )
 			{
 				//std::cout<<"force_c("<<i<<") is NaN: "<<force_c.transpose()<<"\n";
-				force_c(i) = 0;
-				missed_updates_count_ += 1e5;
+				force_c(i) = force_c_prev(i);
+				invalid_value_count_ += 100;
 			}
 			if( isinf(force_c(i)) )
 			{
 				//std::cout<<"force_c("<<i<<") is Inf: "<<force_c.transpose()<<"\n";
-				force_c(i) = 0;
-				missed_updates_count_ += 1e6;
+				force_c(i) = force_c_prev(i);
+				invalid_value_count_ += 1000;
 			}
 		}
 
@@ -961,7 +965,7 @@ void PR2adaptNeuroControllerClass::update()
 			{
 				// Use previous value
 				accData_received = false;
-				missed_updates_count_ += 10;
+				missed_updates_count_ += 100;
 			}
 
 		}
@@ -990,7 +994,7 @@ void PR2adaptNeuroControllerClass::update()
 			{
 				// Use previous value
 				ftData_received = false;
-				missed_updates_count_ += 1e2;
+				missed_updates_count_ += 10000;
 			}
 		}
 
@@ -1005,7 +1009,7 @@ void PR2adaptNeuroControllerClass::update()
 	{
 		if(runComputations)
 		{
-			missed_updates_count_ *= -1;	// computations still running
+			missed_updates_count_ += 1;		// computations still running
 		}
 //		else
 //		{
@@ -1467,7 +1471,10 @@ void PR2adaptNeuroControllerClass::bufferData()
 		experimentDataState_msg_[storage_index_].header.stamp = last_time_;
 		experimentDataState_msg_[storage_index_].dt = dt_;
 		experimentDataState_msg_[storage_index_].missed_updates_counter = missed_updates_count_;
-		missed_updates_count_ = 1;
+		missed_updates_count_ = 0;
+
+		experimentDataState_msg_[storage_index_].invalid_value_counter = invalid_value_count_;
+		invalid_value_count_ = 0;
 
 		// Pose
 		tf::poseEigenToMsg(x_, experimentDataState_msg_[storage_index_].x.pose);
