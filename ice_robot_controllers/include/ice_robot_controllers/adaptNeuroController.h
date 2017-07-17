@@ -448,6 +448,7 @@ private:
 	Eigen::Vector3d e_int_max;
 	Eigen::Vector3d e_int_min;
 	double nne_pose_filter;
+	double nne_scaling;
 
 	// NN END
 	/////////////////////////

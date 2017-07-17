@@ -244,6 +244,8 @@ void PR2adaptNeuroControllerClass::starting()
 	invalid_value_count_ = 0;
 	recordData = false;
 
+	nne_scaling = 0.0;
+
 	// Start threads
 	runComputations = false;
 	m_Thread = boost::thread(&PR2adaptNeuroControllerClass::updateNonRealtime, this);
@@ -616,7 +618,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		}
 
 		// Update reference trajectory vectors for NN
-		if(useHumanIntentNN && loop_count_ > 3000)		// Allow X_hat some time to converge
+		if(useHumanIntentNN && loop_count_ > 10)
 		{
 			// Assume nne_Dim <= 3, i.e. only position
 			e_int = X_hat.head(3) - X.head(3);
@@ -624,6 +626,12 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			// Limit error
 			//e_int = (e_int.array() > e_int_max.array() ).select(e_int_max, e_int);
 			//e_int = (e_int.array() < e_int_min.array() ).select(e_int_min, e_int);
+
+			if(loop_count_ < 5000)	// Allow X_hat some time to converge
+			{
+				X_hat.head(3) = X.head(3) + nne_scaling * e_int;
+				nne_scaling += 0.0002;
+			}
 
 			// Lowpass filter position prediction
 			X_hat.head(3) = X.head(3) + nne_pose_filter * e_int;	// Note: X_hat = X_hat for nne_pose_filter = 1.0
