@@ -481,23 +481,18 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			if(useHumanIntentNN)
 			{
+				// Assume nne_Dim <= 3, i.e. only position
+				e_int = X_hat.head(3) - X.head(3);
+
 				// Limit error
-				if(nne_Dim>2)
-				{
-					e_int = X_hat.head(3) - X.head(3);
-				}
-				else
-				{
-					e_int = x0_vec_.head(3) - X.head(3);
-					e_int.head(nne_Dim) = X_hat.head(nne_Dim) - X.head(nne_Dim); // Dim=2: xy, Dim=1: x
-				}
 				//e_int = (e_int.array() > e_int_max.array() ).select(e_int_max, e_int);
 				//e_int = (e_int.array() < e_int_min.array() ).select(e_int_min, e_int);
-				//x_des_.translation() = X.head(3) + e_int;
-				x_des_.translation() = X.head(3) + nne_pose_filter * e_int;
 
-				x_des_.linear() = x0_.linear();	// Ignore rotation
-				// TODO use Xd_hat
+				// Lowpass filter position prediction
+				X_hat.head(3) = X.head(3) + nne_pose_filter * e_int;	// Note: X_hat = X_hat for nne_pose_filter = 1.0
+
+				x_des_  = CartVec2Affine(X_hat);
+				xd_des_ = CartVec2Affine(Xd_hat);
 			}
 		}
 		if(calibrateSensors)
@@ -636,9 +631,17 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		}
 
 		// Update reference trajectory vectors (assumes only Affine variables were updated)
-		convert2NNinput(x_des_, X_m);
-//		convert2NNinput(xd_des_, Xd_m);
-//		convert2NNinput(xdd_des_, Xdd_m);
+		if(!useHumanIntentNN)
+		{
+			convert2NNinput(x_des_, X_m);
+			convert2NNinput(xd_des_, Xd_m);
+			//convert2NNinput(xdd_des_, Xdd_m);
+		}
+		else
+		{
+			X_m = X_hat;
+			Xd_m = Xd_hat;
+		}
 
 		// Calculate Cartesian error
 		computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
@@ -2863,6 +2866,11 @@ bool PR2adaptNeuroControllerClass::initNN()
 
 	X_hat.setZero(6);	// Note: important for Update function if nne_Dim != 6
 	Xd_hat.setZero(6);
+
+	if(nne_Dim == 2)
+	{
+		X_hat(3) = -0.05; // FIMXE: use variable for desired z
+	}
 
 	e_int_max << 0.01, 0.01, 0.01;
 	e_int_min << -0.01, -0.01, -0.01;
