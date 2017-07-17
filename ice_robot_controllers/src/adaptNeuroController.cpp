@@ -624,8 +624,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			e_int = X_hat.head(3) - X.head(3);
 
 			// Limit error
-			//e_int = (e_int.array() > e_int_max.array() ).select(e_int_max, e_int);
-			//e_int = (e_int.array() < e_int_min.array() ).select(e_int_min, e_int);
+			if(nne_useLimits_err)
+			{
+				e_int = (e_int.array() > e_int_max.array() ).select(e_int_max, e_int);
+				e_int = (e_int.array() < e_int_min.array() ).select(e_int_min, e_int);
+			}
 
 			if(loop_count_ < 5000)	// Allow X_hat some time to converge
 			{
@@ -2862,6 +2865,9 @@ bool PR2adaptNeuroControllerClass::initNN()
 	loadROSparamVector("/nne_Pmin", nne_Pmin);
 	loadROSparamVector("/nne_Pmax", nne_Pmax);
 
+	nne_useLimits_err = false;
+	loadROSparam("/nne_useLimits_err", nne_useLimits_err);
+
 	ptrNNEstimator = new csl::neural_network::NNEstimator(nne_Dim, csl::neural_network::NNEstimator::RBF);
 	ptrNNEstimator->paramInit(nne_G,nne_H,nne_kappa,0.01);
 	ptrNNEstimator->setParamAlpha(nne_alpha);
@@ -2878,8 +2884,8 @@ bool PR2adaptNeuroControllerClass::initNN()
 		X_hat(2) = -0.05; // FIMXE: use variable for desired z
 	}
 
-	e_int_max << 0.01, 0.01, 0.01;
-	e_int_min << -0.01, -0.01, -0.01;
+	e_int_max << 0.25, 0.25, 0.25;
+	e_int_min << -0.25, -0.25, -0.25;
 
 	nne_pose_filter = 0.01;
 	loadROSparam("/nne_pose_filter", nne_pose_filter);

@@ -432,6 +432,7 @@ private:
 	Eigen::VectorXd fc_JT_;
 
 	int num_Dim_Estimator;
+	bool nne_useLimits_err;
 	Eigen::VectorXd X_hat;	// Human Intent Estimation
 	Eigen::VectorXd Xd_hat;
 	Eigen::VectorXd Kh;
