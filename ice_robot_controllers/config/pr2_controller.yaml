@@ -72,7 +72,7 @@ cartIniYaw           :  0.0
 
 useOuterloop       : false
 # Only one can be true
-useARMAmodel       : false
+useARMAmodel       : true
 useCTARMAmodel     : false # Removed
 useFIRmodel        : false # Removed
 useMRACmodel       : false # Removed
@@ -131,10 +131,10 @@ externalRefTraj    : false
 # NN estimator              #
 #############################
 # Estimate human intent trajectory from force and position values
-computeHumanIntentNN : true
-useHumanIntentNN     : true
+computeHumanIntentNN : false
+useHumanIntentNN     : false
 nne_kappa : 0.01
-nne_alpha : 1.0
+nne_alpha : 0.5
 nne_pose_filter : 1.0
 
 nne_useLimits: true

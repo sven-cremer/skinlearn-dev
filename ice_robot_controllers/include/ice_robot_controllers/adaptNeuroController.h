@@ -344,6 +344,8 @@ private:
 	bool calibrateSingelSensors;
 	csl::outer_loop::RlsModel* ARMAmodel_flexi_combined_;
 
+	std::vector<csl::outer_loop::RlsModel*> ARMAmodel_FT_;
+
 	Eigen::MatrixXd weightsRLSmodelX ;
 	Eigen::MatrixXd weightsRLSmodelY ;
 

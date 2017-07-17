@@ -32,6 +32,11 @@ PR2adaptNeuroControllerClass::~PR2adaptNeuroControllerClass()
 		if(ARMAmodel_flexi_[i])
 			delete ARMAmodel_flexi_[i];
 	}
+	for(int i=0; i<ARMAmodel_FT_.size();i++)
+	{
+		if(ARMAmodel_FT_[i])
+			delete ARMAmodel_FT_[i];
+	}
 	if(ptrNNController)
 		delete ptrNNController;
 	if(ptrNNController)
@@ -464,6 +469,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			// TODO check limits?			a = F/m							v=v0+at			x=x0+vt
 			x_des_.translation() += (force_h.head(3) / intentEst_M) * intentEst_delT * intentEst_delT;
+			//X_hat.head(3) = x_des_.translation();
 //
 //				x_des_.translation() = task_ref;
 //
@@ -615,6 +621,22 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			// Subscriber updates commandPose, commandTf
 			// TODO: interpolate?, set xd_des_
 			x_des_ = commandPose;
+		}
+
+		if(useARMAmodel && loop_count_ > 10)
+		{
+			for(int i=0;i<2;i++)
+			{
+				double xm, xdm, xddm;
+				ARMAmodel_FT_[i]->updateDelT(dt_);
+				ARMAmodel_FT_[i]->useARMA( xm,				// output: x_m
+										   xdm,				// output: xd_m
+										   xddm,			// output: xdd_m
+										   force_h(i) );	// input:  force
+				X_hat(i)  = xm;
+				Xd_hat(i) = xdm;
+			}
+			x_des_  = CartVec2Affine(X_hat);
 		}
 
 		// Update reference trajectory vectors for NN
@@ -1530,6 +1552,13 @@ void PR2adaptNeuroControllerClass::bufferData()
 			experimentDataState_msg_[storage_index_].q[j] = q_(j);
 			if(useNullspacePose)
 				experimentDataState_msg_[storage_index_].tau_posture[j] = nullspaceTorque(j);
+		}
+
+		// ARMA model
+		if(useARMAmodel)
+		{
+			tf::poseEigenToMsg(convert2Affine(X_hat), experimentDataState_msg_[storage_index_].x_hat);
+			tf::poseEigenToMsg(convert2Affine(Xd_hat), experimentDataState_msg_[storage_index_].xd_hat);
 		}
 
 		// Estimator
@@ -2785,6 +2814,24 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	ARMAmodel_flexi_combined_->updateAB( task_mA, task_mB );
 	ARMAmodel_flexi_combined_->initRls( rls_lambda, rls_sigma );
 	ARMAmodel_flexi_combined_->setUseFixedWeights(true);
+
+	// ARMA model in XY plane
+	Eigen::MatrixXd w;
+	w.resize(8,1);
+	w << -1.8775,1.2729,-0.0578,-0.3269,0.0018,0.0001,-0.0013,0.0002;
+
+	for(int i=0;i<2;i++)
+	{
+		csl::outer_loop::RlsModel* tmpPtr = new csl::outer_loop::RlsModel(1, 4, 4, 1);
+		tmpPtr->updateDelT( outerLoopTime );
+		tmpPtr->updateAB( task_mA, task_mB );
+		tmpPtr->initRls( rls_lambda, rls_sigma );
+		tmpPtr->setUseFixedWeights(true);
+
+		tmpPtr->setWeights(w);
+
+		ARMAmodel_FT_.push_back(tmpPtr);
+	}
 
 	// System Model END
 	/////////////////////////
