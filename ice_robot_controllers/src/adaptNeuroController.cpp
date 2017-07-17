@@ -629,7 +629,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 			if(loop_count_ < 5000)	// Allow X_hat some time to converge
 			{
-				X_hat.head(3) = X.head(3) + nne_scaling * e_int;
+				X_hat.head(3) = x0_vec_.head(3) + nne_scaling * e_int;
 				nne_scaling += 0.0002;
 			}
 
