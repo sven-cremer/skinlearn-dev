@@ -625,27 +625,18 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		if(externalRefTraj)
 		{
 			// Subscriber updates commandPose, commandTf
-			// TODO: interpolate?
+			// TODO: interpolate?, set xd_des_
 			x_des_ = commandPose;
-
 		}
 
 		// Update reference trajectory vectors (assumes only Affine variables were updated)
-		if(!useHumanIntentNN)
-		{
-			convert2NNinput(x_des_, X_m);
-			convert2NNinput(xd_des_, Xd_m);
-			//convert2NNinput(xdd_des_, Xdd_m);
-		}
-		else
-		{
-			X_m = X_hat;
-			Xd_m = Xd_hat;
-		}
+		convert2NNinput(x_des_, X_m);
+		convert2NNinput(xd_des_, Xd_m);
+		//convert2NNinput(xdd_des_, Xdd_m);
 
 		// Calculate Cartesian error
-		computePoseError(x_, x_des_, xerr_);			// TODO: Use xd_filtered_ instead
-		X_m.tail(3) = X.tail(3) - xerr_.tail(3);		// Make sure X_m - X rotation error is small/continuous
+		computePoseError(x_des_,x_, xerr_);				// e = xd - x, TODO: Use xd_filtered_ instead
+		X_m.tail(3) = X.tail(3) + xerr_.tail(3);		// Make sure X_m - X rotation error is small/continuous
 
 		// TODO
 		/*
