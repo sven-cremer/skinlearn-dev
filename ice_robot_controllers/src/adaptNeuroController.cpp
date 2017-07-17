@@ -645,7 +645,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		else
 		{
 			convert2NNinput(x_des_, X_m);
-			convert2NNinput(xd_des_, Xd_m);
+			//convert2NNinput(xd_des_, Xd_m);
 			//convert2NNinput(xdd_des_, Xdd_m);
 
 			// Calculate Cartesian error
