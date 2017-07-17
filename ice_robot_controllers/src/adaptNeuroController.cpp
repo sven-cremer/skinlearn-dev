@@ -695,7 +695,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				Xd_hat(i) = xdm;
 
 				Eigen::MatrixXd tmp;
-				ARMAmodel_flexi_[i]->getWeights(tmp);
+				ARMAmodel_FT_[i]->getWeights(tmp);
 				weightsARMA_FT_.col(i) = tmp;
 			}
 		}

@@ -126,7 +126,7 @@ circleUlim         : 0.8   #  = A/2
 
 # Subscribes to a reference trajectory topic
 # Note: set to false if human intent is used
-externalRefTraj    : false
+externalRefTraj    : true
 
 #############################
 # NN estimator              #
