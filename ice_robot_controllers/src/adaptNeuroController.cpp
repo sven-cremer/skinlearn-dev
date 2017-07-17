@@ -630,11 +630,13 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				e_int = (e_int.array() < e_int_min.array() ).select(e_int_min, e_int);
 			}
 
+			/*
 			if(loop_count_ < 5000)	// Allow X_hat some time to converge
 			{
 				X_hat.head(3) = x0_vec_.head(3) + nne_scaling * e_int;
 				nne_scaling += 0.0002;
 			}
+			*/
 
 			// Lowpass filter position prediction
 			X_hat.head(3) = X.head(3) + nne_pose_filter * e_int;	// Note: X_hat = X_hat for nne_pose_filter = 1.0
@@ -643,18 +645,18 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			xd_des_ = CartVec2Affine(Xd_hat);
 
 			convert2NNinput(X_hat, X_m);
-			convert2NNinput(Xd_hat, Xd_m);
+			//convert2NNinput(Xd_hat, Xd_m);
 		}
 		else
 		{
 			convert2NNinput(x_des_, X_m);
 			//convert2NNinput(xd_des_, Xd_m);
 			//convert2NNinput(xdd_des_, Xdd_m);
-
-			// Calculate Cartesian error
-			computePoseError(x_des_,x_, xerr_);				// e = xd - x, TODO: Use xd_filtered_ instead
-			X_m.tail(3) = X.tail(3) + xerr_.tail(3);		// Make sure X_m - X rotation error is small/continuous
 		}
+
+		// Calculate Cartesian error
+		computePoseError(x_des_,x_, xerr_);				// e = xd - x, TODO: Use xd_filtered_ instead
+		X_m.tail(3) = X.tail(3) + xerr_.tail(3);		// Make sure X_m - X rotation error is small/continuous
 
 		// TODO
 		/*
