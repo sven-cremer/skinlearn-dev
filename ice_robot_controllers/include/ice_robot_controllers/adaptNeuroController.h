@@ -345,6 +345,8 @@ private:
 	csl::outer_loop::RlsModel* ARMAmodel_flexi_combined_;
 
 	std::vector<csl::outer_loop::RlsModel*> ARMAmodel_FT_;
+	Eigen::MatrixXd weightsARMA_FT_;
+	bool tuneARMA;
 
 	Eigen::MatrixXd weightsRLSmodelX ;
 	Eigen::MatrixXd weightsRLSmodelY ;

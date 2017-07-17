@@ -72,7 +72,8 @@ cartIniYaw           :  0.0
 
 useOuterloop       : false
 # Only one can be true
-useARMAmodel       : true
+useARMAmodel       : false
+tuneARMA           : true
 useCTARMAmodel     : false # Removed
 useFIRmodel        : false # Removed
 useMRACmodel       : false # Removed

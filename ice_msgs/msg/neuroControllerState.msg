@@ -37,3 +37,7 @@ float64[] Kh
 float64[] Dh
 float64 U_norm_traj
 float64 V_norm_gain
+
+## ARMA weights
+float64[] armaX
+float64[] armaY
