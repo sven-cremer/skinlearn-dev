@@ -628,6 +628,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			for(int i=0;i<2;i++)
 			{
 				double xm, xdm, xddm;
+
 				ARMAmodel_FT_[i]->updateDelT(dt_);
 				ARMAmodel_FT_[i]->useARMA( xm,				// output: x_m
 										   xdm,				// output: xd_m
@@ -675,6 +676,28 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			convert2NNinput(x_des_, X_m);
 			//convert2NNinput(xd_des_, Xd_m);
 			//convert2NNinput(xdd_des_, Xdd_m);
+		}
+
+		if(tuneARMA)
+		{
+			for(int i=0;i<2;i++)
+			{
+				double xm, xdm, xddm;
+
+				ARMAmodel_FT_[i]->runARMAupdate(dt_       ,  // input: delta T
+                                                force_h(i),  // input:  force or voltage
+                                                X_m(i)    ,  // input:  x_d
+                                                xm        ,  // output: x_m
+                                                xdm       ,  // output: xd_m
+                                                xddm     );  // output: xdd_m
+
+				X_hat(i)  = xm;
+				Xd_hat(i) = xdm;
+
+				Eigen::MatrixXd tmp;
+				ARMAmodel_flexi_[i]->getWeights(tmp);
+				weightsARMA_FT_.col(i) = tmp;
+			}
 		}
 
 		// Calculate Cartesian error
@@ -1555,10 +1578,19 @@ void PR2adaptNeuroControllerClass::bufferData()
 		}
 
 		// ARMA model
-		if(useARMAmodel)
+		if(useARMAmodel || tuneARMA)
 		{
 			tf::poseEigenToMsg(convert2Affine(X_hat), experimentDataState_msg_[storage_index_].x_hat);
 			tf::poseEigenToMsg(convert2Affine(Xd_hat), experimentDataState_msg_[storage_index_].xd_hat);
+		}
+		if(tuneARMA)
+		{
+			experimentDataState_msg_[storage_index_].armaX.resize(8);
+			experimentDataState_msg_[storage_index_].armaY.resize(8);
+			for (int j = 0; j < 8; ++j) {
+				experimentDataState_msg_[storage_index_].armaX[j] = weightsARMA_FT_(j,0);
+				experimentDataState_msg_[storage_index_].armaY[j] = weightsARMA_FT_(j,1);
+			}
 		}
 
 		// Estimator
@@ -2708,6 +2740,8 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	loadROSparam("/useIRLmodel",    useIRLmodel, false);
 	loadROSparam("/useDirectmodel", useDirectmodel, false);
 
+	loadROSparam("/tuneARMA",   tuneARMA, false);
+
 	loadROSparam("/externalRefTraj", externalRefTraj, true);
 
 	loadROSparam("/intentEst_time", intentLoopTime, 0.05);
@@ -2819,6 +2853,7 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	Eigen::MatrixXd w;
 	w.resize(8,1);
 	w << -1.8775,1.2729,-0.0578,-0.3269,0.0018,0.0001,-0.0013,0.0002;
+	weightsARMA_FT_.resize(8,2);
 
 	for(int i=0;i<2;i++)
 	{
@@ -2826,9 +2861,10 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 		tmpPtr->updateDelT( outerLoopTime );
 		tmpPtr->updateAB( task_mA, task_mB );
 		tmpPtr->initRls( rls_lambda, rls_sigma );
-		tmpPtr->setUseFixedWeights(true);
+		tmpPtr->setUseFixedWeights(!tuneARMA);
 
 		tmpPtr->setWeights(w);
+		weightsARMA_FT_.col(i) = w;
 
 		ARMAmodel_FT_.push_back(tmpPtr);
 	}
