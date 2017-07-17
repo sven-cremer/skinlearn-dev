@@ -2850,10 +2850,15 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	ARMAmodel_flexi_combined_->setUseFixedWeights(true);
 
 	// ARMA model in XY plane
+	weightsARMA_FT_.setZero(8,2);
 	Eigen::MatrixXd w;
 	w.resize(8,1);
-	w << -1.8775,1.2729,-0.0578,-0.3269,0.0018,0.0001,-0.0013,0.0002;
-	weightsARMA_FT_.resize(8,2);
+	if( loadROSparamVector("/weightsARMA_X", w) )
+		weightsARMA_FT_.col(0) = w;
+	if( loadROSparamVector("/weightsARMA_Y", w) )
+		weightsARMA_FT_.col(1) = w;
+
+	//std::cout<<"ARMA FT weights:\n"<<weightsARMA_FT_<<"\n---\n";
 
 	for(int i=0;i<2;i++)
 	{
@@ -2863,8 +2868,8 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 		tmpPtr->initRls( rls_lambda, rls_sigma );
 		tmpPtr->setUseFixedWeights(!tuneARMA);
 
+		w = weightsARMA_FT_.col(i);
 		tmpPtr->setWeights(w);
-		weightsARMA_FT_.col(i) = w;
 
 		ARMAmodel_FT_.push_back(tmpPtr);
 	}

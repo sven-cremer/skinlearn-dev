@@ -72,8 +72,8 @@ cartIniYaw           :  0.0
 
 useOuterloop       : false
 # Only one can be true
-useARMAmodel       : false
-tuneARMA           : true
+useARMAmodel       : true
+tuneARMA           : false
 useCTARMAmodel     : false # Removed
 useFIRmodel        : false # Removed
 useMRACmodel       : false # Removed
@@ -82,6 +82,9 @@ useMSDmodel        : false # Removed
 useDirectmodel     : false # Removed
 
 outerLoop_time     : 0.0
+
+weightsARMA_X: [-1.1289, 0.3429, -0.1885, -0.0260, -0.0066, 0.1066, -0.1824, 0.0823]
+weightsARMA_Y: [-1.3067, 0.4668, -0.3020, 0.1421, 0.0208, 0.0038, -0.0465, 0.0215]
 
 #############################
 # Filtering                 #
@@ -126,7 +129,7 @@ circleUlim         : 0.8   #  = A/2
 
 # Subscribes to a reference trajectory topic
 # Note: set to false if human intent is used
-externalRefTraj    : true
+externalRefTraj    : false
 
 #############################
 # NN estimator              #
