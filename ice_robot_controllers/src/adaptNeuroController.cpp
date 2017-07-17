@@ -639,12 +639,13 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			*/
 
 			// Lowpass filter position prediction
-			X_hat.head(3) = X.head(3) + nne_pose_filter * e_int;	// Note: X_hat = X_hat for nne_pose_filter = 1.0
+			X_m.head(3) = X.head(3) + nne_pose_filter * e_int;	// Note: X_m = X_hat if nne_pose_filter = 1.0
+			X_m.tail(3) = Eigen::Vector3d::Zero();
 
-			x_des_  = CartVec2Affine(X_hat);
-			xd_des_ = CartVec2Affine(Xd_hat);
+			x_des_  = CartVec2Affine(X_m);
+			//xd_des_ = CartVec2Affine(Xd_hat);
 
-			convert2NNinput(X_hat, X_m);
+			//convert2NNinput(X_hat, X_m);
 			//convert2NNinput(Xd_hat, Xd_m);
 		}
 		else
