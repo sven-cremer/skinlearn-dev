@@ -14,7 +14,7 @@ useQuaternions     : false
 useNullspacePose   : false
 useDigitalFilter   : true # Note: the NAC only uses a simple lowpass filter
 
-publishRTtopics    : false
+publishRTtopics    : true
 
 mannequinMode      : false
 mannequinThresPos  : 0.05
@@ -27,9 +27,9 @@ mannequinThresRot  : 0.05 # not used
 forceTorqueOn      : true
 accelerometerOn    : true
 
-#gripper_acc_tip: r_gripper_motor_accelerometer_link
 gripper_acc_tip: l_gripper_motor_accelerometer_link
-ft_frame_id: l_force_torque_link #l_gripper_tool_frame
+ft_frame_id: l_force_torque_link
+#ft_frame_id: l_gripper_tool_frame
 
 # This makes zero any force less than below (not used)
 forceCutOffX          : 0.1
@@ -72,7 +72,7 @@ cartIniYaw           :  0.0
 
 useOuterloop       : false
 # Only one can be true
-useARMAmodel       : true
+useARMAmodel       : false
 tuneARMA           : false
 useCTARMAmodel     : false # Removed
 useFIRmodel        : false # Removed
@@ -129,7 +129,7 @@ circleUlim         : 0.8   #  = A/2
 
 # Subscribes to a reference trajectory topic
 # Note: set to false if human intent is used
-externalRefTraj    : false
+externalRefTraj    : true
 
 #############################
 # NN estimator              #

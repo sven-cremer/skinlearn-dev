@@ -1160,21 +1160,23 @@ void PR2adaptNeuroControllerClass::update()
 
 			pub_state_.unlockAndPublish();
 		}
-*/
 
 		if (pub_ft_.trylock()) {
 			pub_ft_.msg_.header.stamp = last_time_;
-			tf::wrenchEigenToMsg(wrench_transformed_, pub_ft_.msg_.wrench);
 			//pub_ft_.msg_.wrench = l_ftData.wrench;
 			pub_ft_.unlockAndPublish();
 		}
-/*
+*/
+
 		if (pub_ft_transformed_.trylock()) {
 			pub_ft_transformed_.msg_.header.stamp = last_time_;
-			tf::wrenchEigenToMsg(wrench_filtered_, pub_ft_transformed_.msg_.wrench);
+			if(useDigitalFilter)
+				tf::wrenchEigenToMsg(wrench_filtered_, pub_ft_transformed_.msg_.wrench);
+			else
+				tf::wrenchEigenToMsg(wrench_transformed_, pub_ft_transformed_.msg_.wrench);
 			pub_ft_transformed_.unlockAndPublish();
 		}
-*/
+
 	}
 
 }
