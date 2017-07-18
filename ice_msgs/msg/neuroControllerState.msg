@@ -19,6 +19,7 @@ geometry_msgs/Twist x_err
 
 ## Controller
 geometry_msgs/Wrench force_c
+geometry_msgs/Wrench force_h
 float64[] tau_posture
 float64[] tau_c
 

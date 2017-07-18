@@ -213,9 +213,8 @@ private:
 	CartVec wrench_gripper_;			// Gripper wrench
 	Eigen::VectorXd force_h;			// Human force
 
-	double forceCutOffX ;
-	double forceCutOffY ;
-	double forceCutOffZ ;
+	bool useForceCutOff;
+	CartVec forceCutOff;
 
 	bool useForceScaling;
 	CartVec forceScaling;

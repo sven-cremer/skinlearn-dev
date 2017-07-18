@@ -14,7 +14,7 @@ useQuaternions     : false
 useNullspacePose   : false
 useDigitalFilter   : true # Note: the NAC only uses a simple lowpass filter
 
-publishRTtopics    : true
+publishRTtopics    : false
 
 mannequinMode      : false
 mannequinThresPos  : 0.05
@@ -32,9 +32,8 @@ ft_frame_id: l_force_torque_link
 #ft_frame_id: l_gripper_tool_frame
 
 # This makes zero any force less than below (not used)
-forceCutOffX          : 0.1
-forceCutOffY          : 0.1
-forceCutOffZ          : 0.1
+useForceCutOff: true
+forceCutOff: [0.1,0.1,0.1,0.1,0.1,0.1]
 
 useForceScaling: true
 forceScaling : [1.0,1.0,1.0,1.0,1.0,1.0]

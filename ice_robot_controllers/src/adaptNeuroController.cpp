@@ -371,23 +371,23 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			transformed_force = tactile_wrench_.topRows(3);		// this variable is being updated by the readForceValuesCB
 		}
 
-		// Force threshold (makes force zero bellow threshold) FIXME not needed since force is filtered?
-	//	if( ( transformed_force(0) < forceCutOffX ) && ( transformed_force(0) > -forceCutOffX ) ){ transformed_force(0) = 0; }
-	//	if( ( transformed_force(1) < forceCutOffY ) && ( transformed_force(1) > -forceCutOffY ) ){ transformed_force(1) = 0; }
-	//	if( ( transformed_force(2) < forceCutOffZ ) && ( transformed_force(2) > -forceCutOffZ ) ){ transformed_force(2) = 0; }
-
 		// Feedforward force, human force [6x1]
 		if(useDigitalFilter)
 			convert2NNinput(wrench_filtered_,force_h);
 		else
 			convert2NNinput(wrench_transformed_,force_h);
 
-		// Scaling factor
+		// Force scaling factor
 		if(useForceScaling)
 		{
 			force_h = force_h.cwiseProduct(forceScaling);
 		}
 
+		// Force threshold (makes force zero bellow threshold)
+		if(useForceCutOff)
+		{
+			force_h = (force_h.array().abs() < forceCutOff.array()).select(Eigen::VectorXd::Zero(6), force_h);
+		}
 
 		/***************** REFERENCE TRAJECTORY *****************/
 
@@ -1556,6 +1556,7 @@ void PR2adaptNeuroControllerClass::bufferData()
 				tf::wrenchEigenToMsg(wrench_filtered_, experimentDataState_msg_[storage_index_].force_measured);	// TODO save both
 			else
 				tf::wrenchEigenToMsg(wrench_transformed_, experimentDataState_msg_[storage_index_].force_measured);
+			tf::wrenchEigenToMsg(force_h, experimentDataState_msg_[storage_index_].force_h);
 		}
 		//tf::matrixEigenToMsg(J_, pub_state_.msg_.J);			// TODO move into a separate message
 		//tf::matrixEigenToMsg(nullSpace, pub_state_.msg_.N);
@@ -2516,9 +2517,13 @@ bool PR2adaptNeuroControllerClass::initRobot()
 		// TODO init FT variables
 		W_mat_.setZero();
 
+		nh_.param("/useForceScaling", useForceScaling, false);
 		forceScaling.setOnes();
 		loadROSparamVector("/forceScaling", forceScaling);
-		nh_.param("/useForceScaling", useForceScaling, false);
+
+		nh_.param("/useForceCutOff", useForceCutOff, false);
+		forceCutOff.setZero();
+		loadROSparamVector("/forceCutOff", forceCutOff);
 	}
 
 	// Torque Saturation
@@ -2760,10 +2765,6 @@ bool PR2adaptNeuroControllerClass::initOuterLoop()
 	loadROSparam("/intentEst_time", intentLoopTime, 0.05);
 	loadROSparam("/intentEst_delT", intentEst_delT, 0.1);
 	loadROSparam("/intentEst_M", intentEst_M, 1.0);
-
-	loadROSparam("/forceCutOffX", forceCutOffX, 0.1);
-	loadROSparam("/forceCutOffY", forceCutOffY, 0.1);
-	loadROSparam("/forceCutOffZ", forceCutOffZ, 0.1);
 
 	loadROSparam("/fixedFilterWeights", useFixedWeights, true);
 
