@@ -217,6 +217,9 @@ private:
 	double forceCutOffY ;
 	double forceCutOffZ ;
 
+	bool useForceScaling;
+	CartVec forceScaling;
+
 	bool useDigitalFilter;			// Flag for using filter
     CartVec wrench_filtered_;		// Filtered data
 	std::vector<digitalFilter> digitalFilters;	// Filter object

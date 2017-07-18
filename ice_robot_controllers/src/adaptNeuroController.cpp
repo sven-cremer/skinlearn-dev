@@ -382,6 +382,13 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		else
 			convert2NNinput(wrench_transformed_,force_h);
 
+		// Scaling factor
+		if(useForceScaling)
+		{
+			force_h = force_h.cwiseProduct(forceScaling);
+		}
+
+
 		/***************** REFERENCE TRAJECTORY *****************/
 
 		if(executeCircleTraj)
@@ -813,7 +820,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		force_c_prev = force_c;
 
 		// Neural Network
-		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_h,force_c);
+		ptrNNController->UpdateCart(q, qd, X, Xd, X_m, Xd_m, Xdd_m, dt_,force_h,force_c);		// TODO check sign of force_h
 
 		// Check for valid output
 		for(int i=0;i<force_c.size();i++)
@@ -2508,6 +2515,10 @@ bool PR2adaptNeuroControllerClass::initRobot()
 
 		// TODO init FT variables
 		W_mat_.setZero();
+
+		forceScaling.setOnes();
+		loadROSparamVector("/forceScaling", forceScaling);
+		nh_.param("/useForceScaling", useForceScaling, false);
 	}
 
 	// Torque Saturation

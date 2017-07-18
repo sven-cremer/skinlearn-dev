@@ -36,6 +36,9 @@ forceCutOffX          : 0.1
 forceCutOffY          : 0.1
 forceCutOffZ          : 0.1
 
+useForceScaling: true
+forceScaling : [1.0,1.0,1.0,1.0,1.0,1.0]
+
 #############################
 # Flexiforce settings       #
 #############################
