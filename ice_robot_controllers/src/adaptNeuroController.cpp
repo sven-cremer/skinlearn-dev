@@ -428,7 +428,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 				ROS_INFO("End pose: pos=[%f,%f,%f], rot=[%f,%f,%f]",p(0),p(1),p(2),p(3),p(4),p(5));
 			}
 		}
-		if(mannequinMode && loop_count_ > 100) // Check if initialized
+		if(mannequinMode && loop_count_ > 10) // Check if initialized
 		{
 
 			// Compute error
@@ -448,7 +448,7 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 //			{
 //				x_des_ = x_;
 //			}
-
+/*
 			if( fabs( x_.translation().z() -  x_des_.translation().z() ) > mannequinThresPos)	// Only change z //
 			{
 				CartVec tmp;
@@ -457,7 +457,11 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 
 				// x_des_.translation().z() = x_.translation().z();  <- oscillates?
 			}
-
+*/
+			X_m.setZero();
+			X_m.head(2) = X.head(2);
+			X_m(2) = -0.05;
+			x_des_  = CartVec2Affine(X_m);
 		}
 		if(useHumanIntent && loop_count_ > 100) // TODO make sure this is executed before BufferData!
 		{

@@ -16,7 +16,7 @@ useDigitalFilter   : true # Note: the NAC only uses a simple lowpass filter
 
 publishRTtopics    : false
 
-mannequinMode      : false
+mannequinMode      : true
 mannequinThresPos  : 0.05
 mannequinThresRot  : 0.05 # not used
 
@@ -132,7 +132,7 @@ circleUlim         : 0.8   #  = A/2
 
 # Subscribes to a reference trajectory topic
 # Note: set to false if human intent is used
-externalRefTraj    : true
+externalRefTraj    : false
 
 #############################
 # NN estimator              #
