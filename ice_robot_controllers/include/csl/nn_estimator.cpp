@@ -226,6 +226,8 @@ public:
 	Eigen::VectorXd	getH()				{	return H;			}
 	Eigen::VectorXd	getKh()				{	return Kh.diagonal();	}
 	Eigen::VectorXd	getDh()				{	return Dh.diagonal();	}
+	Eigen::VectorXd	getS()				{	return s;			}
+	Eigen::VectorXd	getEa()				{	return ea_;			}
 
 	void setPhatMin(Eigen::VectorXd v)  {	Phat_min = v;		}	// TODO check values
 	void setPhatMax(Eigen::VectorXd v)  {	Phat_max = v;		}

@@ -490,13 +490,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 		if(computeHumanIntentNN && loop_count_ > 10 ) //&& loop_count_ % 5 == 0) // TODO make sure this is executed before BufferData!
 		{
 			ptrNNEstimator->Update(X,Xd,force_h,dt_,X_hat, Xd_hat);		// TODO use correct dt
-			Kh = ptrNNEstimator->getKh();
-			Dh = ptrNNEstimator->getDh();
-			//x_des_ = CartVec2Affine(X_m);
-			//std::cout<<"X ="<<X_hat.transpose()<<"\n";
-			//std::cout<<"Xd="<<Xd_hat.transpose()<<"\n";
-			//std::cout<<"Kh="<<Kh.transpose()<<"\n";
-			//std::cout<<"Dh="<<Dh.transpose()<<"\n---\n";
 		}
 		/*
 		if(calibrateSensors)
@@ -1603,14 +1596,23 @@ void PR2adaptNeuroControllerClass::bufferData()
 			experimentDataState_msg_[storage_index_].U_norm_traj = ptrNNEstimator->getWeightsNormU();
 			experimentDataState_msg_[storage_index_].V_norm_gain = ptrNNEstimator->getWeightsNormV();
 
-			experimentDataState_msg_[storage_index_].Kh.resize(Kh.size());
-			for (int j = 0; j < Kh.size(); ++j) {
+			Kh = ptrNNEstimator->getKh();
+			Dh = ptrNNEstimator->getDh();
+			nne_s = ptrNNEstimator->getS();
+			nne_ea = ptrNNEstimator->getEa();
+
+			experimentDataState_msg_[storage_index_].Kh.resize(nne_Dim);
+			experimentDataState_msg_[storage_index_].Dh.resize(nne_Dim);
+			experimentDataState_msg_[storage_index_].nne_s.resize(nne_Dim);
+			experimentDataState_msg_[storage_index_].nne_ea.resize(nne_Dim);
+
+			for (int j = 0; j < nne_Dim; ++j) {
 				experimentDataState_msg_[storage_index_].Kh[j] = Kh(j);
-			}
-			experimentDataState_msg_[storage_index_].Dh.resize(Dh.size());
-			for (int j = 0; j < Dh.size(); ++j) {
 				experimentDataState_msg_[storage_index_].Dh[j] = Dh(j);
+				experimentDataState_msg_[storage_index_].nne_s[j] = nne_s(j);
+				experimentDataState_msg_[storage_index_].nne_ea[j] = nne_ea(j);
 			}
+
 		}
 
 		// Prescribed error dynamics

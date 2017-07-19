@@ -443,6 +443,8 @@ private:
 	Eigen::VectorXd Xd_hat;
 	Eigen::VectorXd Kh;
 	Eigen::VectorXd Dh;
+	Eigen::VectorXd nne_s;
+	Eigen::VectorXd nne_ea;
 
 	bool nn_usePED;
 	Eigen::VectorXd Lambda;
