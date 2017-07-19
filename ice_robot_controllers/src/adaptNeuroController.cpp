@@ -651,6 +651,29 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			x_des_  = CartVec2Affine(X_hat);
 		}
 
+		if(tuneARMA)
+		{
+			for(int i=0;i<2;i++)
+			{
+				double xm, xdm, xddm;
+
+				ARMAmodel_FT_[i]->runARMAupdate(dt_       ,  // input: delta T
+                                                force_h(i),  // input:  force or voltage
+                                                X_m(i)    ,  // input:  x_d
+                                                xm        ,  // output: x_m
+                                                xdm       ,  // output: xd_m
+                                                xddm     );  // output: xdd_m
+
+				Eigen::MatrixXd tmp;
+				ARMAmodel_FT_[i]->getWeights(tmp);
+				weightsARMA_FT_.col(i) = tmp;
+
+				X_hat(i)  = xm;
+				Xd_hat(i) = xdm;
+			}
+			x_des_  = CartVec2Affine(X_hat);
+		}
+
 		// Update reference trajectory vectors for NN
 		if(useHumanIntentNN && loop_count_ > 10)
 		{
@@ -687,28 +710,6 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			convert2NNinput(x_des_, X_m);
 			//convert2NNinput(xd_des_, Xd_m);
 			//convert2NNinput(xdd_des_, Xdd_m);
-		}
-
-		if(tuneARMA)
-		{
-			for(int i=0;i<2;i++)
-			{
-				double xm, xdm, xddm;
-
-				ARMAmodel_FT_[i]->runARMAupdate(dt_       ,  // input: delta T
-                                                force_h(i),  // input:  force or voltage
-                                                X_m(i)    ,  // input:  x_d
-                                                xm        ,  // output: x_m
-                                                xdm       ,  // output: xd_m
-                                                xddm     );  // output: xdd_m
-
-				X_hat(i)  = xm;
-				Xd_hat(i) = xdm;
-
-				Eigen::MatrixXd tmp;
-				ARMAmodel_FT_[i]->getWeights(tmp);
-				weightsARMA_FT_.col(i) = tmp;
-			}
 		}
 
 		// Calculate Cartesian error

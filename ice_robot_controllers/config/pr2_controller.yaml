@@ -16,7 +16,7 @@ useDigitalFilter   : true # Note: the NAC only uses a simple lowpass filter
 
 publishRTtopics    : false
 
-mannequinMode      : true
+mannequinMode      : false
 mannequinThresPos  : 0.05
 mannequinThresRot  : 0.05 # not used
 
@@ -86,8 +86,10 @@ useDirectmodel     : false # Removed
 
 outerLoop_time     : 0.0
 
-weightsARMA_X: [-1.1289, 0.3429, -0.1885, -0.0260, -0.0066, 0.1066, -0.1824, 0.0823]
-weightsARMA_Y: [-1.3067, 0.4668, -0.3020, 0.1421, 0.0208, 0.0038, -0.0465, 0.0215]
+#weightsARMA_X: [-1.1289, 0.3429, -0.1885, -0.0260, -0.0066, 0.1066, -0.1824, 0.0823]
+#weightsARMA_Y: [-1.3067, 0.4668, -0.3020, 0.1421, 0.0208, 0.0038, -0.0465, 0.0215]
+weightsARMA_X: [-0.1, 0.1, -0.1, 0.1, 0.01, 0.01, -0.01, 0.01]
+weightsARMA_Y: [-0.1, 0.1, -0.1, 0.1, 0.01, 0.01, -0.01, 0.01]
 
 #############################
 # Filtering                 #
