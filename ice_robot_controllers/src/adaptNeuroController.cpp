@@ -634,39 +634,26 @@ void PR2adaptNeuroControllerClass::updateNonRealtime()
 			x_des_ = commandPose;
 		}
 
-		if(useARMAmodel && loop_count_ > 10)
+		if( (useARMAmodel || tuneARMA ) && loop_count_ > 10)
 		{
 			for(int i=0;i<2;i++)
 			{
 				double xm, xdm, xddm;
-
-				ARMAmodel_FT_[i]->updateDelT(dt_);
-				ARMAmodel_FT_[i]->useARMA( xm,				// output: x_m
-										   xdm,				// output: xd_m
-										   xddm,			// output: xdd_m
-										   force_h(i) );	// input:  force
-				X_hat(i)  = xm;
-				Xd_hat(i) = xdm;
-			}
-			x_des_  = CartVec2Affine(X_hat);
-		}
-
-		if(tuneARMA)
-		{
-			for(int i=0;i<2;i++)
-			{
-				double xm, xdm, xddm;
+				double xd = X(i);	// TODO or use X_m(i) ?
 
 				ARMAmodel_FT_[i]->runARMAupdate(dt_       ,  // input: delta T
                                                 force_h(i),  // input:  force or voltage
-                                                X_m(i)    ,  // input:  x_d
+                                                xd        ,  // input:  x_d
                                                 xm        ,  // output: x_m
                                                 xdm       ,  // output: xd_m
                                                 xddm     );  // output: xdd_m
 
-				Eigen::MatrixXd tmp;
-				ARMAmodel_FT_[i]->getWeights(tmp);
-				weightsARMA_FT_.col(i) = tmp;
+				if(tuneARMA)
+				{
+					Eigen::MatrixXd tmp;
+					ARMAmodel_FT_[i]->getWeights(tmp);
+					weightsARMA_FT_.col(i) = tmp;
+				}
 
 				X_hat(i)  = xm;
 				Xd_hat(i) = xdm;
