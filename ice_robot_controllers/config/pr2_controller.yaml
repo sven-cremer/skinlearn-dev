@@ -32,11 +32,12 @@ ft_frame_id: l_force_torque_link
 #ft_frame_id: l_gripper_tool_frame
 
 # This makes zero any force less than below (not used)
-useForceCutOff: true
+useForceCutOff: false
 forceCutOff: [0.1,0.1,0.1,0.1,0.1,0.1]
 
+# Scaling applied before cutoff
 useForceScaling: true
-forceScaling : [1.0,1.0,1.0,1.0,1.0,1.0]
+forceScaling : [0.9,0.9,0.9,0.9,0.9,0.9]
 
 #############################
 # Flexiforce settings       #
@@ -75,7 +76,7 @@ cartIniYaw           :  0.0
 useOuterloop       : false
 # Only one can be true
 useARMAmodel       : false
-tuneARMA           : false
+tuneARMA           : true
 useCTARMAmodel     : false # Removed
 useFIRmodel        : false # Removed
 useMRACmodel       : false # Removed
@@ -192,7 +193,7 @@ nn_lambda             : [2,2,2,2,2,2]
 #nn_Kv                 : [1]
 #nn_lambda             : [10]
 
-nn_usePED : true
+nn_usePED : false
 nn_Kd                 : [20,20,20,20,20,20]
 nn_Dd                 : [10,10,10,10,10,10]
 
