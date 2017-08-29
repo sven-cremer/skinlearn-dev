@@ -1,9 +1,0 @@
-<launch>
-
-   <rosparam file="$(find uta_pr2_forceControl)/pr2_controller.yaml"
-             command="load" />
-
-   <include file="$(find uta_pr2_forceControl)/launch/defaultCartesianController.launch"/>
-   <node pkg="uta_pr2_forceControl" type="controllerTestClient" name="controllerTestClient" output="screen"/>
-
-</launch>
