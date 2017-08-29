@@ -1,15 +1,13 @@
-Intelligent Control and Estimation (ICE) Library.
+SkinLearn
 ===
-
-ROS packages being developed for the Intelligent Control and Estimation Library.  
-
+SkinLearn is a multi-modal skin based Human-Robot Interaction learning, estimation and control system. This includes libraries for Intelligent Control and Estimation (ICE).
 
 Branches:
 
   * master (Groovy, rosbuild) - deprecated
   * rbfnn (test with RBF activation functions) - incomplete
-  * **catkin-devel** - started converting packages from rosmake to catkin
-  * *indigo-devel* - main branch, work in progress
+  * catkin-devel - started converting packages from rosmake to catkin
+  * **indigo-devel** - main branch, work in progress
 
 Working packages:
 
@@ -17,7 +15,7 @@ Working packages:
   * *ice_robot_controllers*: contains the `adaptNeuroController` class
   * *ice_experimenter*: keyboard interface for running experiments
   * *ice_sensors*: code for tactile sensors
-  * *pr2_cart*
+  * *pr2_cart*: real-time admittance and velocity controller for PR2 cart following behavior 
   * *uta_pr2_...*: older packages that no longer work (and to be removed)
 
 # Workspace setup

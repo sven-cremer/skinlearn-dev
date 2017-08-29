@@ -1,7 +1,7 @@
 PR2 cart
 ===
 
-Realtime impedance and velocity controller for PR2 cart following behavior. 
+Realtime admittance and velocity controller for PR2 cart following behavior. 
  
 # Running on the PR2
 First, you need to set up the PR2 to run in hydro. Normally, 1st generation PR2's don't have ROS hydro in their default configuration. UTARI's PR2 has been modified to run on both ROS fuerte and ROS hydro. Bofore running ```robot start ```, run the following commands 
